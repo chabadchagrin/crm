@@ -315,8 +315,8 @@ function showKeyModal() {
 }
 function updateKeyBadge() {
   const b = document.getElementById('keyBadge');
-  // API key no longer needed for property lookups (using Zillow)
-  b.textContent = '✓ Zillow Connected'; b.className = 'key-ind key-ok';
+  if (API_KEY) { b.textContent = '✓ API Key'; b.className = 'key-ind key-ok'; }
+  else { b.textContent = '⚠ API Key'; b.className = 'key-ind key-no'; }
 }
 
 // ── MAP ──
