@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Property Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f8fa;--surf:#ffffff;--surf2:#f0f2f5;--border:#dde1e9;--border2:#c8cdd8;
+  --accent:#2563eb;--accent2:#1d4ed8;--gold:#b45309;--green:#16a34a;--red:#dc2626;
+  --grey:#9ca3af;--txt:#111827;--txt2:#4b5563;--txt3:#9ca3af;
+}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt)}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:30px;width:500px;max-width:95vw}
+.modal h2{font-family:'Lora',serif;font-size:1.3rem;margin-bottom:8px}
+.modal p{font-size:.78rem;color:var(--txt2);line-height:1.65;margin-bottom:18px}
+.modal label{display:block;font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Mono',monospace;font-size:.8rem;border-radius:5px;outline:none;margin-bottom:14px}
+.modal input:focus{border-color:var(--accent)}
+.modal-note{font-size:.67rem;color:var(--txt3);line-height:1.55;margin-bottom:18px;padding:10px 12px;background:rgba(255,255,255,.03);border-radius:4px;border-left:2px solid var(--border2)}
+.modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+.modal label{display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px}
+.ac-result-item{padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.ac-result-item:hover{background:var(--surf2);border-color:var(--accent)}
+.ac-result-item.selected{background:rgba(37,99,235,.08);border-color:var(--accent)}
+.ac-result-name{font-weight:600;font-size:.85rem;color:var(--txt)}
+.ac-result-addr{font-size:.73rem;color:var(--txt2);margin-top:2px}
+.ac-result-val{font-size:.7rem;color:var(--green);margin-top:2px;font-family:'DM Mono',monospace}
+.btn{border:none;padding:7px 14px;font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;border-radius:4px;letter-spacing:.04em;transition:background .15s;white-space:nowrap}
+.btn-pri{background:var(--accent);color:#fff}.btn-pri:hover{background:#6a9ff7}
+.btn-sec{background:transparent;border:1px solid var(--border2);color:var(--txt2)}.btn-sec:hover{border-color:var(--accent);color:var(--accent)}
+.btn-gold{background:rgba(232,184,75,.15);border:1px solid rgba(232,184,75,.3);color:var(--gold)}.btn-gold:hover{background:rgba(232,184,75,.25)}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed}
+.btn-green{background:rgba(76,175,125,.15);border:1px solid rgba(76,175,125,.3);color:var(--green)}.btn-green:hover{background:rgba(76,175,125,.25)}
+.hdr{background:var(--surf);border-bottom:1px solid var(--border);padding:0 16px;height:46px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo{font-family:'Lora',serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.logo span{color:var(--accent)}
+.legend{display:flex;align-items:center;gap:8px}
+.leg-item{display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:.57rem;color:var(--txt3)}
+.leg-dot{width:9px;height:9px;border-radius:50%}
+.spacer{flex:1}
+.total{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3);flex-shrink:0}
+.key-ind{font-family:'DM Mono',monospace;font-size:.57rem;padding:3px 7px;border-radius:3px;cursor:pointer;border:1px solid;flex-shrink:0}
+.key-ok{background:rgba(76,175,125,.12);color:var(--green);border-color:rgba(76,175,125,.2)}
+.key-no{background:rgba(224,96,96,.12);color:var(--red);border-color:rgba(224,96,96,.2)}
+.toolbar{background:var(--surf2);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.toolbar-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
+.tlabel{font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);flex-shrink:0}
+.tier-wrap{display:flex;align-items:center;gap:4px}
+.tier-lbl{font-family:'DM Mono',monospace;font-size:.6rem;flex-shrink:0}
+.tier-lbl.green{color:var(--green)}.tier-lbl.gold{color:var(--gold)}.tier-lbl.red{color:var(--red)}
+.tier-input{background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 6px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none;width:95px}
+.tier-input:focus{border-color:var(--accent)}
+.prog-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
+.prog-bar{width:140px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.prog-lbl{font-family:'DM Mono',monospace;font-size:.57rem;color:var(--txt3);white-space:nowrap}
+.main{display:flex;flex:1;overflow:hidden}
+#map{flex:1;z-index:1}
+.sidebar{width:330px;background:var(--surf);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.srch{padding:7px 9px;border-bottom:1px solid var(--border);background:var(--surf2)}
+.srch input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:5px 9px;font-family:'DM Sans',sans-serif;font-size:.74rem;border-radius:4px;outline:none}
+.srch input:focus{border-color:var(--accent)}
+.srch input::placeholder{color:var(--txt3)}
+.clist{flex:1;overflow-y:auto}
+.citem{padding:9px 11px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:8px;transition:background .1s;position:relative}
+.citem:hover{background:var(--surf2)}
+.citem.active{background:rgba(79,142,247,.1);border-left:2px solid var(--accent)}
+.citem.active .cname{color:var(--accent2)}
+.citem.dimmed{opacity:.2}
+.pindot{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.5rem;color:#fff;flex-shrink:0;margin-top:1px;background:var(--grey)}
+.pindot.green{background:var(--green)}.pindot.gold{background:var(--gold);color:#333}.pindot.red{background:var(--red)}
+.cname{font-size:.78rem;font-weight:500;color:var(--txt);line-height:1.2}
+.caddr{font-size:.65rem;color:var(--txt2);margin-top:2px;line-height:1.3}
+.cphone{font-size:.62rem;color:var(--txt3);margin-top:2px;font-family:'DM Mono',monospace}
+.cval{font-size:.62rem;font-family:'DM Mono',monospace;margin-top:2px}
+.cval.green{color:var(--green)}.cval.gold{color:var(--gold)}.cval.red{color:var(--red)}
+.ck{position:absolute;right:7px;bottom:5px;font-family:'DM Mono',monospace;font-size:.48rem;color:var(--green);opacity:.8}
+.ppanel{border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;max-height:340px;overflow-y:auto}
+.pinner{padding:13px}
+.crm-block{margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.crm-name{font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt);line-height:1.2}
+.crm-addr{font-size:.68rem;color:var(--txt2);margin-top:3px;line-height:1.4}
+.crm-phone{font-size:.65rem;color:var(--txt3);margin-top:3px;font-family:'DM Mono',monospace}
+.ctag{display:inline-block;font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.1em;padding:2px 5px;border-radius:3px;margin-top:4px}
+.ctag.cuy{background:rgba(79,142,247,.12);color:var(--accent2)}
+.ctag.gea{background:rgba(76,175,125,.12);color:var(--green)}
+.ctag.unk{background:rgba(85,94,112,.2);color:var(--txt3)}
+.psec-title{font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:7px}
+.pcell{background:var(--surf);padding:6px 9px}
+.pkey{font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px}
+.pval{font-size:.74rem;color:var(--txt);font-weight:500}
+.pval.big{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--gold)}
+.pval.grn{color:var(--green)}
+.psrc{font-size:.56rem;color:var(--txt3);font-style:italic;margin-top:5px}
+.hint{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:5px;color:var(--txt3);font-size:.68rem}
+.hint .hi{font-size:1.5rem;opacity:.2;margin-bottom:3px}
+.loading-row{display:flex;align-items:center;gap:8px;padding:16px 13px;color:var(--txt3);font-size:.7rem}
+.spin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.errblk{padding:12px 13px;color:var(--red);font-size:.7rem;line-height:1.6;display:flex;flex-direction:column;gap:8px}
+.retry-btn{background:rgba(224,96,96,.15);border:1px solid rgba(224,96,96,.3);color:var(--red);font-family:'DM Mono',monospace;font-size:.65rem;padding:5px 12px;border-radius:4px;cursor:pointer;align-self:flex-start}
+.retry-btn:hover{background:rgba(224,96,96,.25)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 24px;text-align:center;gap:10px}
+.empty .ei{font-size:2.2rem;opacity:.12}
+.empty .et{font-family:'Lora',serif;font-size:.9rem;color:var(--txt2)}
+.empty .es{font-size:.67rem;color:var(--txt3);line-height:1.65;max-width:220px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.pfbar{background:var(--surf2);border-top:1px solid var(--border);padding:7px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+.pf-text{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-stop{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--red);cursor:pointer;background:none;border:none;padding:0}
+.mpin{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid rgba(0,0,0,.3)}
+.mpin.pin-grey{background:var(--grey)}.mpin.pin-green{background:var(--green)}.mpin.pin-gold{background:var(--gold)}.mpin.pin-red{background:var(--red)}
+.mpin.active{transform:rotate(-45deg) scale(1.3)}
+.mpin-n{transform:rotate(45deg);font-family:'DM Mono',monospace;font-size:8px;color:#fff;font-weight:500}
+.mpin.pin-gold .mpin-n{color:#333}
+.tab-bar{display:flex;border-bottom:2px solid var(--border);background:var(--surf2);flex-shrink:0}
+.tab-btn{flex:1;padding:8px 6px;font-family:'DM Mono',monospace;font-size:.63rem;border:none;background:none;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;letter-spacing:.04em}
+.tab-btn:hover{color:var(--txt);background:var(--surf)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--surf)}
+.ppanel{position:relative}
+</style>
+</head>
+<body>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>🔑 Anthropic API Key</h2>
+    <p>This app searches public Ohio property records. Your key is saved in this browser — enter once per computer.</p>
+    <label>Your API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off">
+    <div class="modal-note">🔒 Stored in your browser only. Never sent anywhere except api.anthropic.com.</div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveKey()">Save &amp; Open</button>
+      <button class="btn btn-sec" onclick="skipKey()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CONTACT MODAL -->
+<div class="modal-bg" id="addContactModal" style="display:none">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+    <h2>＋ Add New Contact</h2>
+
+    <!-- Tab bar -->
+    <div class="tab-bar" style="margin-bottom:16px">
+      <button class="tab-btn active" id="actab-address" onclick="switchAcTab('address')">📍 I know the address</button>
+      <button class="tab-btn" id="actab-search" onclick="switchAcTab('search')">🔍 Search by name</button>
+    </div>
+
+    <!-- Shared fields -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
+      <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
+      <div><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
+      <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
+      <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
+    </div>
+
+    <!-- Address tab -->
+    <div id="actab-address-content">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="123 Main Street"></div>
+        <div><label>City *</label><input type="text" id="ac_city" placeholder="Chagrin Falls"></div>
+        <div><label>ZIP</label><input type="text" id="ac_zip" placeholder="44022" maxlength="5"></div>
+      </div>
+    </div>
+
+    <!-- Search tab -->
+    <div id="actab-search-content" style="display:none">
+      <div style="margin-bottom:12px">
+        <label>Area / City (optional but helps)</label>
+        <input type="text" id="ac_area" placeholder="Chagrin Falls, Gates Mills, etc.">
+      </div>
+      <div style="font-size:.7rem;color:var(--txt3);margin-bottom:12px;padding:8px;background:var(--surf2);border-radius:4px">
+        💡 Nicknames work — "Jenny" will find "Jennifer", "Bob" finds "Robert", etc.
+      </div>
+    </div>
+
+    <div id="ac_status" style="display:none;padding:10px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.75rem;color:var(--txt2)"></div>
+    <div id="ac_results" style="display:none;margin-bottom:14px"></div>
+
+    <div class="modal-btns">
+      <button class="btn btn-pri" id="ac_actionBtn" onclick="handleAcAction()">📍 Lookup Address</button>
+      <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM ADD MODAL -->
+<div class="modal-bg" id="confirmAddModal" style="display:none">
+  <div class="modal" style="width:520px">
+    <h2>✅ Confirm Add Contact</h2>
+    <div id="confirm_content" style="margin-bottom:18px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="confirmAddContact()">Add to Sheet</button>
+      <button class="btn btn-sec" onclick="backToSearch()">← Back to Results</button>
+      <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="visibility:hidden">
+  <header class="hdr">
+    <div class="logo">📍 <span>CRM</span> Property Map</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div>Unknown</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Tier 1</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div>Tier 2</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Tier 3</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="total" id="totalLbl">Loading…</span>
+    <span class="key-ind key-no" id="keyBadge" onclick="showKeyModal()">⚠ No API Key</span>
+  </header>
+
+  <div class="toolbar">
+    <span class="tlabel">Tiers</span>
+    <div class="tier-wrap">
+      <span class="tier-lbl green">Green &lt;</span>
+      <input type="number" class="tier-input" id="tier1" value="500000" oninput="recolorAll()">
+    </div>
+    <div class="tier-wrap">
+      <span class="tier-lbl gold">Gold &lt;</span>
+      <input type="number" class="tier-input" id="tier2" value="1000000" oninput="recolorAll()">
+    </div>
+    <span class="tier-lbl red">Red ↑</span>
+    <div class="toolbar-sep"></div>
+    <span class="tlabel">Filter</span>
+    <input type="number" class="tier-input" id="minValue" placeholder="Min $" style="width:100px" oninput="applyFilter()">
+    <button class="btn btn-sec" style="padding:4px 9px" onclick="clearFilter()">✕</button>
+    <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
+    <div class="toolbar-sep"></div>
+    <button class="btn btn-gold" id="prefetchBtn" onclick="startPrefetch()" disabled>⚡ Pre-fetch All</button>
+    <button class="btn btn-green" onclick="exportCSV()">⬇ Export</button>
+    <button class="btn btn-pri" onclick="showAddContact()">＋ Add Contact</button>
+    <button class="btn btn-sec" onclick="reloadSheet()">🔄 Refresh</button>
+    <div class="prog-wrap" id="geoProgress" style="display:none">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-lbl" id="progLbl">Loading…</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div id="map"></div>
+    <div class="sidebar">
+      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" oninput="applyFilter()"></div>
+      <div class="clist" id="clist">
+        <div class="empty"><div class="ei">⏳</div><div class="et">Loading…</div></div>
+      </div>
+      <div class="ppanel" id="ppanel">
+        <div class="hint"><div class="hi">🏠</div><p>Select a contact to view property records</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pfbar" id="pfBar" style="display:none">
+    <div class="spin"></div>
+    <div class="pf-text" id="pfText">Starting…</div>
+    <button class="pf-stop" onclick="stopPrefetch()">✕ Stop</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Sheet: A=ContactName, B=JointName, C=Address, D=City, E=State, F=ZIP, G=Phone, H=ID, I=HomeValue, J=Lat, K=Lon, L=County
+// ── PASSWORD PROTECTION ──
+(function() {
+  const CORRECT = 'chabad2025';
+  const stored = sessionStorage.getItem('crm_auth');
+  if (stored !== CORRECT) {
+    const pw = prompt('Enter password:');
+    if (pw !== CORRECT) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666;font-size:1.1rem">Access denied. Reload to try again.</div>';
+      throw new Error('Access denied');
+    }
+    sessionStorage.setItem('crm_auth', CORRECT);
+  }
+})();
+
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxE-bzfstM9jfePzaKP_GVBXrvi2f4Cdch-K8hPPBiiXQLeRlYnYAbVamkzUJIXv089Ug/exec';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ── API KEY ──
+let API_KEY = '';
+try { API_KEY = localStorage.getItem('crm_map_api_key') || ''; } catch(e) {}
+window.addEventListener('DOMContentLoaded', () => { closeModal(); }); // Zillow API used - no Anthropic key needed
+
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v.startsWith('sk-ant')) { alert('Please enter a valid Anthropic API key (starts with sk-ant-)'); return; }
+  API_KEY = v;
+  try { localStorage.setItem('crm_map_api_key', v); } catch(e) {}
+  closeModal();
+}
+function skipKey() { closeModal(); }
+function closeModal() {
+  document.getElementById('modalBg').style.display = 'none';
+  document.getElementById('app').style.visibility = 'visible';
+  updateKeyBadge();
+  if (!map) initMap();
+  loadFromSheet();
+}
+function showKeyModal() {
+  document.getElementById('apiKeyInput').value = API_KEY || '';
+  document.getElementById('modalBg').style.display = 'flex';
+}
+function updateKeyBadge() {
+  const b = document.getElementById('keyBadge');
+  // API key no longer needed for property lookups (using Zillow)
+  b.textContent = '✓ Zillow Connected'; b.className = 'key-ind key-ok';
+}
+
+// ── MAP ──
+let map;
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView([41.45, -81.3], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>', maxZoom: 19
+  }).addTo(map);
+}
+
+// ── STATE ──
+let households = [], filtered = [], markers = [], activeIdx = -1;
+
+const GEAUGA_ZIPS = new Set(['44021','44024','44026','44046','44047','44062','44072','44231','44234','44241','44255','44264']);
+const BORDER_ZIPS = new Set(['44022','44023','44040','44086']);
+function guessCounty(zip) {
+  const z = (zip||'').replace(/\D/g,'').substring(0,5);
+  if (GEAUGA_ZIPS.has(z)) return 'gea';
+  if (BORDER_ZIPS.has(z)) return 'unk';
+  return 'cuy';
+}
+
+// ── LOAD FROM SHEET ──
+async function loadFromSheet() {
+  showProgress(true, 'Reading Google Sheet…', 0);
+  try {
+    const r = await fetch(SHEET_URL + '?action=read');
+    const rows = await r.json();
+    const dataRows = rows.slice(1).filter(r => r[0] && r[2]);
+
+    const addrMap = {};
+    dataRows.forEach((r, idx) => {
+      const contactName = (r[0]||'').toString().trim();
+      const jointName   = (r[1]||'').toString().trim();
+      const address     = (r[2]||'').toString().trim();
+      const city        = (r[3]||'').toString().trim();
+      const state       = (r[4]||'OH').toString().trim();
+      const zip         = (r[5]||'').toString().replace(/\D/g,'').substring(0,5);
+      const phone       = (r[6]||'').toString().trim();
+      const contactId   = (r[7]||'').toString().trim();
+      const homeValue   = r[8] ? parseFloat(r[8]) || null : null;
+      const lat         = r[9] ? parseFloat(r[9]) || null : null;
+      const lon         = r[10] ? parseFloat(r[10]) || null : null;
+      const county      = r[11] ? (r[11]||'').toString().trim() : guessCounty(zip);
+      const dateAdded   = r[13] ? (r[13]||'').toString().trim() : '';
+      const propDetails = r[12] ? tryParse(r[12]) : null;
+      const sheetRow    = idx + 2;
+
+      const key = address.toLowerCase().trim() + '|' + zip;
+      if (!addrMap[key]) {
+        addrMap[key] = { address, city, state, zip, county, lat, lon, homeValue, sheetRow, members: [], jointNames: [], propDetails: null };
+      }
+      const h = addrMap[key];
+      h.members.push({ contactName, phone, contactId, sheetRow });
+      if (jointName && !h.jointNames.includes(jointName)) h.jointNames.push(jointName);
+      if (homeValue && !h.homeValue) h.homeValue = homeValue;
+      if (lat && !h.lat) { h.lat = lat; h.lon = lon; }
+      if (county && county !== 'unk' && h.county === 'unk') h.county = county;
+      if (propDetails && !h.propDetails) h.propDetails = propDetails;
+      if (dateAdded && !h.dateAdded) h.dateAdded = dateAdded;
+    });
+
+    households = Object.values(addrMap).map(h => ({ ...h, displayName: buildDisplayName(h) }));
+    filtered = [...households];
+    renderList();
+    document.getElementById('totalLbl').textContent = `${households.length} households · ${dataRows.length} contacts`;
+    if (API_KEY) document.getElementById('prefetchBtn').disabled = false;
+
+    // Place pins for already-geocoded addresses instantly
+    markers = new Array(households.length).fill(null);
+    let instantCount = 0;
+    households.forEach((h, i) => {
+      if (h.lat && h.lon) { placePinAt(i); instantCount++; }
+    });
+
+    // Geocode missing
+    const needsGeo = households.filter(h => !h.lat);
+    if (needsGeo.length > 0) {
+      await geocodeMissing(needsGeo);
+    } else {
+      showProgress(false);
+      fitMap();
+    }
+
+  } catch(e) {
+    document.getElementById('clist').innerHTML = `<div class="empty"><div class="ei">⚠️</div><div class="et">Could not load sheet</div><div class="es">${e.message}</div></div>`;
+    showProgress(false);
+  }
+}
+
+function reloadSheet() {
+  households=[]; filtered=[]; markers.forEach(m=>m&&map.removeLayer(m)); markers=[];
+  activeIdx=-1; setProp('hint'); renderList();
+  loadFromSheet();
+}
+
+// ── BUILD DISPLAY NAME ──
+function buildDisplayName(h) {
+  if (h.jointNames.length > 0) return h.jointNames[0];
+  if (h.members.length === 1) return fmtName(h.members[0].contactName);
+  const firsts = h.members.map(m => { const p=m.contactName.split(','); return p.length>=2?p[1].trim():m.contactName; });
+  const last = h.members[0].contactName.split(',')[0].trim();
+  return firsts.join(' & ') + ' ' + last;
+}
+function fmtName(cn) {
+  const p = cn.split(',');
+  return p.length>=2 ? p[1].trim()+' '+p[0].trim() : cn;
+}
+
+function tryParse(v) { try { return typeof v==='string' ? JSON.parse(v) : v; } catch(e) { return null; } }
+
+// ── PLACE PIN ──
+function placePinAt(i) {
+  const h = households[i];
+  if (markers[i]) map.removeLayer(markers[i]);
+  const m = L.marker([h.lat, h.lon], { icon: pinIcon(i, false, getTier(i)) }).addTo(map);
+  m.on('click', () => selectHousehold(i));
+  markers[i] = m;
+}
+
+// ── GEOCODE MISSING ──
+async function geocodeMissing(needsGeo) {
+  showProgress(true, `Geocoding ${needsGeo.length} addresses…`, 0);
+  for (let i = 0; i < needsGeo.length; i++) {
+    const h = needsGeo[i];
+    const idx = households.indexOf(h);
+    document.getElementById('progLbl').textContent = `Geocoding ${i+1}/${needsGeo.length}…`;
+    document.getElementById('progFill').style.width = `${Math.round((i/needsGeo.length)*100)}%`;
+
+    const geo = await geocodeOne(h);
+    if (geo) {
+      h.lat = geo.lat; h.lon = geo.lon;
+      placePinAt(idx);
+      renderList();
+      // Save lat/lon to ALL member rows in one batched write per member
+      for (const m of h.members) {
+        await writeRow([
+          { row: m.sheetRow, col: 10, value: geo.lat },
+          { row: m.sheetRow, col: 11, value: geo.lon }
+        ]);
+      }
+    }
+    if (i < needsGeo.length - 1) await sleep(1200);
+  }
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('progLbl').textContent = `✓ Done`;
+  setTimeout(() => showProgress(false), 2000);
+  fitMap();
+}
+
+async function geocodeOne(h) {
+  // Strategy 1: full address
+  const attempts = [
+    `${h.address}, ${h.city}, ${h.state} ${h.zip}, USA`,
+    `${h.address}, ${h.city}, ${h.state}, USA`,
+    `${h.address}, ${h.zip}, USA`,
+  ];
+  for (const q of attempts) {
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=us`,
+        { headers: { 'Accept-Language':'en', 'User-Agent':'CRMPropertyMap/1.0' } }
+      );
+      const d = await r.json();
+      if (d && d.length) return { lat: +d[0].lat, lon: +d[0].lon };
+      await new Promise(res => setTimeout(res, 500));
+    } catch(e) {}
+  }
+  return null;
+}
+
+function fitMap() {
+  const valid = households.filter(h => h.lat);
+  if (valid.length > 1) {
+    const lats=valid.map(h=>h.lat), lons=valid.map(h=>h.lon);
+    map.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]], {padding:[50,50]});
+  } else if (valid.length===1) { map.setView([valid[0].lat,valid[0].lon],14); }
+}
+
+// ── WRITE TO SHEET (batched per row) ──
+async function writeRow(updates) {
+  // updates = [{row, col, value}, ...]
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'writeRow', updates })
+    });
+  } catch(e) {}
+}
+
+// ── TIERS ──
+function getTier(i) {
+  const val = households[i]?.homeValue;
+  if (!val) return 'grey';
+  const t1 = parseFloat(document.getElementById('tier1').value)||500000;
+  const t2 = parseFloat(document.getElementById('tier2').value)||1000000;
+  if (val < t1) return 'green';
+  if (val < t2) return 'gold';
+  return 'red';
+}
+
+function recolorAll() {
+  households.forEach((h,i) => {
+    if (!markers[i]) return;
+    markers[i].setIcon(pinIcon(i, i===activeIdx, getTier(i)));
+  });
+  renderList();
+}
+
+// ── FILTER ──
+function applyFilter() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  const minVal = parseFloat(document.getElementById('minValue').value)||0;
+  filtered = households.filter(h => {
+    const i = households.indexOf(h);
+    const textMatch = h.displayName.toLowerCase().includes(q) || h.address.toLowerCase().includes(q) || h.city.toLowerCase().includes(q);
+    if (!textMatch) return false;
+    if (minVal > 0) return h.homeValue && h.homeValue >= minVal;
+    return true;
+  });
+  households.forEach((h,i) => { if (markers[i]) markers[i].setOpacity(filtered.includes(h) ? 1 : 0.12); });
+  document.getElementById('filterCount').textContent = minVal>0 ? `${filtered.length} match` : '';
+  renderList();
+}
+
+function clearFilter() {
+  document.getElementById('minValue').value = '';
+  document.getElementById('srch').value = '';
+  filtered = [...households];
+  households.forEach((h,i) => { if(markers[i]) markers[i].setOpacity(1); });
+  document.getElementById('filterCount').textContent = '';
+  renderList();
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const el = document.getElementById('clist');
+  if (!households.length) { el.innerHTML='<div class="empty"><div class="ei">🗂️</div><div class="et">No contacts</div><div class="es">Make sure your Google Sheet has data in columns A–H.</div></div>'; return; }
+  if (!filtered.length) { el.innerHTML='<div class="empty"><div class="ei">🔍</div><div class="et">No matches</div></div>'; return; }
+  el.innerHTML = filtered.map(h => {
+    const i = households.indexOf(h);
+    const tier = getTier(i);
+    const phones = [...new Set(h.members.map(m=>m.phone).filter(Boolean))].join(' · ');
+    const valStr = h.homeValue ? '$'+h.homeValue.toLocaleString() : '';
+    return `<div class="citem${i===activeIdx?' active':''}${!filtered.includes(h)?' dimmed':''}" onclick="selectHousehold(${i})">
+      <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div class="cname">${h.displayName}</div>
+        <div class="caddr">${h.address}, ${h.city} ${h.zip}</div>
+        ${phones?`<div class="cphone">${phones}</div>`:''}
+        ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
+      </div>
+      ${h.homeValue?'<span class="ck">✓</span>':''}
+    </div>`;
+  }).join('');
+}
+
+// ── SELECT ──
+async function selectHousehold(i) {
+  if (activeIdx!==-1&&markers[activeIdx]) markers[activeIdx].setIcon(pinIcon(activeIdx,false,getTier(activeIdx)));
+  activeIdx = i;
+  const h = households[i];
+  if (markers[i]) { markers[i].setIcon(pinIcon(i,true,getTier(i))); map.setView([h.lat,h.lon],15,{animate:true}); }
+  renderList();
+  if (h.propDetails) { setProp('data',h); return; }
+  if (h.homeValue && !h.propDetails) { setProp('data',h); return; }
+  setProp('loading',h);
+  const result = await fetchProp(h);
+  if (!result.error) {
+    // fallback to lastSalePrice if no marketValue returned
+    if (!result.homeValue && result.lastSalePrice) {
+      result.homeValue = parseFloat(result.lastSalePrice.toString().replace(/[^0-9.]/g,'')) || null;
+    }
+    h.homeValue = result.homeValue || h.homeValue;
+    h.propDetails = result;
+    if (result.county && result.county !== 'unk') h.county = result.county;
+    // save homeValue and county to all member rows
+    for (const m of h.members) {
+      const updates = [];
+      if (h.homeValue) updates.push({ row: m.sheetRow, col: 9, value: h.homeValue });
+      if (h.county) updates.push({ row: m.sheetRow, col: 12, value: h.county });
+      if (h.propDetails) updates.push({ row: m.sheetRow, col: 13, value: JSON.stringify(h.propDetails) });
+      if (updates.length) await writeRow(updates);
+    }
+    recolorAll();
+  }
+  renderList();
+  setProp('data', h, result);
+}
+
+// ── PROP PANEL ──
+function setProp(mode, h, result) {
+  const el = document.getElementById('ppanel');
+  if (mode==='hint') { el.innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view property records</p></div>'; return; }
+
+  const idx = households.indexOf(h);
+  const countyLabel = h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
+  const tagClass = h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
+
+  const header = `<div class="pinner" style="padding-bottom:6px;position:relative">
+    <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px" title="Close">✕</button>
+    <div class="crm-name" style="padding-right:24px">${h.displayName}</div>
+    <div class="crm-addr">${h.address}, ${h.city}, ${h.state} ${h.zip}</div>
+    <span class="ctag ${tagClass}">${countyLabel}</span>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-prop-${idx}" onclick="showTab(${idx},'prop')">🏠 Property</button>
+    <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts (${h.members.length})</button>
+  </div>`;
+
+  if (mode==='loading') {
+    el.innerHTML = header + `<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>`;
+    return;
+  }
+
+  const data = result || h.propDetails || {};
+
+  // Contacts tab
+  const contactsHtml = h.members.map(m => {
+    const parts = m.contactName.split(',');
+    const fullName = parts.length>=2 ? parts[1].trim()+' '+parts[0].trim() : m.contactName;
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="font-weight:600;font-size:.82rem;color:var(--txt)">${fullName}</div>
+      ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
+      ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
+      <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CRM ID: ${m.contactId}</div>
+    </div>`;
+  }).join('');
+
+  if (result && result.error) {
+    el.innerHTML = header +
+      `<div id="tabcontent-prop-${idx}" class="tab-content pinner">
+        <div class="errblk"><span>${result.message}</span>
+        <button class="retry-btn" onclick="retryLookup(${idx})">↺ Retry</button></div>
+      </div>
+      <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none">${contactsHtml}</div>`;
+    return;
+  }
+
+  const cells = [
+    h.homeValue        && ['Market Value', '$'+Math.round(h.homeValue).toLocaleString(), 'grn'],
+    data.lastSalePrice && ['Last Sale Price', data.lastSalePrice, 'big'],
+    data.lastSaleDate  && ['Sale Date', data.lastSaleDate, ''],
+    data.assessedValue && ['Assessed Value', data.assessedValue, ''],
+    data.propertyType  && ['Type', data.propertyType, ''],
+    data.yearBuilt     && ['Year Built', data.yearBuilt, ''],
+    data.squareFeet    && ['Sq Ft', data.squareFeet, ''],
+    data.bedsBaths     && ['Beds / Baths', data.bedsBaths, ''],
+    data.lotSize       && ['Lot Size', data.lotSize, ''],
+    data.annualTax     && ['Annual Tax', data.annualTax, ''],
+  ].filter(Boolean);
+
+  const grid = cells.length
+    ? `<div class="pgrid">${cells.map(([k,v,cls])=>`<div class="pcell"><div class="pkey">${k}</div><div class="pval ${cls}">${v}</div></div>`).join('')}</div>`
+    : '<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>';
+
+  el.innerHTML = header +
+    `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">
+      ${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}
+    </div>
+    <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
+      ${contactsHtml}
+    </div>`;
+}
+
+async function retryLookup(i) {
+  households[i].propDetails = null;
+  households[i].homeValue = null;
+  selectHousehold(i);
+}
+
+// ── FETCH PROPERTY via Zillow/RapidAPI ──
+const RAPIDAPI_KEY = '14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
+
+async function fetchProp(h) {
+  const addr = encodeURIComponent(`${h.address}, ${h.city}, ${h.state} ${h.zip}`);
+  try {
+    const resp = await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${addr}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-rapidapi-host': 'private-zillow.p.rapidapi.com',
+        'x-rapidapi-key': RAPIDAPI_KEY
+      }
+    });
+    const d = await resp.json();
+    if (!d.propertyDetails) return { error:true, message:'No property data found for this address.' };
+    
+    const p = d.propertyDetails;
+    const rf = p.resoFacts || {};
+    
+    // Verify address match — check street number matches
+    const returnedNum = (p.streetAddress||'').match(/^\d+/);
+    const requestedNum = h.address.match(/^\d+/);
+    if (returnedNum && requestedNum && returnedNum[0] !== requestedNum[0]) {
+      return { error:true, message:`Address mismatch: Zillow returned ${p.streetAddress} instead of ${h.address}.` };
+    }
+
+    // Determine county
+    const countyStr = (p.county||'').toLowerCase();
+    const county = countyStr.includes('geauga') ? 'gea' : 'cuy';
+
+    // Last sale from priceHistory
+    const sales = (p.priceHistory||[]).filter(e => e.event && e.event.toLowerCase().includes('sold'));
+    const lastSale = sales[0] || null;
+    const lastSalePrice = lastSale ? '$' + lastSale.price.toLocaleString() : null;
+    const lastSaleDate = lastSale ? new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}) : null;
+
+    // Market value: use zestimate if available, else last sale price
+    const homeValue = p.zestimate || p.lastSoldPrice || p.price || null;
+
+    // Assessed value from tax history
+    const taxHistory = p.taxHistory || [];
+    const latestTax = taxHistory[0] || null;
+    const assessedValue = rf.taxAssessedValue ? '$' + Math.round(rf.taxAssessedValue).toLocaleString() : (latestTax ? '$' + Math.round(latestTax.value).toLocaleString() : null);
+    const annualTax = rf.taxAnnualAmount ? '$' + rf.taxAnnualAmount.toLocaleString() : (latestTax ? '$' + latestTax.taxPaid.toFixed(0) : null);
+
+    const sqft = p.livingArea ? p.livingArea.toLocaleString() : null;
+    const beds = p.bedrooms || null;
+    const baths = p.bathrooms || null;
+    const bedsBaths = beds && baths ? `${beds} / ${baths}` : null;
+    const lotSize = rf.lotSize || (p.lotAreaValue ? `${p.lotAreaValue} ${p.lotAreaUnits||'acres'}` : null);
+
+    return {
+      county,
+      homeValue,
+      lastSalePrice,
+      lastSaleDate,
+      assessedValue,
+      marketValue: homeValue ? '$' + homeValue.toLocaleString() : null,
+      propertyType: rf.homeType || p.homeType || 'Single Family',
+      yearBuilt: rf.yearBuilt ? String(rf.yearBuilt) : null,
+      squareFeet: sqft,
+      bedsBaths,
+      lotSize,
+      annualTax,
+      source: 'Zillow'
+    };
+  } catch(e) {
+    return { error:true, message:'Lookup failed: ' + e.message };
+  }
+}
+
+// ── PRE-FETCH ALL ──
+let prefetching = false;
+async function startPrefetch() {
+  // No API key needed - using Zillow/RapidAPI
+  const unfetched = households.filter(h => !h.homeValue);
+  if (!unfetched.length) { alert('All households already have property data!'); return; }
+  const ok = window.confirm(`Look up property records for ${unfetched.length} households?\n\nEst. cost: $${(unfetched.length*0.015).toFixed(2)}–$${(unfetched.length*0.025).toFixed(2)}\nEst. time: ~${Math.ceil(unfetched.length/60)} min\n\nRequests are paced to avoid rate limits.\n\nContinue?`);
+  if (!ok) return;
+  prefetching = true;
+  document.getElementById('pfBar').style.display = 'flex';
+  document.getElementById('prefetchBtn').disabled = true;
+  let done = 0, failed = 0;
+
+  for (let i = 0; i < households.length; i++) {
+    if (!prefetching) break;
+    const h = households[i];
+    if (h.homeValue) continue;
+    document.getElementById('pfText').textContent = `[${done+failed+1}/${unfetched.length}] ${h.displayName}`;
+    const result = await fetchProp(h);
+    if (!result.error) {
+      h.homeValue = result.homeValue || h.homeValue;
+      h.propDetails = result;
+      if (result.county && result.county !== 'unk') h.county = result.county;
+      for (const m of h.members) {
+        const updates = [];
+        if (h.homeValue) updates.push({ row:m.sheetRow, col:9, value:h.homeValue });
+        if (h.county) updates.push({ row:m.sheetRow, col:12, value:h.county });
+        if (h.propDetails) updates.push({ row:m.sheetRow, col:13, value:JSON.stringify(h.propDetails) });
+        if (updates.length) await writeRow(updates);
+      }
+      recolorAll();
+      done++;
+    } else { failed++; }
+    renderList();
+    await sleep(1000); // 1 sec gap between Zillow API calls
+  }
+
+  prefetching = false;
+  document.getElementById('pfBar').style.display = 'none';
+  document.getElementById('prefetchBtn').disabled = false;
+  document.getElementById('prefetchBtn').textContent = `✓ ${done} fetched`;
+  if (failed > 0) alert(`Done!\n${done} succeeded\n${failed} failed — click them individually to retry.`);
+}
+
+function stopPrefetch() {
+  prefetching = false;
+  document.getElementById('pfBar').style.display = 'none';
+  document.getElementById('prefetchBtn').disabled = false;
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  const minVal = parseFloat(document.getElementById('minValue').value)||0;
+  const sinceDate = prompt('Export contacts added since date?\n\nEnter date (YYYY-MM-DD) or leave blank for all contacts:', '');
+  const since = sinceDate ? sinceDate.trim() : null;
+
+  let list = minVal > 0 ? filtered : households;
+  if (since) {
+    list = list.filter(h => !h.dateAdded || h.dateAdded >= since);
+  }
+
+  if (!list.length) { alert('No contacts match the selected criteria.'); return; }
+
+  const rows = [['Contact ID','First Name','Last Name','Home Value']];
+  list.forEach(h => {
+    h.members.forEach(m => {
+      const parts = m.contactName.split(',');
+      const last  = parts.length>=2 ? parts[0].trim() : '';
+      const first = parts.length>=2 ? parts[1].trim() : m.contactName;
+      const fmtVal = h.homeValue ? '$' + Math.round(h.homeValue).toLocaleString('en-US') : '';
+      rows.push([m.contactId, first, last, fmtVal]);
+    });
+  });
+  const csv = rows.map(r=>r.map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = since ? `contacts_since_${since}.csv` : minVal>0 ? `prospects_above_${minVal}.csv` : 'all_contacts_homevalue.csv';
+  a.click();
+}
+
+// ── TABS ──
+function showTab(idx, tab) {
+  ['prop','contacts'].forEach(t => {
+    const btn = document.getElementById(`tab-${t}-${idx}`);
+    const content = document.getElementById(`tabcontent-${t}-${idx}`);
+    if (btn) btn.classList.toggle('active', t===tab);
+    if (content) content.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+// ── PIN ICON ──
+function pinIcon(num, active, tier) {
+  return L.divIcon({
+    className:'',
+    html:`<div class="mpin pin-${tier}${active?' active':''}"><div class="mpin-n">${num+1}</div></div>`,
+    iconSize:[28,28], iconAnchor:[14,28], popupAnchor:[0,-30]
+  });
+}
+
+// ── ADD CONTACT ──
+let acSelectedResult = null;
+let acSearchResults = [];
+let acFormData = {};
+let acCurrentTab = 'address';
+
+function showAddContact() {
+  document.getElementById('addContactModal').style.display = 'flex';
+  document.getElementById('ac_first').focus();
+  document.getElementById('ac_status').style.display = 'none';
+  document.getElementById('ac_results').style.display = 'none';
+  acSelectedResult = null;
+  switchAcTab('address');
+}
+
+function switchAcTab(tab) {
+  acCurrentTab = tab;
+  ['address','search'].forEach(t => {
+    document.getElementById(`actab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`actab-${t}-content`).style.display = t===tab ? 'block' : 'none';
+  });
+  const btn = document.getElementById('ac_actionBtn');
+  btn.textContent = tab === 'address' ? '📍 Lookup Address' : '🔍 Search County Records';
+  document.getElementById('ac_status').style.display = 'none';
+  document.getElementById('ac_results').style.display = 'none';
+}
+
+function handleAcAction() {
+  if (acCurrentTab === 'address') lookupByAddress();
+  else searchNewContact();
+}
+
+function hideAddContact() {
+  document.getElementById('addContactModal').style.display = 'none';
+  document.getElementById('confirmAddModal').style.display = 'none';
+  ['ac_first','ac_last','ac_spouse','ac_area','ac_phone','ac_email','ac_street','ac_city','ac_zip'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('ac_status').style.display = 'none';
+  document.getElementById('ac_results').style.display = 'none';
+}
+
+async function lookupByAddress() {
+  const first = document.getElementById('ac_first').value.trim();
+  const last = document.getElementById('ac_last').value.trim();
+  const street = document.getElementById('ac_street').value.trim();
+  const city = document.getElementById('ac_city').value.trim() || 'Chagrin Falls';
+  const zip = document.getElementById('ac_zip').value.trim();
+  if (!first || !last) { alert('Please enter first and last name.'); return; }
+  if (!street) { alert('Please enter a street address.'); return; }
+
+  acFormData = {
+    first, last,
+    spouse: document.getElementById('ac_spouse').value.trim(),
+    phone: document.getElementById('ac_phone').value.trim(),
+    email: document.getElementById('ac_email').value.trim(),
+    area: city
+  };
+
+  const btn = document.getElementById('ac_actionBtn');
+  btn.disabled = true; btn.textContent = '⏳ Looking up…';
+
+  const status = document.getElementById('ac_status');
+  status.style.display = 'block';
+  status.textContent = 'Fetching property data from Zillow…';
+
+  try {
+    const fullAddr = encodeURIComponent(`${street}, ${city}, OH${zip ? ' '+zip : ''}`);
+    const resp = await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${fullAddr}`, {
+      headers: { 'Content-Type':'application/json','x-rapidapi-host':'private-zillow.p.rapidapi.com','x-rapidapi-key': RAPIDAPI_KEY }
+    });
+    const d = await resp.json();
+    if (!d.propertyDetails) throw new Error('Address not found on Zillow.');
+    const p = d.propertyDetails;
+    const sales = (p.priceHistory||[]).filter(e=>e.event&&e.event.toLowerCase().includes('sold'));
+    const lastSale = sales[0]||null;
+    const countyStr = (p.county||'').toLowerCase();
+    acSearchResults = [{
+      ownerName: (p.resoFacts&&p.resoFacts.ownerName)||'',
+      address: p.streetAddress||street,
+      city: p.city||city,
+      state: p.state||'OH',
+      zip: p.zipcode||zip,
+      county: countyStr.includes('geauga')?'gea':'cuy',
+      marketValue: p.zestimate||p.price||null,
+      yearBuilt: p.yearBuilt?String(p.yearBuilt):null,
+      propertyType: p.homeType||'Single Family',
+      lastSalePrice: lastSale?'$'+lastSale.price.toLocaleString():null,
+      lastSaleDate: lastSale?new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}):null,
+      assessedValue: p.resoFacts&&p.resoFacts.taxAssessedValue?'$'+Math.round(p.resoFacts.taxAssessedValue).toLocaleString():null,
+      annualTax: p.resoFacts&&p.resoFacts.taxAnnualAmount?'$'+p.resoFacts.taxAnnualAmount.toLocaleString():null,
+      squareFeet: p.livingArea?p.livingArea.toLocaleString():null,
+      bedsBaths: p.bedrooms&&p.bathrooms?`${p.bedrooms} / ${p.bathrooms}`:null,
+      lotSize: p.resoFacts&&p.resoFacts.lotSize||null
+    }];
+    status.textContent = '✅ Found! Confirm the details below.';
+    showSearchResults();
+  } catch(e) {
+    status.textContent = '⚠ ' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = '📍 Lookup Address';
+}
+
+async function searchNewContact() {
+  const first = document.getElementById('ac_first').value.trim();
+  const last = document.getElementById('ac_last').value.trim();
+  if (!first || !last) { alert('Please enter at least a first and last name.'); return; }
+
+  acFormData = {
+    first, last,
+    spouse: document.getElementById('ac_spouse').value.trim(),
+    area: document.getElementById('ac_area').value.trim() || 'Chagrin Falls Ohio',
+    phone: document.getElementById('ac_phone').value.trim(),
+    email: document.getElementById('ac_email').value.trim()
+  };
+
+  const btn = document.getElementById('ac_searchBtn');
+  btn.disabled = true;
+  btn.textContent = '🔍 Searching…';
+
+  const status = document.getElementById('ac_status');
+  status.style.display = 'block';
+  status.textContent = 'Searching Cuyahoga and Geauga County records…';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: `Search Cuyahoga County and Geauga County Ohio property records to find the address of a person by name. Use fuzzy name matching — nicknames and variations should match (Jenny=Jennifer, Bob=Robert, Beth=Elizabeth, etc.). Search fiscaloffice.cuyahogacounty.us and auditor.co.geauga.oh.us. Return ONLY valid JSON array of matches, no markdown:
+[{"ownerName":"COHEN ROBERT","address":"123 Main St","city":"Chagrin Falls","state":"OH","zip":"44022","county":"cuy","marketValue":450000,"yearBuilt":"1985","propertyType":"Single Family"}]
+Return up to 5 best matches. If none found return empty array [].`,
+        messages: [{ role: 'user', content: `Find property records for someone named ${first} ${last} (may also go by variations/nicknames of these names)${acFormData.area ? ' in or near ' + acFormData.area : ''} in Cuyahoga or Geauga County Ohio.` }]
+      })
+    });
+
+    const d = await resp.json();
+    if (d.error) throw new Error(d.error.message);
+    const txt = d.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const m = txt.replace(/```json|```/g, '').match(/\[[\s\S]*\]/);
+    acSearchResults = m ? JSON.parse(m[0]) : [];
+
+    if (!acSearchResults.length) {
+      status.textContent = '⚠ No matches found in county records. Try a different spelling or area.';
+      btn.disabled = false;
+      btn.textContent = '🔍 Search Again';
+      return;
+    }
+
+    status.textContent = `Found ${acSearchResults.length} match${acSearchResults.length > 1 ? 'es' : ''}. Select the correct one:`;
+    showSearchResults();
+  } catch(e) {
+    status.textContent = '⚠ Search failed: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔍 Search Again';
+}
+
+function showSearchResults() {
+  const el = document.getElementById('ac_results');
+  el.style.display = 'block';
+  el.innerHTML = acSearchResults.map((r, i) => `
+    <div class="ac-result-item" id="acr_${i}" onclick="selectResult(${i})">
+      <div class="ac-result-name">${r.ownerName}</div>
+      <div class="ac-result-addr">${r.address}, ${r.city}, ${r.state} ${r.zip}</div>
+      ${r.marketValue ? `<div class="ac-result-val">Est. $${Math.round(r.marketValue).toLocaleString()}</div>` : ''}
+      <div style="font-size:.65rem;color:var(--txt3);margin-top:2px">${r.county==='gea'?'Geauga County':'Cuyahoga County'} · Built ${r.yearBuilt||'?'}</div>
+    </div>`).join('') +
+    `<div style="font-size:.68rem;color:var(--txt3);margin-top:4px">Don't see the right one? Try refining the name or area and search again.</div>`;
+}
+
+function selectResult(i) {
+  document.querySelectorAll('.ac-result-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById(`acr_${i}`).classList.add('selected');
+  acSelectedResult = acSearchResults[i];
+
+  const r = acSelectedResult;
+  const jointName = acFormData.spouse
+    ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+    : `${acFormData.first} ${acFormData.last}`;
+
+  document.getElementById('confirm_content').innerHTML = `
+    <div style="background:var(--surf2);border-radius:6px;padding:14px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:.9rem;color:var(--txt);margin-bottom:8px">Contact Info</div>
+      <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
+        <b>Name:</b> ${acFormData.last}, ${acFormData.first}<br>
+        <b>Joint Name:</b> ${jointName}<br>
+        ${acFormData.phone?`<b>Phone:</b> ${acFormData.phone}<br>`:''}
+        ${acFormData.email?`<b>Email:</b> ${acFormData.email}<br>`:''}
+      </div>
+    </div>
+    <div style="background:var(--surf2);border-radius:6px;padding:14px">
+      <div style="font-weight:700;font-size:.9rem;color:var(--txt);margin-bottom:8px">Property Found</div>
+      <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
+        <b>County Owner:</b> ${r.ownerName}<br>
+        <b>Address:</b> ${r.address}, ${r.city}, ${r.state} ${r.zip}<br>
+        <b>County:</b> ${r.county==='gea'?'Geauga':'Cuyahoga'}<br>
+        ${r.marketValue?`<b>Est. Value:</b> $${Math.round(r.marketValue).toLocaleString()}<br>`:''}
+      </div>
+    </div>`;
+
+  document.getElementById('addContactModal').style.display = 'none';
+  document.getElementById('confirmAddModal').style.display = 'flex';
+}
+
+function backToSearch() {
+  document.getElementById('confirmAddModal').style.display = 'none';
+  document.getElementById('addContactModal').style.display = 'flex';
+}
+
+async function confirmAddContact() {
+  if (!acSelectedResult) return;
+  const r = acSelectedResult;
+  const today = new Date().toISOString().split('T')[0];
+  const jointName = acFormData.spouse
+    ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+    : `${acFormData.first} ${acFormData.last}`;
+
+  // Write two rows if spouse, one row if single
+  const rows = [];
+  const baseRow = [
+    '', // col A: ContactName (Last, First) - filled below
+    jointName, // col B: JointName
+    r.address, // col C
+    r.city,    // col D
+    r.state,   // col E
+    r.zip,     // col F
+    acFormData.phone, // col G
+    '',        // col H: CRM ID (blank - new contact)
+    r.marketValue || '', // col I: HomeValue
+    '',        // col J: Lat (geocode on reload)
+    '',        // col K: Lon
+    r.county,  // col L: County
+    '',        // col M: PropData
+    today      // col N: DateAdded
+  ];
+
+  // Primary contact row
+  const row1 = [...baseRow];
+  row1[0] = `${acFormData.last}, ${acFormData.first}`;
+  row1[6] = acFormData.phone;
+  rows.push(row1);
+
+  // Spouse row if provided
+  if (acFormData.spouse) {
+    const row2 = [...baseRow];
+    const spouseParts = acFormData.spouse.trim().split(' ');
+    const spouseLast = spouseParts.length > 1 ? spouseParts[spouseParts.length-1] : acFormData.last;
+    const spouseFirst = spouseParts.length > 1 ? spouseParts.slice(0,-1).join(' ') : acFormData.spouse;
+    row2[0] = `${spouseLast}, ${spouseFirst}`;
+    row2[6] = ''; // phone on primary only
+    rows.push(row2);
+  }
+
+  // Append rows to sheet
+  try {
+    for (const row of rows) {
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'append', values: row })
+      });
+    }
+    hideAddContact();
+    alert(`✅ ${acFormData.first} ${acFormData.last} added! Click Refresh to see them on the map.`);
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+  }
+}
+
+function showProgress(show, text, pct) {
+  const el = document.getElementById('geoProgress');
+  el.style.display = show ? 'flex' : 'none';
+  if (text) document.getElementById('progLbl').textContent = text;
+  if (pct !== undefined) document.getElementById('progFill').style.width = pct+'%';
+}
+</script>
+</body>
+</html>
