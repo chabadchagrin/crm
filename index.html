@@ -979,7 +979,7 @@ async function searchNewContact() {
     email: document.getElementById('ac_email').value.trim()
   };
 
-  const btn = document.getElementById('ac_searchBtn');
+  const btn = document.getElementById('ac_actionBtn');
   btn.disabled = true;
   btn.textContent = '🔍 Searching…';
 
@@ -1027,7 +1027,7 @@ Return up to 5 best matches. If none found return empty array [].`,
   }
 
   btn.disabled = false;
-  btn.textContent = '🔍 Search Again';
+  btn.textContent = '🔍 Search County Records';
 }
 
 function showSearchResults() {
