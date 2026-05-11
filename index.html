@@ -122,6 +122,52 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .mpin.active{transform:rotate(-45deg) scale(1.3)}
 .mpin-n{transform:rotate(45deg);font-family:'DM Mono',monospace;font-size:8px;color:#fff;font-weight:500}
 .mpin.pin-gold .mpin-n{color:#333}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .hdr { height:auto; padding:10px 12px; flex-wrap:wrap; gap:8px; }
+  .logo { font-size:1rem; }
+  .legend { display:none; }
+  .toolbar { display:none; }
+  .main { flex-direction:column; }
+  #map { display:none; }
+  .sidebar { width:100%; height:100%; border-left:none; }
+  .ppanel { max-height:60vh; }
+  
+  /* Mobile top bar */
+  .mobile-bar { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--surf2); border-bottom:1px solid var(--border); flex-shrink:0; }
+  .mobile-bar input { flex:1; background:var(--bg); border:1px solid var(--border2); color:var(--txt); padding:7px 10px; font-family:'DM Sans',sans-serif; font-size:.85rem; border-radius:6px; outline:none; }
+  .mobile-add-btn { background:var(--accent); color:#fff; border:none; padding:7px 14px; border-radius:6px; font-size:.8rem; cursor:pointer; white-space:nowrap; font-family:'DM Sans',sans-serif; font-weight:500; }
+  
+  /* Mobile contact items bigger touch targets */
+  .citem { padding:13px 12px; }
+  .cname { font-size:.9rem; }
+  .caddr { font-size:.75rem; }
+  .cphone { font-size:.72rem; }
+  .cval { font-size:.72rem; }
+  
+  /* Mobile property panel full screen */
+  .ppanel { max-height:none; flex:1; overflow-y:auto; }
+  .pinner { padding:16px; }
+  .crm-name { font-size:1.1rem; }
+  .tab-btn { font-size:.72rem; padding:10px 6px; }
+  .pgrid { grid-template-columns:1fr 1fr; }
+  .pcell { padding:8px 10px; }
+  .pval { font-size:.82rem; }
+  .pval.big { font-size:.9rem; }
+
+  /* Mobile modal */
+  .modal { width:95vw; padding:20px; }
+  .modal h2 { font-size:1.1rem; }
+  .modal input { padding:10px; font-size:.9rem; }
+  .modal-btns { flex-direction:column; }
+  .modal-btns .btn { width:100%; padding:12px; font-size:.8rem; }
+}
+
+@media (min-width:769px) {
+  .mobile-bar { display:none; }
+  #desktop-srch { display:block !important; }
+}
 .tab-bar{display:flex;border-bottom:2px solid var(--border);background:var(--surf2);flex-shrink:0}
 .tab-btn{flex:1;padding:8px 6px;font-family:'DM Mono',monospace;font-size:.63rem;border:none;background:none;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;letter-spacing:.04em}
 .tab-btn:hover{color:var(--txt);background:var(--surf)}
@@ -226,7 +272,13 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="main">
     <div id="map"></div>
     <div class="sidebar">
-      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" oninput="applyFilter()"></div>
+      <!-- Mobile bar (hidden on desktop) -->
+      <div class="mobile-bar">
+        <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
+        <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
+      </div>
+      <!-- Desktop search (hidden on mobile via CSS) -->
+      <div class="srch" style="display:none" id="desktop-srch"><input type="text" id="srch" placeholder="Search contacts…" oninput="applyFilter()"></div>
       <div class="clist" id="clist">
         <div class="empty"><div class="ei">⏳</div><div class="et">Loading…</div></div>
       </div>
@@ -591,9 +643,10 @@ function setProp(mode, h, result) {
   const countyLabel = h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
   const tagClass = h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
 
+  const backBtn = `<button onclick="isMobile()?mobileBack():setProp('hint')" style="position:absolute;top:8px;${isMobile()?'left:8px':'right:8px'};background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px" title="${isMobile()?'Back':'Close'}">${isMobile()?'← Back':'✕'}</button>`;
   const header = `<div class="pinner" style="padding-bottom:6px;position:relative">
-    <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px" title="Close">✕</button>
-    <div class="crm-name" style="padding-right:24px">${h.displayName}</div>
+    ${backBtn}
+    <div class="crm-name" style="padding-right:24px;${isMobile()?'padding-left:52px':''}">${h.displayName}</div>
     <div class="crm-addr">${h.address}, ${h.city}, ${h.state} ${h.zip}</div>
     <span class="ctag ${tagClass}">${countyLabel}</span>
   </div>
@@ -1084,7 +1137,7 @@ async function confirmAddContact() {
     '',        // col J: Lat (geocode on reload)
     '',        // col K: Lon
     r.county,  // col L: County
-    '',        // col M: PropData
+    JSON.stringify({lastSalePrice:r.lastSalePrice,lastSaleDate:r.lastSaleDate,assessedValue:r.assessedValue,marketValue:r.marketValue?'$'+Math.round(r.marketValue).toLocaleString():null,propertyType:r.propertyType,yearBuilt:r.yearBuilt,squareFeet:r.squareFeet,bedsBaths:r.bedsBaths,lotSize:r.lotSize,annualTax:r.annualTax,source:'Zillow'}), // col M: PropData
     today      // col N: DateAdded
   ];
 
@@ -1118,6 +1171,23 @@ async function confirmAddContact() {
   } catch(e) {
     alert('Failed to save: ' + e.message);
   }
+}
+
+// ── MOBILE ──
+function mobileSrch() {
+  // sync mobile search to desktop search input and trigger filter
+  document.getElementById('srch').value = document.getElementById('srch-mobile').value;
+  applyFilter();
+}
+
+// On mobile, show property panel as overlay when contact selected
+function isMobile() { return window.innerWidth <= 768; }
+
+// Back button for mobile property panel
+function mobileBack() {
+  setProp('hint');
+  // scroll list back to top
+  document.getElementById('clist').scrollTop = 0;
 }
 
 function showProgress(show, text, pct) {
