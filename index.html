@@ -203,8 +203,25 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
       <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
-      <div><label>City *</label><input type="text" id="ac_city" placeholder="Chagrin Falls"></div>
-      <div><label>ZIP</label><input type="text" id="ac_zip" placeholder="44022" maxlength="5"></div>
+      <div style="grid-column:span 2">
+        <label>City *</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <button type="button" onclick="setCity('Chagrin Falls','44022')" style="font-size:.68rem;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Chagrin Falls 44022</button>
+          <button type="button" onclick="setCity('Chagrin Falls','44023')" style="font-size:.68rem;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Chagrin Falls 44023</button>
+          <button type="button" onclick="setCity('Bainbridge','44023')" style="font-size:.68rem;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Bainbridge 44023</button>
+          <button type="button" onclick="setCity('South Russell','44022')" style="font-size:.68rem;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">South Russell 44022</button>
+          <button type="button" onclick="setCity('Bentleyville','44022')" style="font-size:.68rem;padding:4px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Bentleyville 44022</button>
+        </div>
+        <input type="text" id="ac_city" placeholder="Or type city name">
+      </div>
+      <div style="grid-column:span 2">
+        <label>ZIP</label>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <button type="button" onclick="setZip('44022')" style="font-size:.68rem;padding:4px 14px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">44022</button>
+          <button type="button" onclick="setZip('44023')" style="font-size:.68rem;padding:4px 14px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">44023</button>
+        </div>
+        <input type="text" id="ac_zip" placeholder="Or type ZIP" maxlength="5">
+      </div>
     </div>
     <div id="ac_status" style="display:none;padding:10px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.75rem;color:var(--txt2)"></div>
     <div id="ac_results" style="display:none;margin-bottom:14px"></div>
@@ -1167,10 +1184,91 @@ async function confirmAddContact() {
       });
     }
     hideAddContact();
-    alert(`✅ ${acFormData.first} ${acFormData.last} added! Click Refresh to see them on the map.`);
+
+    // Geocode and add pin immediately without full refresh
+    const newHousehold = {
+      address: r.address,
+      city: r.city,
+      state: r.state,
+      zip: r.zip,
+      county: r.county,
+      displayName: acFormData.spouse
+        ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+        : `${acFormData.first} ${acFormData.last}`,
+      members: rows.map((row, i) => ({
+        contactName: row[0],
+        phone: i===0 ? acFormData.phone : '',
+        email: i===0 ? acFormData.email : '',
+        contactId: '',
+        sheetRow: 999 // placeholder - will be correct on next refresh
+      })),
+      homeValue: r.marketValue || null,
+      propDetails: {
+        lastSalePrice: r.lastSalePrice,
+        lastSaleDate: r.lastSaleDate,
+        assessedValue: r.assessedValue,
+        marketValue: r.marketValue ? '$'+Math.round(r.marketValue).toLocaleString() : null,
+        propertyType: r.propertyType,
+        yearBuilt: r.yearBuilt,
+        squareFeet: r.squareFeet,
+        bedsBaths: r.bedsBaths,
+        lotSize: r.lotSize,
+        annualTax: r.annualTax,
+        source: 'Zillow'
+      },
+      dateAdded: today,
+      lat: null, lon: null
+    };
+
+    households.push(newHousehold);
+    filtered = [...households];
+    markers.push(null);
+    renderList();
+    document.getElementById('totalLbl').textContent = `${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
+
+    // Geocode the new address
+    const newIdx = households.length - 1;
+    const geo = await geocodeOne(newHousehold);
+    if (geo) {
+      newHousehold.lat = geo.lat;
+      newHousehold.lon = geo.lon;
+      placePinAt(newIdx);
+      map.setView([geo.lat, geo.lon], 15, { animate: true });
+      // Save lat/lon to sheet for each member row
+      // We don't know exact row numbers yet so user can refresh to persist
+    }
+    renderList();
+
   } catch(e) {
     alert('Failed to save: ' + e.message);
   }
+}
+
+// ── ADD CONTACT HELPERS ──
+function setCity(city, zip) {
+  document.getElementById('ac_city').value = city;
+  document.getElementById('ac_zip').value = zip;
+  // highlight selected city button
+  document.querySelectorAll('[onclick^="setCity"]').forEach(b => {
+    b.style.background = 'var(--surf2)';
+    b.style.borderColor = 'var(--border2)';
+    b.style.color = 'var(--txt)';
+  });
+  event.target.style.background = 'var(--accent)';
+  event.target.style.borderColor = 'var(--accent)';
+  event.target.style.color = '#fff';
+}
+
+function setZip(zip) {
+  document.getElementById('ac_zip').value = zip;
+  document.querySelectorAll('[onclick^="setZip"]').forEach(b => {
+    b.style.background = 'var(--surf2)';
+    b.style.borderColor = 'var(--border2)';
+    b.style.color = 'var(--txt)';
+  });
+  event.target.style.background = 'var(--accent)';
+  event.target.style.borderColor = 'var(--accent)';
+  event.target.style.color = '#fff';
 }
 
 // ── MOBILE ──
