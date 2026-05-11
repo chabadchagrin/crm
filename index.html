@@ -1000,10 +1000,15 @@ async function searchNewContact() {
         model: 'claude-sonnet-4-5',
         max_tokens: 1500,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `Search Cuyahoga County and Geauga County Ohio property records to find the address of a person by name. Use fuzzy name matching — nicknames and variations should match (Jenny=Jennifer, Bob=Robert, Beth=Elizabeth, etc.). Search fiscaloffice.cuyahogacounty.us and auditor.co.geauga.oh.us. Return ONLY valid JSON array of matches, no markdown:
-[{"ownerName":"COHEN ROBERT","address":"123 Main St","city":"Chagrin Falls","state":"OH","zip":"44022","county":"cuy","marketValue":450000,"yearBuilt":"1985","propertyType":"Single Family"}]
-Return up to 5 best matches. If none found return empty array [].`,
-        messages: [{ role: 'user', content: `Find property records for someone named ${first} ${last} (may also go by variations/nicknames of these names)${acFormData.area ? ' in or near ' + acFormData.area : ''} in Cuyahoga or Geauga County Ohio.` }]
+        system: `You are searching Ohio county property records. Use the web_search tool to search these specific county sites by owner name. Try multiple name variations — nicknames, middle initials, legal vs common names (Jenny=Jennifer, Bob=Robert, Beth=Elizabeth, Mike=Michael, etc). Search both:
+1. Cuyahoga County: search myplace.cuyahogacounty.gov for the owner name
+2. Geauga County: search auditor.co.geauga.oh.us for the owner name
+Also try searching Google with: site:myplace.cuyahogacounty.gov OR site:auditor.co.geauga.oh.us [name]
+
+Return ONLY a valid JSON array of matches, no markdown, no explanation:
+[{"ownerName":"PISTELL JENNIFER J","address":"270 Applebrook Dr","city":"Chagrin Falls","state":"OH","zip":"44022","county":"cuy","marketValue":500000,"yearBuilt":"1964","propertyType":"Single Family"}]
+Up to 5 matches. Empty array [] if truly nothing found.`,
+        messages: [{ role: 'user', content: `Search Cuyahoga and Geauga County Ohio property records for owner name: "${last.toUpperCase()} ${first.toUpperCase()}" or variations. ${acFormData.area ? 'Location hint: ' + acFormData.area : ''}. Try the last name first format as that is how county records store names.` }]
       })
     });
 
