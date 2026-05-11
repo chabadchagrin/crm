@@ -147,49 +147,23 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <!-- ADD CONTACT MODAL -->
 <div class="modal-bg" id="addContactModal" style="display:none">
-  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+  <div class="modal" style="width:520px">
     <h2>＋ Add New Contact</h2>
-
-    <!-- Tab bar -->
-    <div class="tab-bar" style="margin-bottom:16px">
-      <button class="tab-btn active" id="actab-address" onclick="switchAcTab('address')">📍 I know the address</button>
-      <button class="tab-btn" id="actab-search" onclick="switchAcTab('search')">🔍 Search by name</button>
-    </div>
-
-    <!-- Shared fields -->
+    <p>Enter the contact's details. The app will look up their property data automatically.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
       <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
       <div><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
+      <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
+      <div><label>City *</label><input type="text" id="ac_city" placeholder="Chagrin Falls"></div>
+      <div><label>ZIP</label><input type="text" id="ac_zip" placeholder="44022" maxlength="5"></div>
     </div>
-
-    <!-- Address tab -->
-    <div id="actab-address-content">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="123 Main Street"></div>
-        <div><label>City *</label><input type="text" id="ac_city" placeholder="Chagrin Falls"></div>
-        <div><label>ZIP</label><input type="text" id="ac_zip" placeholder="44022" maxlength="5"></div>
-      </div>
-    </div>
-
-    <!-- Search tab -->
-    <div id="actab-search-content" style="display:none">
-      <div style="margin-bottom:12px">
-        <label>Area / City (optional but helps)</label>
-        <input type="text" id="ac_area" placeholder="Chagrin Falls, Gates Mills, etc.">
-      </div>
-      <div style="font-size:.7rem;color:var(--txt3);margin-bottom:12px;padding:8px;background:var(--surf2);border-radius:4px">
-        💡 Nicknames work — "Jenny" will find "Jennifer", "Bob" finds "Robert", etc.
-      </div>
-    </div>
-
     <div id="ac_status" style="display:none;padding:10px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.75rem;color:var(--txt2)"></div>
     <div id="ac_results" style="display:none;margin-bottom:14px"></div>
-
     <div class="modal-btns">
-      <button class="btn btn-pri" id="ac_actionBtn" onclick="handleAcAction()">📍 Lookup Address</button>
+      <button class="btn btn-pri" id="ac_actionBtn" onclick="lookupByAddress()">📍 Look Up Property</button>
       <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
     </div>
   </div>
