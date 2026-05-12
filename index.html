@@ -175,19 +175,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 </head>
 <body>
 
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h2>🔑 Anthropic API Key</h2>
-    <p>This app searches public Ohio property records. Your key is saved in this browser — enter once per computer.</p>
-    <label>Your API Key</label>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off">
-    <div class="modal-note">🔒 Stored in your browser only. Never sent anywhere except api.anthropic.com.</div>
-    <div class="modal-btns">
-      <button class="btn btn-pri" onclick="saveKey()">Save &amp; Open</button>
-      <button class="btn btn-sec" onclick="skipKey()">Skip</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- ADD CONTACT MODAL -->
 <div class="modal-bg" id="addContactModal" style="display:none">
@@ -331,7 +319,9 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxE-bzfstM9jfePzaKP_G
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ── INIT ──
-let API_KEY = ''; // kept for potential future use
+let API_KEY = '';
+function saveKey() { document.getElementById('app').style.visibility='visible'; initMap(); loadFromSheet(); }
+function skipKey() { saveKey(); }
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('app').style.visibility = 'visible';
   initMap();
