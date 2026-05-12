@@ -45,9 +45,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .leg-dot{width:9px;height:9px;border-radius:50%}
 .spacer{flex:1}
 .total{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3);flex-shrink:0}
-.key-ind{font-family:'DM Mono',monospace;font-size:.57rem;padding:3px 7px;border-radius:3px;cursor:pointer;border:1px solid;flex-shrink:0}
-.key-ok{background:rgba(76,175,125,.12);color:var(--green);border-color:rgba(76,175,125,.2)}
-.key-no{background:rgba(224,96,96,.12);color:var(--red);border-color:rgba(224,96,96,.2)}
+
 .toolbar{background:var(--surf2);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
 .toolbar-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
 .tlabel{font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);flex-shrink:0}
@@ -256,7 +254,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
     <div class="spacer"></div>
     <span class="total" id="totalLbl">Loading…</span>
-    <span class="key-ind key-no" id="keyBadge" onclick="showKeyModal()">⚠ No API Key</span>
+
   </header>
 
   <div class="toolbar">
@@ -332,35 +330,13 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxE-bzfstM9jfePzaKP_GVBXrvi2f4Cdch-K8hPPBiiXQLeRlYnYAbVamkzUJIXv089Ug/exec';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── API KEY ──
-let API_KEY = '';
-try { API_KEY = localStorage.getItem('crm_map_api_key') || ''; } catch(e) {}
-window.addEventListener('DOMContentLoaded', () => { closeModal(); }); // Zillow API used - no Anthropic key needed
-
-function saveKey() {
-  const v = document.getElementById('apiKeyInput').value.trim();
-  if (!v.startsWith('sk-ant')) { alert('Please enter a valid Anthropic API key (starts with sk-ant-)'); return; }
-  API_KEY = v;
-  try { localStorage.setItem('crm_map_api_key', v); } catch(e) {}
-  closeModal();
-}
-function skipKey() { closeModal(); }
-function closeModal() {
-  document.getElementById('modalBg').style.display = 'none';
+// ── INIT ──
+let API_KEY = ''; // kept for potential future use
+window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('app').style.visibility = 'visible';
-  updateKeyBadge();
-  if (!map) initMap();
+  initMap();
   loadFromSheet();
-}
-function showKeyModal() {
-  document.getElementById('apiKeyInput').value = API_KEY || '';
-  document.getElementById('modalBg').style.display = 'flex';
-}
-function updateKeyBadge() {
-  const b = document.getElementById('keyBadge');
-  if (API_KEY) { b.textContent = '✓ API Key'; b.className = 'key-ind key-ok'; }
-  else { b.textContent = '⚠ API Key'; b.className = 'key-ind key-no'; }
-}
+});
 
 // ── MAP ──
 let map;
@@ -427,7 +403,7 @@ async function loadFromSheet() {
     filtered = [...households];
     renderList();
     document.getElementById('totalLbl').textContent = `${households.length} households · ${dataRows.length} contacts`;
-    if (API_KEY) document.getElementById('prefetchBtn').disabled = false;
+    document.getElementById('prefetchBtn').disabled = false;
 
     // Place pins for already-geocoded addresses instantly
     markers = new Array(households.length).fill(null);
@@ -868,7 +844,7 @@ function exportCSV() {
 
   if (!list.length) { alert('No contacts match the selected criteria.'); return; }
 
-  const rows = [['Contact ID','First Name','Last Name','Home Value']];
+  const rows = [['Contact ID','First Name','Last Name','Address Notes']];
   list.forEach(h => {
     h.members.forEach(m => {
       const parts = m.contactName.split(',');
@@ -1010,74 +986,7 @@ async function lookupByAddress() {
   btn.textContent = '📍 Lookup Address';
 }
 
-async function searchNewContact() {
-  const first = document.getElementById('ac_first').value.trim();
-  const last = document.getElementById('ac_last').value.trim();
-  if (!first || !last) { alert('Please enter at least a first and last name.'); return; }
 
-  acFormData = {
-    first, last,
-    spouse: document.getElementById('ac_spouse').value.trim(),
-    area: document.getElementById('ac_area').value.trim() || 'Chagrin Falls Ohio',
-    phone: document.getElementById('ac_phone').value.trim(),
-    email: document.getElementById('ac_email').value.trim()
-  };
-
-  const btn = document.getElementById('ac_actionBtn');
-  btn.disabled = true;
-  btn.textContent = '🔍 Searching…';
-
-  const status = document.getElementById('ac_status');
-  status.style.display = 'block';
-  status.textContent = 'Searching Cuyahoga and Geauga County records…';
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1500,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `You are searching Ohio county property records. Use the web_search tool to search these specific county sites by owner name. Try multiple name variations — nicknames, middle initials, legal vs common names (Jenny=Jennifer, Bob=Robert, Beth=Elizabeth, Mike=Michael, etc). Search both:
-1. Cuyahoga County: search myplace.cuyahogacounty.gov for the owner name
-2. Geauga County: search auditor.co.geauga.oh.us for the owner name
-Also try searching Google with: site:myplace.cuyahogacounty.gov OR site:auditor.co.geauga.oh.us [name]
-
-Return ONLY a valid JSON array of matches, no markdown, no explanation:
-[{"ownerName":"PISTELL JENNIFER J","address":"270 Applebrook Dr","city":"Chagrin Falls","state":"OH","zip":"44022","county":"cuy","marketValue":500000,"yearBuilt":"1964","propertyType":"Single Family"}]
-Up to 5 matches. Empty array [] if truly nothing found.`,
-        messages: [{ role: 'user', content: `Search Cuyahoga and Geauga County Ohio property records for owner name: "${last.toUpperCase()} ${first.toUpperCase()}" or variations. ${acFormData.area ? 'Location hint: ' + acFormData.area : ''}. Try the last name first format as that is how county records store names.` }]
-      })
-    });
-
-    const d = await resp.json();
-    if (d.error) throw new Error(d.error.message);
-    const txt = d.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    const m = txt.replace(/```json|```/g, '').match(/\[[\s\S]*\]/);
-    acSearchResults = m ? JSON.parse(m[0]) : [];
-
-    if (!acSearchResults.length) {
-      status.textContent = '⚠ No matches found in county records. Try a different spelling or area.';
-      btn.disabled = false;
-      btn.textContent = '🔍 Search Again';
-      return;
-    }
-
-    status.textContent = `Found ${acSearchResults.length} match${acSearchResults.length > 1 ? 'es' : ''}. Select the correct one:`;
-    showSearchResults();
-  } catch(e) {
-    status.textContent = '⚠ Search failed: ' + e.message;
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🔍 Search County Records';
-}
 
 function showSearchResults() {
   const el = document.getElementById('ac_results');
@@ -1099,7 +1008,7 @@ function selectResult(i) {
 
   const r = acSelectedResult;
   const jointName = acFormData.spouse
-    ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+    ? `${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`
     : `${acFormData.first} ${acFormData.last}`;
 
   document.getElementById('confirm_content').innerHTML = `
@@ -1136,7 +1045,7 @@ async function confirmAddContact() {
   const r = acSelectedResult;
   const today = new Date().toISOString().split('T')[0];
   const jointName = acFormData.spouse
-    ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+    ? `${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`
     : `${acFormData.first} ${acFormData.last}`;
 
   // Write two rows if spouse, one row if single
@@ -1193,7 +1102,7 @@ async function confirmAddContact() {
       zip: r.zip,
       county: r.county,
       displayName: acFormData.spouse
-        ? `${acFormData.spouse} and ${acFormData.first} ${acFormData.last}`
+        ? `${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`
         : `${acFormData.first} ${acFormData.last}`,
       members: rows.map((row, i) => ({
         contactName: row[0],
