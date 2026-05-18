@@ -339,6 +339,7 @@ function initMap() {
 
 // ── STATE ──
 let households = [], filtered = [], markers = [], activeIdx = -1;
+let donationsByContactId = {}; // keyed by contact ID, array of donations
 
 const GEAUGA_ZIPS = new Set(['44021','44024','44026','44046','44047','44062','44072','44231','44234','44241','44255','44264']);
 const BORDER_ZIPS = new Set(['44022','44023','44040','44086']);
@@ -415,6 +416,117 @@ async function loadFromSheet() {
     document.getElementById('clist').innerHTML = `<div class="empty"><div class="ei">⚠️</div><div class="et">Could not load sheet</div><div class="es">${e.message}</div></div>`;
     showProgress(false);
   }
+}
+
+async function loadDonations() {
+  try {
+    const r = await fetch(SHEET_URL + '?action=readDonations');
+    const rows = await r.json();
+    if (!rows || rows.length < 2) return;
+    donationsByContactId = {};
+    rows.slice(1).forEach(row => {
+      if (!row[0]) return; // skip empty rows
+      const contactId = (row[0]||'').toString().trim();
+      const name      = (row[1]||'').toString().trim();
+      const amount    = parseFloat((row[2]||'0').toString().replace(/[^0-9.]/g,'')) || 0;
+      const date      = (row[3]||'').toString().trim();
+      const notes     = (row[4]||'').toString().trim();
+      if (!contactId || !amount) return;
+      if (!donationsByContactId[contactId]) donationsByContactId[contactId] = [];
+      donationsByContactId[contactId].push({ name, amount, date, notes });
+    });
+    // Sort each contact's donations by date descending
+    Object.keys(donationsByContactId).forEach(id => {
+      donationsByContactId[id].sort((a,b) => new Date(b.date) - new Date(a.date));
+    });
+    renderList(); // re-render to show giving data
+
+    // Add donors who have no address in the main sheet
+    mergeDonorsWithoutAddress();
+  } catch(e) {
+    console.log('Could not load donations:', e.message);
+  }
+}
+
+function mergeDonorsWithoutAddress() {
+  // Get all contact IDs already in households
+  const existingIds = new Set();
+  households.forEach(h => h.members.forEach(m => {
+    if (m.contactId) existingIds.add(m.contactId.toString());
+  }));
+
+  // Find donors not in any household
+  const newHouseholds = [];
+  const seenDonorIds = new Set();
+
+  Object.keys(donationsByContactId).forEach(contactId => {
+    if (existingIds.has(contactId)) return; // already in map
+    if (seenDonorIds.has(contactId)) return;
+    seenDonorIds.add(contactId);
+
+    const donations = donationsByContactId[contactId];
+    const donorName = donations[0]?.name || '';
+    // Parse "Last, First" format
+    const parts = donorName.split(',');
+    const displayName = parts.length >= 2
+      ? parts[1].trim() + ' ' + parts[0].trim()
+      : donorName;
+
+    newHouseholds.push({
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      county: '',
+      displayName,
+      members: [{
+        contactName: donorName,
+        phone: '',
+        email: '',
+        contactId,
+        sheetRow: null
+      }],
+      jointNames: [],
+      homeValue: null,
+      propDetails: null,
+      dateAdded: '',
+      lat: null,
+      lon: null,
+      noAddress: true
+    });
+  });
+
+  if (newHouseholds.length > 0) {
+    households = [...households, ...newHouseholds];
+    filtered = [...households];
+    markers = [...markers, ...new Array(newHouseholds.length).fill(null)];
+    document.getElementById('totalLbl').textContent =
+      `${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
+    renderList();
+  }
+}
+
+// Get aggregated giving stats for a household
+function getGivingStats(h) {
+  const allDonations = [];
+  h.members.forEach(m => {
+    const d = donationsByContactId[m.contactId] || [];
+    d.forEach(don => allDonations.push(don));
+  });
+  if (!allDonations.length) return null;
+  // deduplicate by amount+date
+  const seen = new Set();
+  const unique = allDonations.filter(d => {
+    const key = d.amount + '|' + d.date;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+  unique.sort((a,b) => new Date(b.date) - new Date(a.date));
+  const total = unique.reduce((s,d) => s + d.amount, 0);
+  const largest = Math.max(...unique.map(d => d.amount));
+  const lastDate = unique[0]?.date || '';
+  const firstDate = unique[unique.length-1]?.date || '';
+  return { total, count: unique.length, largest, lastDate, firstDate, donations: unique };
 }
 
 function reloadSheet() {
@@ -575,9 +687,10 @@ function renderList() {
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="cname">${h.displayName}</div>
-        <div class="caddr">${h.address}, ${h.city} ${h.zip}</div>
+        <div class="caddr">${h.noAddress ? '<span style="color:var(--txt3);font-style:italic">No address on file</span>' : h.address+', '+h.city+' '+h.zip}</div>
         ${phones?`<div class="cphone">${phones}</div>`:''}
         ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
+        ${(()=>{const g=getGivingStats(h);return g?`<div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $${Math.round(g.total).toLocaleString()} · ${g.count} gift${g.count!==1?'s':''}</div>`:'';})()}
       </div>
       ${h.homeValue?'<span class="ck">✓</span>':''}
     </div>`;
@@ -623,10 +736,11 @@ function setProp(mode, h, result) {
   if (mode==='hint') { el.innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view property records</p></div>'; return; }
 
   const idx = households.indexOf(h);
-  const countyLabel = h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
+  const countyLabel = h.noAddress ? 'No Address' : h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
   const tagClass = h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
 
   const backBtn = `<button onclick="isMobile()?mobileBack():setProp('hint')" style="position:absolute;top:8px;${isMobile()?'left:8px':'right:8px'};background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px" title="${isMobile()?'Back':'Close'}">${isMobile()?'← Back':'✕'}</button>`;
+  const giving = getGivingStats(h);
   const header = `<div class="pinner" style="padding-bottom:6px;position:relative">
     ${backBtn}
     <div class="crm-name" style="padding-right:24px;${isMobile()?'padding-left:52px':''}">${h.displayName}</div>
@@ -635,7 +749,8 @@ function setProp(mode, h, result) {
   </div>
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-prop-${idx}" onclick="showTab(${idx},'prop')">🏠 Property</button>
-    <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts (${h.members.length})</button>
+    <button class="tab-btn" id="tab-giving-${idx}" onclick="showTab(${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
+    <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
   </div>`;
 
   if (mode==='loading') {
@@ -682,11 +797,41 @@ function setProp(mode, h, result) {
 
   const grid = cells.length
     ? `<div class="pgrid">${cells.map(([k,v,cls])=>`<div class="pcell"><div class="pkey">${k}</div><div class="pval ${cls}">${v}</div></div>`).join('')}</div>`
-    : '<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>';
+    : h.noAddress
+      ? `<div style="font-size:.8rem;color:var(--txt2);padding:8px 0">No address on file.<br><br><button class="retry-btn" style="background:rgba(37,99,235,.1);border-color:var(--accent);color:var(--accent)" onclick="hideAddContact();showAddContact()">＋ Add Address</button></div>`
+      : '<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>';
+
+  // Build giving tab
+  let givingHtml = '';
+  if (giving) {
+    const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e){return d;} };
+    const fmtAmt = a => '$' + a.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    givingHtml = `
+      <div class="pgrid" style="margin-bottom:12px">
+        <div class="pcell"><div class="pkey">Total Given</div><div class="pval big">${fmtAmt(giving.total)}</div></div>
+        <div class="pcell"><div class="pkey">Gifts</div><div class="pval">${giving.count}</div></div>
+        <div class="pcell"><div class="pkey">Largest Gift</div><div class="pval grn">${fmtAmt(giving.largest)}</div></div>
+        <div class="pcell"><div class="pkey">Last Gift</div><div class="pval">${fmtDate(giving.lastDate)}</div></div>
+      </div>
+      <div class="psec-title">Donation History</div>
+      ${giving.donations.map(d=>`
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:.78rem;font-weight:500;color:var(--txt)">${fmtAmt(d.amount)}</div>
+            ${d.notes?`<div style="font-size:.67rem;color:var(--txt3);margin-top:1px">${d.notes}</div>`:''}
+          </div>
+          <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;margin-left:12px">${fmtDate(d.date)}</div>
+        </div>`).join('')}`;
+  } else {
+    givingHtml = '<div style="font-size:.78rem;color:var(--txt3);padding:8px 0">No donation history found.<br><small>Make sure their Contact ID matches between the main sheet and Donations sheet.</small></div>';
+  }
 
   el.innerHTML = header +
     `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">
       ${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}
+    </div>
+    <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
+      ${givingHtml}
     </div>
     <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
       ${contactsHtml}
@@ -854,7 +999,7 @@ function exportCSV() {
 
 // ── TABS ──
 function showTab(idx, tab) {
-  ['prop','contacts'].forEach(t => {
+  ['prop','giving','contacts'].forEach(t => {
     const btn = document.getElementById(`tab-${t}-${idx}`);
     const content = document.getElementById(`tabcontent-${t}-${idx}`);
     if (btn) btn.classList.toggle('active', t===tab);
