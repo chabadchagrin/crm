@@ -208,16 +208,24 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </header>
 
   <div class="toolbar">
-    <span class="tlabel">Tiers</span>
-    <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="tier1" value="500000" oninput="recolorAll()"></div>
-    <div class="tier-wrap"><span class="tier-lbl gold">Gold &lt;</span><input type="number" class="tier-input" id="tier2" value="1000000" oninput="recolorAll()"></div>
-    <span class="tier-lbl red">Red ↑</span>
-    <div class="toolbar-sep"></div>
+
     <span class="tlabel">Color by</span>
-    <select id="colorBy" onchange="recolorAll()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
+    <select id="colorBy" onchange="switchColorMode()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
       <option value="value">Home Value</option>
       <option value="giving">Giving</option>
     </select>
+    <!-- Value tiers -->
+    <div id="valueTiers" style="display:flex;align-items:center;gap:4px">
+      <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="tier1" value="500000" oninput="recolorAll()"></div>
+      <div class="tier-wrap"><span class="tier-lbl gold">Gold &lt;</span><input type="number" class="tier-input" id="tier2" value="1000000" oninput="recolorAll()"></div>
+      <span class="tier-lbl red">Red ↑</span>
+    </div>
+    <!-- Giving tiers -->
+    <div id="givingTiers" style="display:none;align-items:center;gap:4px">
+      <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="gtier1" value="1000" oninput="recolorAll()"></div>
+      <div class="tier-wrap"><span class="tier-lbl gold">Gold &lt;</span><input type="number" class="tier-input" id="gtier2" value="5000" oninput="recolorAll()"></div>
+      <span class="tier-lbl red">Red ↑</span>
+    </div>
     <div class="toolbar-sep"></div>
     <span class="tlabel">Filter</span>
     <input type="number" class="tier-input" id="minValue" placeholder="Min $" style="width:100px" oninput="applyFilter()">
@@ -323,12 +331,7 @@ async function loadFromSheet(){
       if(dateAdded&&!h.dateAdded)h.dateAdded=dateAdded;
     });
     households=Object.values(addrMap).map(h=>({...h,displayName:buildDisplayName(h)}));
-    // Sort by last name
-    households.sort((a,b)=>{
-      const la=a.members[0]?.contactName.split(',')[0].trim().toLowerCase()||a.displayName.toLowerCase();
-      const lb=b.members[0]?.contactName.split(',')[0].trim().toLowerCase()||b.displayName.toLowerCase();
-      return la.localeCompare(lb);
-    });
+    sortHouseholds();
     filtered=[...households];
     markers=new Array(households.length).fill(null);
     renderList();
@@ -408,6 +411,15 @@ function getGivingStats(h){
 
 function tryParse(v){try{return typeof v==='string'?JSON.parse(v):v;}catch(e){return null;}}
 
+function sortHouseholds(){
+  households.sort((a,b)=>{
+    const la=a.members[0]?.contactName.split(',')[0].trim().toLowerCase()||a.displayName.toLowerCase();
+    const lb=b.members[0]?.contactName.split(',')[0].trim().toLowerCase()||b.displayName.toLowerCase();
+    return la.localeCompare(lb);
+  });
+  filtered=[...households];
+}
+
 function reloadSheet(){
   households=[];filtered=[];markers.forEach(m=>m&&map.removeLayer(m));markers=[];
   activeIdx=-1;donationsByContactId={};setProp('hint');renderList();loadFromSheet();
@@ -479,19 +491,30 @@ function getTier(i){
   const mode=document.getElementById('colorBy')?.value||'value';
   if(mode==='giving'){
     const g=getGivingStats(h);if(!g)return'grey';
-    if(g.total<1000)return'green';if(g.total<5000)return'gold';return'red';
+    const g1=parseFloat(document.getElementById('gtier1')?.value)||1000;
+    const g2=parseFloat(document.getElementById('gtier2')?.value)||5000;
+    if(g.total<g1)return'green';if(g.total<g2)return'gold';return'red';
   }
   const val=h.homeValue;if(!val)return'grey';
   const t1=parseFloat(document.getElementById('tier1').value)||500000;
   const t2=parseFloat(document.getElementById('tier2').value)||1000000;
   if(val<t1)return'green';if(val<t2)return'gold';return'red';
 }
+function switchColorMode(){
+  const mode=document.getElementById('colorBy').value;
+  document.getElementById('valueTiers').style.display=mode==='value'?'flex':'none';
+  document.getElementById('givingTiers').style.display=mode==='giving'?'flex':'none';
+  recolorAll();
+}
+
 function recolorAll(){
   const mode=document.getElementById('colorBy')?.value||'value';
   if(mode==='giving'){
-    document.getElementById('leg1').textContent='< $1,000';
-    document.getElementById('leg2').textContent='< $5,000';
-    document.getElementById('leg3').textContent='$5,000+';
+    const g1=parseFloat(document.getElementById('gtier1').value)||1000;
+    const g2=parseFloat(document.getElementById('gtier2').value)||5000;
+    document.getElementById('leg1').textContent='< $'+g1.toLocaleString();
+    document.getElementById('leg2').textContent='< $'+g2.toLocaleString();
+    document.getElementById('leg3').textContent='$'+g2.toLocaleString()+'+';
   } else {
     const t1=parseFloat(document.getElementById('tier1').value)||500000;
     const t2=parseFloat(document.getElementById('tier2').value)||1000000;
