@@ -674,6 +674,7 @@ async function retryLookup(i){households[i].propDetails=null;households[i].homeV
 
 // ── FETCH PROPERTY ──
 async function fetchProp(h){
+  if(!h.address||h.noAddress)return{error:true,message:'No address on file.'};
   const addr=encodeURIComponent(`${h.address}, ${h.city}, OH${h.zip?' '+h.zip:''}`);
   try{
     const resp=await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${addr}`,{
@@ -720,7 +721,7 @@ async function startPrefetch(){
   for(let i=0;i<households.length;i++){
     if(!prefetching)break;
     const h=households[i];
-    if(h.homeValue||h.noAddress)continue;
+    if(h.homeValue||h.noAddress||!h.address)continue;
     document.getElementById('pfText').textContent=`[${done+failed+1}/${unfetched.length}] ${h.displayName}`;
     const result=await fetchProp(h);
     if(!result.error){
