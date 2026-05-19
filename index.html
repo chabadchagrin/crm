@@ -291,9 +291,10 @@ async function loadFromSheet(){
   try{
     const r=await fetch(SHEET_URL+'?action=read');
     const rows=await r.json();
-    const dataRows=rows.slice(1).filter(r=>r[0]&&r[2]);
+    const allRows=rows.slice(1); // keep all rows to preserve sheet row numbers
     const addrMap={};
-    dataRows.forEach((r,idx)=>{
+    allRows.forEach((r,idx)=>{
+      if(!r[0])return; // skip completely empty rows
       const contactName=(r[0]||'').toString().trim();
       const jointName=(r[1]||'').toString().trim();
       const address=(r[2]||'').toString().trim();
@@ -309,6 +310,7 @@ async function loadFromSheet(){
       const propDetails=r[12]?tryParse(r[12]):null;
       const dateAdded=r[13]?(r[13]||'').toString().trim():'';
       const sheetRow=idx+2;
+      if(!address){return;} // skip no-address rows for map (they come from donations sheet)
       const key=address.toLowerCase().trim()+'|'+zip;
       if(!addrMap[key])addrMap[key]={address,city,state,zip,county,lat,lon,homeValue,sheetRow,members:[],jointNames:[],propDetails,dateAdded,noAddress:false};
       const h=addrMap[key];
