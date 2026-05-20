@@ -187,7 +187,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <button class="btn btn-sec" id="imp_donations_btn" onclick="setImportType('donations')" style="flex:1">💝 Donations</button>
     </div>
     <div id="imp_format" style="font-size:.72rem;color:var(--txt2);background:var(--surf2);padding:10px;border-radius:6px;margin-bottom:12px;line-height:1.7"></div>
-    <div class="import-zone" onclick="document.getElementById('csvFile').click()">
+    <div class="import-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDrop(event)">
       <p>Click to select CSV file<br><strong>or drag and drop here</strong></p>
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSV(event)">
     </div>
@@ -264,6 +264,27 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- ADD DONATION MODAL -->
+<div class="modal-bg" id="addDonationModal" style="display:none">
+  <div class="modal" style="width:400px">
+    <h2>💝 Add Donation</h2>
+    <div id="add_don_name" style="font-size:.85rem;color:var(--txt2);margin-bottom:16px"></div>
+    <label>Contact</label>
+    <select id="don_contact" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px"></select>
+    <label>Amount *</label>
+    <input type="number" id="don_amount" placeholder="180.00" step="0.01" min="0">
+    <label>Date *</label>
+    <input type="date" id="don_date">
+    <label>Notes</label>
+    <input type="text" id="don_notes" placeholder="Annual gala, etc.">
+    <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveDonation()">Save Donation</button>
+      <button class="btn btn-sec" onclick="document.getElementById('addDonationModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── PASSWORD ──
@@ -330,8 +351,8 @@ async function loadAll(){
 
     // Sort alphabetically by last name
     households.sort((a,b)=>{
-      const la=a.members[0]?.last_name?.toLowerCase()||a.displayName.toLowerCase();
-      const lb=b.members[0]?.last_name?.toLowerCase()||b.displayName.toLowerCase();
+      const la=(a.members[0]?.last_name||'').toLowerCase()||a.displayName.toLowerCase();
+      const lb=(b.members[0]?.last_name||'').toLowerCase()||b.displayName.toLowerCase();
       return la.localeCompare(lb);
     });
 
@@ -502,11 +523,12 @@ function setProp(mode,h,result){
   const data=result||h.property_data||{};
 
   // Contacts tab
-  const contactsHtml=(h.members||[]).map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
-    <div style="font-weight:600;font-size:.82rem;color:var(--txt)">${m.first_name} ${m.last_name}</div>
+  const contactsHtml=(h.members||[]).map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border);position:relative">
+    <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${m.first_name} ${m.last_name}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
+    <button onclick="deleteContact('${m.id}','${m.first_name} ${m.last_name}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
   </div>`).join('');
 
   // Giving tab
@@ -514,19 +536,30 @@ function setProp(mode,h,result){
   if(giving){
     const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
     const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    givingHtml=`<div class="pgrid" style="margin-bottom:12px">
+    givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Giving Summary</div>
+      <button onclick="showAddDonation('${idx}')" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
+    </div>
+    <div class="pgrid" style="margin-bottom:12px">
       <div class="pcell"><div class="pkey">Total Given</div><div class="pval big">${fa(giving.total)}</div></div>
       <div class="pcell"><div class="pkey">Gifts</div><div class="pval">${giving.count}</div></div>
       <div class="pcell"><div class="pkey">Largest Gift</div><div class="pval grn">${fa(giving.largest)}</div></div>
       <div class="pcell"><div class="pkey">Last Gift</div><div class="pval">${fd(giving.lastDate)}</div></div>
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px">Donation History</div>
-    ${giving.donations.map(d=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-size:.78rem;font-weight:500">${fa(d.amount)}</div>${d.notes?`<div style="font-size:.67rem;color:var(--txt3)">${d.notes}</div>`:''}</div>
-      <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;margin-left:12px">${fd(d.date)}</div>
+    ${giving.donations.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:.78rem;font-weight:500">${fa(d.amount)}</div>
+        ${d.notes?`<div style="font-size:.67rem;color:var(--txt3)">${d.notes}</div>`:''}
+      </div>
+      <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;margin:0 8px">${fd(d.date)}</div>
+      <button onclick="deleteDonation('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px;flex-shrink:0" title="Delete donation">🗑</button>
     </div>`).join('')}`;
   }else{
-    givingHtml='<div style="font-size:.78rem;color:var(--txt3);padding:8px 0">No donation history on file.</div>';
+    givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:.78rem;color:var(--txt3)">No donation history on file.</div>
+      <button onclick="showAddDonation('${idx}')" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
+    </div>`;
   }
 
   // Property tab
@@ -777,8 +810,20 @@ function setImportType(type){
   }
 }
 
+function handleDrop(event){
+  event.preventDefault();event.stopPropagation();
+  document.getElementById('dropZone').style.borderColor='var(--border2)';
+  const file=event.dataTransfer.files[0];
+  if(!file||!file.name.endsWith('.csv')){alert('Please drop a CSV file.');return;}
+  processFile(file);
+}
+
 function handleCSV(event){
   const file=event.target.files[0];if(!file)return;
+  processFile(file);
+}
+
+function processFile(file){
   const reader=new FileReader();
   reader.onload=async e=>{
     const lines=e.target.result.split('\n').filter(l=>l.trim());
@@ -865,6 +910,84 @@ async function importDonations(lines){
   }
   status.textContent=`✅ Done! ${added} donations added, ${skipped} skipped (duplicates or no match).`;
   loadAll();
+}
+
+// ── ADD DONATION ──
+let addDonHouseholdIdx = -1;
+function showAddDonation(idx){
+  addDonHouseholdIdx = parseInt(idx);
+  const h = households[addDonHouseholdIdx];
+  document.getElementById('add_don_name').textContent = h.displayName;
+  // Populate contact selector
+  const sel = document.getElementById('don_contact');
+  sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${m.first_name} ${m.last_name}</option>`).join('');
+  // Default date to today
+  document.getElementById('don_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('don_amount').value = '';
+  document.getElementById('don_notes').value = '';
+  document.getElementById('don_status').style.display = 'none';
+  document.getElementById('addDonationModal').style.display = 'flex';
+}
+
+async function saveDonation(){
+  const amount = parseFloat(document.getElementById('don_amount').value);
+  const date = document.getElementById('don_date').value;
+  const notes = document.getElementById('don_notes').value.trim();
+  const contactId = document.getElementById('don_contact').value;
+  const status = document.getElementById('don_status');
+  if(!amount||!date){alert('Please enter amount and date.');return;}
+  status.style.display='block';status.textContent='Saving…';
+  try{
+    await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+    // Update local state
+    const h = households[addDonHouseholdIdx];
+    const member = h.members.find(m=>m.id===contactId);
+    if(member){
+      if(!member.donations)member.donations=[];
+      member.donations.unshift({contact_id:contactId,amount,date,notes});
+      member.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    }
+    document.getElementById('addDonationModal').style.display='none';
+    renderList();
+    // Refresh the panel
+    setProp('data',h);
+    showTab(addDonHouseholdIdx,'giving');
+  }catch(e){status.textContent='⚠ '+e.message;}
+}
+
+// ── DELETE ──
+async function deleteContact(contactId, name, hIdx){
+  if(!confirm(`Delete ${name}?
+
+If this is the only contact in the household, the household and all its property data will also be deleted.`))return;
+  try{
+    await sb('contacts?id=eq.'+contactId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    // Check if household still has contacts
+    const h=households[hIdx];
+    h.members=h.members.filter(m=>m.id!==contactId);
+    if(h.members.length===0){
+      // Delete household too
+      await sb('households?id=eq.'+h.id,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      if(markers[hIdx])map.removeLayer(markers[hIdx]);
+      households.splice(hIdx,1);filtered=[...households];markers.splice(hIdx,1);
+      setProp('hint');activeIdx=-1;
+    }else{
+      setProp('data',h);showTab(hIdx,'contacts');
+    }
+    document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
+    renderList();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+
+async function deleteDonation(donationId, hIdx){
+  if(!confirm('Delete this donation?'))return;
+  try{
+    await sb('donations?id=eq.'+donationId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    const h=households[hIdx];
+    h.members.forEach(m=>{m.donations=(m.donations||[]).filter(d=>d.id!==donationId);});
+    renderList();
+    setProp('data',h);showTab(hIdx,'giving');
+  }catch(e){alert('Delete failed: '+e.message);}
 }
 
 // ── PIN & UTILS ──
