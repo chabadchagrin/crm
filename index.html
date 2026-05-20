@@ -342,18 +342,32 @@ async function loadAll(){
       donMap[d.contact_id].push(d);
     });
 
-    households=(hRows||[]).map(h=>({
-      ...h,
-      members:(h.contacts||[]).map(c=>({...c,donations:donMap[c.id]||[]})),
-      displayName:buildDisplayName(h),
-      noAddress:!h.address
-    }));
+    households=(hRows||[]).map(h=>{
+      // Deduplicate contacts by id
+      const seen=new Set();
+      const uniqueContacts=(h.contacts||[]).filter(c=>{
+        if(seen.has(c.id))return false;
+        seen.add(c.id);return true;
+      });
+      return{
+        ...h,
+        members:uniqueContacts.map(c=>({...c,donations:donMap[c.id]||[]})),
+        displayName:buildDisplayName(h),
+        noAddress:!h.address
+      };
+    });
 
     // Sort alphabetically by last name
     households.sort((a,b)=>{
-      const la=(a.members[0]?.last_name||'').toLowerCase()||a.displayName.toLowerCase();
-      const lb=(b.members[0]?.last_name||'').toLowerCase()||b.displayName.toLowerCase();
-      return la.localeCompare(lb);
+      // Get last name: try members, then extract from joint_name/displayName
+      const getLastName=h=>{
+        const fromMember=h.members?.find(m=>m.last_name)?.last_name;
+        if(fromMember)return fromMember.toLowerCase();
+        const name=h.joint_name||h.displayName||'';
+        // Last word of the name is usually the last name
+        return name.trim().split(' ').pop().toLowerCase();
+      };
+      return getLastName(a).localeCompare(getLastName(b));
     });
 
     filtered=[...households];
