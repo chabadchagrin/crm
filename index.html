@@ -10,7 +10,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#f7f8fa;--surf:#fff;--surf2:#f0f2f5;--border:#dde1e9;--border2:#c8cdd8;
-  --accent:#2563eb;--accent2:#1d4ed8;--gold:#b45309;--green:#16a34a;--red:#dc2626;
+  --accent:#2563eb;--gold:#b45309;--green:#16a34a;--red:#dc2626;
   --grey:#9ca3af;--txt:#111827;--txt2:#4b5563;--txt3:#9ca3af;
 }
 html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt)}
@@ -37,10 +37,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .tier-lbl.green{color:var(--green)}.tier-lbl.gold{color:var(--gold)}.tier-lbl.red{color:var(--red)}
 .tier-input{background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 6px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none;width:95px}
 .tier-input:focus{border-color:var(--accent)}
-.prog-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
-.prog-bar{width:140px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
-.prog-lbl{font-family:'DM Mono',monospace;font-size:.57rem;color:var(--txt3);white-space:nowrap}
 .main{display:flex;flex:1;overflow:hidden}
 #map{flex:1;z-index:1}
 .sidebar{width:340px;background:var(--surf);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
@@ -52,25 +48,22 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .citem{padding:9px 11px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:8px;transition:background .1s;position:relative}
 .citem:hover{background:var(--surf2)}
 .citem.active{background:rgba(37,99,235,.06);border-left:2px solid var(--accent)}
-.citem.active .cname{color:var(--accent)}
-.citem.dimmed{opacity:.2}
 .pindot{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.5rem;color:#fff;flex-shrink:0;margin-top:1px;background:var(--grey)}
 .pindot.green{background:var(--green)}.pindot.gold{background:var(--gold);color:#333}.pindot.red{background:var(--red)}
 .cname{font-size:.78rem;font-weight:500;color:var(--txt);line-height:1.2}
-.caddr{font-size:.65rem;color:var(--txt2);margin-top:2px;line-height:1.3}
+.caddr{font-size:.65rem;color:var(--txt2);margin-top:2px}
 .cphone{font-size:.62rem;color:var(--txt3);margin-top:2px;font-family:'DM Mono',monospace}
 .cval{font-size:.62rem;font-family:'DM Mono',monospace;margin-top:2px}
 .cval.green{color:var(--green)}.cval.gold{color:var(--gold)}.cval.red{color:var(--red)}
 .ck{position:absolute;right:7px;bottom:5px;font-family:'DM Mono',monospace;font-size:.48rem;color:var(--green);opacity:.8}
-.ppanel{border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;max-height:360px;overflow-y:auto;position:relative}
+.ppanel{border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;max-height:380px;overflow-y:auto}
 .pinner{padding:13px}
-.crm-name{font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt);line-height:1.2}
-.crm-addr{font-size:.68rem;color:var(--txt2);margin-top:3px;line-height:1.4}
+.crm-name{font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt)}
+.crm-addr{font-size:.68rem;color:var(--txt2);margin-top:3px}
 .ctag{display:inline-block;font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.1em;padding:2px 5px;border-radius:3px;margin-top:4px}
 .ctag.cuy{background:rgba(37,99,235,.1);color:var(--accent)}
 .ctag.gea{background:rgba(22,163,74,.1);color:var(--green)}
 .ctag.unk{background:rgba(156,163,175,.15);color:var(--txt3)}
-.psec-title{font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px}
 .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:7px}
 .pcell{background:var(--surf);padding:6px 9px}
 .pkey{font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px}
@@ -79,61 +72,50 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .pval.grn{color:var(--green)}
 .psrc{font-size:.56rem;color:var(--txt3);font-style:italic;margin-top:5px}
 .hint{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;gap:5px;color:var(--txt3);font-size:.68rem}
-.hint .hi{font-size:1.5rem;opacity:.2;margin-bottom:3px}
+.hint .hi{font-size:1.5rem;opacity:.2}
 .loading-row{display:flex;align-items:center;gap:8px;padding:16px 13px;color:var(--txt3);font-size:.7rem}
 .spin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.errblk{padding:12px 13px;color:var(--red);font-size:.7rem;line-height:1.6;display:flex;flex-direction:column;gap:8px}
+.errblk{padding:12px 13px;color:var(--red);font-size:.7rem;display:flex;flex-direction:column;gap:8px}
 .retry-btn{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.65rem;padding:5px 12px;border-radius:4px;cursor:pointer;align-self:flex-start}
-.retry-btn:hover{background:rgba(220,38,38,.18)}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 24px;text-align:center;gap:10px}
-.empty .ei{font-size:2.2rem;opacity:.12}
-.empty .et{font-family:'Lora',serif;font-size:.9rem;color:var(--txt2)}
-.empty .es{font-size:.67rem;color:var(--txt3);line-height:1.65;max-width:220px}
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.pfbar{background:var(--surf2);border-top:1px solid var(--border);padding:7px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0}
-.pf-text{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pf-stop{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--red);cursor:pointer;background:none;border:none;padding:0}
-.mpin{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid rgba(0,0,0,.15)}
-.mpin.pin-grey{background:var(--grey)}.mpin.pin-green{background:var(--green)}.mpin.pin-gold{background:var(--gold)}.mpin.pin-red{background:var(--red)}
-.mpin.active{transform:rotate(-45deg) scale(1.3)}
-.mpin-n{transform:rotate(45deg);font-family:'DM Mono',monospace;font-size:8px;color:#fff;font-weight:500}
-.mpin.pin-gold .mpin-n{color:#333}
-.tab-bar{display:flex;border-bottom:2px solid var(--border);background:var(--surf2);flex-shrink:0}
-.tab-btn{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:.6rem;border:none;background:none;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;letter-spacing:.03em}
+.tab-bar{display:flex;border-bottom:2px solid var(--border);background:var(--surf2)}
+.tab-btn{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:.6rem;border:none;background:none;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
 .tab-btn:hover{color:var(--txt);background:var(--surf)}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--surf)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center}
 .modal{background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto}
 .modal h2{font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px}
-.modal p{font-size:.78rem;color:var(--txt2);line-height:1.65;margin-bottom:16px}
+.modal p{font-size:.78rem;color:var(--txt2);margin-bottom:16px}
 .modal label{display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px}
 .modal input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px}
 .modal input:focus{border-color:var(--accent)}
 .modal-btns{display:flex;gap:10px;flex-wrap:wrap}
-.modal-note{font-size:.67rem;color:var(--txt3);line-height:1.55;margin-bottom:16px;padding:9px 11px;background:var(--surf2);border-radius:4px;border-left:2px solid var(--border2)}
-.ac-result-item{padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:background .15s}
-.ac-result-item:hover{background:var(--surf2);border-color:var(--accent)}
-.ac-result-item.selected{background:rgba(37,99,235,.06);border-color:var(--accent)}
-.ac-result-name{font-weight:600;font-size:.82rem;color:var(--txt)}
-.ac-result-addr{font-size:.72rem;color:var(--txt2);margin-top:2px}
-.ac-result-val{font-size:.68rem;color:var(--green);margin-top:2px;font-family:'DM Mono',monospace}
-/* Mobile */
+.mpin{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid rgba(0,0,0,.15)}
+.mpin.pin-grey{background:var(--grey)}.mpin.pin-green{background:var(--green)}.mpin.pin-gold{background:var(--gold)}.mpin.pin-red{background:var(--red)}
+.mpin.active{transform:rotate(-45deg) scale(1.3)}
+.mpin-n{transform:rotate(45deg);font-family:'DM Mono',monospace;font-size:8px;color:#fff;font-weight:500}
+.mpin.pin-gold .mpin-n{color:#333}
+.pfbar{background:var(--surf2);border-top:1px solid var(--border);padding:7px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+.pf-text{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-stop{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--red);cursor:pointer;background:none;border:none}
+.prog-wrap{display:flex;align-items:center;gap:6px}
+.prog-bar{width:140px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.prog-lbl{font-family:'DM Mono',monospace;font-size:.57rem;color:var(--txt3);white-space:nowrap}
+.import-zone{border:2px dashed var(--border2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:12px}
+.import-zone:hover{border-color:var(--accent)}
+.import-zone p{font-size:.78rem;color:var(--txt3)}
+.import-zone strong{color:var(--accent)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @media(max-width:768px){
   .legend{display:none}.toolbar{display:none}
-  .main{flex-direction:column}
-  #map{display:none}
+  .main{flex-direction:column}#map{display:none}
   .sidebar{width:100%;height:100%;border-left:none}
   .ppanel{max-height:none;flex:1;overflow-y:auto}
   .mobile-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surf2);border-bottom:1px solid var(--border);flex-shrink:0}
   .mobile-bar input{flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none}
   .mobile-add-btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:.8rem;cursor:pointer;white-space:nowrap}
-  .citem{padding:13px 12px}.cname{font-size:.9rem}.caddr{font-size:.75rem}
-  .modal{width:95vw;padding:20px}
-  .modal-btns{flex-direction:column}
-  .modal-btns .btn{width:100%;padding:12px}
+  .modal{width:95vw;padding:20px}.modal-btns{flex-direction:column}.modal-btns .btn{width:100%;padding:12px}
 }
 @media(min-width:769px){.mobile-bar{display:none}}
 </style>
@@ -144,13 +126,15 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <div class="modal-bg" id="addContactModal" style="display:none">
   <div class="modal">
     <h2>＋ Add New Contact</h2>
-    <p>Enter the contact's details. The app will look up their property data automatically.</p>
+    <p>Enter details — the app will look up property data automatically.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
       <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
       <div><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
+      <div><label>CivicCRM ID</label><input type="text" id="ac_crmid" placeholder="1073"></div>
+      <div><label>Spouse CivicCRM ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
       <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
       <div style="grid-column:span 2">
         <label>City *</label>
@@ -161,7 +145,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
           <button type="button" onclick="setCity('South Russell','44022')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">South Russell 44022</button>
           <button type="button" onclick="setCity('Bentleyville','44022')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Bentleyville 44022</button>
         </div>
-        <input type="text" id="ac_city" placeholder="Or type city name" style="margin-bottom:0">
+        <input type="text" id="ac_city" placeholder="Or type city" style="margin-bottom:0">
       </div>
       <div style="grid-column:span 2">
         <label>ZIP</label>
@@ -173,7 +157,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
     </div>
     <div id="ac_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
-    <div id="ac_results" style="display:none;margin-bottom:12px"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" id="ac_actionBtn" onclick="lookupByAddress()">📍 Look Up Property</button>
       <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
@@ -187,9 +170,30 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <h2>✅ Confirm Add Contact</h2>
     <div id="confirm_content" style="margin-bottom:16px"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" onclick="confirmAddContact()">Add to Sheet</button>
-      <button class="btn btn-sec" onclick="backToSearch()">← Back</button>
+      <button class="btn btn-pri" onclick="confirmAddContact()">Add to Database</button>
+      <button class="btn btn-sec" onclick="document.getElementById('confirmAddModal').style.display='none';document.getElementById('addContactModal').style.display='flex'">← Back</button>
       <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-bg" id="importModal" style="display:none">
+  <div class="modal" style="width:580px">
+    <h2>⬆ Import CSV</h2>
+    <p>Import contacts or donations from a CivicCRM export. Existing records (matched by CivicCRM ID) will be updated. New records will be added.</p>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-pri" id="imp_contacts_btn" onclick="setImportType('contacts')" style="flex:1">👥 Contacts</button>
+      <button class="btn btn-sec" id="imp_donations_btn" onclick="setImportType('donations')" style="flex:1">💝 Donations</button>
+    </div>
+    <div id="imp_format" style="font-size:.72rem;color:var(--txt2);background:var(--surf2);padding:10px;border-radius:6px;margin-bottom:12px;line-height:1.7"></div>
+    <div class="import-zone" onclick="document.getElementById('csvFile').click()">
+      <p>Click to select CSV file<br><strong>or drag and drop here</strong></p>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSV(event)">
+    </div>
+    <div id="imp_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-sec" onclick="document.getElementById('importModal').style.display='none'">Close</button>
     </div>
   </div>
 </div>
@@ -208,19 +212,16 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </header>
 
   <div class="toolbar">
-
     <span class="tlabel">Color by</span>
     <select id="colorBy" onchange="switchColorMode()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
       <option value="value">Home Value</option>
       <option value="giving">Giving</option>
     </select>
-    <!-- Value tiers -->
     <div id="valueTiers" style="display:flex;align-items:center;gap:4px">
       <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="tier1" value="500000" oninput="recolorAll()"></div>
       <div class="tier-wrap"><span class="tier-lbl gold">Gold &lt;</span><input type="number" class="tier-input" id="tier2" value="1000000" oninput="recolorAll()"></div>
       <span class="tier-lbl red">Red ↑</span>
     </div>
-    <!-- Giving tiers -->
     <div id="givingTiers" style="display:none;align-items:center;gap:4px">
       <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="gtier1" value="1000" oninput="recolorAll()"></div>
       <div class="tier-wrap"><span class="tier-lbl gold">Gold &lt;</span><input type="number" class="tier-input" id="gtier2" value="5000" oninput="recolorAll()"></div>
@@ -235,7 +236,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-gold" id="prefetchBtn" onclick="startPrefetch()" disabled>⚡ Pre-fetch All</button>
     <button class="btn btn-green" onclick="exportCSV()">⬇ Export</button>
     <button class="btn btn-pri" onclick="showAddContact()">＋ Add Contact</button>
-    <button class="btn btn-sec" onclick="reloadSheet()">🔄 Refresh</button>
+    <button class="btn btn-sec" onclick="showImport()">⬆ Import</button>
+    <button class="btn btn-sec" onclick="loadAll()">🔄 Refresh</button>
     <div class="prog-wrap" id="geoProgress" style="display:none">
       <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
       <span class="prog-lbl" id="progLbl">Loading…</span>
@@ -250,7 +252,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
       <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" oninput="applyFilter()"></div>
-      <div class="clist" id="clist"><div class="empty"><div class="ei">⏳</div><div class="et">Loading…</div></div></div>
+      <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
   </div>
@@ -274,215 +276,103 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   }
 })();
 
-const SHEET_URL='https://script.google.com/macros/s/AKfycbxE-bzfstM9jfePzaKP_GVBXrvi2f4Cdch-K8hPPBiiXQLeRlYnYAbVamkzUJIXv089Ug/exec';
+// ── SUPABASE CONFIG ──
+const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
 const RAPIDAPI_KEY='14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function sb(path,opts={}){
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+    ...opts
+  });
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
 
 // ── MAP ──
 let map;
 function initMap(){
-  map=L.map('map',{zoomControl:true}).setView([41.45,-81.3],10);
+  map=L.map('map').setView([41.45,-81.3],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
 }
 
 // ── STATE ──
 let households=[],filtered=[],markers=[],activeIdx=-1;
-let donationsByContactId={};
 
-const GEAUGA_ZIPS=new Set(['44021','44024','44026','44046','44047','44062','44072','44231','44234','44241','44255','44264']);
-const BORDER_ZIPS=new Set(['44022','44023','44040','44086']);
-function guessCounty(zip){const z=(zip||'').replace(/\D/g,'').substring(0,5);if(GEAUGA_ZIPS.has(z))return'gea';if(BORDER_ZIPS.has(z))return'unk';return'cuy';}
+// ── LOAD ALL ──
+async function loadAll(){
+  households=[];filtered=[];markers.forEach(m=>m&&map.removeLayer(m));markers=[];activeIdx=-1;
+  setProp('hint');
+  document.getElementById('clist').innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';
 
-// ── LOAD SHEET ──
-async function loadFromSheet(){
-  showProgress(true,'Reading Google Sheet…',0);
   try{
-    const r=await fetch(SHEET_URL+'?action=read');
-    const rows=await r.json();
-    const allRows=rows.slice(1); // keep all rows to preserve sheet row numbers
-    const addrMap={};
-    allRows.forEach((r,idx)=>{
-      if(!r[0])return; // skip completely empty rows
-      const contactName=(r[0]||'').toString().trim();
-      const jointName=(r[1]||'').toString().trim();
-      const address=(r[2]||'').toString().trim();
-      const city=(r[3]||'').toString().trim();
-      const state=(r[4]||'OH').toString().trim();
-      const zip=(r[5]||'').toString().replace(/\D/g,'').substring(0,5);
-      const phone=(r[6]||'').toString().trim();
-      const contactId=(r[7]||'').toString().trim();
-      const homeValue=r[8]?parseFloat(r[8])||null:null;
-      const lat=r[9]?parseFloat(r[9])||null:null;
-      const lon=r[10]?parseFloat(r[10])||null:null;
-      const county=r[11]?(r[11]||'').toString().trim():guessCounty(zip);
-      const propDetails=r[12]?tryParse(r[12]):null;
-      const dateAdded=r[13]?(r[13]||'').toString().trim():'';
-      const sheetRow=idx+2;
-      if(!address){return;} // skip no-address rows for map (they come from donations sheet)
-      const key=address.toLowerCase().trim()+'|'+zip;
-      if(!addrMap[key])addrMap[key]={address,city,state,zip,county,lat,lon,homeValue,sheetRow,members:[],jointNames:[],propDetails,dateAdded,noAddress:false};
-      const h=addrMap[key];
-      h.members.push({contactName,phone,contactId,sheetRow,email:''});
-      if(jointName&&!h.jointNames.includes(jointName))h.jointNames.push(jointName);
-      if(homeValue&&!h.homeValue)h.homeValue=homeValue;
-      if(lat&&!h.lat){h.lat=lat;h.lon=lon;}
-      if(county&&county!=='unk'&&h.county==='unk')h.county=county;
-      if(propDetails&&!h.propDetails)h.propDetails=propDetails;
-      if(dateAdded&&!h.dateAdded)h.dateAdded=dateAdded;
+    // Load households with their contacts
+    const hRows=await sb('households?select=*,contacts(*)&order=created_at.asc');
+    // Load all donations
+    const donations=await sb('donations?select=*&order=date.desc');
+
+    // Build donation lookup by contact id
+    const donMap={};
+    (donations||[]).forEach(d=>{
+      if(!donMap[d.contact_id])donMap[d.contact_id]=[];
+      donMap[d.contact_id].push(d);
     });
-    households=Object.values(addrMap).map(h=>({...h,displayName:buildDisplayName(h)}));
-    sortHouseholds();
+
+    households=(hRows||[]).map(h=>({
+      ...h,
+      members:(h.contacts||[]).map(c=>({...c,donations:donMap[c.id]||[]})),
+      displayName:buildDisplayName(h),
+      noAddress:!h.address
+    }));
+
+    // Sort alphabetically by last name
+    households.sort((a,b)=>{
+      const la=a.members[0]?.last_name?.toLowerCase()||a.displayName.toLowerCase();
+      const lb=b.members[0]?.last_name?.toLowerCase()||b.displayName.toLowerCase();
+      return la.localeCompare(lb);
+    });
+
     filtered=[...households];
     markers=new Array(households.length).fill(null);
-    renderList();
-    document.getElementById('totalLbl').textContent=`${households.length} households`;
-    document.getElementById('prefetchBtn').disabled=false;
-    placeKnownPins();
-    // Load donations in parallel
-    loadDonations();
-    const needsGeo=households.filter(h=>!h.lat&&!h.noAddress&&h.address);
-    if(needsGeo.length>0)await geocodeMissing(needsGeo);
-    else{showProgress(false);fitMap();}
-  }catch(e){
-    document.getElementById('clist').innerHTML=`<div class="empty"><div class="ei">⚠️</div><div class="et">Could not load</div><div class="es">${e.message}</div></div>`;
-    showProgress(false);
-  }
-}
 
-// ── DONATIONS ──
-async function loadDonations(){
-  try{
-    const r=await fetch(SHEET_URL+'?action=readDonations');
-    const rows=await r.json();
-    if(!rows||rows.length<2)return;
-    donationsByContactId={};
-    rows.slice(1).forEach(row=>{
-      if(!row[0])return;
-      const contactId=(row[0]||'').toString().trim();
-      const name=(row[1]||'').toString().trim();
-      const amount=parseFloat((row[2]||'0').toString().replace(/[$,\s]/g,''))||0;
-      const date=(row[3]||'').toString().trim();
-      const notes=(row[4]||'').toString().trim();
-      if(!contactId||!amount)return;
-      if(!donationsByContactId[contactId])donationsByContactId[contactId]=[];
-      donationsByContactId[contactId].push({name,amount,date,notes});
-    });
-    Object.keys(donationsByContactId).forEach(id=>{
-      donationsByContactId[id].sort((a,b)=>new Date(b.date)-new Date(a.date));
-    });
-    mergeDonorsWithoutAddress();
-    renderList();
-  }catch(e){console.log('Donations error:',e.message);}
-}
-
-function mergeDonorsWithoutAddress(){
-  const existingIds=new Set();
-  households.forEach(h=>h.members.forEach(m=>{if(m.contactId)existingIds.add(m.contactId.toString());}));
-  const seenIds=new Set();
-  const newH=[];
-  Object.keys(donationsByContactId).forEach(contactId=>{
-    if(existingIds.has(contactId)||seenIds.has(contactId))return;
-    seenIds.add(contactId);
-    const donations=donationsByContactId[contactId];
-    const donorName=donations[0]?.name||'';
-    const parts=donorName.split(',');
-    const displayName=parts.length>=2?parts[1].trim()+' '+parts[0].trim():donorName;
-    newH.push({address:'',city:'',state:'',zip:'',county:'',displayName,members:[{contactName:donorName,phone:'',email:'',contactId,sheetRow:null}],jointNames:[],homeValue:null,propDetails:null,dateAdded:'',lat:null,lon:null,noAddress:true});
-  });
-  if(newH.length>0){
-    households=[...households,...newH];
-    filtered=[...households];
-    markers=[...markers,...new Array(newH.length).fill(null)];
     document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
+    document.getElementById('prefetchBtn').disabled=false;
+
+    // Place known pins
+    households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
+    fitMap();
     renderList();
+
+    // Geocode missing
+    const needsGeo=households.filter(h=>!h.lat&&h.address);
+    if(needsGeo.length)await geocodeMissing(needsGeo);
+
+  }catch(e){
+    document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
   }
-}
-
-function getGivingStats(h){
-  const all=[];
-  h.members.forEach(m=>{(donationsByContactId[m.contactId]||[]).forEach(d=>all.push(d));});
-  if(!all.length)return null;
-  const seen=new Set();
-  const unique=all.filter(d=>{const k=d.amount+'|'+d.date;if(seen.has(k))return false;seen.add(k);return true;});
-  unique.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const total=unique.reduce((s,d)=>s+d.amount,0);
-  return{total,count:unique.length,largest:Math.max(...unique.map(d=>d.amount)),lastDate:unique[0]?.date||'',donations:unique};
-}
-
-function tryParse(v){try{return typeof v==='string'?JSON.parse(v):v;}catch(e){return null;}}
-
-function sortHouseholds(){
-  households.sort((a,b)=>{
-    const la=a.members[0]?.contactName.split(',')[0].trim().toLowerCase()||a.displayName.toLowerCase();
-    const lb=b.members[0]?.contactName.split(',')[0].trim().toLowerCase()||b.displayName.toLowerCase();
-    return la.localeCompare(lb);
-  });
-  filtered=[...households];
-}
-
-function reloadSheet(){
-  households=[];filtered=[];markers.forEach(m=>m&&map.removeLayer(m));markers=[];
-  activeIdx=-1;donationsByContactId={};setProp('hint');renderList();loadFromSheet();
 }
 
 // ── DISPLAY NAME ──
 function buildDisplayName(h){
-  if(h.jointNames.length>0)return h.jointNames[0];
-  if(h.members.length===1)return fmtName(h.members[0].contactName);
-  const firsts=h.members.map(m=>{const p=m.contactName.split(',');return p.length>=2?p[1].trim():m.contactName;});
-  const last=h.members[0].contactName.split(',')[0].trim();
-  return firsts.join(' & ')+' '+last;
-}
-function fmtName(cn){const p=cn.split(',');return p.length>=2?p[1].trim()+' '+p[0].trim():cn;}
-
-// ── GEOCODE ──
-function placeKnownPins(){households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});}
-function placePinAt(i){
-  const h=households[i];
-  if(markers[i])map.removeLayer(markers[i]);
-  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
-  m.on('click',()=>selectHousehold(i));
-  markers[i]=m;
-}
-async function geocodeMissing(needsGeo){
-  showProgress(true,`Geocoding ${needsGeo.length} addresses…`,0);
-  for(let i=0;i<needsGeo.length;i++){
-    const h=needsGeo[i];const idx=households.indexOf(h);
-    document.getElementById('progLbl').textContent=`Geocoding ${i+1}/${needsGeo.length}…`;
-    document.getElementById('progFill').style.width=`${Math.round((i/needsGeo.length)*100)}%`;
-    const geo=await geocodeOne(h);
-    if(geo){
-      h.lat=geo.lat;h.lon=geo.lon;placePinAt(idx);renderList();
-      for(const m of h.members)await writeRow([{row:m.sheetRow,col:10,value:geo.lat},{row:m.sheetRow,col:11,value:geo.lon}]);
-    }
-    if(i<needsGeo.length-1)await sleep(1200);
-  }
-  document.getElementById('progFill').style.width='100%';
-  document.getElementById('progLbl').textContent='✓ Done';
-  setTimeout(()=>showProgress(false),2000);fitMap();
-}
-async function geocodeOne(h){
-  const q=encodeURIComponent(`${h.address}, ${h.city}, ${h.state} ${h.zip}, USA`);
-  const attempts=[q,encodeURIComponent(`${h.address}, ${h.city}, ${h.state}, USA`),encodeURIComponent(`${h.address}, ${h.zip}, USA`)];
-  for(const aq of attempts){
-    try{
-      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${aq}&limit=1&countrycodes=us`,{headers:{'Accept-Language':'en','User-Agent':'CRMPropertyMap/1.0'}});
-      const d=await r.json();
-      if(d&&d.length)return{lat:+d[0].lat,lon:+d[0].lon};
-      await sleep(500);
-    }catch(e){}
-  }
-  return null;
-}
-function fitMap(){
-  const v=households.filter(h=>h.lat);
-  if(v.length>1){const lats=v.map(h=>h.lat),lons=v.map(h=>h.lon);map.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]],{padding:[50,50]});}
-  else if(v.length===1)map.setView([v[0].lat,v[0].lon],14);
+  if(h.joint_name)return h.joint_name;
+  const contacts=h.contacts||[];
+  if(!contacts.length)return'Unknown';
+  if(contacts.length===1)return contacts[0].first_name+' '+contacts[0].last_name;
+  const firsts=contacts.map(c=>c.first_name).join(' & ');
+  return firsts+' '+contacts[0].last_name;
 }
 
-// ── WRITE ──
-async function writeRow(updates){
-  try{await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'writeRow',updates})});}catch(e){}
+// ── GIVING STATS ──
+function getGivingStats(h){
+  const all=[];
+  (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>all.push(d)));
+  if(!all.length)return null;
+  all.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
+  return{total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
 }
 
 // ── TIERS ──
@@ -491,15 +381,16 @@ function getTier(i){
   const mode=document.getElementById('colorBy')?.value||'value';
   if(mode==='giving'){
     const g=getGivingStats(h);if(!g)return'grey';
-    const g1=parseFloat(document.getElementById('gtier1')?.value)||1000;
-    const g2=parseFloat(document.getElementById('gtier2')?.value)||5000;
+    const g1=parseFloat(document.getElementById('gtier1').value)||1000;
+    const g2=parseFloat(document.getElementById('gtier2').value)||5000;
     if(g.total<g1)return'green';if(g.total<g2)return'gold';return'red';
   }
-  const val=h.homeValue;if(!val)return'grey';
+  const val=h.home_value;if(!val)return'grey';
   const t1=parseFloat(document.getElementById('tier1').value)||500000;
   const t2=parseFloat(document.getElementById('tier2').value)||1000000;
   if(val<t1)return'green';if(val<t2)return'gold';return'red';
 }
+
 function switchColorMode(){
   const mode=document.getElementById('colorBy').value;
   document.getElementById('valueTiers').style.display=mode==='value'?'flex':'none';
@@ -515,7 +406,7 @@ function recolorAll(){
     document.getElementById('leg1').textContent='< $'+g1.toLocaleString();
     document.getElementById('leg2').textContent='< $'+g2.toLocaleString();
     document.getElementById('leg3').textContent='$'+g2.toLocaleString()+'+';
-  } else {
+  }else{
     const t1=parseFloat(document.getElementById('tier1').value)||500000;
     const t2=parseFloat(document.getElementById('tier2').value)||1000000;
     document.getElementById('leg1').textContent='< $'+t1.toLocaleString();
@@ -531,43 +422,37 @@ function applyFilter(){
   const q=document.getElementById('srch').value.toLowerCase();
   const minVal=parseFloat(document.getElementById('minValue').value)||0;
   filtered=households.filter(h=>{
-    const textMatch=h.displayName.toLowerCase().includes(q)||h.address.toLowerCase().includes(q)||h.city.toLowerCase().includes(q);
-    if(!textMatch)return false;
-    if(minVal>0)return h.homeValue&&h.homeValue>=minVal;
+    const text=h.displayName.toLowerCase()+(h.address||'').toLowerCase()+(h.city||'').toLowerCase();
+    if(!text.includes(q))return false;
+    if(minVal>0)return h.home_value&&h.home_value>=minVal;
     return true;
   });
   households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(filtered.includes(h)?1:0.12);});
   document.getElementById('filterCount').textContent=minVal>0?`${filtered.length} match`:'';
   renderList();
 }
-function clearFilter(){
-  document.getElementById('minValue').value='';document.getElementById('srch').value='';
-  filtered=[...households];
-  households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(1);});
-  document.getElementById('filterCount').textContent='';renderList();
-}
+function clearFilter(){document.getElementById('minValue').value='';document.getElementById('srch').value='';filtered=[...households];households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(1);});document.getElementById('filterCount').textContent='';renderList();}
 function mobileSrch(){document.getElementById('srch').value=document.getElementById('srch-mobile').value;applyFilter();}
 
 // ── RENDER LIST ──
 function renderList(){
   const el=document.getElementById('clist');
-  if(!households.length){el.innerHTML='<div class="empty"><div class="ei">🗂️</div><div class="et">No contacts</div></div>';return;}
-  if(!filtered.length){el.innerHTML='<div class="empty"><div class="ei">🔍</div><div class="et">No matches</div></div>';return;}
-  const giving_summary=h=>{const g=getGivingStats(h);return g?`<div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $${Math.round(g.total).toLocaleString()} · ${g.count} gift${g.count!==1?'s':''}</div>`:'';}
+  if(!filtered.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
   el.innerHTML=filtered.map(h=>{
     const i=households.indexOf(h);const tier=getTier(i);
-    const phones=[...new Set(h.members.map(m=>m.phone).filter(Boolean))].join(' · ');
-    const valStr=h.homeValue?'$'+h.homeValue.toLocaleString():'';
-    return`<div class="citem${i===activeIdx?' active':''}${!filtered.includes(h)?' dimmed':''}" onclick="selectHousehold(${i})">
+    const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
+    const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
+    const g=getGivingStats(h);
+    return`<div class="citem${i===activeIdx?' active':''}" onclick="selectHousehold(${i})">
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="cname">${h.displayName}</div>
-        <div class="caddr">${h.noAddress?'<span style="color:var(--txt3);font-style:italic">No address on file</span>':h.address+', '+h.city+' '+h.zip}</div>
+        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+' '+(h.zip||'')}</div>
         ${phones?`<div class="cphone">${phones}</div>`:''}
         ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
-        ${giving_summary(h)}
+        ${g?`<div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $${Math.round(g.total).toLocaleString()} · ${g.count} gift${g.count!==1?'s':''}</div>`:''}
       </div>
-      ${h.homeValue?'<span class="ck">✓</span>':''}
+      ${h.home_value?'<span class="ck">✓</span>':''}
     </div>`;
   }).join('');
 }
@@ -578,19 +463,14 @@ async function selectHousehold(i){
   activeIdx=i;const h=households[i];
   if(markers[i]){markers[i].setIcon(pinIcon(i,true,getTier(i)));map.setView([h.lat,h.lon],15,{animate:true});}
   renderList();
-  if(h.propDetails||h.noAddress){setProp('data',h);return;}
+  if(h.property_data||h.noAddress){setProp('data',h);return;}
   setProp('loading',h);
   const result=await fetchProp(h);
   if(!result.error){
-    h.homeValue=result.homeValue||h.homeValue;h.propDetails=result;
+    h.home_value=result.homeValue||h.home_value;
+    h.property_data=result;
     if(result.county&&result.county!=='unk')h.county=result.county;
-    for(const m of h.members){
-      const upd=[];
-      if(h.homeValue)upd.push({row:m.sheetRow,col:9,value:h.homeValue});
-      if(h.county)upd.push({row:m.sheetRow,col:12,value:h.county});
-      if(h.propDetails)upd.push({row:m.sheetRow,col:13,value:JSON.stringify(h.propDetails)});
-      if(upd.length)await writeRow(upd);
-    }
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({home_value:h.home_value,county:h.county,property_data:result})});
     recolorAll();
   }
   renderList();setProp('data',h,result);
@@ -603,13 +483,12 @@ function setProp(mode,h,result){
   const idx=households.indexOf(h);
   const countyLabel=h.noAddress?'No Address':h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
   const tagClass=h.noAddress?'unk':h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
-  const isMob=window.innerWidth<=768;
-  const backBtn=`<button onclick="${isMob?'setProp(\'hint\')':'setProp(\'hint\')'}" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>`;
   const giving=getGivingStats(h);
+
   const header=`<div class="pinner" style="padding-bottom:6px;position:relative">
-    ${backBtn}
+    <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>
     <div class="crm-name" style="padding-right:24px">${h.displayName}</div>
-    <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':h.address+', '+h.city+', '+h.state+' '+h.zip}</div>
+    <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
     <span class="ctag ${tagClass}">${countyLabel}</span>
   </div>
   <div class="tab-bar">
@@ -618,36 +497,32 @@ function setProp(mode,h,result){
     <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
   </div>`;
 
-  if(mode==='loading'){el.innerHTML=header+`<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>`;return;}
+  if(mode==='loading'){el.innerHTML=header+'<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>';return;}
 
-  const data=result||h.propDetails||{};
+  const data=result||h.property_data||{};
 
   // Contacts tab
-  const contactsHtml=h.members.map(m=>{
-    const parts=m.contactName.split(',');
-    const fullName=parts.length>=2?parts[1].trim()+' '+parts[0].trim():m.contactName;
-    return`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
-      <div style="font-weight:600;font-size:.82rem;color:var(--txt)">${fullName}</div>
-      ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
-      ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
-      <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CRM ID: ${m.contactId}</div>
-    </div>`;
-  }).join('');
+  const contactsHtml=(h.members||[]).map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+    <div style="font-weight:600;font-size:.82rem;color:var(--txt)">${m.first_name} ${m.last_name}</div>
+    ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
+    ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
+    <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
+  </div>`).join('');
 
   // Giving tab
   let givingHtml='';
   if(giving){
     const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
-    const fa=a=>'$'+a.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     givingHtml=`<div class="pgrid" style="margin-bottom:12px">
       <div class="pcell"><div class="pkey">Total Given</div><div class="pval big">${fa(giving.total)}</div></div>
       <div class="pcell"><div class="pkey">Gifts</div><div class="pval">${giving.count}</div></div>
       <div class="pcell"><div class="pkey">Largest Gift</div><div class="pval grn">${fa(giving.largest)}</div></div>
       <div class="pcell"><div class="pkey">Last Gift</div><div class="pval">${fd(giving.lastDate)}</div></div>
     </div>
-    <div class="psec-title">Donation History</div>
-    ${giving.donations.map(d=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-size:.78rem;font-weight:500;color:var(--txt)">${fa(d.amount)}</div>${d.notes?`<div style="font-size:.67rem;color:var(--txt3);margin-top:1px">${d.notes}</div>`:''}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px">Donation History</div>
+    ${giving.donations.map(d=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:.78rem;font-weight:500">${fa(d.amount)}</div>${d.notes?`<div style="font-size:.67rem;color:var(--txt3)">${d.notes}</div>`:''}</div>
       <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;margin-left:12px">${fd(d.date)}</div>
     </div>`).join('')}`;
   }else{
@@ -656,7 +531,7 @@ function setProp(mode,h,result){
 
   // Property tab
   const cells=[
-    h.homeValue&&['Market Value','$'+Math.round(h.homeValue).toLocaleString(),'grn'],
+    h.home_value&&['Market Value','$'+Math.round(h.home_value).toLocaleString(),'grn'],
     data.lastSalePrice&&['Last Sale Price',data.lastSalePrice,'big'],
     data.lastSaleDate&&['Sale Date',data.lastSaleDate,''],
     data.assessedValue&&['Assessed Value',data.assessedValue,''],
@@ -668,7 +543,7 @@ function setProp(mode,h,result){
     data.annualTax&&['Annual Tax',data.annualTax,''],
   ].filter(Boolean);
   const grid=h.noAddress
-    ?`<div style="font-size:.8rem;color:var(--txt2);padding:8px 0">No address on file.<br><br><button class="retry-btn" style="background:rgba(37,99,235,.1);border-color:var(--accent);color:var(--accent)" onclick="hideAddContact();showAddContact()">＋ Add Address</button></div>`
+    ?'<div style="font-size:.8rem;color:var(--txt2);padding:8px 0">No address on file.</div>'
     :cells.length?`<div class="pgrid">${cells.map(([k,v,cls])=>`<div class="pcell"><div class="pkey">${k}</div><div class="pval ${cls}">${v}</div></div>`).join('')}</div>`
     :'<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>';
 
@@ -695,7 +570,7 @@ function showTab(idx,tab){
     if(content)content.style.display=t===tab?'block':'none';
   });
 }
-async function retryLookup(i){households[i].propDetails=null;households[i].homeValue=null;selectHousehold(i);}
+async function retryLookup(i){households[i].property_data=null;households[i].home_value=null;selectHousehold(i);}
 
 // ── FETCH PROPERTY ──
 async function fetchProp(h){
@@ -708,19 +583,17 @@ async function fetchProp(h){
     const d=await resp.json();
     if(!d.propertyDetails)return{error:true,message:'Address not found on Zillow.'};
     const p=d.propertyDetails;const rf=p.resoFacts||{};
-    const retNum=(p.streetAddress||'').match(/^\d+/);const reqNum=h.address.match(/^\d+/);
+    const retNum=(p.streetAddress||'').match(/^\d+/);const reqNum=(h.address||'').match(/^\d+/);
     if(retNum&&reqNum&&retNum[0]!==reqNum[0])return{error:true,message:`Address mismatch: Zillow returned ${p.streetAddress}`};
     const sales=(p.priceHistory||[]).filter(e=>e.event&&e.event.toLowerCase().includes('sold'));
     const lastSale=sales[0]||null;
-    const countyStr=(p.county||'').toLowerCase();
     const homeValue=p.zestimate||p.lastSoldPrice||p.price||null;
     return{
-      county:countyStr.includes('geauga')?'gea':'cuy',
+      county:(p.county||'').toLowerCase().includes('geauga')?'gea':'cuy',
       homeValue,
       lastSalePrice:lastSale?'$'+lastSale.price.toLocaleString():null,
       lastSaleDate:lastSale?new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}):null,
       assessedValue:rf.taxAssessedValue?'$'+Math.round(rf.taxAssessedValue).toLocaleString():null,
-      marketValue:homeValue?'$'+Math.round(homeValue).toLocaleString():null,
       propertyType:rf.homeType||p.homeType||'Single Family',
       yearBuilt:rf.yearBuilt?String(rf.yearBuilt):null,
       squareFeet:p.livingArea?p.livingArea.toLocaleString():null,
@@ -732,78 +605,90 @@ async function fetchProp(h){
   }catch(e){return{error:true,message:'Lookup failed: '+e.message};}
 }
 
+// ── GEOCODE ──
+function placePinAt(i){
+  const h=households[i];
+  if(markers[i])map.removeLayer(markers[i]);
+  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
+  m.on('click',()=>selectHousehold(i));
+  markers[i]=m;
+}
+async function geocodeMissing(needsGeo){
+  showProgress(true,`Geocoding ${needsGeo.length} addresses…`,0);
+  for(let i=0;i<needsGeo.length;i++){
+    const h=needsGeo[i];const idx=households.indexOf(h);
+    document.getElementById('progLbl').textContent=`Geocoding ${i+1}/${needsGeo.length}…`;
+    document.getElementById('progFill').style.width=`${Math.round((i/needsGeo.length)*100)}%`;
+    const geo=await geocodeOne(h);
+    if(geo){
+      h.lat=geo.lat;h.lon=geo.lon;placePinAt(idx);renderList();
+      await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({lat:geo.lat,lon:geo.lon})});
+    }
+    if(i<needsGeo.length-1)await sleep(1200);
+  }
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('progLbl').textContent='✓ Done';
+  setTimeout(()=>showProgress(false),2000);fitMap();
+}
+async function geocodeOne(h){
+  const q=encodeURIComponent(`${h.address}, ${h.city}, ${h.state||'OH'} ${h.zip}, USA`);
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&countrycodes=us`,{headers:{'Accept-Language':'en','User-Agent':'CRMPropertyMap/1.0'}});
+    const d=await r.json();
+    if(d&&d.length)return{lat:+d[0].lat,lon:+d[0].lon};
+  }catch(e){}
+  return null;
+}
+function fitMap(){const v=households.filter(h=>h.lat);if(v.length>1){const lats=v.map(h=>h.lat),lons=v.map(h=>h.lon);map.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]],{padding:[50,50]});}else if(v.length===1)map.setView([v[0].lat,v[0].lon],14);}
+
 // ── PREFETCH ──
 let prefetching=false;
 async function startPrefetch(){
-  const unfetched=households.filter(h=>!h.homeValue&&!h.noAddress);
+  const unfetched=households.filter(h=>!h.home_value&&h.address);
   if(!unfetched.length){alert('All households already have property data!');return;}
-  const ok=window.confirm(`Look up property for ${unfetched.length} households?\nEst. time: ~${Math.ceil(unfetched.length/60)} min\n\nContinue?`);
-  if(!ok)return;
-  prefetching=true;
-  document.getElementById('pfBar').style.display='flex';
-  document.getElementById('prefetchBtn').disabled=true;
+  if(!confirm(`Look up property for ${unfetched.length} households?\nEst. ~${Math.ceil(unfetched.length/60)} min`))return;
+  prefetching=true;document.getElementById('pfBar').style.display='flex';document.getElementById('prefetchBtn').disabled=true;
   let done=0,failed=0;
-  for(let i=0;i<households.length;i++){
+  for(const h of households){
     if(!prefetching)break;
-    const h=households[i];
-    if(h.homeValue||h.noAddress||!h.address)continue;
+    if(h.home_value||!h.address)continue;
     document.getElementById('pfText').textContent=`[${done+failed+1}/${unfetched.length}] ${h.displayName}`;
     const result=await fetchProp(h);
     if(!result.error){
-      h.homeValue=result.homeValue;h.propDetails=result;
-      if(result.county&&result.county!=='unk')h.county=result.county;
-      for(const m of h.members){
-        const upd=[];
-        if(h.homeValue)upd.push({row:m.sheetRow,col:9,value:h.homeValue});
-        if(h.county)upd.push({row:m.sheetRow,col:12,value:h.county});
-        if(h.propDetails)upd.push({row:m.sheetRow,col:13,value:JSON.stringify(h.propDetails)});
-        if(upd.length)await writeRow(upd);
-      }
+      h.home_value=result.homeValue;h.property_data=result;if(result.county)h.county=result.county;
+      await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({home_value:h.home_value,county:h.county,property_data:result})});
       recolorAll();done++;
     }else{failed++;}
     renderList();await sleep(1000);
   }
-  prefetching=false;
-  document.getElementById('pfBar').style.display='none';
-  document.getElementById('prefetchBtn').disabled=false;
-  document.getElementById('prefetchBtn').textContent=`✓ ${done} fetched`;
-  if(failed>0)alert(`Done!\n${done} succeeded\n${failed} failed — click individually to retry.`);
+  prefetching=false;document.getElementById('pfBar').style.display='none';document.getElementById('prefetchBtn').disabled=false;
+  if(failed>0)alert(`Done! ${done} succeeded, ${failed} failed.`);
 }
 function stopPrefetch(){prefetching=false;document.getElementById('pfBar').style.display='none';document.getElementById('prefetchBtn').disabled=false;}
 
 // ── EXPORT ──
 function exportCSV(){
   const minVal=parseFloat(document.getElementById('minValue').value)||0;
-  const sinceDate=prompt('Export contacts added since date?\n\nEnter date (YYYY-MM-DD) or leave blank for all:','');
-  const since=sinceDate?sinceDate.trim():null;
+  const since=prompt('Export contacts added since date? (YYYY-MM-DD or blank for all):','')?.trim()||null;
   let list=minVal>0?filtered:households;
-  if(since)list=list.filter(h=>!h.dateAdded||h.dateAdded>=since);
+  if(since)list=list.filter(h=>!h.date_added||h.date_added>=since);
   if(!list.length){alert('No contacts match.');return;}
-  const rows=[['Contact ID','First Name','Last Name','Address Notes']];
-  list.forEach(h=>{
-    h.members.forEach(m=>{
-      const parts=m.contactName.split(',');
-      const last=parts.length>=2?parts[0].trim():'';
-      const first=parts.length>=2?parts[1].trim():m.contactName;
-      const fmtVal=h.homeValue?'$'+Math.round(h.homeValue).toLocaleString('en-US'):'';
-      rows.push([m.contactId,first,last,fmtVal]);
-    });
-  });
+  const rows=[['CivicCRM ID','First Name','Last Name','Address Notes']];
+  list.forEach(h=>(h.members||[]).forEach(m=>{
+    const val=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
+    rows.push([m.civicrm_id||'',m.first_name,m.last_name,val]);
+  }));
   const csv=rows.map(r=>r.map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=since?`contacts_since_${since}.csv`:minVal>0?`prospects_above_${minVal}.csv`:'all_contacts.csv';
-  a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=since?`contacts_since_${since}.csv`:'contacts.csv';a.click();
 }
 
 // ── ADD CONTACT ──
-let acSelectedResult=null,acFormData={};
-function showAddContact(){document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';document.getElementById('ac_results').style.display='none';}
-function hideAddContact(){document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_street','ac_city','ac_zip'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('ac_status').style.display='none';}
-function setCity(city,zip){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.borderColor='var(--border2)';b.style.color='var(--txt)';});event.target.style.background='var(--accent)';event.target.style.borderColor='var(--accent)';event.target.style.color='#fff';}
-function setZip(zip){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.borderColor='var(--border2)';b.style.color='var(--txt)';});event.target.style.background='var(--accent)';event.target.style.borderColor='var(--accent)';event.target.style.color='#fff';}
-function backToSearch(){document.getElementById('confirmAddModal').style.display='none';document.getElementById('addContactModal').style.display='flex';}
+let acPropResult=null,acFormData={};
+function showAddContact(){document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';}
+function hideAddContact(){document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
+function setCity(city,zip){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
+function setZip(zip){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
 
 async function lookupByAddress(){
   const first=document.getElementById('ac_first').value.trim();
@@ -813,99 +698,186 @@ async function lookupByAddress(){
   const zip=document.getElementById('ac_zip').value.trim();
   if(!first||!last){alert('Please enter first and last name.');return;}
   if(!street){alert('Please enter a street address.');return;}
-  acFormData={first,last,spouse:document.getElementById('ac_spouse').value.trim(),phone:document.getElementById('ac_phone').value.trim(),email:document.getElementById('ac_email').value.trim()};
+  acFormData={first,last,spouse:document.getElementById('ac_spouse').value.trim(),phone:document.getElementById('ac_phone').value.trim(),email:document.getElementById('ac_email').value.trim(),crmId:document.getElementById('ac_crmid').value.trim(),crmId2:document.getElementById('ac_crmid2').value.trim(),street,city,zip};
   const btn=document.getElementById('ac_actionBtn');btn.disabled=true;btn.textContent='⏳ Looking up…';
   const status=document.getElementById('ac_status');status.style.display='block';status.textContent='Fetching from Zillow…';
   try{
-    const fullAddr=encodeURIComponent(`${street}, ${city}, OH${zip?' '+zip:''}`);
-    const resp=await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${fullAddr}`,{headers:{'Content-Type':'application/json','x-rapidapi-host':'private-zillow.p.rapidapi.com','x-rapidapi-key':RAPIDAPI_KEY}});
+    const addr=encodeURIComponent(`${street}, ${city}, OH${zip?' '+zip:''}`);
+    const resp=await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${addr}`,{headers:{'Content-Type':'application/json','x-rapidapi-host':'private-zillow.p.rapidapi.com','x-rapidapi-key':RAPIDAPI_KEY}});
     const d=await resp.json();
     if(!d.propertyDetails)throw new Error('Address not found on Zillow.');
     const p=d.propertyDetails;const rf=p.resoFacts||{};
     const sales=(p.priceHistory||[]).filter(e=>e.event&&e.event.toLowerCase().includes('sold'));
     const lastSale=sales[0]||null;
-    const countyStr=(p.county||'').toLowerCase();
-    acSelectedResult={
-      address:p.streetAddress||street,city:p.city||city,state:p.state||'OH',zip:p.zipcode||zip,
-      county:countyStr.includes('geauga')?'gea':'cuy',
-      marketValue:p.zestimate||p.price||null,
-      yearBuilt:p.yearBuilt?String(p.yearBuilt):null,
-      propertyType:p.homeType||'Single Family',
-      lastSalePrice:lastSale?'$'+lastSale.price.toLocaleString():null,
-      lastSaleDate:lastSale?new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}):null,
-      assessedValue:rf.taxAssessedValue?'$'+Math.round(rf.taxAssessedValue).toLocaleString():null,
-      annualTax:rf.taxAnnualAmount?'$'+rf.taxAnnualAmount.toLocaleString():null,
-      squareFeet:p.livingArea?p.livingArea.toLocaleString():null,
-      bedsBaths:p.bedrooms&&p.bathrooms?`${p.bedrooms} / ${p.bathrooms}`:null,
-      lotSize:rf.lotSize||(p.lotAreaValue?`${p.lotAreaValue} ${p.lotAreaUnits||'acres'}`:null)
-    };
-    const r=acSelectedResult;
-    const jointName=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
+    acPropResult={address:p.streetAddress||street,city:p.city||city,state:'OH',zip:p.zipcode||zip,county:(p.county||'').toLowerCase().includes('geauga')?'gea':'cuy',homeValue:p.zestimate||p.price||null,lastSalePrice:lastSale?'$'+lastSale.price.toLocaleString():null,lastSaleDate:lastSale?new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}):null,assessedValue:rf.taxAssessedValue?'$'+Math.round(rf.taxAssessedValue).toLocaleString():null,annualTax:rf.taxAnnualAmount?'$'+rf.taxAnnualAmount.toLocaleString():null,squareFeet:p.livingArea?p.livingArea.toLocaleString():null,bedsBaths:p.bedrooms&&p.bathrooms?`${p.bedrooms} / ${p.bathrooms}`:null,lotSize:rf.lotSize||null,propertyType:p.homeType||'Single Family',yearBuilt:p.yearBuilt?String(p.yearBuilt):null,source:'Zillow'};
+    const r=acPropResult;const jn=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
     document.getElementById('confirm_content').innerHTML=`
-      <div style="background:var(--surf2);border-radius:6px;padding:14px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:.88rem;color:var(--txt);margin-bottom:6px">Contact</div>
+      <div style="background:var(--surf2);border-radius:6px;padding:14px;margin-bottom:10px">
+        <div style="font-weight:700;font-size:.88rem;margin-bottom:6px">Contact</div>
         <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
-          <b>Name:</b> ${acFormData.last}, ${acFormData.first}<br>
-          <b>Joint Name:</b> ${jointName}<br>
+          <b>Name:</b> ${acFormData.first} ${acFormData.last}<br>
+          <b>Joint Name:</b> ${jn}<br>
           ${acFormData.phone?`<b>Phone:</b> ${acFormData.phone}<br>`:''}
           ${acFormData.email?`<b>Email:</b> ${acFormData.email}<br>`:''}
+          ${acFormData.crmId?`<b>CivicCRM ID:</b> ${acFormData.crmId}<br>`:''}
         </div>
       </div>
       <div style="background:var(--surf2);border-radius:6px;padding:14px">
-        <div style="font-weight:700;font-size:.88rem;color:var(--txt);margin-bottom:6px">Property Found</div>
+        <div style="font-weight:700;font-size:.88rem;margin-bottom:6px">Property</div>
         <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
-          <b>Address:</b> ${r.address}, ${r.city}, ${r.state} ${r.zip}<br>
-          <b>County:</b> ${r.county==='gea'?'Geauga':'Cuyahoga'}<br>
-          ${r.marketValue?`<b>Est. Value:</b> $${Math.round(r.marketValue).toLocaleString()}<br>`:''}
+          <b>Address:</b> ${r.address}, ${r.city}, OH ${r.zip}<br>
+          ${r.homeValue?`<b>Value:</b> $${Math.round(r.homeValue).toLocaleString()}<br>`:''}
         </div>
       </div>`;
-    status.style.display='none';
-    document.getElementById('addContactModal').style.display='none';
-    document.getElementById('confirmAddModal').style.display='flex';
+    status.style.display='none';document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='flex';
   }catch(e){status.textContent='⚠ '+e.message;}
   btn.disabled=false;btn.textContent='📍 Look Up Property';
 }
 
 async function confirmAddContact(){
-  if(!acSelectedResult)return;
-  const r=acSelectedResult;const today=new Date().toISOString().split('T')[0];
-  const jointName=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
-  const baseRow=['',jointName,r.address,r.city,r.state,r.zip,acFormData.phone,'',r.marketValue||'','','',r.county,JSON.stringify({lastSalePrice:r.lastSalePrice,lastSaleDate:r.lastSaleDate,assessedValue:r.assessedValue,marketValue:r.marketValue?'$'+Math.round(r.marketValue).toLocaleString():null,propertyType:r.propertyType,yearBuilt:r.yearBuilt,squareFeet:r.squareFeet,bedsBaths:r.bedsBaths,lotSize:r.lotSize,annualTax:r.annualTax,source:'Zillow'}),today];
-  const rows=[];
-  const row1=[...baseRow];row1[0]=`${acFormData.last}, ${acFormData.first}`;row1[6]=acFormData.phone;rows.push(row1);
-  if(acFormData.spouse){
-    const row2=[...baseRow];const sp=acFormData.spouse.trim().split(' ');
-    const spLast=sp.length>1?sp[sp.length-1]:acFormData.last;const spFirst=sp.length>1?sp.slice(0,-1).join(' '):acFormData.spouse;
-    row2[0]=`${spLast}, ${spFirst}`;row2[6]='';rows.push(row2);
-  }
+  if(!acPropResult)return;
+  const r=acPropResult;
   try{
-    for(const row of rows)await fetch(SHEET_URL,{method:'POST',body:JSON.stringify({action:'append',values:row})});
+    // Create household
+    const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`,address:r.address,city:r.city,state:'OH',zip:r.zip,county:r.county,home_value:r.homeValue,property_data:r,date_added:new Date().toISOString().split('T')[0]})});
+    // Create primary contact
+    await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone,email:acFormData.email,civicrm_id:acFormData.crmId||null})});
+    // Create spouse if provided
+    if(acFormData.spouse){
+      const sp=acFormData.spouse.trim().split(' ');
+      const spFirst=sp.length>1?sp.slice(0,-1).join(' '):acFormData.spouse;
+      const spLast=sp.length>1?sp[sp.length-1]:acFormData.last;
+      await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:spFirst,last_name:spLast,civicrm_id:acFormData.crmId2||null})});
+    }
     hideAddContact();
-    const newH={address:r.address,city:r.city,state:r.state,zip:r.zip,county:r.county,
-      displayName:acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`,
-      members:rows.map((row,i)=>({contactName:row[0],phone:i===0?acFormData.phone:'',email:i===0?acFormData.email:'',contactId:'',sheetRow:999})),
-      jointNames:[],homeValue:r.marketValue||null,propDetails:{lastSalePrice:r.lastSalePrice,lastSaleDate:r.lastSaleDate,assessedValue:r.assessedValue,marketValue:r.marketValue?'$'+Math.round(r.marketValue).toLocaleString():null,propertyType:r.propertyType,yearBuilt:r.yearBuilt,squareFeet:r.squareFeet,bedsBaths:r.bedsBaths,lotSize:r.lotSize,annualTax:r.annualTax,source:'Zillow'},
-      dateAdded:today,lat:null,lon:null,noAddress:false};
-    households.push(newH);filtered=[...households];markers.push(null);renderList();
-    document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
-    const newIdx=households.length-1;const geo=await geocodeOne(newH);
-    if(geo){newH.lat=geo.lat;newH.lon=geo.lon;placePinAt(newIdx);map.setView([geo.lat,geo.lon],15,{animate:true});}
-    renderList();
+    alert(`✅ ${acFormData.first} ${acFormData.last} added! Click Refresh to see them on the map.`);
+    loadAll();
   }catch(e){alert('Failed to save: '+e.message);}
 }
 
-// ── PIN ICON ──
+// ── IMPORT CSV ──
+let importType='contacts';
+function showImport(){
+  document.getElementById('importModal').style.display='flex';
+  setImportType('contacts');
+}
+function setImportType(type){
+  importType=type;
+  document.getElementById('imp_contacts_btn').className='btn '+(type==='contacts'?'btn-pri':'btn-sec');
+  document.getElementById('imp_donations_btn').className='btn '+(type==='donations'?'btn-pri':'btn-sec');
+  document.getElementById('imp_status').style.display='none';
+  if(type==='contacts'){
+    document.getElementById('imp_format').innerHTML=`<b>Expected columns (from CivicCRM export):</b><br>
+    Contact Name · Joint Casual Firstname-Lastname · Street Address · City · State · Postal Code · Phone · ID<br><br>
+    <b>How it works:</b> Matched by CivicCRM ID. New contacts are added. Existing contacts are updated.`;
+  }else{
+    document.getElementById('imp_format').innerHTML=`<b>Expected columns (from CivicCRM export):</b><br>
+    Contact ID · Donor Name · Amount · Date · Notes<br><br>
+    <b>How it works:</b> Matched by Contact ID + Date + Amount. Duplicates are skipped automatically.`;
+  }
+}
+
+function handleCSV(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    const status=document.getElementById('imp_status');
+    status.style.display='block';status.textContent='Processing…';
+    try{
+      if(importType==='contacts')await importContacts(lines);
+      else await importDonations(lines);
+    }catch(err){status.textContent='⚠ Error: '+err.message;}
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVLine(line){
+  const result=[];let current='';let inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){inQuotes=!inQuotes;}
+    else if(line[i]===','&&!inQuotes){result.push(current.trim());current='';}
+    else{current+=line[i];}
+  }
+  result.push(current.trim());
+  return result.map(v=>v.replace(/^"|"$/g,'').trim());
+}
+
+async function importContacts(lines){
+  const status=document.getElementById('imp_status');
+  const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]);
+  let added=0,updated=0,skipped=0;
+  for(const r of rows){
+    const contactName=r[0]||'';const jointName=r[1]||'';const address=r[2]||'';
+    const city=r[3]||'';const state=r[4]||'OH';const zip=(r[5]||'').replace(/\D/g,'').substring(0,5);
+    const phone=r[6]||'';const crmId=(r[7]||'').toString().trim();
+    if(!contactName||!crmId)continue;
+    const parts=contactName.split(',');
+    const lastName=parts[0]?.trim()||'';
+    const firstName=parts[1]?.trim()||contactName;
+    status.textContent=`Processing ${firstName} ${lastName}…`;
+
+    // Check if contact already exists by civicrm_id
+    const existing=await sb(`contacts?civicrm_id=eq.${crmId}&select=id,household_id`);
+    if(existing&&existing.length>0){
+      // Update contact
+      await sb(`contacts?id=eq.${existing[0].id}`,{method:'PATCH',body:JSON.stringify({first_name:firstName,last_name:lastName,phone:phone||undefined})});
+      // Update household address if provided
+      if(address&&existing[0].household_id){
+        await sb(`households?id=eq.${existing[0].household_id}`,{method:'PATCH',body:JSON.stringify({address,city,state,zip,joint_name:jointName||undefined})});
+      }
+      updated++;
+    }else{
+      // Create new household + contact
+      const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName||`${firstName} ${lastName}`,address:address||null,city:city||null,state,zip:zip||null,date_added:new Date().toISOString().split('T')[0]})});
+      await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:firstName,last_name:lastName,phone:phone||null,civicrm_id:crmId})});
+      added++;
+    }
+  }
+  status.textContent=`✅ Done! ${added} added, ${updated} updated, ${skipped} skipped.`;
+  loadAll();
+}
+
+async function importDonations(lines){
+  const status=document.getElementById('imp_status');
+  const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]);
+  let added=0,skipped=0;
+  for(const r of rows){
+    const crmId=(r[0]||'').toString().trim();
+    const amount=parseFloat((r[2]||'0').replace(/[$,\s]/g,''))||0;
+    const date=(r[3]||'').toString().split(' ')[0]; // strip time
+    const notes=r[4]||'';
+    if(!crmId||!amount)continue;
+    status.textContent=`Processing donation for CRM ID ${crmId}…`;
+
+    // Find contact by civicrm_id
+    const contacts=await sb(`contacts?civicrm_id=eq.${crmId}&select=id`);
+    if(!contacts||!contacts.length){skipped++;continue;}
+    const contactId=contacts[0].id;
+
+    // Check for duplicate
+    const existing=await sb(`donations?contact_id=eq.${contactId}&amount=eq.${amount}&date=eq.${date}&select=id`);
+    if(existing&&existing.length>0){skipped++;continue;}
+
+    await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,civicrm_id:crmId,amount,date:date||null,notes:notes||null})});
+    added++;
+  }
+  status.textContent=`✅ Done! ${added} donations added, ${skipped} skipped (duplicates or no match).`;
+  loadAll();
+}
+
+// ── PIN & UTILS ──
 function pinIcon(num,active,tier){
   return L.divIcon({className:'',html:`<div class="mpin pin-${tier}${active?' active':''}"><div class="mpin-n">${num+1}</div></div>`,iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-30]});
 }
 function showProgress(show,text,pct){
-  const el=document.getElementById('geoProgress');el.style.display=show?'flex':'none';
+  document.getElementById('geoProgress').style.display=show?'flex':'none';
   if(text)document.getElementById('progLbl').textContent=text;
   if(pct!==undefined)document.getElementById('progFill').style.width=pct+'%';
 }
-function isMobile(){return window.innerWidth<=768;}
 
-window.addEventListener('DOMContentLoaded',()=>{initMap();loadFromSheet();});
+window.addEventListener('DOMContentLoaded',()=>{initMap();loadAll();});
 </script>
 </body>
 </html>
