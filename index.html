@@ -330,12 +330,21 @@ async function loadAll(){
   document.getElementById('clist').innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';
 
   try{
-    // Load households with their contacts
-    const hRows=await sb('households?select=*,contacts(*)&order=created_at.asc');
-    // Load all donations
-    const donations=await sb('donations?select=*&order=date.desc');
+    // Load households, contacts, donations separately
+    const [hRows, allContacts, donations] = await Promise.all([
+      sb('households?select=*&order=created_at.asc'),
+      sb('contacts?select=*&order=created_at.asc'),
+      sb('donations?select=*&order=date.desc')
+    ]);
 
-    // Build donation lookup by contact id
+    // Build contact lookup by household_id
+    const contactsByHousehold={};
+    (allContacts||[]).forEach(c=>{
+      if(!contactsByHousehold[c.household_id])contactsByHousehold[c.household_id]=[];
+      contactsByHousehold[c.household_id].push(c);
+    });
+
+    // Build donation lookup by contact_id
     const donMap={};
     (donations||[]).forEach(d=>{
       if(!donMap[d.contact_id])donMap[d.contact_id]=[];
@@ -343,16 +352,12 @@ async function loadAll(){
     });
 
     households=(hRows||[]).map(h=>{
-      // Deduplicate contacts by id
-      const seen=new Set();
-      const uniqueContacts=(h.contacts||[]).filter(c=>{
-        if(seen.has(c.id))return false;
-        seen.add(c.id);return true;
-      });
+      const contacts=contactsByHousehold[h.id]||[];
       return{
         ...h,
-        members:uniqueContacts.map(c=>({...c,donations:donMap[c.id]||[]})),
-        displayName:buildDisplayName(h),
+        contacts,
+        members:contacts.map(c=>({...c,donations:donMap[c.id]||[]})),
+        displayName:buildDisplayName({...h,contacts}),
         noAddress:!h.address
       };
     });
