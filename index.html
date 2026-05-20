@@ -413,7 +413,9 @@ function buildDisplayName(h){
 // ── GIVING STATS ──
 function getGivingStats(h){
   const all=[];
-  (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>all.push(d)));
+  const seen=new Set();
+  const unique=(h.members||[]).filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;});
+  unique.forEach(m=>(m.donations||[]).forEach(d=>all.push(d)));
   if(!all.length)return null;
   all.sort((a,b)=>new Date(b.date)-new Date(a.date));
   const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
@@ -547,7 +549,10 @@ function setProp(mode,h,result){
   const data=result||h.property_data||{};
 
   // Contacts tab
-  const contactsHtml=(h.members||[]).map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border);position:relative">
+  // Hard dedup members by id before rendering
+  const seenIds=new Set();
+  const uniqueMembers=(h.members||[]).filter(m=>{if(seenIds.has(m.id))return false;seenIds.add(m.id);return true;});
+  const contactsHtml=uniqueMembers.map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border);position:relative">
     <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${m.first_name} ${m.last_name}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
