@@ -352,7 +352,12 @@ async function loadAll(){
     });
 
     households=(hRows||[]).map(h=>{
-      const contacts=contactsByHousehold[h.id]||[];
+      // Force dedup contacts by id
+      const seen=new Set();
+      const contacts=(contactsByHousehold[h.id]||[]).filter(c=>{
+        if(seen.has(c.id))return false;
+        seen.add(c.id);return true;
+      });
       return{
         ...h,
         contacts,
@@ -364,13 +369,13 @@ async function loadAll(){
 
     // Sort alphabetically by last name
     households.sort((a,b)=>{
-      // Get last name: try members, then extract from joint_name/displayName
       const getLastName=h=>{
-        const fromMember=h.members?.find(m=>m.last_name)?.last_name;
-        if(fromMember)return fromMember.toLowerCase();
-        const name=h.joint_name||h.displayName||'';
-        // Last word of the name is usually the last name
-        return name.trim().split(' ').pop().toLowerCase();
+        for(const m of (h.members||[])){
+          if(m.last_name&&m.last_name.trim())return m.last_name.trim().toLowerCase();
+        }
+        const name=(h.joint_name||h.displayName||'').trim();
+        const words=name.split(' ');
+        return words[words.length-1].toLowerCase();
       };
       return getLastName(a).localeCompare(getLastName(b));
     });
