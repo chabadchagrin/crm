@@ -106,6 +106,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .import-zone:hover{border-color:var(--accent)}
 .import-zone p{font-size:.78rem;color:var(--txt3)}
 .import-zone strong{color:var(--accent)}
+.crm-tooltip{background:white;border:1px solid #dde1e9;border-radius:6px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.12);font-family:'DM Sans',sans-serif}
+.crm-tooltip::before{display:none}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @media(max-width:768px){
   .legend{display:none}.toolbar{display:none}
@@ -359,6 +361,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
 const RAPIDAPI_KEY='14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
+let ANTHROPIC_KEY=localStorage.getItem('crm_ant_key')||'';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 async function sb(path,opts={}){
@@ -421,7 +424,8 @@ async function loadAll(){
         contacts,
         members:contacts.map(c=>({...c,donations:donMap[c.id]||[]})),
         displayName:buildDisplayName({...h,contacts}),
-        noAddress:!h.address
+        noAddress:!h.address,
+      profile_data:h.property_data?.profile||null
       };
     });
 
@@ -629,6 +633,7 @@ function setProp(mode,h,result){
     <button class="tab-btn active" id="tab-prop-${idx}" onclick="showTab(${idx},'prop')">🏠 Property</button>
     <button class="tab-btn" id="tab-giving-${idx}" onclick="showTab(${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
     <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
+    <button class="tab-btn" id="tab-profile-${idx}" onclick="showTab(${idx},'profile')">🔍 Profile</button>
   </div>`;
 
   if(mode==='loading'){el.innerHTML=header+'<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>';return;}
@@ -708,14 +713,24 @@ function setProp(mode,h,result){
     return;
   }
 
+  // Profile tab
+  const existingProfile=h.profile_data;
+  const profileHtml=existingProfile
+    ? buildProfileDisplay(existingProfile, idx)
+    : `<div style="text-align:center;padding:16px 0">
+        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:12px">No profile built yet.</div>
+        <button onclick="buildProfile(${idx})" id="buildProfileBtn-${idx}" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500">🔍 Build Profile</button>
+      </div>`;
+
   el.innerHTML=header+
     `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}${reGeoBtn}</div>
     <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${givingHtml}</div>
-    <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>`;
+    <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>
+    <div id="tabcontent-profile-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${profileHtml}</div>`;
 }
 
 function showTab(idx,tab){
-  ['prop','giving','contacts'].forEach(t=>{
+  ['prop','giving','contacts','profile'].forEach(t=>{
     const btn=document.getElementById(`tab-${t}-${idx}`);
     const content=document.getElementById(`tabcontent-${t}-${idx}`);
     if(btn)btn.classList.toggle('active',t===tab);
@@ -765,6 +780,17 @@ function placePinAt(i){
   if(markers[i])map.removeLayer(markers[i]);
   const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
   m.on('click',()=>selectHousehold(i));
+  // Hover tooltip
+  const g=getGivingStats(h);
+  const valStr=h.home_value?'🏠 $'+Math.round(h.home_value).toLocaleString():'';
+  const givStr=g?'💝 $'+Math.round(g.total).toLocaleString()+' · '+g.count+' gift'+(g.count!==1?'s':''):'';
+  const tooltip=`<div style="font-family:'DM Sans',sans-serif;min-width:160px">
+    <div style="font-weight:600;font-size:.82rem;margin-bottom:3px">${h.displayName}</div>
+    <div style="font-size:.7rem;color:#666;margin-bottom:3px">${h.address||''}, ${h.city||''}</div>
+    ${valStr?`<div style="font-size:.7rem;color:#16a34a">${valStr}</div>`:''}
+    ${givStr?`<div style="font-size:.7rem;color:#b45309">${givStr}</div>`:''}
+  </div>`;
+  m.bindTooltip(tooltip,{direction:'top',offset:[0,-28],opacity:1,className:'crm-tooltip'});
   markers[i]=m;
 }
 async function geocodeMissing(needsGeo){
@@ -1205,6 +1231,111 @@ async function saveDonation(){
     setProp('data',h);
     showTab(addDonHouseholdIdx,'giving');
   }catch(e){status.textContent='⚠ '+e.message;}
+}
+
+// ── PROFILE BUILDER ──
+function buildProfileDisplay(p, idx){
+  const scoreColor=p.score>=70?'var(--green)':p.score>=40?'var(--gold)':'var(--red)';
+  return`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Prospect Profile</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${p.builtAt?new Date(p.builtAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
+        <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Refresh</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--surf2);border-radius:6px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:1.6rem;font-weight:700;color:${scoreColor};font-family:'DM Mono',monospace">${p.score||'?'}</div>
+        <div style="font-size:.55rem;color:var(--txt3);font-family:'DM Mono',monospace">/ 100</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:.75rem;font-weight:600;color:var(--txt);margin-bottom:2px">${p.capacity||''}</div>
+        <div style="font-size:.7rem;color:var(--txt2)">${p.approach||''}</div>
+      </div>
+    </div>
+    ${p.summary?`<div style="font-size:.75rem;color:var(--txt2);line-height:1.65;margin-bottom:12px">${p.summary}</div>`:''}
+    ${p.fedLevel?`<div style="font-size:.7rem;margin-bottom:4px">🏛 <b>Federation:</b> ${p.fedLevel}</div>`:''}
+    ${p.businessInfo?`<div style="font-size:.7rem;margin-bottom:4px">💼 <b>Business:</b> ${p.businessInfo}</div>`:''}
+    ${p.boardMemberships?`<div style="font-size:.7rem;margin-bottom:4px">📋 <b>Boards:</b> ${p.boardMemberships}</div>`:''}
+    ${p.philanthropy990?`<div style="font-size:.7rem;margin-bottom:4px">📄 <b>990 Giving:</b> ${p.philanthropy990}</div>`:''}
+    ${p.pressmentions?`<div style="font-size:.7rem;margin-bottom:4px">📰 <b>Press:</b> ${p.pressmentions}</div>`:''}
+  `;
+}
+
+async function buildProfile(idx){
+  if(!ANTHROPIC_KEY){
+    const k=prompt('Enter your Anthropic API key to build profiles (stored in this browser only):');
+    if(!k)return;
+    ANTHROPIC_KEY=k.trim();
+    localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
+  }
+  const h=households[idx];
+  const btn=document.getElementById(`buildProfileBtn-${idx}`);
+  const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
+  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Researching ${h.displayName}… this may take 15-20 seconds</span></div>`;
+
+  // Get primary contact name
+  const primaryMember=h.members?.[0];
+  if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
+  const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
+  const location=`${h.city||'Chagrin Falls'}, Ohio`;
+  const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':ANTHROPIC_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1500,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:`You research Jewish philanthropists and community members in the Cleveland/Chagrin Falls Ohio area for a Chabad organization's donor intelligence system. Search for public information about the person and return ONLY valid JSON, no markdown:
+{
+  "score": 75,
+  "capacity": "High Capacity Donor",
+  "approach": "Warm relationship, strong Jewish identity. Good ask for major gifts.",
+  "summary": "2-3 paragraph narrative about this person based on what you found publicly.",
+  "fedLevel": "Lion of Judah" or null,
+  "businessInfo": "CEO of Acme Corp" or null,
+  "boardMemberships": "Jewish Federation board, Cleveland Clinic Foundation" or null,
+  "philanthropy990": "Gave $25k to Jewish Federation (2022), $10k to JCC (2021)" or null,
+  "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
+  "builtAt": "${new Date().toISOString()}"
+}
+Score 0-100: home value (up to 30pts), Jewish giving history (up to 40pts), community involvement (up to 30pts).
+If you find nothing public, return a minimal profile with score based only on home value.
+NEVER invent information. Only include what you actually find publicly.`,
+        messages:[{role:'user',content:`Research this person for Jewish philanthropic prospect scoring:
+Name: ${fullName}
+Location: ${location}
+Home Value: ${homeVal}
+Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPublica 990 finder, LinkedIn, Ohio business records, general web search.`}]
+      })
+    });
+
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('Could not parse response');
+    const profile=JSON.parse(m[0]);
+    profile.builtAt=new Date().toISOString();
+
+    // Save to Supabase household
+    h.profile_data=profile;
+    await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile}})});
+
+    if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx);
+  }catch(e){
+    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
+    <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+  }
 }
 
 // ── RE-GEOCODE ──
