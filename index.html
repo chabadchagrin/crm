@@ -938,9 +938,10 @@ function setImportType(type){
     First Name · Last Name · Email · Phone · Street Address · City · State · ZIP · Contact ID · Gender<br><br>
     <b>How it works:</b> Matched by Contact ID. New contacts are added, existing ones updated. Contacts sharing the same address are automatically grouped into one household.`;
   }else{
-    document.getElementById('imp_format').innerHTML=`<b>Expected columns (from CivicCRM export):</b><br>
-    Contact ID · Donor Name · Amount · Date · Notes<br><br>
-    <b>How it works:</b> Matched by Contact ID + Date + Amount. Duplicates are skipped automatically.`;
+    document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
+    Contact ID · Amount · Date · Notes<br>
+    <em style="color:var(--txt3)">Donor Name column is optional — works with or without it.</em><br><br>
+    <b>How it works:</b> Matched by Contact ID. Duplicates (same ID + date + amount) are skipped automatically.`;
   }
 }
 
@@ -1059,28 +1060,35 @@ async function importContacts(lines){
 async function importDonations(lines){
   const status=document.getElementById('imp_status');
   const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]);
-  let added=0,skipped=0;
+  let added=0,skipped=0,notFound=0;
+
+  // Auto-detect format: with or without Donor Name column
+  // Sample first data row to check if col 1 looks like a name or a number
+  const sample=rows[0]||[];
+  const hasDonorName=sample[1]&&isNaN(parseFloat((sample[1]||'').replace(/[$,\s]/g,'')));
+  const amtCol=hasDonorName?2:1;
+  const dateCol=hasDonorName?3:2;
+  const notesCol=hasDonorName?4:3;
+
   for(const r of rows){
     const crmId=(r[0]||'').toString().trim();
-    const amount=parseFloat((r[2]||'0').replace(/[$,\s]/g,''))||0;
-    const date=(r[3]||'').toString().split(' ')[0]; // strip time
-    const notes=r[4]||'';
+    const amount=parseFloat((r[amtCol]||'0').replace(/[$,\s]/g,''))||0;
+    const date=(r[dateCol]||'').toString().split(' ')[0];
+    const notes=r[notesCol]||'';
     if(!crmId||!amount)continue;
     status.textContent=`Processing donation for CRM ID ${crmId}…`;
 
-    // Find contact by civicrm_id
     const contacts=await sb(`contacts?civicrm_id=eq.${crmId}&select=id`);
-    if(!contacts||!contacts.length){skipped++;continue;}
+    if(!contacts||!contacts.length){notFound++;continue;}
     const contactId=contacts[0].id;
 
-    // Check for duplicate
     const existing=await sb(`donations?contact_id=eq.${contactId}&amount=eq.${amount}&date=eq.${date}&select=id`);
     if(existing&&existing.length>0){skipped++;continue;}
 
     await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,civicrm_id:crmId,amount,date:date||null,notes:notes||null})});
     added++;
   }
-  status.textContent=`✅ Done! ${added} donations added, ${skipped} skipped (duplicates or no match).`;
+  status.textContent=`✅ Done! ${added} added, ${skipped} duplicates skipped${notFound?' · '+notFound+' contact IDs not found':''}.`;
   loadAll();
 }
 
