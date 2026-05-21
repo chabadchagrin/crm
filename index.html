@@ -131,6 +131,15 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
       <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
       <div><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
+      <div style="grid-column:span 2">
+        <label>Or link to existing contact as spouse</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="ac_spouse_search" placeholder="Search existing contact…" oninput="searchSpouse()" style="margin-bottom:0;flex:1">
+          <button type="button" onclick="clearSpouseLink()" style="padding:4px 10px;font-size:.7rem;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer;white-space:nowrap">Clear</button>
+        </div>
+        <div id="ac_spouse_results" style="display:none;border:1px solid var(--border2);border-radius:4px;background:var(--surf);max-height:150px;overflow-y:auto;margin-top:4px"></div>
+        <div id="ac_spouse_selected" style="display:none;padding:6px 10px;background:rgba(37,99,235,.08);border:1px solid var(--accent);border-radius:4px;margin-top:4px;font-size:.75rem;color:var(--accent)"></div>
+      </div>
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
       <div><label>CivicCRM ID</label><input type="text" id="ac_crmid" placeholder="1073"></div>
@@ -614,7 +623,9 @@ function setProp(mode,h,result){
   const grid=h.noAddress
     ?'<div style="font-size:.8rem;color:var(--txt2);padding:8px 0">No address on file.</div>'
     :cells.length?`<div class="pgrid">${cells.map(([k,v,cls])=>`<div class="pcell"><div class="pkey">${k}</div><div class="pval ${cls}">${v}</div></div>`).join('')}</div>`
-    :'<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>';
+    :`<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>`;
+  // Add re-geocode button after grid
+  const reGeoBtn=!h.noAddress?`<button onclick="reGeocode(${idx})" style="margin-top:8px;font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">📍 Re-geocode</button>`:'';
 
   if(result&&result.error){
     el.innerHTML=header+`<div id="tabcontent-prop-${idx}" class="tab-content pinner">
@@ -626,7 +637,7 @@ function setProp(mode,h,result){
   }
 
   el.innerHTML=header+
-    `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}</div>
+    `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}${reGeoBtn}</div>
     <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${givingHtml}</div>
     <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>`;
 }
@@ -775,8 +786,58 @@ function exportCSV(){
 // ── ADD CONTACT ──
 let acPropResult=null,acFormData={};
 function showAddContact(){document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';}
-function hideAddContact(){document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
+function hideAddContact(){document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip','ac_spouse_search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('ac_spouse_results').style.display='none';document.getElementById('ac_spouse_selected').style.display='none';acLinkedSpouse=null;}
 function setCity(city,zip){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
+let acLinkedSpouse=null;
+
+function searchSpouse(){
+  const q=document.getElementById('ac_spouse_search').value.toLowerCase().trim();
+  const res=document.getElementById('ac_spouse_results');
+  if(q.length<2){res.style.display='none';return;}
+  const matches=households.filter(h=>
+    h.displayName.toLowerCase().includes(q)||
+    (h.members||[]).some(m=>(m.first_name+' '+m.last_name).toLowerCase().includes(q))
+  ).slice(0,8);
+  if(!matches.length){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=matches.map(h=>`
+    <div onclick="selectSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+      <div style="font-weight:500">${h.displayName}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
+    </div>`).join('');
+}
+
+function selectSpouse(householdId){
+  const h=households.find(hh=>hh.id===householdId);
+  if(!h)return;
+  acLinkedSpouse=h;
+  // Auto-fill address fields
+  document.getElementById('ac_street').value=h.address||'';
+  document.getElementById('ac_city').value=h.city||'';
+  document.getElementById('ac_zip').value=h.zip||'';
+  document.getElementById('ac_spouse_results').style.display='none';
+  document.getElementById('ac_spouse_search').value='';
+  document.getElementById('ac_spouse_selected').style.display='block';
+  document.getElementById('ac_spouse_selected').textContent=`✓ Linked to ${h.displayName} — address auto-filled`;
+  // Highlight city button if matches
+  document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{
+    if(b.textContent.includes(h.city||'')&&b.textContent.includes(h.zip||'')){
+      b.style.background='var(--accent)';b.style.color='#fff';b.style.borderColor='var(--accent)';
+    }
+  });
+}
+
+function clearSpouseLink(){
+  acLinkedSpouse=null;
+  document.getElementById('ac_spouse_search').value='';
+  document.getElementById('ac_spouse_results').style.display='none';
+  document.getElementById('ac_spouse_selected').style.display='none';
+  document.getElementById('ac_street').value='';
+  document.getElementById('ac_city').value='';
+  document.getElementById('ac_zip').value='';
+  document.querySelectorAll('[onclick^="setCity"],[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});
+}
+
 function setZip(zip){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
 
 async function lookupByAddress(){
@@ -1049,19 +1110,44 @@ async function saveDonation(){
   }catch(e){status.textContent='⚠ '+e.message;}
 }
 
+// ── RE-GEOCODE ──
+async function reGeocode(idx){
+  const h=households[idx];
+  if(!h||!h.address)return;
+  const btn=event.target;btn.textContent='📍 Geocoding…';btn.disabled=true;
+  // Try Zillow first for lat/lon
+  const result=await fetchProp(h);
+  if(!result.error&&result.lat&&result.lon){
+    h.lat=result.lat;h.lon=result.lon;
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({lat:h.lat,lon:h.lon})});
+    placePinAt(idx);map.setView([h.lat,h.lon],15,{animate:true});
+    btn.textContent='✓ Done';return;
+  }
+  // Fall back to Nominatim
+  const geo=await geocodeOne(h);
+  if(geo){
+    h.lat=geo.lat;h.lon=geo.lon;
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({lat:geo.lat,lon:geo.lon})});
+    placePinAt(idx);map.setView([h.lat,h.lon],15,{animate:true});
+    btn.textContent='✓ Done';
+  }else{
+    btn.textContent='⚠ Not found';btn.disabled=false;
+  }
+}
+
 // ── DELETE ──
 async function deleteContact(contactId, name, hIdx){
   if(!confirm(`Delete ${name}?
 
 If this is the only contact in the household, the household and all its property data will also be deleted.`))return;
   try{
-    await sb('contacts?id=eq.'+contactId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    await sb('contacts?id=eq.'+contactId,{method:'DELETE'});
     // Check if household still has contacts
     const h=households[hIdx];
     h.members=h.members.filter(m=>m.id!==contactId);
     if(h.members.length===0){
       // Delete household too
-      await sb('households?id=eq.'+h.id,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      await sb('households?id=eq.'+h.id,{method:'DELETE'});
       if(markers[hIdx])map.removeLayer(markers[hIdx]);
       households.splice(hIdx,1);filtered=[...households];markers.splice(hIdx,1);
       setProp('hint');activeIdx=-1;
@@ -1076,7 +1162,7 @@ If this is the only contact in the household, the household and all its property
 async function deleteDonation(donationId, hIdx){
   if(!confirm('Delete this donation?'))return;
   try{
-    await sb('donations?id=eq.'+donationId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    await sb('donations?id=eq.'+donationId,{method:'DELETE'});
     const h=households[hIdx];
     h.members.forEach(m=>{m.donations=(m.donations||[]).filter(d=>d.id!==donationId);});
     renderList();
