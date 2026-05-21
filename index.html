@@ -517,7 +517,14 @@ async function selectHousehold(i){
     h.home_value=result.homeValue||h.home_value;
     h.property_data=result;
     if(result.county&&result.county!=='unk')h.county=result.county;
-    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({home_value:h.home_value,county:h.county,property_data:result})});
+    const patchData={home_value:h.home_value,county:h.county,property_data:result};
+    // Save Zillow lat/lon if we don't have coordinates yet
+    if(!h.lat&&result.lat&&result.lon){
+      h.lat=result.lat;h.lon=result.lon;
+      patchData.lat=h.lat;patchData.lon=h.lon;
+      placePinAt(households.indexOf(h));
+    }
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify(patchData)});
     recolorAll();
   }
   renderList();setProp('data',h,result);
@@ -651,6 +658,8 @@ async function fetchProp(h){
     const lastSale=sales[0]||null;
     const homeValue=p.zestimate||p.lastSoldPrice||p.price||null;
     return{
+      lat:p.latitude||null,
+      lon:p.longitude||null,
       county:(p.county||'').toLowerCase().includes('geauga')?'gea':'cuy',
       homeValue,
       lastSalePrice:lastSale?'$'+lastSale.price.toLocaleString():null,
@@ -693,12 +702,23 @@ async function geocodeMissing(needsGeo){
   setTimeout(()=>showProgress(false),2000);fitMap();
 }
 async function geocodeOne(h){
-  const q=encodeURIComponent(`${h.address}, ${h.city}, ${h.state||'OH'} ${h.zip}, USA`);
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&countrycodes=us`,{headers:{'Accept-Language':'en','User-Agent':'CRMPropertyMap/1.0'}});
-    const d=await r.json();
-    if(d&&d.length)return{lat:+d[0].lat,lon:+d[0].lon};
-  }catch(e){}
+  // Try multiple address formats
+  const attempts=[
+    `${h.address}, ${h.city}, ${h.state||'OH'} ${h.zip}, USA`,
+    // Strip apartment number
+    `${(h.address||'').replace(/\s+(apt|unit|#|suite)\s*[\w-]+/i,'').trim()}, ${h.city}, ${h.state||'OH'} ${h.zip}, USA`,
+    // Just street + zip
+    `${h.address}, ${h.zip}, USA`,
+  ];
+  for(const addr of attempts){
+    try{
+      const q=encodeURIComponent(addr);
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&countrycodes=us`,{headers:{'Accept-Language':'en','User-Agent':'CRMPropertyMap/1.0'}});
+      const d=await r.json();
+      if(d&&d.length)return{lat:+d[0].lat,lon:+d[0].lon};
+      await sleep(300);
+    }catch(e){}
+  }
   return null;
 }
 function fitMap(){const v=households.filter(h=>h.lat);if(v.length>1){const lats=v.map(h=>h.lat),lons=v.map(h=>h.lon);map.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]],{padding:[50,50]});}else if(v.length===1)map.setView([v[0].lat,v[0].lon],14);}
@@ -718,7 +738,14 @@ async function startPrefetch(){
     const result=await fetchProp(h);
     if(!result.error){
       h.home_value=result.homeValue;h.property_data=result;if(result.county)h.county=result.county;
-      await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({home_value:h.home_value,county:h.county,property_data:result})});
+      const patchData={home_value:h.home_value,county:h.county,property_data:result};
+    // Save Zillow lat/lon if we don't have coordinates yet
+    if(!h.lat&&result.lat&&result.lon){
+      h.lat=result.lat;h.lon=result.lon;
+      patchData.lat=h.lat;patchData.lon=h.lon;
+      placePinAt(households.indexOf(h));
+    }
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify(patchData)});
       recolorAll();done++;
     }else{failed++;}
     renderList();await sleep(1000);
@@ -937,6 +964,15 @@ async function importContacts(lines){
     // Create contact linked to household
     await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:firstName,last_name:lastName,phone,email,civicrm_id:crmId,gender})});
     added++;
+
+    // Update joint name to include all contacts in this household
+    const hhContacts=await sb(`contacts?household_id=eq.${householdId}&select=first_name,last_name&order=created_at.asc`);
+    if(hhContacts&&hhContacts.length>1){
+      const firsts=hhContacts.map(c=>c.first_name);
+      const last=hhContacts[0].last_name;
+      const jointName=firsts.join(' and ')+' '+last;
+      await sb(`households?id=eq.${householdId}`,{method:'PATCH',body:JSON.stringify({joint_name:jointName})});
+    }
   }
   status.textContent=`✅ Done! ${added} added, ${updated} updated.`;
   loadAll();
