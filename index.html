@@ -186,6 +186,36 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- EDIT CONTACT MODAL -->
+<div class="modal-bg" id="editContactModal" style="display:none">
+  <div class="modal" style="width:480px">
+    <h2>✏️ Edit Contact</h2>
+    <input type="hidden" id="edit_contact_id">
+    <input type="hidden" id="edit_household_id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><label>First Name</label><input type="text" id="edit_first"></div>
+      <div><label>Last Name</label><input type="text" id="edit_last"></div>
+      <div><label>Phone</label><input type="tel" id="edit_phone"></div>
+      <div><label>Email</label><input type="email" id="edit_email"></div>
+      <div style="grid-column:span 2"><label>CivicCRM ID</label><input type="text" id="edit_crmid"></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <label style="margin-bottom:6px;display:block">Link as spouse to existing contact</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="edit_spouse_search" placeholder="Search by name…" oninput="searchEditSpouse()" style="margin-bottom:0;flex:1">
+        <button type="button" onclick="clearEditSpouseLink()" style="padding:4px 10px;font-size:.7rem;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Clear</button>
+      </div>
+      <div id="edit_spouse_results" style="display:none;border:1px solid var(--border2);border-radius:4px;background:var(--surf);max-height:130px;overflow-y:auto;margin-top:4px"></div>
+      <div id="edit_spouse_selected" style="display:none;padding:6px 10px;background:rgba(37,99,235,.08);border:1px solid var(--accent);border-radius:4px;margin-top:4px;font-size:.75rem;color:var(--accent)"></div>
+    </div>
+    <div id="edit_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-pri" onclick="saveContactEdit()">Save Changes</button>
+      <button class="btn btn-sec" onclick="document.getElementById('editContactModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
 <div class="modal-bg" id="importModal" style="display:none">
   <div class="modal" style="width:580px">
@@ -237,9 +267,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <span class="tier-lbl red">Red ↑</span>
     </div>
     <div class="toolbar-sep"></div>
-    <span class="tlabel">Filter</span>
-    <input type="number" class="tier-input" id="minValue" placeholder="Min $" style="width:100px" oninput="applyFilter()">
-    <button class="btn btn-sec" style="padding:4px 9px" onclick="clearFilter()">✕</button>
+    <button class="btn btn-sec" onclick="toggleFilterPanel()" id="filterToggle">⚙ Filter</button>
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
     <div class="toolbar-sep"></div>
     <button class="btn btn-gold" id="prefetchBtn" onclick="startPrefetch()" disabled>⚡ Pre-fetch All</button>
@@ -251,6 +279,27 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
       <span class="prog-lbl" id="progLbl">Loading…</span>
     </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div id="filterPanel" style="display:none;background:var(--surf2);border-bottom:1px solid var(--border);padding:10px 14px;display:none;flex-wrap:wrap;gap:12px;align-items:flex-end">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Min Home Value</div>
+      <input type="number" class="tier-input" id="minValue" placeholder="$0" style="width:110px" oninput="applyFilter()">
+    </div>
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Min Total Giving</div>
+      <input type="number" class="tier-input" id="minGiving" placeholder="$0" style="width:110px" oninput="applyFilter()">
+    </div>
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Last Gift After</div>
+      <input type="date" class="tier-input" id="filterDateFrom" style="width:140px" oninput="applyFilter()">
+    </div>
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">Last Gift Before</div>
+      <input type="date" class="tier-input" id="filterDateTo" style="width:140px" oninput="applyFilter()">
+    </div>
+    <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px">✕ Clear</button>
   </div>
 
   <div class="main">
@@ -474,20 +523,42 @@ function recolorAll(){
 }
 
 // ── FILTER ──
+function toggleFilterPanel(){
+  const p=document.getElementById('filterPanel');
+  const isVisible=p.style.display==='flex';
+  p.style.display=isVisible?'none':'flex';
+  document.getElementById('filterToggle').textContent=isVisible?'⚙ Filter':'✕ Filter';
+}
 function applyFilter(){
   const q=document.getElementById('srch').value.toLowerCase();
   const minVal=parseFloat(document.getElementById('minValue').value)||0;
+  const minGiving=parseFloat(document.getElementById('minGiving')?.value)||0;
+  const dateFrom=document.getElementById('filterDateFrom')?.value||'';
+  const dateTo=document.getElementById('filterDateTo')?.value||'';
   filtered=households.filter(h=>{
     const text=h.displayName.toLowerCase()+(h.address||'').toLowerCase()+(h.city||'').toLowerCase();
     if(!text.includes(q))return false;
-    if(minVal>0)return h.home_value&&h.home_value>=minVal;
+    if(minVal>0&&(!h.home_value||h.home_value<minVal))return false;
+    if(minGiving>0||dateFrom||dateTo){
+      const g=getGivingStats(h);
+      if(minGiving>0&&(!g||g.total<minGiving))return false;
+      if(dateFrom&&(!g||!g.lastDate||g.lastDate<dateFrom))return false;
+      if(dateTo&&(!g||!g.lastDate||g.lastDate>dateTo))return false;
+    }
     return true;
   });
   households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(filtered.includes(h)?1:0.12);});
-  document.getElementById('filterCount').textContent=minVal>0?`${filtered.length} match`:'';
+  const activeFilters=[minVal>0,minGiving>0,dateFrom,dateTo].filter(Boolean).length;
+  document.getElementById('filterCount').textContent=activeFilters>0?`${filtered.length} shown`:'';
   renderList();
 }
-function clearFilter(){document.getElementById('minValue').value='';document.getElementById('srch').value='';filtered=[...households];households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(1);});document.getElementById('filterCount').textContent='';renderList();}
+function clearFilter(){
+  ['minValue','minGiving','filterDateFrom','filterDateTo','srch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  filtered=[...households];
+  households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(1);});
+  document.getElementById('filterCount').textContent='';
+  renderList();
+}
 function mobileSrch(){document.getElementById('srch').value=document.getElementById('srch-mobile').value;applyFilter();}
 
 // ── RENDER LIST ──
@@ -574,6 +645,7 @@ function setProp(mode,h,result){
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
     <button onclick="deleteContact('${m.id}','${m.first_name} ${m.last_name}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
+    <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact">✏️</button>
   </div>`).join('');
 
   // Giving tab
@@ -1060,7 +1132,7 @@ async function importContacts(lines){
 async function importDonations(lines){
   const status=document.getElementById('imp_status');
   const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]);
-  let added=0,skipped=0,notFound=0;
+  let added=0,skipped=0,notFound=0,notFoundIds=[];
 
   // Auto-detect format: with or without Donor Name column
   // Sample first data row to check if col 1 looks like a name or a number
@@ -1079,7 +1151,7 @@ async function importDonations(lines){
     status.textContent=`Processing donation for CRM ID ${crmId}…`;
 
     const contacts=await sb(`contacts?civicrm_id=eq.${crmId}&select=id`);
-    if(!contacts||!contacts.length){notFound++;continue;}
+    if(!contacts||!contacts.length){notFound++;notFoundIds.push(crmId);continue;}
     const contactId=contacts[0].id;
 
     const existing=await sb(`donations?contact_id=eq.${contactId}&amount=eq.${amount}&date=eq.${date}&select=id`);
@@ -1088,7 +1160,7 @@ async function importDonations(lines){
     await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,civicrm_id:crmId,amount,date:date||null,notes:notes||null})});
     added++;
   }
-  status.textContent=`✅ Done! ${added} added, ${skipped} duplicates skipped${notFound?' · '+notFound+' contact IDs not found':''}.`;
+  status.innerHTML=`✅ Done! ${added} added, ${skipped} duplicates skipped${notFound?` · <span style="color:var(--red)">${notFound} contact ID${notFound>1?'s':''} not found: ${notFoundIds.join(', ')}</span>`:''}.`;
   loadAll();
 }
 
@@ -1158,6 +1230,102 @@ async function reGeocode(idx){
   }else{
     btn.textContent='⚠ Not found';btn.disabled=false;
   }
+}
+
+// ── EDIT CONTACT ──
+let editLinkedHousehold=null;
+
+function openEditContact(id,first,last,phone,email,crmid,householdId){
+  document.getElementById('edit_contact_id').value=id;
+  document.getElementById('edit_household_id').value=householdId;
+  document.getElementById('edit_first').value=first;
+  document.getElementById('edit_last').value=last;
+  document.getElementById('edit_phone').value=phone;
+  document.getElementById('edit_email').value=email;
+  document.getElementById('edit_crmid').value=crmid;
+  document.getElementById('edit_spouse_search').value='';
+  document.getElementById('edit_spouse_results').style.display='none';
+  document.getElementById('edit_spouse_selected').style.display='none';
+  document.getElementById('edit_status').style.display='none';
+  editLinkedHousehold=null;
+  document.getElementById('editContactModal').style.display='flex';
+}
+
+function searchEditSpouse(){
+  const q=document.getElementById('edit_spouse_search').value.toLowerCase().trim();
+  const currentHhId=document.getElementById('edit_household_id').value;
+  const res=document.getElementById('edit_spouse_results');
+  if(q.length<2){res.style.display='none';return;}
+  const matches=households.filter(h=>
+    h.id!==currentHhId&&(
+      h.displayName.toLowerCase().includes(q)||
+      (h.members||[]).some(m=>(m.first_name+' '+m.last_name).toLowerCase().includes(q))
+    )
+  ).slice(0,6);
+  if(!matches.length){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=matches.map(h=>`
+    <div onclick="selectEditSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+      <div style="font-weight:500">${h.displayName}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
+    </div>`).join('');
+}
+
+function selectEditSpouse(householdId){
+  editLinkedHousehold=households.find(h=>h.id===householdId);
+  document.getElementById('edit_spouse_results').style.display='none';
+  document.getElementById('edit_spouse_search').value='';
+  document.getElementById('edit_spouse_selected').style.display='block';
+  document.getElementById('edit_spouse_selected').textContent=`✓ Will merge with ${editLinkedHousehold.displayName}`;
+}
+
+function clearEditSpouseLink(){
+  editLinkedHousehold=null;
+  document.getElementById('edit_spouse_search').value='';
+  document.getElementById('edit_spouse_results').style.display='none';
+  document.getElementById('edit_spouse_selected').style.display='none';
+}
+
+async function saveContactEdit(){
+  const contactId=document.getElementById('edit_contact_id').value;
+  const currentHhId=document.getElementById('edit_household_id').value;
+  const first=document.getElementById('edit_first').value.trim();
+  const last=document.getElementById('edit_last').value.trim();
+  const phone=document.getElementById('edit_phone').value.trim()||null;
+  const email=document.getElementById('edit_email').value.trim()||null;
+  const crmid=document.getElementById('edit_crmid').value.trim()||null;
+  const status=document.getElementById('edit_status');
+  status.style.display='block';status.textContent='Saving…';
+  try{
+    // Update contact fields
+    await sb(`contacts?id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({first_name:first,last_name:last,phone,email,civicrm_id:crmid})});
+
+    if(editLinkedHousehold){
+      // Move this contact to the linked household
+      await sb(`contacts?id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({household_id:editLinkedHousehold.id})});
+      // Update joint name on target household
+      const allContacts=await sb(`contacts?household_id=eq.${editLinkedHousehold.id}&select=first_name,last_name&order=created_at.asc`);
+      const firsts=[...new Set(allContacts.map(c=>c.first_name))];
+      const lastName=allContacts[0]?.last_name||last;
+      await sb(`households?id=eq.${editLinkedHousehold.id}`,{method:'PATCH',body:JSON.stringify({joint_name:firsts.join(' and ')+' '+lastName})});
+      // If old household is now empty, delete it
+      const remaining=await sb(`contacts?household_id=eq.${currentHhId}&select=id`);
+      if(!remaining||!remaining.length){
+        await sb(`households?id=eq.${currentHhId}`,{method:'DELETE'});
+      }
+    } else {
+      // Just update the joint name on current household
+      const allContacts=await sb(`contacts?household_id=eq.${currentHhId}&select=first_name,last_name&order=created_at.asc`);
+      if(allContacts&&allContacts.length){
+        const firsts=[...new Set(allContacts.map(c=>c.first_name))];
+        const lastName=allContacts[0]?.last_name||last;
+        await sb(`households?id=eq.${currentHhId}`,{method:'PATCH',body:JSON.stringify({joint_name:firsts.join(' and ')+' '+lastName})});
+      }
+    }
+
+    document.getElementById('editContactModal').style.display='none';
+    loadAll();
+  }catch(e){status.textContent='⚠ '+e.message;}
 }
 
 // ── DELETE ──
