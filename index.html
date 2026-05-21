@@ -888,19 +888,36 @@ async function confirmAddContact(){
   if(!acPropResult)return;
   const r=acPropResult;
   try{
-    // Create household
-    const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`,address:r.address,city:r.city,state:'OH',zip:r.zip,county:r.county,home_value:r.homeValue,property_data:r,date_added:new Date().toISOString().split('T')[0]})});
-    // Create primary contact
-    await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone,email:acFormData.email,civicrm_id:acFormData.crmId||null})});
-    // Create spouse if provided
-    if(acFormData.spouse){
-      const sp=acFormData.spouse.trim().split(' ');
-      const spFirst=sp.length>1?sp.slice(0,-1).join(' '):acFormData.spouse;
-      const spLast=sp.length>1?sp[sp.length-1]:acFormData.last;
-      await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:spFirst,last_name:spLast,civicrm_id:acFormData.crmId2||null})});
+    let householdId;
+
+    if(acLinkedSpouse){
+      // Link to existing household
+      householdId=acLinkedSpouse.id;
+      // Update joint name to include new contact
+      const existingMembers=acLinkedSpouse.members||[];
+      const allFirstNames=[...existingMembers.map(m=>m.first_name),acFormData.first];
+      const lastName=existingMembers[0]?.last_name||acFormData.last;
+      const newJointName=allFirstNames.join(' and ')+' '+lastName;
+      await sb('households?id=eq.'+householdId,{method:'PATCH',body:JSON.stringify({joint_name:newJointName})});
+    } else {
+      // Create new household
+      const jointName=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
+      const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address:r.address,city:r.city,state:'OH',zip:r.zip,county:r.county,home_value:r.homeValue,property_data:r,date_added:new Date().toISOString().split('T')[0]})});
+      householdId=hh.id;
+      // Create spouse if provided (and no linked spouse)
+      if(acFormData.spouse){
+        const sp=acFormData.spouse.trim().split(' ');
+        const spFirst=sp.length>1?sp.slice(0,-1).join(' '):acFormData.spouse;
+        const spLast=sp.length>1?sp[sp.length-1]:acFormData.last;
+        await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:spFirst,last_name:spLast,civicrm_id:acFormData.crmId2||null})});
+      }
     }
+
+    // Create the new contact linked to household
+    await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,civicrm_id:acFormData.crmId||null})});
+
     hideAddContact();
-    alert(`✅ ${acFormData.first} ${acFormData.last} added! Click Refresh to see them on the map.`);
+    alert(`✅ ${acFormData.first} ${acFormData.last} added!`);
     loadAll();
   }catch(e){alert('Failed to save: '+e.message);}
 }
