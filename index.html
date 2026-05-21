@@ -829,9 +829,9 @@ function setImportType(type){
   document.getElementById('imp_donations_btn').className='btn '+(type==='donations'?'btn-pri':'btn-sec');
   document.getElementById('imp_status').style.display='none';
   if(type==='contacts'){
-    document.getElementById('imp_format').innerHTML=`<b>Expected columns (from CivicCRM export):</b><br>
-    Contact Name · Joint Casual Firstname-Lastname · Street Address · City · State · Postal Code · Phone · ID<br><br>
-    <b>How it works:</b> Matched by CivicCRM ID. New contacts are added. Existing contacts are updated.`;
+    document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
+    First Name · Last Name · Email · Phone · Street Address · City · State · ZIP · Contact ID · Gender<br><br>
+    <b>How it works:</b> Matched by Contact ID. New contacts are added, existing ones updated. Contacts sharing the same address are automatically grouped into one household.`;
   }else{
     document.getElementById('imp_format').innerHTML=`<b>Expected columns (from CivicCRM export):</b><br>
     Contact ID · Donor Name · Amount · Date · Notes<br><br>
@@ -880,36 +880,65 @@ function parseCSVLine(line){
 
 async function importContacts(lines){
   const status=document.getElementById('imp_status');
-  const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]);
-  let added=0,updated=0,skipped=0;
+  const rows=lines.slice(1).map(parseCSVLine).filter(r=>r[0]||r[1]);
+  let added=0,updated=0;
+
+  // First pass: build address groups to link spouses into same household
+  const addressMap={}; // key: address+zip -> household_id
+
   for(const r of rows){
-    const contactName=r[0]||'';const jointName=r[1]||'';const address=r[2]||'';
-    const city=r[3]||'';const state=r[4]||'OH';const zip=(r[5]||'').replace(/\D/g,'').substring(0,5);
-    const phone=r[6]||'';const crmId=(r[7]||'').toString().trim();
-    if(!contactName||!crmId)continue;
-    const parts=contactName.split(',');
-    const lastName=parts[0]?.trim()||'';
-    const firstName=parts[1]?.trim()||contactName;
+    const firstName=(r[0]||'').trim();
+    const lastName=(r[1]||'').trim();
+    const email=(r[2]||'').trim()||null;
+    const phone=(r[3]||'').trim()||null;
+    const address=(r[4]||'').trim()||null;
+    const city=(r[5]||'').trim()||null;
+    const state=(r[6]||'OH').trim();
+    const zip=(r[7]||'').replace(/\D/g,'').substring(0,5)||null;
+    const crmId=(r[8]||'').toString().trim()||null;
+    const gender=(r[9]||'').trim()||null;
+
+    if(!firstName&&!lastName)continue;
+    if(!crmId)continue;
+
     status.textContent=`Processing ${firstName} ${lastName}…`;
 
-    // Check if contact already exists by civicrm_id
+    // Check if contact already exists
     const existing=await sb(`contacts?civicrm_id=eq.${crmId}&select=id,household_id`);
     if(existing&&existing.length>0){
-      // Update contact
-      await sb(`contacts?id=eq.${existing[0].id}`,{method:'PATCH',body:JSON.stringify({first_name:firstName,last_name:lastName,phone:phone||undefined})});
-      // Update household address if provided
+      await sb(`contacts?id=eq.${existing[0].id}`,{method:'PATCH',body:JSON.stringify({first_name:firstName,last_name:lastName,phone,email,gender})});
       if(address&&existing[0].household_id){
-        await sb(`households?id=eq.${existing[0].household_id}`,{method:'PATCH',body:JSON.stringify({address,city,state,zip,joint_name:jointName||undefined})});
+        await sb(`households?id=eq.${existing[0].household_id}`,{method:'PATCH',body:JSON.stringify({address,city,state,zip})});
       }
+      if(address&&zip)addressMap[address.toLowerCase()+'|'+zip]=existing[0].household_id;
       updated++;
-    }else{
-      // Create new household + contact
-      const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName||`${firstName} ${lastName}`,address:address||null,city:city||null,state,zip:zip||null,date_added:new Date().toISOString().split('T')[0]})});
-      await sb('contacts',{method:'POST',body:JSON.stringify({household_id:hh.id,first_name:firstName,last_name:lastName,phone:phone||null,civicrm_id:crmId})});
-      added++;
+      continue;
     }
+
+    // New contact — check if a household already exists at this address
+    const addrKey=address&&zip?address.toLowerCase()+'|'+zip:null;
+    let householdId=addrKey?addressMap[addrKey]:null;
+
+    if(!householdId&&addrKey){
+      // Check Supabase for existing household at this address
+      const existingHH=await sb(`households?address=ilike.${encodeURIComponent(address)}&zip=eq.${zip}&select=id`);
+      if(existingHH&&existingHH.length>0)householdId=existingHH[0].id;
+    }
+
+    if(!householdId){
+      // Create new household
+      const jointName=`${firstName} ${lastName}`;
+      const [hh]=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address,city,state,zip,date_added:new Date().toISOString().split('T')[0]})});
+      householdId=hh.id;
+    }
+
+    if(addrKey)addressMap[addrKey]=householdId;
+
+    // Create contact linked to household
+    await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:firstName,last_name:lastName,phone,email,civicrm_id:crmId,gender})});
+    added++;
   }
-  status.textContent=`✅ Done! ${added} added, ${updated} updated, ${skipped} skipped.`;
+  status.textContent=`✅ Done! ${added} added, ${updated} updated.`;
   loadAll();
 }
 
