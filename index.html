@@ -257,6 +257,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <select id="colorBy" onchange="switchColorMode()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
       <option value="value">Home Value</option>
       <option value="giving">Giving</option>
+      <option value="score">Prospect Score</option>
     </select>
     <div id="valueTiers" style="display:flex;align-items:center;gap:4px">
       <div class="tier-wrap"><span class="tier-lbl green">Green &lt;</span><input type="number" class="tier-input" id="tier1" value="500000" oninput="recolorAll()"></div>
@@ -345,6 +346,16 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- FULL SCREEN CONTACT PANEL -->
+<div id="fullPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8000;overflow-y:auto;flex-direction:column">
+  <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:1">
+    <button onclick="closeFullPanel()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.65rem">← Back to Map</button>
+    <div id="fullPanelName" style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700;color:var(--txt)"></div>
+  </div>
+  <div id="fullPanelContent" style="max-width:900px;margin:0 auto;width:100%;padding:24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── PASSWORD ──
@@ -425,7 +436,8 @@ async function loadAll(){
         members:contacts.map(c=>({...c,donations:donMap[c.id]||[]})),
         displayName:buildDisplayName({...h,contacts}),
         noAddress:!h.address,
-      profile_data:h.property_data?.profile||null
+      profile_data:h.property_data?.profile||null,
+      notes:h.notes||''
       };
     });
 
@@ -485,9 +497,39 @@ function getGivingStats(h){
 }
 
 // ── TIERS ──
+function getProspectScore(h){
+  // Calculate live prospect score from available data
+  let score=0;
+  // Giving history (40pts) - strongest signal
+  const g=getGivingStats(h);
+  if(g){
+    if(g.total>=10000)score+=40;
+    else if(g.total>=5000)score+=32;
+    else if(g.total>=1000)score+=24;
+    else if(g.total>=100)score+=16;
+    else score+=8;
+  }
+  // Home value (30pts)
+  const val=h.home_value||0;
+  if(val>=2000000)score+=30;
+  else if(val>=1000000)score+=24;
+  else if(val>=500000)score+=18;
+  else if(val>=300000)score+=12;
+  else if(val>0)score+=6;
+  // AI profile score (30pts)
+  const ps=h.profile_data?.score||0;
+  score+=Math.round((ps/100)*30);
+  return Math.min(100,score);
+}
+
 function getTier(i){
   const h=households[i];if(!h)return'grey';
   const mode=document.getElementById('colorBy')?.value||'value';
+  if(mode==='score'){
+    const s=getProspectScore(h);
+    if(s===0)return'grey';
+    if(s<40)return'green';if(s<70)return'gold';return'red';
+  }
   if(mode==='giving'){
     const g=getGivingStats(h);if(!g)return'grey';
     const g1=parseFloat(document.getElementById('gtier1').value)||1000;
@@ -507,9 +549,15 @@ function switchColorMode(){
   recolorAll();
 }
 
+// Score mode legend update handled in recolorAll
+
 function recolorAll(){
   const mode=document.getElementById('colorBy')?.value||'value';
-  if(mode==='giving'){
+  if(mode==='score'){
+    document.getElementById('leg1').textContent='0–39';
+    document.getElementById('leg2').textContent='40–69';
+    document.getElementById('leg3').textContent='70–100';
+  } else if(mode==='giving'){
     const g1=parseFloat(document.getElementById('gtier1').value)||1000;
     const g2=parseFloat(document.getElementById('gtier2').value)||5000;
     document.getElementById('leg1').textContent='< $'+g1.toLocaleString();
@@ -623,17 +671,24 @@ function setProp(mode,h,result){
   const tagClass=h.noAddress?'unk':h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
   const giving=getGivingStats(h);
 
+  const liveScore=getProspectScore(h);
+  const scoreColor=liveScore>=70?'var(--green)':liveScore>=40?'var(--gold)':'var(--red)';
   const header=`<div class="pinner" style="padding-bottom:6px;position:relative">
     <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>
-    <div class="crm-name" style="padding-right:24px">${h.displayName}</div>
+    <button onclick="openFullPanel(${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view">⛶</button>
+    <div class="crm-name" style="padding-right:56px">${h.displayName}</div>
     <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
-    <span class="ctag ${tagClass}">${countyLabel}</span>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <span class="ctag ${tagClass}">${countyLabel}</span>
+      ${liveScore>0?`<span style="font-family:'DM Mono',monospace;font-size:.58rem;color:${scoreColor};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px">Score: ${liveScore}/100</span>`:''}
+    </div>
   </div>
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-prop-${idx}" onclick="showTab(${idx},'prop')">🏠 Property</button>
     <button class="tab-btn" id="tab-giving-${idx}" onclick="showTab(${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
     <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
     <button class="tab-btn" id="tab-profile-${idx}" onclick="showTab(${idx},'profile')">🔍 Profile</button>
+    <button class="tab-btn" id="tab-notes-${idx}" onclick="showTab(${idx},'notes')">📝 Notes</button>
   </div>`;
 
   if(mode==='loading'){el.innerHTML=header+'<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>';return;}
@@ -726,11 +781,17 @@ function setProp(mode,h,result){
     `<div id="tabcontent-prop-${idx}" class="tab-content pinner" style="padding-top:8px">${grid}${data.source?`<div class="psrc">Source: ${data.source}</div>`:''}${reGeoBtn}</div>
     <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${givingHtml}</div>
     <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>
-    <div id="tabcontent-profile-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${profileHtml}</div>`;
+    <div id="tabcontent-profile-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${profileHtml}</div>
+    <div id="tabcontent-notes-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
+      <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:8px">Private Notes</div>
+      <textarea id="notes-textarea-${idx}" placeholder="Add private notes about this contact — will be used when building their prospect profile..." style="width:100%;min-height:100px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
+      <button onclick="saveNotes(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">Save Notes</button>
+      <span id="notes-saved-${idx}" style="display:none;font-size:.7rem;color:var(--green);margin-left:8px">✓ Saved</span>
+    </div>`;
 }
 
 function showTab(idx,tab){
-  ['prop','giving','contacts','profile'].forEach(t=>{
+  ['prop','giving','contacts','profile','notes'].forEach(t=>{
     const btn=document.getElementById(`tab-${t}-${idx}`);
     const content=document.getElementById(`tabcontent-${t}-${idx}`);
     if(btn)btn.classList.toggle('active',t===tab);
@@ -1315,6 +1376,7 @@ NEVER invent information. Only include what you actually find publicly.`,
 Name: ${fullName}
 Location: ${location}
 Home Value: ${homeVal}
+${h.notes?`Private notes from relationship manager (factor into score and approach): ${h.notes}`:''}
 Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPublica 990 finder, LinkedIn, Ohio business records, general web search.`}]
       })
     });
@@ -1336,6 +1398,122 @@ Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPu
     if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
     <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
   }
+}
+
+// ── NOTES ──
+async function saveNotes(idx){
+  const h=households[idx];
+  const notes=document.getElementById(`notes-textarea-${idx}`)?.value||'';
+  h.notes=notes;
+  await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({notes})});
+  const saved=document.getElementById(`notes-saved-${idx}`);
+  if(saved){saved.style.display='inline';setTimeout(()=>saved.style.display='none',2000);}
+}
+
+// ── FULL PANEL ──
+function openFullPanel(idx){
+  const h=households[idx];
+  const g=getGivingStats(h);
+  const score=getProspectScore(h);
+  const scoreColor=score>=70?'var(--green)':score>=40?'var(--gold)':'var(--red)';
+  const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+  const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  document.getElementById('fullPanelName').textContent=h.displayName;
+
+  const data=h.property_data||{};
+  const profile=h.profile_data||null;
+
+  // Build full panel content
+  const content=`
+    <!-- Score card -->
+    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:20px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:3rem;font-weight:700;color:${scoreColor};font-family:'DM Mono',monospace;line-height:1">${score}</div>
+        <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">PROSPECT SCORE</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;margin-bottom:4px">${h.displayName}</div>
+        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:6px">${h.address||''}, ${h.city||''}, OH ${h.zip||''}</div>
+        ${profile?.approach?`<div style="font-size:.78rem;color:var(--txt2);font-style:italic">"${profile.approach}"</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;text-align:right">
+        ${h.home_value?`<div style="font-size:.75rem"><span style="color:var(--txt3)">Home Value</span><br><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
+        ${g?`<div style="font-size:.75rem"><span style="color:var(--txt3)">Total Given</span><br><b style="color:var(--gold)">$${Math.round(g.total).toLocaleString()}</b></div>`:''}
+      </div>
+    </div>
+
+    <!-- Property -->
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px">🏠 Property</div>
+      ${[['Market Value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():null,'grn'],['Last Sale',data.lastSalePrice,''],['Sale Date',data.lastSaleDate,''],['Year Built',data.yearBuilt,''],['Sq Ft',data.squareFeet,''],['Beds/Baths',data.bedsBaths,''],['Lot Size',data.lotSize,''],['Annual Tax',data.annualTax,'']].filter(([,v])=>v).map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.75rem"><span style="color:var(--txt3)">${k}</span><span style="font-weight:500;color:${c==='grn'?'var(--green)':'var(--txt)'}">${v}</span></div>`).join('')}
+    </div>
+
+    <!-- Giving -->
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px">💝 Giving History</div>
+      ${g?`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--surf2);border-radius:6px;padding:10px;text-align:center"><div style="font-size:1.1rem;font-weight:700;color:var(--gold);font-family:'DM Mono',monospace">$${Math.round(g.total).toLocaleString()}</div><div style="font-size:.6rem;color:var(--txt3)">Total Given</div></div>
+          <div style="background:var(--surf2);border-radius:6px;padding:10px;text-align:center"><div style="font-size:1.1rem;font-weight:700;font-family:'DM Mono',monospace">${g.count}</div><div style="font-size:.6rem;color:var(--txt3)">Gifts</div></div>
+        </div>
+        ${g.donations.map(d=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.75rem"><span style="font-weight:500">${fa(d.amount)}</span>${d.notes?`<span style="color:var(--txt3);font-size:.68rem;max-width:120px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">${d.notes}</span>`:'<span></span>'}<span style="color:var(--txt3)">${fd(d.date)}</span></div>`).join('')}
+      `:'<div style="font-size:.78rem;color:var(--txt3)">No donation history.</div>'}
+    </div>
+
+    <!-- Contacts -->
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px">👥 Contacts</div>
+      ${(h.members||[]).map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name}</div>
+        ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
+        ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
+        <div style="font-size:.62rem;color:var(--txt3);margin-top:2px">CivicCRM: ${m.civicrm_id||'—'} · ${m.gender||''}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Profile -->
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px">🔍 AI Profile</div>
+      ${profile?`
+        <div style="font-size:.78rem;color:var(--txt2);line-height:1.65;margin-bottom:10px">${profile.summary||''}</div>
+        ${profile.fedLevel?`<div style="font-size:.73rem;margin-bottom:4px">🏛 <b>Federation:</b> ${profile.fedLevel}</div>`:''}
+        ${profile.businessInfo?`<div style="font-size:.73rem;margin-bottom:4px">💼 <b>Business:</b> ${profile.businessInfo}</div>`:''}
+        ${profile.boardMemberships?`<div style="font-size:.73rem;margin-bottom:4px">📋 <b>Boards:</b> ${profile.boardMemberships}</div>`:''}
+        ${profile.philanthropy990?`<div style="font-size:.73rem;margin-bottom:4px">📄 <b>990:</b> ${profile.philanthropy990}</div>`:''}
+        ${profile.pressmentions?`<div style="font-size:.73rem;margin-bottom:4px">📰 <b>Press:</b> ${profile.pressmentions}</div>`:''}
+      `:`<div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
+      <button onclick="buildProfile(${idx});closeFullPanel()" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.78rem">${profile?'↺ Rebuild Profile':'🔍 Build Profile'}</button>
+    </div>
+
+    <!-- Notes -->
+    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:8px">📝 Private Notes</div>
+      <textarea id="fullpanel-notes-${idx}" placeholder="Add private notes — included when building prospect profile..." style="width:100%;min-height:80px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
+      <button onclick="saveFullNotes(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.78rem">Save Notes</button>
+      <span id="fullnotes-saved-${idx}" style="display:none;font-size:.7rem;color:var(--green);margin-left:8px">✓ Saved</span>
+    </div>
+  `;
+
+  document.getElementById('fullPanelContent').innerHTML=content;
+  document.getElementById('fullPanel').style.display='flex';
+  window.scrollTo(0,0);
+}
+
+function closeFullPanel(){
+  document.getElementById('fullPanel').style.display='none';
+}
+
+async function saveFullNotes(idx){
+  const h=households[idx];
+  const notes=document.getElementById(`fullpanel-notes-${idx}`)?.value||'';
+  h.notes=notes;
+  // Sync to sidebar notes textarea too
+  const sidebarTA=document.getElementById(`notes-textarea-${idx}`);
+  if(sidebarTA)sidebarTA.value=notes;
+  await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({notes})});
+  const saved=document.getElementById(`fullnotes-saved-${idx}`);
+  if(saved){saved.style.display='inline';setTimeout(()=>saved.style.display='none',2000);}
 }
 
 // ── RE-GEOCODE ──
