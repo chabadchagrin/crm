@@ -287,8 +287,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <button onclick="runAISearch()" class="btn btn-pri" style="padding:5px 10px;border-radius:20px">Ask</button>
     </div>
   </header>
-  <!-- AI Search Results -->
-  <div id="aiSearchPanel" style="display:none;background:var(--surf);border-bottom:2px solid var(--accent);padding:14px 20px;max-height:280px;overflow-y:auto">
+  <!-- AI Search Results (inside #app, outside header) -->
+  <div id="aiSearchPanel" style="display:none;background:var(--surf);border-bottom:2px solid var(--accent);padding:14px 20px;max-height:280px;overflow-y:auto;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">AI Search Results</div>
       <button onclick="document.getElementById('aiSearchPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:.9rem">✕</button>
