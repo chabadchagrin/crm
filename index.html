@@ -787,13 +787,23 @@ function setProp(mode,h,result){
       <div class="pcell"><div class="pkey">Last Gift</div><div class="pval">${fd(giving.lastDate)}</div></div>
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px">Donation History</div>
-    ${giving.donations.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1">
+    ${giving.donations.map(d=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="font-size:.78rem;font-weight:500">${fa(d.amount)}</div>
-        ${d.notes?`<div style="font-size:.67rem;color:var(--txt3)">${d.notes}</div>`:''}
+        <div style="display:flex;align-items:center;gap:4px">
+          <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap">${fd(d.date)}</div>
+          <button onclick="editDonationNote('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Edit note">✏️</button>
+          <button onclick="deleteDonation('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Delete">🗑</button>
+        </div>
       </div>
-      <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;margin:0 8px">${fd(d.date)}</div>
-      <button onclick="deleteDonation('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px;flex-shrink:0" title="Delete donation">🗑</button>
+      <div id="don-note-display-${d.id}" style="font-size:.67rem;color:var(--txt3);margin-top:2px">${d.notes||'<em style="color:var(--txt3)">No note — click ✏️ to add</em>'}</div>
+      <div id="don-note-edit-${d.id}" style="display:none;margin-top:4px">
+        <input type="text" value="${(d.notes||'').replace(/"/g,'&quot;')}" id="don-note-input-${d.id}" style="width:100%;background:var(--surf2);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;font-size:.72rem;color:var(--txt);outline:none">
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button onclick="saveDonationNote('${d.id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:var(--accent);color:#fff;border:none;border-radius:3px;cursor:pointer">Save</button>
+          <button onclick="cancelDonationNote('${d.id}')" style="font-size:.65rem;padding:3px 9px;background:none;border:1px solid var(--border2);border-radius:3px;cursor:pointer;color:var(--txt2)">Cancel</button>
+        </div>
+      </div>
     </div>`).join('')}`;
   }else{
     givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -1839,6 +1849,35 @@ If this is the only contact in the household, the household and all its property
     document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
     renderList();
   }catch(e){alert('Delete failed: '+e.message);}
+}
+
+function editDonationNote(donId, hIdx){
+  document.getElementById(`don-note-display-${donId}`).style.display='none';
+  document.getElementById(`don-note-edit-${donId}`).style.display='block';
+  document.getElementById(`don-note-input-${donId}`).focus();
+}
+
+function cancelDonationNote(donId){
+  document.getElementById(`don-note-display-${donId}`).style.display='block';
+  document.getElementById(`don-note-edit-${donId}`).style.display='none';
+}
+
+async function saveDonationNote(donId, hIdx){
+  const input=document.getElementById(`don-note-input-${donId}`);
+  const notes=input?.value?.trim()||'';
+  try{
+    await sb(`donations?id=eq.${donId}`,{method:'PATCH',body:JSON.stringify({notes:notes||null})});
+    // Update local state
+    const h=households[hIdx];
+    h.members.forEach(m=>{
+      const don=(m.donations||[]).find(d=>d.id===donId);
+      if(don)don.notes=notes;
+    });
+    // Update display
+    const display=document.getElementById(`don-note-display-${donId}`);
+    if(display)display.innerHTML=notes||'<em style="color:var(--txt3)">No note — click ✏️ to add</em>';
+    cancelDonationNote(donId);
+  }catch(e){alert('Save failed: '+e.message);}
 }
 
 async function deleteDonation(donationId, hIdx){
