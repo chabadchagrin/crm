@@ -188,6 +188,38 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- LOG INTERACTION MODAL -->
+<div class="modal-bg" id="logInteractionModal" style="display:none">
+  <div class="modal" style="width:480px">
+    <h2>📝 Log Interaction</h2>
+    <input type="hidden" id="li_household_idx">
+    <div id="li_contact_select_wrap" style="margin-bottom:12px">
+      <label>Who was this with?</label>
+      <select id="li_contact_id" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:0"></select>
+    </div>
+    <label>Type</label>
+    <select id="li_type" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+      <option>Meeting in person</option>
+      <option>Phone call</option>
+      <option>Shabbat attendance</option>
+      <option>Class / Program</option>
+      <option>Event attendance</option>
+      <option>Kids program</option>
+      <option>Email / Text</option>
+      <option>Other</option>
+    </select>
+    <label>Date</label>
+    <input type="date" id="li_date">
+    <label>Notes</label>
+    <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <div id="li_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveInteraction()">Log Interaction</button>
+      <button class="btn btn-sec" onclick="document.getElementById('logInteractionModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT CONTACT MODAL -->
 <div class="modal-bg" id="editContactModal" style="display:none">
   <div class="modal" style="width:480px">
@@ -250,7 +282,19 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
     <div class="spacer"></div>
     <span class="total" id="totalLbl">Loading…</span>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <input type="text" id="aiSearchInput" placeholder="🔍 Ask anything…" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:200px" onkeydown="if(event.key==='Enter')runAISearch()">
+      <button onclick="runAISearch()" class="btn btn-pri" style="padding:5px 10px;border-radius:20px">Ask</button>
+    </div>
   </header>
+  <!-- AI Search Results -->
+  <div id="aiSearchPanel" style="display:none;background:var(--surf);border-bottom:2px solid var(--accent);padding:14px 20px;max-height:280px;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">AI Search Results</div>
+      <button onclick="document.getElementById('aiSearchPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:.9rem">✕</button>
+    </div>
+    <div id="aiSearchResults" style="font-size:.8rem;color:var(--txt2);line-height:1.7"></div>
+  </div>
 
   <div class="toolbar">
     <span class="tlabel">Color by</span>
@@ -688,6 +732,7 @@ function setProp(mode,h,result){
     <button class="tab-btn" id="tab-giving-${idx}" onclick="showTab(${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
     <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
     <button class="tab-btn" id="tab-profile-${idx}" onclick="showTab(${idx},'profile')">🔍 Profile</button>
+    <button class="tab-btn" id="tab-interactions-${idx}" onclick="showTab(${idx},'interactions');loadInteractionsTab(${idx})">🤝 Activity</button>
     <button class="tab-btn" id="tab-notes-${idx}" onclick="showTab(${idx},'notes')">📝 Notes</button>
   </div>`;
 
@@ -782,6 +827,13 @@ function setProp(mode,h,result){
     <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${givingHtml}</div>
     <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>
     <div id="tabcontent-profile-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${profileHtml}</div>
+    <div id="tabcontent-interactions-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Activity Log</div>
+        <button onclick="openLogInteraction(${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Log</button>
+      </div>
+      <div id="interactions-list-${idx}"><div style="font-size:.75rem;color:var(--txt3)">Loading…</div></div>
+    </div>
     <div id="tabcontent-notes-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:8px">Private Notes</div>
       <textarea id="notes-textarea-${idx}" placeholder="Add private notes about this contact — will be used when building their prospect profile..." style="width:100%;min-height:100px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
@@ -791,7 +843,7 @@ function setProp(mode,h,result){
 }
 
 function showTab(idx,tab){
-  ['prop','giving','contacts','profile','notes'].forEach(t=>{
+  ['prop','giving','contacts','profile','interactions','notes'].forEach(t=>{
     const btn=document.getElementById(`tab-${t}-${idx}`);
     const content=document.getElementById(`tabcontent-${t}-${idx}`);
     if(btn)btn.classList.toggle('active',t===tab);
@@ -1340,6 +1392,16 @@ async function buildProfile(idx){
   const primaryMember=h.members?.[0];
   if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
   const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
+  const g=getGivingStats(h);
+  // Load recent interactions
+  let interactions=[];
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(memberIds){
+      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=20`);
+      interactions=iRows||[];
+    }
+  }catch(e){}
   const location=`${h.city||'Chagrin Falls'}, Ohio`;
   const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
 
@@ -1376,7 +1438,9 @@ NEVER invent information. Only include what you actually find publicly.`,
 Name: ${fullName}
 Location: ${location}
 Home Value: ${homeVal}
-${h.notes?`Private notes from relationship manager (factor into score and approach): ${h.notes}`:''}
+Giving to Chabad: ${g?`Total $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}. Donation notes: ${g.donations.filter(d=>d.notes).map(d=>d.notes).join('; ')}`:'No giving history'}
+${h.notes?`Private relationship notes (factor heavily into score and approach): ${h.notes}`:''}
+${interactions&&interactions.length?`Recent interactions: ${interactions.slice(0,10).map(i=>`${i.type} on ${i.date}: ${i.notes}`).join('; ')}`:''}
 Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPublica 990 finder, LinkedIn, Ohio business records, general web search.`}]
       })
     });
@@ -1398,6 +1462,69 @@ Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPu
     if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
     <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
   }
+}
+
+// ── INTERACTIONS ──
+function openLogInteraction(idx){
+  const h=households[idx];
+  document.getElementById('li_household_idx').value=idx;
+  document.getElementById('li_date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('li_notes').value='';
+  document.getElementById('li_status').style.display='none';
+  // Populate contact selector
+  const sel=document.getElementById('li_contact_id');
+  sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}">${m.first_name} ${m.last_name}</option>`).join('');
+  document.getElementById('logInteractionModal').style.display='flex';
+}
+
+async function saveInteraction(){
+  const idx=parseInt(document.getElementById('li_household_idx').value);
+  const contactId=document.getElementById('li_contact_id').value;
+  const type=document.getElementById('li_type').value;
+  const date=document.getElementById('li_date').value;
+  const notes=document.getElementById('li_notes').value.trim();
+  const status=document.getElementById('li_status');
+  if(!date){alert('Please enter a date.');return;}
+  status.style.display='block';status.textContent='Saving…';
+  try{
+    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+    document.getElementById('logInteractionModal').style.display='none';
+    // Refresh interactions tab if open
+    loadInteractionsTab(idx);
+  }catch(e){status.textContent='⚠ '+e.message;}
+}
+
+async function loadInteractionsTab(idx){
+  const h=households[idx];
+  const el=document.getElementById(`interactions-list-${idx}`);
+  if(!el)return;
+  el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">Loading…</div>';
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(!memberIds){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No contacts.</div>';return;}
+    const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=50`);
+    if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No activity logged yet. Click ＋ Log to add.</div>';return;}
+    const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+    el.innerHTML=rows.map(r=>{
+      const member=(h.members||[]).find(m=>m.id===r.contact_id);
+      const memberName=member?member.first_name:'';
+      return`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:.75rem;font-weight:500;color:var(--txt)">${r.type}</div>
+          <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap;margin-left:8px">${fd(r.date)}</div>
+        </div>
+        ${r.notes?`<div style="font-size:.7rem;color:var(--txt2);margin-top:3px;line-height:1.5">${r.notes}</div>`:''}
+        ${memberName?`<div style="font-size:.6rem;color:var(--txt3);margin-top:2px">with ${memberName}</div>`:''}
+        <button onclick="deleteInteraction('${r.id}',${idx})" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;margin-top:2px;padding:0">🗑 delete</button>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
+}
+
+async function deleteInteraction(id,idx){
+  if(!confirm('Delete this interaction?'))return;
+  await sb(`interactions?id=eq.${id}`,{method:'DELETE'});
+  loadInteractionsTab(idx);
 }
 
 // ── NOTES ──
@@ -1670,6 +1797,53 @@ async function deleteDonation(donationId, hIdx){
     renderList();
     setProp('data',h);showTab(hIdx,'giving');
   }catch(e){alert('Delete failed: '+e.message);}
+}
+
+// ── AI SEARCH ──
+async function runAISearch(){
+  if(!ANTHROPIC_KEY){
+    const k=prompt('Enter your Anthropic API key:');
+    if(!k)return;
+    ANTHROPIC_KEY=k.trim();
+    localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
+  }
+  const query=document.getElementById('aiSearchInput').value.trim();
+  if(!query)return;
+  const panel=document.getElementById('aiSearchPanel');
+  const results=document.getElementById('aiSearchResults');
+  panel.style.display='block';
+  results.innerHTML='<div class="loading-row"><div class="spin"></div><span>Searching through your contacts, notes and interactions…</span></div>';
+
+  // Build context from all households
+  const context=households.map((h,i)=>{
+    const g=getGivingStats(h);
+    const score=getProspectScore(h);
+    return `Contact #${i+1}: ${h.displayName} | Address: ${h.address||'none'}, ${h.city||''} | Home Value: ${h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown'} | Total Giving: ${g?'$'+Math.round(g.total).toLocaleString()+' ('+g.count+' gifts)':'none'} | Prospect Score: ${score}/100 | Notes: ${h.notes||'none'} | Profile: ${h.profile_data?.summary||'none'}`;
+  }).join('
+');
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1000,
+        system:`You are an intelligent assistant for a Chabad organization's CRM. You help the rabbi find the right contacts based on natural language queries. You have access to contact data including names, addresses, home values, giving history, prospect scores, private notes, and AI profiles. Answer helpfully and specifically, naming actual people from the data when relevant. Be concise but insightful.`,
+        messages:[{role:'user',content:`Query: "${query}"
+
+Contact database:
+${context}`}]
+      })
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    results.innerHTML=txt.replace(/
+/g,'<br>');
+  }catch(e){
+    results.innerHTML=`<span style="color:var(--red)">⚠ ${e.message}</span>`;
+  }
 }
 
 // ── PIN & UTILS ──
