@@ -207,6 +207,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <option>Kids program</option>
       <option>Email / Text</option>
       <option>Other</option>
+      <option>Note</option>
     </select>
     <label>Date</label>
     <input type="date" id="li_date">
@@ -216,6 +217,23 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="saveInteraction()">Log Interaction</button>
       <button class="btn btn-sec" onclick="document.getElementById('logInteractionModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD NOTE MODAL -->
+<div class="modal-bg" id="addNoteModal" style="display:none">
+  <div class="modal" style="width:460px">
+    <h2>📝 Add Note</h2>
+    <input type="hidden" id="note_household_idx">
+    <label>Date</label>
+    <input type="date" id="note_date">
+    <label>Note</label>
+    <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <div id="note_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveNote()">Save Note</button>
+      <button class="btn btn-sec" onclick="document.getElementById('addNoteModal').style.display='none'">Cancel</button>
     </div>
   </div>
 </div>
@@ -733,7 +751,7 @@ function setProp(mode,h,result){
     <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
     <button class="tab-btn" id="tab-profile-${idx}" onclick="showTab(${idx},'profile')">🔍 Profile</button>
     <button class="tab-btn" id="tab-interactions-${idx}" onclick="showTab(${idx},'interactions');loadInteractionsTab(${idx})">🤝 Activity</button>
-    <button class="tab-btn" id="tab-notes-${idx}" onclick="showTab(${idx},'notes')">📝 Notes</button>
+    <button class="tab-btn" id="tab-notes-${idx}" onclick="showTab(${idx},'notes');loadNotesTab(${idx})">📝 Notes</button>
   </div>`;
 
   if(mode==='loading'){el.innerHTML=header+'<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>';return;}
@@ -835,10 +853,11 @@ function setProp(mode,h,result){
       <div id="interactions-list-${idx}"><div style="font-size:.75rem;color:var(--txt3)">Loading…</div></div>
     </div>
     <div id="tabcontent-notes-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
-      <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:8px">Private Notes</div>
-      <textarea id="notes-textarea-${idx}" placeholder="Add private notes about this contact — will be used when building their prospect profile..." style="width:100%;min-height:100px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
-      <button onclick="saveNotes(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">Save Notes</button>
-      <span id="notes-saved-${idx}" style="display:none;font-size:.7rem;color:var(--green);margin-left:8px">✓ Saved</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Private Notes</div>
+        <button onclick="openAddNote(${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add Note</button>
+      </div>
+      <div id="notes-list-${idx}"><div style="font-size:.75rem;color:var(--txt3)">Loading…</div></div>
     </div>`;
 }
 
@@ -1521,20 +1540,60 @@ async function loadInteractionsTab(idx){
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
 }
 
-async function deleteInteraction(id,idx){
-  if(!confirm('Delete this interaction?'))return;
+async function deleteInteraction(id,idx,tabType){
+  if(!confirm('Delete this entry?'))return;
   await sb(`interactions?id=eq.${id}`,{method:'DELETE'});
-  loadInteractionsTab(idx);
+  if(tabType==='note')loadNotesTab(idx);
+  else loadInteractionsTab(idx);
 }
 
 // ── NOTES ──
-async function saveNotes(idx){
+function openAddNote(idx){
+  document.getElementById('note_household_idx').value=idx;
+  document.getElementById('note_date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('note_text').value='';
+  document.getElementById('note_status').style.display='none';
+  document.getElementById('addNoteModal').style.display='flex';
+  setTimeout(()=>document.getElementById('note_text').focus(),100);
+}
+
+async function saveNote(){
+  const idx=parseInt(document.getElementById('note_household_idx').value);
   const h=households[idx];
-  const notes=document.getElementById(`notes-textarea-${idx}`)?.value||'';
-  h.notes=notes;
-  await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({notes})});
-  const saved=document.getElementById(`notes-saved-${idx}`);
-  if(saved){saved.style.display='inline';setTimeout(()=>saved.style.display='none',2000);}
+  const date=document.getElementById('note_date').value;
+  const text=document.getElementById('note_text').value.trim();
+  const status=document.getElementById('note_status');
+  if(!text){alert('Please enter a note.');return;}
+  status.style.display='block';status.textContent='Saving…';
+  // Use primary contact id for notes
+  const contactId=h.members?.[0]?.id;
+  if(!contactId){status.textContent='⚠ No contact found.';return;}
+  try{
+    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:date||new Date().toISOString().split('T')[0],notes:text})});
+    document.getElementById('addNoteModal').style.display='none';
+    loadNotesTab(idx);
+  }catch(e){status.textContent='⚠ '+e.message;}
+}
+
+async function loadNotesTab(idx){
+  const h=households[idx];
+  const el=document.getElementById(`notes-list-${idx}`);
+  if(!el)return;
+  el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">Loading…</div>';
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(!memberIds){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No contacts.</div>';return;}
+    const rows=await sb(`interactions?contact_id=in.(${memberIds})&type=eq.Note&order=date.desc&limit=50`);
+    if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No notes yet. Click ＋ Add Note to start.</div>';return;}
+    const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+    el.innerHTML=rows.map(r=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="font-size:.68rem;color:var(--txt3)">${fd(r.date)}</div>
+        <button onclick="deleteInteraction('${r.id}',${idx},'note')" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;padding:0">🗑</button>
+      </div>
+      <div style="font-size:.78rem;color:var(--txt2);line-height:1.55">${r.notes}</div>
+    </div>`).join('');
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
 }
 
 // ── FULL PANEL ──
@@ -1632,15 +1691,9 @@ function closeFullPanel(){
 }
 
 async function saveFullNotes(idx){
-  const h=households[idx];
-  const notes=document.getElementById(`fullpanel-notes-${idx}`)?.value||'';
-  h.notes=notes;
-  // Sync to sidebar notes textarea too
-  const sidebarTA=document.getElementById(`notes-textarea-${idx}`);
-  if(sidebarTA)sidebarTA.value=notes;
-  await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({notes})});
-  const saved=document.getElementById(`fullnotes-saved-${idx}`);
-  if(saved){saved.style.display='inline';setTimeout(()=>saved.style.display='none',2000);}
+  // Redirect to add note modal from full panel
+  document.getElementById('fullPanel').style.display='none';
+  openAddNote(idx);
 }
 
 // ── RE-GEOCODE ──
