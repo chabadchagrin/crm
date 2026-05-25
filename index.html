@@ -25,7 +25,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .btn-green{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green)}.btn-green:hover{background:rgba(22,163,74,.18)}
 .hdr{background:var(--surf);border-bottom:1px solid var(--border);padding:0 16px;height:46px;display:flex;align-items:center;gap:12px;flex-shrink:0}
 .logo{font-family:'Lora',serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:6px;flex-shrink:0}
-.logo span{color:var(--accent)}
 .legend{display:flex;align-items:center;gap:8px}
 .leg-item{display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:.57rem;color:var(--txt3)}
 .leg-dot{width:9px;height:9px;border-radius:50%}
@@ -293,14 +292,58 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <div id="app">
   <header class="hdr">
-    <div class="logo" style="display:flex;align-items:center;gap:10px;">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="24" height="24" fill="none" style="display:block;">
-    <path d="M32 4C24.5 16 14 24 14 35C14 44.94 22.06 53 32 53C41.94 53 50 44.94 50 35C50 24 39.5 16 32 4Z" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M32 15C27.5 23.5 20 28 20 35C20 41.63 25.37 47 32 47C38.63 47 44 41.63 44 35C44 28 36.5 23.5 32 15Z" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M32 27C29.5 31.5 26 34 26 37.5C26 40.81 28.69 43.5 32 43.5C35.31 43.5 38 40.81 38 37.5C38 34 34.5 31.5 32 27Z" fill="var(--red)"/>
-  </svg>
-  <span style="font-family:'Lora',serif;font-weight:700;font-size:1.3rem;letter-spacing:0.5px;color:var(--txt);">דַּעַת</span>
-</div>
+    <div class="logo" style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" width="36" height="24" style="display:block;flex-shrink:0">
+        <style>
+          .fl1{fill:#b45309;opacity:.9}.fl2{fill:#d97706;opacity:.75}.flc{fill:#dc2626}
+          .fls{fill:none;stroke:#c87d2f;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+          .nl{stroke:#4a7fc1;stroke-width:1.8;fill:none;opacity:.85}
+          .nc{fill:#5b8fd4;stroke:#7aaae0;stroke-width:1}
+          .ng{fill:#c8952a;stroke:#e0b84a;stroke-width:1}
+          .ci{stroke:#c8952a;stroke-width:1.2;fill:none;opacity:.8}
+          .cd{fill:#c8952a}
+        </style>
+        <path class="fl1" d="M360 40C335 72 302 100 288 138C270 182 270 218 280 250C290 280 310 305 334 320C322 302 318 276 322 250C326 222 342 202 360 180C378 202 394 222 398 250C402 276 398 302 386 320C410 305 430 280 440 250C450 218 450 182 432 138C418 100 385 72 360 40Z"/>
+        <path class="fl2" d="M385 72C400 96 416 122 422 152C428 180 424 206 414 228C424 210 436 190 438 168C440 146 432 124 420 106C410 90 398 78 385 72Z"/>
+        <path class="fl2" d="M360 105C350 128 344 152 346 174C348 196 358 210 360 188C362 210 372 196 374 174C376 152 370 128 360 105Z" opacity=".55"/>
+        <path class="fls" d="M360 40C335 72 300 104 286 142C268 188 268 222 280 254C292 282 314 306 334 320C324 300 320 274 324 250C328 222 344 202 360 178"/>
+        <path class="fls" d="M360 40C385 72 420 104 434 142C452 188 452 222 440 254C428 282 406 306 386 320C396 300 400 274 396 250C392 222 376 202 360 178"/>
+        <path class="flc" d="M360 168C348 188 340 202 340 218C340 236 349 250 360 254C371 250 380 236 380 218C380 202 372 188 360 168Z"/>
+        <path class="ci" d="M330 308L330 332L316 332L316 344"/>
+        <path class="ci" d="M330 332L344 332L344 348"/>
+        <path class="ci" d="M360 318L360 344L374 344"/>
+        <path class="ci" d="M390 308L390 332L404 332L404 342"/>
+        <circle class="cd" cx="316" cy="344" r="3.5"/>
+        <circle class="cd" cx="344" cy="348" r="3.5"/>
+        <circle class="cd" cx="374" cy="344" r="3.5"/>
+        <circle class="cd" cx="404" cy="342" r="3.5"/>
+        <circle class="cd" cx="360" cy="344" r="3.5"/>
+        <line class="nl" x1="248" y1="108" x2="288" y2="90"/>
+        <line class="nl" x1="248" y1="108" x2="226" y2="155"/>
+        <line class="nl" x1="288" y1="90" x2="258" y2="195"/>
+        <line class="nl" x1="226" y1="155" x2="258" y2="195"/>
+        <line class="nl" x1="226" y1="155" x2="210" y2="228"/>
+        <line class="nl" x1="258" y1="195" x2="210" y2="228"/>
+        <line class="nl" x1="258" y1="195" x2="278" y2="250"/>
+        <line class="nl" x1="210" y1="228" x2="238" y2="270"/>
+        <line class="nl" x1="238" y1="270" x2="278" y2="250"/>
+        <line class="nl" x1="238" y1="270" x2="220" y2="308"/>
+        <line class="nl" x1="278" y1="250" x2="266" y2="318"/>
+        <line class="nl" x1="220" y1="308" x2="266" y2="318"/>
+        <line class="nl" x1="266" y1="318" x2="286" y2="308" opacity=".4"/>
+        <line class="nl" x1="248" y1="108" x2="288" y2="138" opacity=".35"/>
+        <circle class="nc" cx="248" cy="108" r="10"/>
+        <circle class="ng" cx="288" cy="90" r="7"/>
+        <circle class="nc" cx="226" cy="155" r="9"/>
+        <circle class="nc" cx="258" cy="195" r="10"/>
+        <circle class="nc" cx="210" cy="228" r="8"/>
+        <circle class="nc" cx="238" cy="270" r="9"/>
+        <circle class="nc" cx="278" cy="250" r="7"/>
+        <circle class="ng" cx="220" cy="308" r="6"/>
+        <circle class="nc" cx="266" cy="318" r="8"/>
+      </svg>
+      <span style="font-family:'Lora',serif;font-weight:700;font-size:1.3rem;letter-spacing:0.5px;color:#111827;">דַּעַת</span>
+    </div>
     <div class="legend" id="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
