@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chabad Intelligence</title>
+<title>DAAS</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -291,7 +291,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <div id="app">
   <header class="hdr">
-    <div class="logo"><span>Chabad</span> Intelligence</div>
+    <div class="logo"><span>DAAS</span></div>
     <div class="legend" id="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
@@ -475,7 +475,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 (function(){
   const PW='chabad2025';
   if(sessionStorage.getItem('crm_auth')!==PW){
-    const p=prompt('Enter password to access Chabad Intelligence:');
+    const p=prompt('Enter password to access DAAS:');
     if(p!==PW){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666">Access denied.</div>';throw new Error('denied');}
     sessionStorage.setItem('crm_auth',PW);
   }
@@ -787,13 +787,18 @@ function renderList(){
     const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
     const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
     const g=getGivingStats(h);
+    const agc=getAGCScore(h);
+    const scoreColor=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
     return`<div class="citem${i===activeIdx?' active':''}" onclick="selectHousehold(${i})">
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="cname">${h.displayName}</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+' '+(h.zip||'')}</div>
         ${phones?`<div class="cphone">${phones}</div>`:''}
-        ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
+          ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
+          ${agc.total>0?`<div style="font-family:'DM Mono',monospace;font-size:.58rem;color:${scoreColor};background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC ${agc.total}</div>`:''}
+        </div>
         ${g?`<div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $${Math.round(g.total).toLocaleString()} · ${g.count} gift${g.count!==1?'s':''}</div>`:''}
       </div>
       ${h.home_value?'<span class="ck">✓</span>':''}
@@ -1481,6 +1486,8 @@ async function saveDonation(){
     }
     document.getElementById('addDonationModal').style.display='none';
     renderList();
+    // Refresh AGC score — donations affect generosity and affinity
+    refreshAGCScore(h.id).then(()=>recolorAll());
     // Refresh the panel
     setProp('data',h);
     showTab(addDonHouseholdIdx,'giving');
