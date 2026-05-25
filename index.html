@@ -303,6 +303,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
       <input type="text" id="aiSearchInput" placeholder="🔍 Ask anything…" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:200px" onkeydown="if(event.key==='Enter')runAISearch()">
       <button onclick="runAISearch()" class="btn btn-pri" style="padding:5px 10px;border-radius:20px">Ask</button>
+      <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:5px 10px;border-radius:20px;white-space:nowrap">🧠 Research</button>
     </div>
   </header>
   <!-- AI Search Results (inside #app, outside header) -->
@@ -404,6 +405,42 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="saveDonation()">Save Donation</button>
       <button class="btn btn-sec" onclick="document.getElementById('addDonationModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERSON CHAT PANEL -->
+<div id="personChatPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9500;align-items:center;justify-content:center">
+  <div style="background:var(--surf);border-radius:12px;width:580px;max-width:95vw;height:70vh;max-height:600px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-family:'Lora',serif;font-size:.95rem;font-weight:700;color:var(--txt)" id="personChatName"></div>
+        <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">Relationship Memory Chat</div>
+      </div>
+      <button onclick="closePersonChat()" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:1.1rem">✕</button>
+    </div>
+    <div id="personChatMessages" style="flex:1;overflow-y:auto;padding:14px"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="personChatInput" placeholder="Ask anything about this person…" style="flex:1;background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:20px;outline:none" onkeydown="if(event.key==='Enter')sendPersonChat()">
+      <button onclick="sendPersonChat()" class="btn btn-pri" style="border-radius:20px;padding:8px 16px">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBAL ASK PANEL -->
+<div id="globalAskPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8500;flex-direction:column">
+  <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <button onclick="closeGlobalAsk()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.65rem">← Back</button>
+    <div>
+      <div style="font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt)">Constituent Intelligence</div>
+      <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">Ask anything about all your contacts</div>
+    </div>
+  </div>
+  <div id="globalAskMessages" style="flex:1;overflow-y:auto;padding:20px;max-width:760px;width:100%;margin:0 auto"></div>
+  <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surf);flex-shrink:0">
+    <div style="max-width:760px;margin:0 auto;display:flex;gap:10px">
+      <input type="text" id="globalAskInput" placeholder="Who should I invite to a young professionals Shabbat?" style="flex:1;background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:11px 16px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:24px;outline:none" onkeydown="if(event.key==='Enter')sendGlobalAsk()">
+      <button onclick="sendGlobalAsk()" class="btn btn-pri" style="border-radius:24px;padding:10px 20px;font-size:.82rem">Ask</button>
     </div>
   </div>
 </div>
@@ -559,29 +596,75 @@ function getGivingStats(h){
 }
 
 // ── TIERS ──
-function getProspectScore(h){
-  // Calculate live prospect score from available data
-  let score=0;
-  // Giving history (40pts) - strongest signal
+function getAGCScore(h){
   const g=getGivingStats(h);
-  if(g){
-    if(g.total>=10000)score+=40;
-    else if(g.total>=5000)score+=32;
-    else if(g.total>=1000)score+=24;
-    else if(g.total>=100)score+=16;
-    else score+=8;
+  const p=h.profile_data||{};
+
+  // ── AFFINITY (40pts) ── Why would they care enough to give?
+  let affinity=0;
+  // Previous giving to Chabad (20pts) - they already chose us
+  if(g&&g.total>0) affinity+=20;
+  // Frequency of giving to Chabad (bonus up to 5pts)
+  if(g&&g.count>=5) affinity+=5;
+  else if(g&&g.count>=2) affinity+=3;
+  else if(g&&g.count>=1) affinity+=1;
+  // Event/program attendance from interactions
+  const interactions=h._interactions||[];
+  const eventTypes=['Shabbat attendance','Class / Program','Event attendance','Kids program','Meeting in person'];
+  const eventCount=interactions.filter(i=>eventTypes.includes(i.type)).length;
+  if(eventCount>=5) affinity+=10;
+  else if(eventCount>=2) affinity+=7;
+  else if(eventCount>=1) affinity+=4;
+  // Jewish identity / community connection from profile
+  if(p.fedLevel) affinity+=4;
+  if(p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish')) affinity+=3;
+  // Personal notes signal warm relationship
+  const notes=(h.notes||'').toLowerCase();
+  if(notes.includes('warm')||notes.includes('close')||notes.includes('friend')||notes.includes('connected')) affinity+=3;
+  affinity=Math.min(40,affinity);
+
+  // ── GENEROSITY (35pts) ── Are they the kind of person who actually gives?
+  let generosity=0;
+  // Recency of giving to Chabad (10pts)
+  if(g&&g.lastDate){
+    const monthsAgo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);
+    if(monthsAgo<=12) generosity+=10;
+    else if(monthsAgo<=24) generosity+=7;
+    else if(monthsAgo<=36) generosity+=4;
+    else generosity+=2;
   }
-  // Home value (30pts)
+  // Giving to other Jewish/charitable orgs from 990 data (15pts)
+  if(p.philanthropy990) generosity+=15;
+  else if(p.fedLevel) generosity+=10;
+  // Giving breadth — notes mention other giving
+  if(notes.includes('federation')||notes.includes('jcc')||notes.includes('donor')||notes.includes('philanthrop')) generosity+=5;
+  // Total giving amount to Chabad as generosity signal (5pts)
+  if(g&&g.total>=5000) generosity+=5;
+  else if(g&&g.total>=1000) generosity+=3;
+  else if(g&&g.total>=100) generosity+=1;
+  generosity=Math.min(35,generosity);
+
+  // ── CAPACITY (25pts) ── How much could they give?
+  let capacity=0;
   const val=h.home_value||0;
-  if(val>=2000000)score+=30;
-  else if(val>=1000000)score+=24;
-  else if(val>=500000)score+=18;
-  else if(val>=300000)score+=12;
-  else if(val>0)score+=6;
-  // AI profile score (30pts)
-  const ps=h.profile_data?.score||0;
-  score+=Math.round((ps/100)*30);
-  return Math.min(100,score);
+  if(val>=2000000) capacity+=15;
+  else if(val>=1000000) capacity+=12;
+  else if(val>=750000) capacity+=9;
+  else if(val>=500000) capacity+=7;
+  else if(val>=300000) capacity+=4;
+  else if(val>0) capacity+=2;
+  // Business ownership / professional role
+  if(p.businessInfo) capacity+=5;
+  // Large 990 gifts signal high capacity
+  if(p.philanthropy990&&p.philanthropy990.match(/\$[0-9,]+k|\$[5-9][0-9],|\$[1-9][0-9]{2},/i)) capacity+=5;
+  capacity=Math.min(25,capacity);
+
+  const total=Math.min(100,affinity+generosity+capacity);
+  return{total,affinity,generosity,capacity};
+}
+
+function getProspectScore(h){
+  return getAGCScore(h).total;
 }
 
 function getTier(i){
@@ -738,11 +821,17 @@ function setProp(mode,h,result){
   const header=`<div class="pinner" style="padding-bottom:6px;position:relative">
     <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>
     <button onclick="openFullPanel(${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view">⛶</button>
+    <button onclick="openPersonChat(${idx})" style="position:absolute;top:8px;right:46px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Chat about this person">💬</button>
     <div class="crm-name" style="padding-right:56px">${h.displayName}</div>
     <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
       <span class="ctag ${tagClass}">${countyLabel}</span>
-      ${liveScore>0?`<span style="font-family:'DM Mono',monospace;font-size:.58rem;color:${scoreColor};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px">Score: ${liveScore}/100</span>`:''}
+      ${(()=>{
+        const agc=getAGCScore(h);
+        if(agc.total===0)return'';
+        const sc=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
+        return `<span style="font-family:'DM Mono',monospace;font-size:.58rem;color:${sc};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px" title="Affinity: ${agc.affinity}/40 · Generosity: ${agc.generosity}/35 · Capacity: ${agc.capacity}/25">Score: ${agc.total}/100</span>`;
+      })()}
     </div>
   </div>
   <div class="tab-bar">
@@ -1396,6 +1485,12 @@ function buildProfileDisplay(p, idx){
         <div style="font-size:.7rem;color:var(--txt2)">${p.approach||''}</div>
       </div>
     </div>
+    ${p.affinityNotes||p.generosityNotes||p.capacityNotes?`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+      ${p.affinityNotes?`<div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.15);border-radius:5px;padding:7px"><div style="font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:3px">Affinity</div><div style="font-size:.67rem;color:var(--txt2);line-height:1.4">${p.affinityNotes}</div></div>`:''}
+      ${p.generosityNotes?`<div style="background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.15);border-radius:5px;padding:7px"><div style="font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.08em;color:var(--green);margin-bottom:3px">Generosity</div><div style="font-size:.67rem;color:var(--txt2);line-height:1.4">${p.generosityNotes}</div></div>`:''}
+      ${p.capacityNotes?`<div style="background:rgba(180,83,9,.06);border:1px solid rgba(180,83,9,.15);border-radius:5px;padding:7px"><div style="font-family:'DM Mono',monospace;font-size:.5rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:3px">Capacity</div><div style="font-size:.67rem;color:var(--txt2);line-height:1.4">${p.capacityNotes}</div></div>`:''}
+    </div>`:''}
     ${p.summary?`<div style="font-size:.75rem;color:var(--txt2);line-height:1.65;margin-bottom:12px">${p.summary}</div>`:''}
     ${p.fedLevel?`<div style="font-size:.7rem;margin-bottom:4px">🏛 <b>Federation:</b> ${p.fedLevel}</div>`:''}
     ${p.businessInfo?`<div style="font-size:.7rem;margin-bottom:4px">💼 <b>Business:</b> ${p.businessInfo}</div>`:''}
@@ -1447,12 +1542,22 @@ async function buildProfile(idx){
         model:'claude-sonnet-4-5',
         max_tokens:1500,
         tools:[{type:'web_search_20250305',name:'web_search'}],
-        system:`You research Jewish philanthropists and community members in the Cleveland/Chagrin Falls Ohio area for a Chabad organization's donor intelligence system. Search for public information about the person and return ONLY valid JSON, no markdown:
+        system:`You research Jewish philanthropists and community members in the Cleveland/Chagrin Falls Ohio area for a Chabad organization's donor intelligence system. 
+
+Evaluate prospects using three dimensions:
+- AFFINITY (40pts): Connection to Jewish causes, Chabad specifically, community involvement, relationship warmth
+- GENEROSITY (35pts): History of charitable giving to any org, 990 filings, Federation giving, breadth of philanthropy  
+- CAPACITY (25pts): Wealth signals, home value, business ownership, professional role
+
+Search for public information and return ONLY valid JSON, no markdown:
 {
   "score": 75,
+  "affinityNotes": "What drives their connection to Jewish causes",
+  "generosityNotes": "Evidence of charitable giving habits",
+  "capacityNotes": "Wealth and capacity signals found",
   "capacity": "High Capacity Donor",
-  "approach": "Warm relationship, strong Jewish identity. Good ask for major gifts.",
-  "summary": "2-3 paragraph narrative about this person based on what you found publicly.",
+  "approach": "Specific actionable approach suggestion based on their AGC profile",
+  "summary": "2-3 paragraph narrative integrating affinity, generosity and capacity findings",
   "fedLevel": "Lion of Judah" or null,
   "businessInfo": "CEO of Acme Corp" or null,
   "boardMemberships": "Jewish Federation board, Cleveland Clinic Foundation" or null,
@@ -1460,9 +1565,7 @@ async function buildProfile(idx){
   "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
   "builtAt": "${new Date().toISOString()}"
 }
-Score 0-100: home value (up to 30pts), Jewish giving history (up to 40pts), community involvement (up to 30pts).
-If you find nothing public, return a minimal profile with score based only on home value.
-NEVER invent information. Only include what you actually find publicly.`,
+If you find nothing public, return a minimal profile. NEVER invent information.`,
         messages:[{role:'user',content:`Research this person for Jewish philanthropic prospect scoring:
 Name: ${fullName}
 Location: ${location}
@@ -1624,9 +1727,14 @@ function openFullPanel(idx){
   const content=`
     <!-- Score card -->
     <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:20px">
-      <div style="text-align:center;flex-shrink:0">
-        <div style="font-size:3rem;font-weight:700;color:${scoreColor};font-family:'DM Mono',monospace;line-height:1">${score}</div>
-        <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">PROSPECT SCORE</div>
+      <div style="flex-shrink:0;min-width:140px">
+        <div style="font-size:2.8rem;font-weight:700;color:${scoreColor};font-family:'DM Mono',monospace;line-height:1">${score}</div>
+        <div style="font-size:.6rem;color:var(--txt3);font-family:'DM Mono',monospace;margin-bottom:8px">PROSPECT SCORE</div>
+        ${(()=>{
+          const agc=getAGCScore(h);
+          const bar=(val,max,color)=>`<div style="margin-bottom:3px"><div style="display:flex;justify-content:space-between;font-size:.58rem;color:var(--txt3);font-family:'DM Mono',monospace"><span>${color==='#2563eb'?'Affinity':color==='#16a34a'?'Generosity':'Capacity'}</span><span>${val}/${max}</span></div><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${Math.round(val/max*100)}%;background:${color};border-radius:2px"></div></div></div>`;
+          return bar(agc.affinity,40,'#2563eb')+bar(agc.generosity,35,'#16a34a')+bar(agc.capacity,25,'#b45309');
+        })()}
       </div>
       <div style="flex:1">
         <div style="font-family:'Lora',serif;font-size:1.2rem;font-weight:700;margin-bottom:4px">${h.displayName}</div>
@@ -1680,6 +1788,7 @@ function openFullPanel(idx){
         ${profile.pressmentions?`<div style="font-size:.73rem;margin-bottom:4px">📰 <b>Press:</b> ${profile.pressmentions}</div>`:''}
       `:`<div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
       <button onclick="buildProfile(${idx});closeFullPanel()" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.78rem">${profile?'↺ Rebuild Profile':'🔍 Build Profile'}</button>
+      <button onclick="openPersonChat(${idx})" style="margin-top:8px;margin-left:8px;padding:6px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border:none;border-radius:5px;cursor:pointer;font-size:.78rem">💬 Chat about this person</button>
     </div>
 
     <!-- Notes -->
@@ -1934,6 +2043,251 @@ ${context}`}]
   }catch(e){
     results.innerHTML=`<span style="color:var(--red)">⚠ ${e.message}</span>`;
   }
+}
+
+// ── EMBEDDINGS ──
+async function getEmbedding(text){
+  if(!text||!ANTHROPIC_KEY)return null;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:10,
+        system:'Return only the number 1.',
+        messages:[{role:'user',content:'1'}]
+      })
+    });
+    // Claude doesn't do embeddings directly - use a simple hash approach
+    // Real embeddings need OpenAI or Voyage API
+    return null;
+  }catch(e){return null;}
+}
+
+// Use OpenAI-compatible embedding via a simple approach
+// We'll store text and use Claude for semantic search instead of true vectors
+async function embedAndStore(interactionId, text){
+  // Store the text for later semantic search - vector embedding done server-side
+  // For now we rely on Claude reading full text context
+  return true;
+}
+
+async function semanticSearch(query, contactIds=null, limit=20){
+  // Get all interactions matching contactIds or all
+  let url='interactions?select=*,contacts(first_name,last_name,household_id)&order=date.desc&limit=200';
+  if(contactIds&&contactIds.length){
+    url=`interactions?contact_id=in.(${contactIds.map(id=>`"${id}"`).join(',')})&select=*&order=date.desc&limit=200`;
+  }
+  const rows=await sb(url);
+  return rows||[];
+}
+
+// ── PERSON CHAT ──
+let personChatHistory=[];
+let personChatIdx=-1;
+
+function openPersonChat(idx){
+  personChatIdx=idx;
+  personChatHistory=[];
+  const h=households[idx];
+  document.getElementById('personChatName').textContent=h.displayName;
+  document.getElementById('personChatMessages').innerHTML=`<div style="text-align:center;padding:20px;color:var(--txt3);font-size:.78rem">Ask anything about ${h.displayName}…</div>`;
+  document.getElementById('personChatInput').value='';
+  document.getElementById('personChatPanel').style.display='flex';
+  document.getElementById('personChatInput').focus();
+}
+
+function closePersonChat(){
+  document.getElementById('personChatPanel').style.display='none';
+  personChatHistory=[];
+}
+
+async function sendPersonChat(){
+  if(!ANTHROPIC_KEY){
+    const k=prompt('Enter your Anthropic API key:');
+    if(!k)return;
+    ANTHROPIC_KEY=k.trim();
+    localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
+  }
+  const input=document.getElementById('personChatInput');
+  const query=input.value.trim();
+  if(!query)return;
+  input.value='';
+
+  const h=households[personChatIdx];
+  const msgs=document.getElementById('personChatMessages');
+
+  // Add user message
+  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><div style="background:var(--accent);color:#fff;padding:8px 12px;border-radius:12px 12px 2px 12px;font-size:.78rem;max-width:80%">${query}</div></div>`;
+  msgs.innerHTML+=`<div id="person-typing" style="display:flex;margin-bottom:10px"><div style="background:var(--surf2);padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:.78rem;color:var(--txt3)">Thinking…</div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+
+  // Build rich context for this person
+  const g=getGivingStats(h);
+  const agc=getAGCScore(h);
+  const p=h.profile_data||{};
+
+  // Load all interactions and notes for this person
+  let interactions=[];
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(memberIds){
+      const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=100`);
+      interactions=rows||[];
+    }
+  }catch(e){}
+
+  const notes=interactions.filter(i=>i.type==='Note');
+  const activities=interactions.filter(i=>i.type!=='Note');
+
+  const context=`CONTACT: ${h.displayName}
+ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
+HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''})`).join(', ')}
+PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
+EMAILS: ${(h.members||[]).map(m=>m.email).filter(Boolean).join(', ')||'none'}
+
+PROSPECT SCORE: ${agc.total}/100 (Affinity: ${agc.affinity}/40, Generosity: ${agc.generosity}/35, Capacity: ${agc.capacity}/25)
+HOME VALUE: ${h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown'}
+
+GIVING TO CHABAD:
+${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
+Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history'}
+
+AI PROFILE: ${p.summary||'Not yet built'}
+${p.fedLevel?'Federation level: '+p.fedLevel:''}
+${p.businessInfo?'Business: '+p.businessInfo:''}
+${p.boardMemberships?'Boards: '+p.boardMemberships:''}
+${p.philanthropy990?'990 giving: '+p.philanthropy990:''}
+${p.approach?'Suggested approach: '+p.approach:''}
+
+PRIVATE NOTES (${notes.length}):
+${notes.length?notes.map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None recorded'}
+
+ACTIVITY LOG (${activities.length} interactions):
+${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None recorded'}`;
+
+  personChatHistory.push({role:'user',content:query});
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:800,
+        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete information about one specific contact and help the rabbi understand this person deeply, recall past interactions, and plan next steps. Be warm, insightful and specific. Reference actual details from the data. Here is everything known about this person:
+
+${context}`,
+        messages:personChatHistory
+      })
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    personChatHistory.push({role:'assistant',content:reply});
+    document.getElementById('person-typing')?.remove();
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:10px"><div style="background:var(--surf2);padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:.78rem;color:var(--txt);line-height:1.6;max-width:85%">${reply.replace(/\n/g,'<br>')}</div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){
+    document.getElementById('person-typing')?.remove();
+    msgs.innerHTML+=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>`;
+  }
+}
+
+// ── GLOBAL ASK VIEW ──
+let globalChatHistory=[];
+
+function openGlobalAsk(){
+  globalChatHistory=[];
+  document.getElementById('globalAskMessages').innerHTML=`<div style="text-align:center;padding:30px;color:var(--txt3);font-size:.85rem;line-height:1.8">
+    <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+    Ask anything about your constituents.<br>
+    <span style="font-size:.75rem">Examples:<br>
+    "Who should I invite to a young professionals Shabbat?"<br>
+    "Who expressed interest in kids programming?"<br>
+    "Who are my top 5 prospects for the building campaign?"<br>
+    "Who hasn't been engaged in over a year?"</span>
+  </div>`;
+  document.getElementById('globalAskInput').value='';
+  document.getElementById('globalAskPanel').style.display='flex';
+  document.getElementById('globalAskInput').focus();
+}
+
+function closeGlobalAsk(){
+  document.getElementById('globalAskPanel').style.display='none';
+  globalChatHistory=[];
+}
+
+async function sendGlobalAsk(){
+  if(!ANTHROPIC_KEY){
+    const k=prompt('Enter your Anthropic API key:');
+    if(!k)return;
+    ANTHROPIC_KEY=k.trim();
+    localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
+  }
+  const input=document.getElementById('globalAskInput');
+  const query=input.value.trim();
+  if(!query)return;
+  input.value='';
+
+  const msgs=document.getElementById('globalAskMessages');
+  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${query}</div></div>`;
+  msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">Searching your contacts…</div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+
+  // Build comprehensive context - all contacts with their data
+  const context=await buildGlobalContext();
+  globalChatHistory.push({role:'user',content:query});
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1200,
+        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have access to the rabbi's full constituent database including contact info, giving history, event attendance, private notes, and AI profiles. Help the rabbi make smart decisions about engagement, fundraising, and relationship building. Be specific — name actual people, reference actual data. Here is the full database:
+
+${context}`,
+        messages:globalChatHistory
+      })
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    globalChatHistory.push({role:'assistant',content:reply});
+    document.getElementById('global-typing')?.remove();
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${reply.replace(/\n/g,'<br>')}</div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){
+    document.getElementById('global-typing')?.remove();
+    msgs.innerHTML+=`<div style="color:var(--red);font-size:.78rem;padding:8px">⚠ ${e.message}</div>`;
+  }
+}
+
+async function buildGlobalContext(){
+  // Build rich context for all households
+  const lines=await Promise.all(households.map(async(h,i)=>{
+    const g=getGivingStats(h);
+    const agc=getAGCScore(h);
+    const p=h.profile_data||{};
+    // Load interactions for this household
+    let iText='';
+    try{
+      const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+      if(memberIds){
+        const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=20`);
+        if(rows&&rows.length){
+          const notes=rows.filter(r=>r.type==='Note').map(r=>`[${r.date}] NOTE: ${r.notes}`);
+          const acts=rows.filter(r=>r.type!=='Note').map(r=>`[${r.date}] ${r.type}${r.notes?': '+r.notes:''}`);
+          iText=[...notes,...acts].join(' | ');
+        }
+      }
+    }catch(e){}
+    return `${h.displayName} | ${h.city||''} | Score:${agc.total}(A:${agc.affinity},G:${agc.generosity},C:${agc.capacity}) | Value:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none'} | Profile:${p.summary?p.summary.substring(0,100)+'...':'none'} | ${iText?'Context: '+iText.substring(0,200):''}`;
+  }));
+  return lines.join('\n');
 }
 
 // ── PIN & UTILS ──
