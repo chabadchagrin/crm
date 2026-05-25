@@ -2024,9 +2024,19 @@ async function saveContactEdit(){
       const firsts=[...new Set(allContacts.map(c=>c.first_name))];
       const lastName=allContacts[0]?.last_name||last;
       await sb(`households?id=eq.${editLinkedHousehold.id}`,{method:'PATCH',body:JSON.stringify({joint_name:firsts.join(' and ')+' '+lastName})});
-      // If old household is now empty, delete it
+      // If old household is now empty, merge its notes then delete it
       const remaining=await sb(`contacts?household_id=eq.${currentHhId}&select=id`);
       if(!remaining||!remaining.length){
+        // Preserve notes from the old household before deleting
+        const oldHH=await sb(`households?id=eq.${currentHhId}&select=notes`);
+        if(oldHH&&oldHH[0]&&oldHH[0].notes){
+          const targetHH=await sb(`households?id=eq.${editLinkedHousehold.id}&select=notes`);
+          const existingNotes=targetHH?.[0]?.notes||'';
+          const mergedNotes=existingNotes
+            ?existingNotes+'\n\n[Merged from previous household]\n'+oldHH[0].notes
+            :'[Merged from previous household]\n'+oldHH[0].notes;
+          await sb(`households?id=eq.${editLinkedHousehold.id}`,{method:'PATCH',body:JSON.stringify({notes:mergedNotes})});
+        }
         await sb(`households?id=eq.${currentHhId}`,{method:'DELETE'});
       }
     } else {
