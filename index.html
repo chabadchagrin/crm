@@ -738,10 +738,10 @@ function getGivingStats(h){
 async function loadAGCScores(){
   if(!households.length)return;
   try{
-    const rows=await sb('household_agc_scores?select=household_id,affinity_score,generosity_score,capacity_score,total_agc_score,affinity_detail,generosity_detail,capacity_detail');
+    const rows=await sb('household_agc_scores?select=id,affinity_score,generosity_score,capacity_score,total_agc_score,affinity_detail,generosity_detail,capacity_detail');
     if(rows&&rows.length){
       rows.forEach(r=>{
-        agcCache[r.household_id]={
+        agcCache[r.id]={
           total:r.total_agc_score||0,
           affinity:r.affinity_score||0,
           generosity:r.generosity_score||0,
