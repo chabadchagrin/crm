@@ -2636,7 +2636,15 @@ async function buildGlobalContext(semanticRows=[]){
 
 // ── PIN & UTILS ──
 function pinIcon(num,active,tier){
-  return L.divIcon({className:'',html:`<div class="mpin pin-${tier}${active?' active':''}"><div class="mpin-n">${num+1}</div></div>`,iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-30]});
+  const mode=document.getElementById('colorBy')?.value||'value';
+  let label=num+1;
+  if(mode==='score'){
+    const h=households[num];
+    const score=h?getAGCScore(h).total:0;
+    label=score>0?score:'?';
+  }
+  const fontSize=mode==='score'?'7px':'8px';
+  return L.divIcon({className:'',html:`<div class="mpin pin-${tier}${active?' active':''}"><div class="mpin-n" style="font-size:${fontSize}">${label}</div></div>`,iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-30]});
 }
 function showProgress(show,text,pct){
   document.getElementById('geoProgress').style.display=show?'flex':'none';
