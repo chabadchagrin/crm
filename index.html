@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DAAS</title>
+<title>דעת</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'><path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/><path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/></svg>">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -291,7 +292,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <div id="app">
   <header class="hdr">
-    <div class="logo"><span>DAAS</span></div>
+    <div class="logo" style="display:flex;align-items:center;gap:10px;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="24" height="24" fill="none" style="display:block;">
+    <path d="M32 4C24.5 16 14 24 14 35C14 44.94 22.06 53 32 53C41.94 53 50 44.94 50 35C50 24 39.5 16 32 4Z" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M32 15C27.5 23.5 20 28 20 35C20 41.63 25.37 47 32 47C38.63 47 44 41.63 44 35C44 28 36.5 23.5 32 15Z" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M32 27C29.5 31.5 26 34 26 37.5C26 40.81 28.69 43.5 32 43.5C35.31 43.5 38 40.81 38 37.5C38 34 34.5 31.5 32 27Z" fill="var(--red)"/>
+  </svg>
+  <span style="font-family:'Lora',serif;font-weight:700;font-size:1.3rem;letter-spacing:0.5px;color:var(--txt);">דַּעַת</span>
+</div>
     <div class="legend" id="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
