@@ -507,6 +507,7 @@ function initMap(){
 
 // ── STATE ──
 let households=[],filtered=[],markers=[],activeIdx=-1;
+let agcCache={}; // household.id -> {total,affinity,generosity,capacity,detail}
 
 // ── LOAD ALL ──
 async function loadAll(){
@@ -574,6 +575,8 @@ async function loadAll(){
     document.getElementById('prefetchBtn').disabled=false;
     // Load context from Supabase into localStorage cache
     loadGlobalContext();
+    // Load AGC scores from DB (non-blocking)
+    loadAGCScores();
 
     // Place known pins
     households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
@@ -611,74 +614,75 @@ function getGivingStats(h){
   return{total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
 }
 
-// ── TIERS ──
-function getAGCScore(h){
-  const g=getGivingStats(h);
-  const p=h.profile_data||{};
-
-  // ── AFFINITY (40pts) ── Why would they care enough to give?
-  let affinity=0;
-  // Previous giving to Chabad (20pts) - they already chose us
-  if(g&&g.total>0) affinity+=20;
-  // Frequency of giving to Chabad (bonus up to 5pts)
-  if(g&&g.count>=5) affinity+=5;
-  else if(g&&g.count>=2) affinity+=3;
-  else if(g&&g.count>=1) affinity+=1;
-  // Event/program attendance from interactions
-  const interactions=h._interactions||[];
-  const eventTypes=['Shabbat attendance','Class / Program','Event attendance','Kids program','Meeting in person'];
-  const eventCount=interactions.filter(i=>eventTypes.includes(i.type)).length;
-  if(eventCount>=5) affinity+=10;
-  else if(eventCount>=2) affinity+=7;
-  else if(eventCount>=1) affinity+=4;
-  // Jewish identity / community connection from profile
-  if(p.fedLevel) affinity+=4;
-  if(p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish')) affinity+=3;
-  // Personal notes signal warm relationship
-  const notes=(h.notes||'').toLowerCase();
-  if(notes.includes('warm')||notes.includes('close')||notes.includes('friend')||notes.includes('connected')) affinity+=3;
-  affinity=Math.min(40,affinity);
-
-  // ── GENEROSITY (35pts) ── Are they the kind of person who actually gives?
-  let generosity=0;
-  // Recency of giving to Chabad (10pts)
-  if(g&&g.lastDate){
-    const monthsAgo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);
-    if(monthsAgo<=12) generosity+=10;
-    else if(monthsAgo<=24) generosity+=7;
-    else if(monthsAgo<=36) generosity+=4;
-    else generosity+=2;
-  }
-  // Giving to other Jewish/charitable orgs from 990 data (15pts)
-  if(p.philanthropy990) generosity+=15;
-  else if(p.fedLevel) generosity+=10;
-  // Giving breadth — notes mention other giving
-  if(notes.includes('federation')||notes.includes('jcc')||notes.includes('donor')||notes.includes('philanthrop')) generosity+=5;
-  // Total giving amount to Chabad as generosity signal (5pts)
-  if(g&&g.total>=5000) generosity+=5;
-  else if(g&&g.total>=1000) generosity+=3;
-  else if(g&&g.total>=100) generosity+=1;
-  generosity=Math.min(35,generosity);
-
-  // ── CAPACITY (25pts) ── How much could they give?
-  let capacity=0;
-  const val=h.home_value||0;
-  if(val>=2000000) capacity+=15;
-  else if(val>=1000000) capacity+=12;
-  else if(val>=750000) capacity+=9;
-  else if(val>=500000) capacity+=7;
-  else if(val>=300000) capacity+=4;
-  else if(val>0) capacity+=2;
-  // Business ownership / professional role
-  if(p.businessInfo) capacity+=5;
-  // Large 990 gifts signal high capacity
-  if(p.philanthropy990&&p.philanthropy990.match(/\$[0-9,]+k|\$[5-9][0-9],|\$[1-9][0-9]{2},/i)) capacity+=5;
-  capacity=Math.min(25,capacity);
-
-  const total=Math.min(100,affinity+generosity+capacity);
-  return{total,affinity,generosity,capacity};
+// ── AGC SCORES (DB-backed with local fallback) ──
+async function loadAGCScores(){
+  if(!households.length)return;
+  try{
+    const rows=await sb('household_agc_scores?select=household_id,affinity_score,generosity_score,capacity_score,total_agc_score,affinity_detail,generosity_detail,capacity_detail');
+    if(rows&&rows.length){
+      rows.forEach(r=>{
+        agcCache[r.household_id]={
+          total:r.total_agc_score||0,
+          affinity:r.affinity_score||0,
+          generosity:r.generosity_score||0,
+          capacity:r.capacity_score||0,
+          detail:{affinity:r.affinity_detail||{},generosity:r.generosity_detail||{},capacity:r.capacity_detail||{}}
+        };
+      });
+      recolorAll();
+    }
+  }catch(e){console.warn('AGC view unavailable, using local scores:',e.message);}
 }
 
+async function refreshAGCScore(householdId){
+  try{
+    const rows=await fetch(SB_URL+'/rest/v1/rpc/calculate_agc',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({household_id:householdId})
+    }).then(r=>r.json());
+    if(rows){
+      agcCache[householdId]={
+        total:rows.total_agc_score||0,
+        affinity:rows.affinity_score||0,
+        generosity:rows.generosity_score||0,
+        capacity:rows.capacity_score||0,
+        detail:{affinity:rows.affinity_detail||{},generosity:rows.generosity_detail||{},capacity:rows.capacity_detail||{}}
+      };
+    }
+  }catch(e){console.warn('AGC refresh failed:',e.message);}
+}
+
+function getAGCScore(h){
+  if(h&&h.id&&agcCache[h.id])return agcCache[h.id];
+  return _calcAGCLocal(h);
+}
+
+function _calcAGCLocal(h){
+  const g=getGivingStats(h);
+  const p=h.profile_data||{};
+  const notes=(h.notes||'').toLowerCase();
+  let affinity=0;
+  if(g&&g.total>0)affinity+=15;
+  if(g&&g.count>=5)affinity+=5;else if(g&&g.count>=3)affinity+=3;else if(g&&g.count>=1)affinity+=1;
+  if(notes.includes('warm')||notes.includes('close')||notes.includes('friend')||notes.includes('connected'))affinity+=5;
+  if(p.fedLevel)affinity+=5;
+  if(p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish'))affinity+=3;
+  affinity=Math.min(40,affinity);
+  let generosity=0;
+  if(g&&g.lastDate){const mo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);if(mo<=12)generosity+=10;else if(mo<=24)generosity+=7;else if(mo<=36)generosity+=4;else generosity+=2;}
+  if(g&&g.total>=10000)generosity+=10;else if(g&&g.total>=5000)generosity+=7;else if(g&&g.total>=1000)generosity+=5;else if(g&&g.total>=100)generosity+=3;else if(g&&g.total>0)generosity+=1;
+  if(g&&g.count>=5)generosity+=10;else if(g&&g.count>=3)generosity+=7;else if(g&&g.count>=2)generosity+=5;else if(g&&g.count>=1)generosity+=3;
+  if(p.philanthropy990)generosity+=5;
+  generosity=Math.min(35,generosity);
+  let capacity=0;
+  const val=h.home_value||0;
+  if(val>=2000000)capacity+=15;else if(val>=1000000)capacity+=12;else if(val>=750000)capacity+=9;else if(val>=500000)capacity+=7;else if(val>=300000)capacity+=4;else if(val>0)capacity+=2;
+  if(p.businessInfo)capacity+=3;
+  if(g&&g.total>=5000)capacity+=5;
+  capacity=Math.min(25,capacity);
+  return{total:Math.min(100,affinity+generosity+capacity),affinity,generosity,capacity};
+}
 function getProspectScore(h){
   return getAGCScore(h).total;
 }
@@ -1546,17 +1550,20 @@ async function buildProfile(idx){
   if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
   const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
   const g=getGivingStats(h);
+  const agcScore=getAGCScore(h);
   // Load recent interactions
   let interactions=[];
   try{
     const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
     if(memberIds){
-      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=20`);
+      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=30`);
       interactions=iRows||[];
     }
   }catch(e){}
   const location=`${h.city||'Chagrin Falls'}, Ohio`;
   const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
+  const notes_list=interactions.filter(i=>i.type==='Note');
+  const activity_list=interactions.filter(i=>i.type!=='Note');
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1569,40 +1576,53 @@ async function buildProfile(idx){
       },
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1500,
+        max_tokens:1800,
         tools:[{type:'web_search_20250305',name:'web_search'}],
-        system:`You research Jewish philanthropists and community members in the Cleveland/Chagrin Falls Ohio area for a Chabad organization's donor intelligence system. 
+        system:`You are a prospect research assistant for a Chabad rabbi in Chagrin Falls, Ohio. Your job is to ENRICH a contact profile using public web research — not to recalculate scores. The AGC scores below are authoritative pre-calculated database scores. Accept them as facts.
 
-Evaluate prospects using three dimensions:
-- AFFINITY (40pts): Connection to Jewish causes, Chabad specifically, community involvement, relationship warmth
-- GENEROSITY (35pts): History of charitable giving to any org, 990 filings, Federation giving, breadth of philanthropy  
-- CAPACITY (25pts): Wealth signals, home value, business ownership, professional role
+YOUR ROLE: Search for public information (LinkedIn, 990 filings, Cleveland Jewish News, ProPublica, Ohio business records, general web) to explain WHY the scores look the way they do, and to surface specific actionable intelligence the rabbi can use.
 
-Search for public information and return ONLY valid JSON, no markdown:
+DO NOT re-score. DO NOT second-guess the numbers. DO explain what you found publicly.
+
+Return ONLY valid JSON, no markdown fences:
 {
-  "score": 75,
-  "affinityNotes": "What drives their connection to Jewish causes",
-  "generosityNotes": "Evidence of charitable giving habits",
-  "capacityNotes": "Wealth and capacity signals found",
-  "capacity": "High Capacity Donor",
-  "approach": "Specific actionable approach suggestion based on their AGC profile",
-  "summary": "2-3 paragraph narrative integrating affinity, generosity and capacity findings",
+  "affinityNotes": "Qualitative explanation of affinity signals found — Jewish community ties, board roles, Chabad connection indicators",
+  "generosityNotes": "Specific evidence of giving patterns — 990 data, Federation level, named gifts, philanthropy breadth",
+  "capacityNotes": "Wealth signals found publicly — business ownership, professional role, property context, LinkedIn title",
+  "capacity": "one-phrase capacity tier label e.g. 'High Capacity Donor' or 'Mid-Range Prospect'",
+  "approach": "Specific, personalized outreach strategy based on this person's profile and relationship history",
+  "summary": "2-3 paragraph narrative: who this person is, what drives their philanthropy, how to deepen the relationship",
   "fedLevel": "Lion of Judah" or null,
-  "businessInfo": "CEO of Acme Corp" or null,
+  "businessInfo": "CEO of Acme Corp, founded 2004" or null,
   "boardMemberships": "Jewish Federation board, Cleveland Clinic Foundation" or null,
   "philanthropy990": "Gave $25k to Jewish Federation (2022), $10k to JCC (2021)" or null,
   "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
   "builtAt": "${new Date().toISOString()}"
 }
-If you find nothing public, return a minimal profile. NEVER invent information.`,
-        messages:[{role:'user',content:`Research this person for Jewish philanthropic prospect scoring:
-Name: ${fullName}
-Location: ${location}
-Home Value: ${homeVal}
-Giving to Chabad: ${g?`Total $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}. Donation notes: ${g.donations.filter(d=>d.notes).map(d=>d.notes).join('; ')}`:'No giving history'}
-${h.notes?`Private relationship notes (factor heavily into score and approach): ${h.notes}`:''}
-${interactions&&interactions.length?`Recent interactions: ${interactions.slice(0,10).map(i=>`${i.type} on ${i.date}: ${i.notes}`).join('; ')}`:''}
-Search: Cleveland Jewish News, Jewish Federation of Cleveland donor lists, ProPublica 990 finder, LinkedIn, Ohio business records, general web search.`}]
+NEVER invent information. If nothing is found publicly, say so honestly in the notes fields.`,
+        messages:[{role:'user',content:`Enrich this contact profile with public research:
+
+NAME: ${fullName}
+LOCATION: ${location}
+HOME VALUE: ${homeVal}
+
+PRE-CALCULATED AGC SCORES (treat as facts — do not recalculate):
+  Total Score: ${agcScore.total}/100
+  Affinity: ${agcScore.affinity}/40
+  Generosity: ${agcScore.generosity}/35
+  Capacity: ${agcScore.capacity}/25
+
+GIVING TO CHABAD (hard data):
+${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
+Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history on file'}
+
+PRIVATE NOTES (${notes_list.length}):
+${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None'}
+
+ACTIVITY LOG (${activity_list.length} interactions):
+${activity_list.length?activity_list.slice(0,10).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}
+
+Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland, ProPublica Nonprofit Explorer, LinkedIn, Ohio Secretary of State business search, general web.`}]
       })
     });
 
@@ -1652,8 +1672,12 @@ async function saveInteraction(){
   if(!date){alert('Please enter a date.');return;}
   status.style.display='block';status.textContent='Saving…';
   try{
-    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+    const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
     document.getElementById('logInteractionModal').style.display='none';
+    // Generate embedding for semantic search (fire-and-forget)
+    if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+    // Refresh AGC score since interactions affect affinity
+    const hI=households[idx];if(hI)refreshAGCScore(hI.id).then(()=>recolorAll());
     // Refresh interactions tab if open
     loadInteractionsTab(idx);
   }catch(e){status.textContent='⚠ '+e.message;}
@@ -1715,8 +1739,12 @@ async function saveNote(){
   const contactId=h.members?.[0]?.id;
   if(!contactId){status.textContent='⚠ No contact found.';return;}
   try{
-    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:date||new Date().toISOString().split('T')[0],notes:text})});
+    const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:date||new Date().toISOString().split('T')[0],notes:text})});
     document.getElementById('addNoteModal').style.display='none';
+    // Generate embedding for semantic search (fire-and-forget)
+    if(savedN&&savedN[0])embedAndStore(savedN[0].id,'Note: '+text);
+    // Refresh AGC score since notes affect affinity
+    refreshAGCScore(h.id).then(()=>recolorAll());
     loadNotesTab(idx);
   }catch(e){status.textContent='⚠ '+e.message;}
 }
@@ -2118,44 +2146,86 @@ ${context}`}]
   }
 }
 
-// ── EMBEDDINGS ──
+// ── EMBEDDINGS (OpenAI text-embedding-3-small + pgvector) ──
+// ONE-TIME SUPABASE SQL SETUP (run in SQL editor):
+//   ALTER TABLE interactions ADD COLUMN IF NOT EXISTS embedding vector(1536);
+//   CREATE INDEX IF NOT EXISTS ix_interactions_embed ON interactions
+//     USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+//   CREATE OR REPLACE FUNCTION match_interactions(
+//     query_embedding vector(1536), match_threshold float, match_count int
+//   ) RETURNS TABLE (id uuid, contact_id uuid, type text, date date, notes text, similarity float)
+//   LANGUAGE sql STABLE AS $$
+//     SELECT id,contact_id,type,date,notes,1-(embedding<=>query_embedding) AS similarity
+//     FROM interactions
+//     WHERE embedding IS NOT NULL AND 1-(embedding<=>query_embedding)>match_threshold
+//     ORDER BY similarity DESC LIMIT match_count;
+//   $$;
+
+let OPENAI_KEY=localStorage.getItem('crm_oai_key')||'';
+
+async function ensureOpenAIKey(){
+  if(OPENAI_KEY)return OPENAI_KEY;
+  const k=prompt('Enter OpenAI API key for semantic search (stored in browser only).\nGet one at platform.openai.com — free tier works fine.');
+  if(!k)return null;
+  OPENAI_KEY=k.trim();
+  localStorage.setItem('crm_oai_key',OPENAI_KEY);
+  return OPENAI_KEY;
+}
+
 async function getEmbedding(text){
-  if(!text||!ANTHROPIC_KEY)return null;
+  if(!text)return null;
+  const key=await ensureOpenAIKey();
+  if(!key)return null;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch('https://api.openai.com/v1/embeddings',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-5',
-        max_tokens:10,
-        system:'Return only the number 1.',
-        messages:[{role:'user',content:'1'}]
-      })
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'text-embedding-3-small',input:text.substring(0,8000)})
     });
-    // Claude doesn't do embeddings directly - use a simple hash approach
-    // Real embeddings need OpenAI or Voyage API
-    return null;
-  }catch(e){return null;}
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    return d.data?.[0]?.embedding||null;
+  }catch(e){console.warn('Embedding failed:',e.message);return null;}
 }
 
-// Use OpenAI-compatible embedding via a simple approach
-// We'll store text and use Claude for semantic search instead of true vectors
 async function embedAndStore(interactionId, text){
-  // Store the text for later semantic search - vector embedding done server-side
-  // For now we rely on Claude reading full text context
-  return true;
+  if(!text||!interactionId)return;
+  // Fire-and-forget — never blocks the UI
+  setTimeout(async()=>{
+    try{
+      const vec=await getEmbedding(text);
+      if(!vec)return;
+      // pgvector expects a JSON array string
+      await fetch(SB_URL+'/rest/v1/interactions?id=eq.'+interactionId,{
+        method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({embedding:vec})
+      });
+    }catch(e){console.warn('Embed store failed:',e.message);}
+  },600);
 }
 
-async function semanticSearch(query, contactIds=null, limit=20){
-  // Get all interactions matching contactIds or all
-  let url='interactions?select=*,contacts(first_name,last_name,household_id)&order=date.desc&limit=200';
-  if(contactIds&&contactIds.length){
-    url=`interactions?contact_id=in.(${contactIds.map(id=>`"${id}"`).join(',')})&select=*&order=date.desc&limit=200`;
+async function semanticSearch(query, limit=30){
+  // Try pgvector similarity search first; fall back to recent interactions
+  try{
+    if(!OPENAI_KEY){throw new Error('no key');}
+    const vec=await getEmbedding(query);
+    if(!vec)throw new Error('no embedding');
+    const resp=await fetch(SB_URL+'/rest/v1/rpc/match_interactions',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({query_embedding:vec,match_threshold:0.25,match_count:limit})
+    });
+    const rows=await resp.json();
+    if(rows&&rows.length)return rows;
+    throw new Error('no results');
+  }catch(e){
+    // Fall back to recent interactions (recency as proxy for relevance)
+    console.warn('Vector search unavailable, using recency:',e.message);
+    const rows=await sb('interactions?select=id,contact_id,type,date,notes&order=date.desc&limit=150');
+    return rows||[];
   }
-  const rows=await sb(url);
-  return rows||[];
 }
-
 // ── PERSON CHAT ──
 let personChatHistory=[];
 let personChatIdx=-1;
@@ -2214,25 +2284,36 @@ async function sendPersonChat(){
   const notes=interactions.filter(i=>i.type==='Note');
   const activities=interactions.filter(i=>i.type!=='Note');
 
+  // Get DB AGC scores (authoritative)
+  const dbDetail=agcCache[h.id]?.detail||{};
   const context=`CONTACT: ${h.displayName}
 ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
 HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''})`).join(', ')}
 PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
 EMAILS: ${(h.members||[]).map(m=>m.email).filter(Boolean).join(', ')||'none'}
 
-PROSPECT SCORE: ${agc.total}/100 (Affinity: ${agc.affinity}/40, Generosity: ${agc.generosity}/35, Capacity: ${agc.capacity}/25)
+AGC SCORES (pre-calculated from database — treat as authoritative facts):
+  Total: ${agc.total}/100
+  Affinity: ${agc.affinity}/40  ← Connection to Chabad/Jewish causes + relationship warmth
+  Generosity: ${agc.generosity}/35  ← Giving history, frequency, recency, breadth
+  Capacity: ${agc.capacity}/25  ← Wealth signals, home value, business/professional role
+
 HOME VALUE: ${h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown'}
 
-GIVING TO CHABAD:
+GIVING TO CHABAD (hard data):
 ${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
-Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history'}
+All donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history on file'}
 
-AI PROFILE: ${p.summary||'Not yet built'}
+AI PROFILE (from prior web research):
+${p.summary||'Not yet built'}
 ${p.fedLevel?'Federation level: '+p.fedLevel:''}
 ${p.businessInfo?'Business: '+p.businessInfo:''}
 ${p.boardMemberships?'Boards: '+p.boardMemberships:''}
 ${p.philanthropy990?'990 giving: '+p.philanthropy990:''}
-${p.approach?'Suggested approach: '+p.approach:''}
+${p.approach?'Prior suggested approach: '+p.approach:''}
+${p.affinityNotes?'Affinity context: '+p.affinityNotes:''}
+${p.generosityNotes?'Generosity context: '+p.generosityNotes:''}
+${p.capacityNotes?'Capacity context: '+p.capacityNotes:''}
 
 PRIVATE NOTES (${notes.length}):
 ${notes.length?notes.map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None recorded'}
@@ -2249,9 +2330,7 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
         max_tokens:800,
-        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete information about one specific contact and help the rabbi understand this person deeply, recall past interactions, and plan next steps. Be warm, insightful and specific. Reference actual details from the data. Here is everything known about this person:
-
-${context}`,
+        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete, authoritative information about one specific contact. The AGC scores in the context are pre-calculated database facts — treat them as ground truth, not estimates. Your job is to help the rabbi understand this person deeply, recall past interactions, plan next steps, and craft specific outreach. Be warm, insightful, and concrete. Reference actual details. Surface patterns the rabbi might not see. Suggest specific asks, timing, and talking points based on the data.\n\n${context}`,
         messages:personChatHistory
       })
     });
@@ -2351,9 +2430,16 @@ async function sendGlobalAsk(){
   msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">Searching your contacts…</div></div>`;
   msgs.scrollTop=msgs.scrollHeight;
 
-  // Build comprehensive context - all contacts with their data
-  const context=await buildGlobalContext();
+  // Run semantic search to find relevant interactions, then build context
+  let relevantNotes=[];
+  try{
+    relevantNotes=await semanticSearch(query,30);
+  }catch(e){}
+
+  // Build context: roster summary (all contacts) + semantically relevant notes
+  const context=await buildGlobalContext(relevantNotes);
   globalChatHistory.push({role:'user',content:query});
+  const rabbiCtx=localStorage.getItem('ci_context')||'';
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -2361,10 +2447,15 @@ async function sendGlobalAsk(){
       headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1200,
-        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have access to the rabbi's full constituent database including contact info, giving history, event attendance, private notes, and AI profiles. Help the rabbi make smart decisions about engagement, fundraising, and relationship building. Be specific — name actual people, reference actual data. ${localStorage.getItem('ci_context')?'\n\nABOUT THE RABBI AND CHABAD:\n'+localStorage.getItem('ci_context'):''}\n\nFULL CONSTITUENT DATABASE:
+        max_tokens:1400,
+        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have access to the full constituent database with pre-calculated AGC scores (Affinity/Generosity/Capacity — treat these as authoritative hard facts from the database, not estimates).
 
-${context}`,
+Your role: help the rabbi identify the right people for specific purposes, surface patterns across the community, and give concrete, actionable recommendations. Always name specific people. Reference actual scores and data. Do not hedge on the scores — they are calculated facts.
+
+${rabbiCtx?'ABOUT THE RABBI AND CHABAD:\n'+rabbiCtx+'\n\n':''}CONSTITUENT ROSTER (all households with DB scores):
+${context.roster}
+
+${context.relevantNotes?'SEMANTICALLY RELEVANT NOTES & INTERACTIONS (matched to your query):\n'+context.relevantNotes:''}`,
         messages:globalChatHistory
       })
     });
@@ -2381,28 +2472,29 @@ ${context}`,
   }
 }
 
-async function buildGlobalContext(){
-  // Build rich context for all households
-  const lines=await Promise.all(households.map(async(h,i)=>{
+async function buildGlobalContext(semanticRows=[]){
+  // Build compact roster: all households with their DB AGC scores
+  const roster=households.map(h=>{
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const p=h.profile_data||{};
-    // Load interactions for this household
-    let iText='';
-    try{
-      const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
-      if(memberIds){
-        const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=20`);
-        if(rows&&rows.length){
-          const notes=rows.filter(r=>r.type==='Note').map(r=>`[${r.date}] NOTE: ${r.notes}`);
-          const acts=rows.filter(r=>r.type!=='Note').map(r=>`[${r.date}] ${r.type}${r.notes?': '+r.notes:''}`);
-          iText=[...notes,...acts].join(' | ');
-        }
-      }
-    }catch(e){}
-    return `${h.displayName} | ${h.city||''} | Score:${agc.total}(A:${agc.affinity},G:${agc.generosity},C:${agc.capacity}) | Value:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none'} | Profile:${p.summary?p.summary.substring(0,100)+'...':'none'} | ${iText?'Context: '+iText.substring(0,200):''}`;
-  }));
-  return lines.join('\n');
+    const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name).join(' & ');
+    return `${h.displayName} [${members}] | AGC:${agc.total}/100(A:${agc.affinity} G:${agc.generosity} C:${agc.capacity}) | HomeVal:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none'} | ${p.approach?'Approach:'+p.approach.substring(0,80):''}`;
+  }).join('\n');
+
+  // Build relevant notes block from semantic search results
+  let relevantNotes='';
+  if(semanticRows&&semanticRows.length){
+    // Match rows back to household names for context
+    const contactToHousehold={};
+    households.forEach(h=>(h.members||[]).forEach(m=>{contactToHousehold[m.id]=h.displayName;}));
+    relevantNotes=semanticRows.map(r=>{
+      const who=contactToHousehold[r.contact_id]||'Unknown';
+      return `[${r.date}] ${who} — ${r.type}: ${r.notes||''}`;
+    }).join('\n');
+  }
+
+  return{roster,relevantNotes};
 }
 
 // ── PIN & UTILS ──
