@@ -313,11 +313,18 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
 
+    <!-- Search -->
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border2)">
+      <input type="text" placeholder="Search contacts…" autocomplete="new-password"
+        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:.8rem;border-radius:5px;outline:none"
+        oninput="document.getElementById('srch')?document.getElementById('srch').value=this.value:null;applyFilter()">
+    </div>
+
     <!-- DATA section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Data</div>
-    <button class="sb-item" onclick="closeSidebar();setImportType('contacts');showImport()">📥 Import Contacts</button>
-    <button class="sb-item" onclick="closeSidebar();setImportType('donations');showImport()">💝 Import Donations</button>
-    <button class="sb-item" onclick="closeSidebar();setImportType('voter');showImport()">🗳 Import Voter File</button>
+    <button class="sb-item" onclick="closeSidebar();showImport('contacts')">📥 Import Contacts</button>
+    <button class="sb-item" onclick="closeSidebar();showImport('donations')">💝 Import Donations</button>
+    <button class="sb-item" onclick="closeSidebar();showImport('voter')">🗳 Import Voter File</button>
     <button class="sb-item" onclick="closeSidebar();exportCSV()">📤 Export CSV</button>
 
     <!-- MAP section -->
@@ -381,9 +388,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Anthropic API Key</label>
         <input type="password" id="apiAnthropicInput" placeholder="sk-ant-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:'DM Mono',monospace;font-size:.72rem;border-radius:5px">
       </div>
-      <div style="margin-bottom:20px">
+      <div style="margin-bottom:14px">
         <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">OpenAI API Key</label>
         <input type="password" id="apiOpenAIInput" placeholder="sk-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:'DM Mono',monospace;font-size:.72rem;border-radius:5px">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">RapidAPI Key</label>
+        <input type="password" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:'DM Mono',monospace;font-size:.72rem;border-radius:5px">
+        <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Used for Zillow property data (Personator age lookup)</div>
       </div>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('apiKeysModal').style.display='none'">Cancel</button>
@@ -392,62 +404,53 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
   </div>
 
+  <!-- Hidden tier inputs needed for recolorAll() logic -->
+  <div style="display:none"><input type="text" id="srch" value="">
+    <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
+    <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
+    <div id="valueTiers"></div><div id="givingTiers"></div>
+    <button id="prefetchBtn" disabled></button>
+  </div>
+
   <header class="hdr">
-    <!-- Hamburger -->
     <button onclick="openSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;color:var(--txt2);font-size:1.2rem;flex-shrink:0;line-height:1" title="Menu">☰</button>
-    <!-- Logo (text only, small) -->
     <span style="font-family:'Lora',serif;font-weight:700;font-size:1.1rem;color:var(--txt);flex-shrink:0">דַּעַת</span>
+    <div class="toolbar-sep"></div>
+    <button class="btn btn-sec" onclick="toggleFilterPanel()" id="filterToggle" style="padding:4px 10px;font-size:.72rem">⚙ Filter</button>
+    <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
+    <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
+    <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
+    <div class="prog-wrap" id="geoProgress" style="display:none">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-lbl" id="progLbl">Loading…</span>
+    </div>
     <div class="spacer"></div>
-    <!-- Search -->
-    <div class="srch" style="max-width:180px"><input type="text" id="srch" placeholder="Search contacts…" autocomplete="new-password" oninput="applyFilter()"></div>
-    <!-- Color by -->
     <div class="legend" id="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div><span id="leg2">Tier 2</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">Tier 3</span></div>
     </div>
-    <span class="tlabel">Color by</span>
     <select id="colorBy" onchange="switchColorMode();updateSidebarTiers()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
       <option value="value">Home Value</option>
       <option value="giving">Giving</option>
       <option value="score">Prospect Score</option>
     </select>
+    <div class="toolbar-sep"></div>
     <span class="total" id="totalLbl">Loading…</span>
-    <!-- AI search -->
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <input type="text" id="aiSearchInput" placeholder="🔍 Ask anything…" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:160px" onkeydown="if(event.key==='Enter')runAISearch()">
-      <button onclick="runAISearch()" class="btn btn-pri" style="padding:5px 10px;border-radius:20px">Ask</button>
-      <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:5px 10px;border-radius:20px;white-space:nowrap">🧠 Research</button>
+      <input type="text" id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="new-password" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
+      <button onclick="runAISearch()" class="btn btn-pri" style="padding:4px 10px;border-radius:20px;font-size:.72rem">Ask</button>
+      <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;border-radius:20px;font-size:.72rem;white-space:nowrap">🧠</button>
     </div>
   </header>
-  <!-- AI Search Results (inside #app, outside header) -->
+  <!-- AI Search Results -->
   <div id="aiSearchPanel" style="display:none;background:var(--surf);border-bottom:2px solid var(--accent);padding:14px 20px;max-height:280px;overflow-y:auto;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">AI Search Results</div>
       <button onclick="document.getElementById('aiSearchPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:.9rem">✕</button>
     </div>
     <div id="aiSearchResults" style="font-size:.8rem;color:var(--txt2);line-height:1.7"></div>
-  </div>
-
-  <!-- Hidden tier inputs still needed for recolorAll() logic -->
-  <div style="display:none">
-    <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
-    <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
-    <div id="valueTiers"></div><div id="givingTiers"></div>
-  </div>
-  <div class="toolbar">
-    <button class="btn btn-sec" onclick="toggleFilterPanel()" id="filterToggle">⚙ Filter</button>
-    <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
-    <div class="toolbar-sep"></div>
-    <button class="btn btn-pri" onclick="showAddContact()">＋ Add Contact</button>
-    <button class="btn btn-sec" onclick="loadAll()">🔄 Refresh</button>
-    <div class="prog-wrap" id="geoProgress" style="display:none">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-      <span class="prog-lbl" id="progLbl">Loading…</span>
-    </div>
-    <!-- Hidden prefetch button still needed for startPrefetch() -->
-    <button id="prefetchBtn" style="display:none" disabled></button>
   </div>
 
   <!-- Filter Panel -->
@@ -478,7 +481,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
-      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" autocomplete="new-password" oninput="applyFilter()"></div>
       <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
@@ -538,7 +540,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div style="font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt)">Constituent Intelligence</div>
       <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">Ask anything about all your contacts</div>
     </div>
-    <button onclick="toggleContextPanel()" class="btn btn-sec" style="font-size:.65rem;padding:5px 12px">⚙ My Context</button>
   </div>
   <!-- Context panel -->
   <div id="contextPanel" style="display:none;border-bottom:1px solid var(--border);background:var(--surf2);padding:16px 20px;flex-shrink:0">
@@ -604,7 +605,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 // ── SUPABASE AUTH ──
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
-const RAPIDAPI_KEY='14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
+let RAPIDAPI_KEY=localStorage.getItem('crm_rapid_key')||'14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
 let ANTHROPIC_KEY=localStorage.getItem('crm_ant_key')||'';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -1614,9 +1615,10 @@ async function confirmAddContact(){
 
 // ── IMPORT CSV ──
 let importType='contacts';
-function showImport(){
+function showImport(type){
+  if(type)setImportType(type);
   document.getElementById('importModal').style.display='flex';
-  setImportType('contacts');
+}
 }
 function setImportType(type){
   importType=type;
@@ -2882,7 +2884,14 @@ function showProgress(show,text,pct){
 }
 
 // ── SIDEBAR ──
-function openRabbiContext(){toggleContextPanel();}
+function openRabbiContext(){
+  // Open the global ask page and immediately show context panel
+  openGlobalAsk();
+  setTimeout(()=>{
+    const p=document.getElementById('contextPanel');
+    if(p)p.style.display='block';
+  },100);
+}
 
 function openSidebar(){
   document.getElementById('sidebarPanel').style.left='0';
@@ -2908,14 +2917,18 @@ function updateSidebarTiers(){
 function openAPIKeys(){
   document.getElementById('apiAnthropicInput').value=ANTHROPIC_KEY||'';
   document.getElementById('apiOpenAIInput').value=OPENAI_KEY||'';
+  document.getElementById('apiRapidInput').value=RAPIDAPI_KEY||'';
   document.getElementById('apiKeysModal').style.display='flex';
 }
 function saveAPIKeys(){
   const ant=document.getElementById('apiAnthropicInput').value.trim();
   const oai=document.getElementById('apiOpenAIInput').value.trim();
+  const rap=document.getElementById('apiRapidInput').value.trim();
   if(ant){ANTHROPIC_KEY=ant;localStorage.setItem('crm_ant_key',ant);}
   if(oai){OPENAI_KEY=oai;localStorage.setItem('crm_oai_key',oai);}
+  if(rap){RAPIDAPI_KEY=rap;localStorage.setItem('crm_rapid_key',rap);}
   document.getElementById('apiKeysModal').style.display='none';
+  alert('API keys saved.');
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
