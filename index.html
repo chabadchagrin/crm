@@ -390,6 +390,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
     <div class="toolbar-sep"></div>
     <button class="btn btn-gold" id="prefetchBtn" onclick="startPrefetch()" disabled>⚡ Pre-fetch All</button>
+    <button class="btn btn-sec" id="melissaBtn" onclick="startMelissaFetch()" disabled style="font-size:.68rem">🎂 Fetch Ages</button>
     <button class="btn btn-green" onclick="exportCSV()">⬇ Export</button>
     <button class="btn btn-pri" onclick="showAddContact()">＋ Add Contact</button>
     <button class="btn btn-sec" onclick="showImport()">⬆ Import</button>
@@ -428,7 +429,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
-      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" oninput="applyFilter()"></div>
+      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" autocomplete="off" oninput="applyFilter()"></div>
       <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
@@ -693,6 +694,7 @@ async function loadAll(){
 
     document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
     document.getElementById('prefetchBtn').disabled=false;
+    document.getElementById('melissaBtn').disabled=false;
     // Load context from Supabase into localStorage cache
     loadGlobalContext();
     // Load AGC scores from DB (non-blocking)
@@ -732,6 +734,34 @@ function getGivingStats(h){
   all.sort((a,b)=>new Date(b.date)-new Date(a.date));
   const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
   return{total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
+}
+
+// ── MELISSA BULK FETCH ──
+async function startMelissaFetch(){
+  const btn=document.getElementById('melissaBtn');
+  btn.disabled=true;btn.textContent='🎂 Fetching…';
+  let done=0,found=0,errors=0;
+  // Get all contacts missing DOB
+  const allContacts=households.flatMap(h=>(h.members||[]).filter(m=>!m.dob).map(m=>({m,h})));
+  for(const{m,h} of allContacts){
+    if(!h.address||h.noAddress){done++;continue;}
+    try{
+      await sleep(400); // rate limit — 1000/hr
+      const mel=await fetchMelissa(m.first_name,m.last_name,h.address,h.city,h.state||'OH',h.zip);
+      if(mel&&mel.dob){
+        const dob=mel.dob.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+        await sb('contacts?id=eq.'+m.id,{method:'PATCH',body:JSON.stringify({dob})});
+        m.dob=dob;
+        found++;
+      }
+    }catch(e){errors++;console.warn('Melissa fetch failed for',m.first_name,m.last_name,e.message);}
+    done++;
+    btn.textContent=`🎂 ${done}/${allContacts.length}…`;
+  }
+  btn.textContent=`🎂 Done (${found} found)`;
+  btn.disabled=false;
+  setTimeout(()=>{btn.textContent='🎂 Fetch Ages';},4000);
+  if(found)loadAll(); // reload to show updated DOBs
 }
 
 // ── AGC SCORES (DB-backed with local fallback) ──
@@ -1000,6 +1030,7 @@ function setProp(mode,h,result){
     <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${m.first_name} ${m.last_name}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
+    ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:''}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
     <button onclick="deleteContact('${m.id}','${m.first_name} ${m.last_name}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
     <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact">✏️</button>
@@ -1148,6 +1179,59 @@ async function fetchProp(h){
       source:'Zillow'
     };
   }catch(e){return{error:true,message:'Lookup failed: '+e.message};}
+}
+
+// ── MELISSA PEOPLE DATA ──
+async function fetchMelissa(firstName, lastName, address, city, state, zip){
+  if(!firstName||!lastName||!address)return null;
+  try{
+    const params=new URLSearchParams({
+      act:'Append',
+      first:firstName,
+      last:lastName,
+      a1:address,
+      city:city||'',
+      state:state||'OH',
+      postal:zip||'',
+      format:'json'
+    });
+    const resp=await fetch(`https://personator.p.rapidapi.com/v3/WEB/ContactVerify/doContactVerify?${params}`,{
+      headers:{'x-rapidapi-host':'personator.p.rapidapi.com','x-rapidapi-key':RAPIDAPI_KEY}
+    });
+    const d=await resp.json();
+    const rec=d?.Records?.[0];
+    if(!rec)return null;
+    // Only return data if results indicate a match
+    const results=rec.Results||'';
+    if(!results.includes('GS'))return null; // GS = good demographic match
+    const dob=rec.DateOfBirth&&rec.DateOfBirth.trim()?rec.DateOfBirth.trim():null;
+    if(!dob)return null;
+    return{dob};
+  }catch(e){console.warn('Melissa lookup failed:',e.message);return null;}
+}
+
+// Helper: calculate age from DOB string (YYYYMMDD or YYYY-MM-DD)
+function calcAge(dob){
+  if(!dob)return null;
+  const clean=dob.replace(/-/g,'');
+  if(clean.length<8)return null;
+  const yr=parseInt(clean.substring(0,4));
+  const mo=parseInt(clean.substring(4,6))-1;
+  const dy=parseInt(clean.substring(6,8));
+  if(isNaN(yr)||isNaN(mo)||isNaN(dy))return null;
+  const today=new Date();
+  let age=today.getFullYear()-yr;
+  if(today.getMonth()<mo||(today.getMonth()===mo&&today.getDate()<dy))age--;
+  return age>0&&age<120?age:null;
+}
+
+// Format DOB for display (YYYYMMDD → Month D, YYYY)
+function formatDOB(dob){
+  if(!dob)return null;
+  const clean=dob.replace(/-/g,'');
+  if(clean.length<8)return null;
+  const d=new Date(parseInt(clean.substring(0,4)),parseInt(clean.substring(4,6))-1,parseInt(clean.substring(6,8)));
+  return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 }
 
 // ── GEOCODE ──
@@ -1391,7 +1475,18 @@ async function confirmAddContact(){
     }
 
     // Create the new contact linked to household
-    await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,civicrm_id:acFormData.crmId||null})});
+    const [newContact]=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,civicrm_id:acFormData.crmId||null})});
+
+    // Fire Melissa lookup for DOB/demographics (fire-and-forget)
+    if(newContact){
+      setTimeout(async()=>{
+        const mel=await fetchMelissa(acFormData.first,acFormData.last,r.address,r.city,'OH',r.zip);
+        if(mel&&mel.dob){
+          const dob=mel.dob.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+          await sb('contacts?id=eq.'+newContact.id,{method:'PATCH',body:JSON.stringify({dob})});
+        }
+      },800);
+    }
 
     hideAddContact();
     alert(`✅ ${acFormData.first} ${acFormData.last} added!`);
@@ -2010,6 +2105,7 @@ function openFullPanel(idx){
           <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
           ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
           ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
+          ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">🎂 ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:''}
           <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">ID: ${m.civicrm_id||'—'}</div>
         </div>`).join('')}
       </div>
@@ -2425,7 +2521,7 @@ async function sendPersonChat(){
   const dbDetail=agcCache[h.id]?.detail||{};
   const context=`CONTACT: ${h.displayName}
 ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
-HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''})`).join(', ')}
+HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''}${m.dob?' · DOB: '+formatDOB(m.dob)+' · Age '+calcAge(m.dob):''})`).join(', ')}
 PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
 EMAILS: ${(h.members||[]).map(m=>m.email).filter(Boolean).join(', ')||'none'}
 
