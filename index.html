@@ -277,11 +277,12 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div style="display:flex;gap:10px;margin-bottom:16px">
       <button class="btn btn-pri" id="imp_contacts_btn" onclick="setImportType('contacts')" style="flex:1">👥 Contacts</button>
       <button class="btn btn-sec" id="imp_donations_btn" onclick="setImportType('donations')" style="flex:1">💝 Donations</button>
+      <button class="btn btn-sec" id="imp_voter_btn" onclick="setImportType('voter')" style="flex:1">🗳 Voter File</button>
     </div>
     <div id="imp_format" style="font-size:.72rem;color:var(--txt2);background:var(--surf2);padding:10px;border-radius:6px;margin-bottom:12px;line-height:1.7"></div>
     <div class="import-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDrop(event)">
       <p>Click to select CSV file<br><strong>or drag and drop here</strong></p>
-      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSV(event)">
+      <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(event)">
     </div>
     <div id="imp_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
@@ -390,7 +391,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
     <div class="toolbar-sep"></div>
     <button class="btn btn-gold" id="prefetchBtn" onclick="startPrefetch()" disabled>⚡ Pre-fetch All</button>
-    <button class="btn btn-sec" id="melissaBtn" onclick="startMelissaFetch()" disabled style="font-size:.68rem">🎂 Fetch Ages</button>
     <button class="btn btn-green" onclick="exportCSV()">⬇ Export</button>
     <button class="btn btn-pri" onclick="showAddContact()">＋ Add Contact</button>
     <button class="btn btn-sec" onclick="showImport()">⬆ Import</button>
@@ -429,7 +429,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
-      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" autocomplete="off" oninput="applyFilter()"></div>
+      <div class="srch"><input type="text" id="srch" placeholder="Search contacts…" autocomplete="new-password" oninput="applyFilter()"></div>
       <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
@@ -694,7 +694,6 @@ async function loadAll(){
 
     document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
     document.getElementById('prefetchBtn').disabled=false;
-    document.getElementById('melissaBtn').disabled=false;
     // Load context from Supabase into localStorage cache
     loadGlobalContext();
     // Load AGC scores from DB (non-blocking)
@@ -737,31 +736,29 @@ function getGivingStats(h){
 }
 
 // ── MELISSA BULK FETCH ──
-async function startMelissaFetch(){
-  const btn=document.getElementById('melissaBtn');
-  btn.disabled=true;btn.textContent='🎂 Fetching…';
-  let done=0,found=0,errors=0;
-  // Get all contacts missing DOB
-  const allContacts=households.flatMap(h=>(h.members||[]).filter(m=>!m.dob).map(m=>({m,h})));
-  for(const{m,h} of allContacts){
-    if(!h.address||h.noAddress){done++;continue;}
-    try{
-      await sleep(400); // rate limit — 1000/hr
-      const mel=await fetchMelissa(m.first_name,m.last_name,h.address,h.city,h.state||'OH',h.zip);
-      if(mel&&mel.dob){
-        const dob=mel.dob.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
-        await sb('contacts?id=eq.'+m.id,{method:'PATCH',body:JSON.stringify({dob})});
-        m.dob=dob;
-        found++;
-      }
-    }catch(e){errors++;console.warn('Melissa fetch failed for',m.first_name,m.last_name,e.message);}
-    done++;
-    btn.textContent=`🎂 ${done}/${allContacts.length}…`;
+async function fetchContactAge(contactId, firstName, lastName, householdIdx){
+  const btn=document.getElementById('agebtn-'+contactId);
+  if(btn){btn.textContent='…';btn.disabled=true;}
+  const h=households[householdIdx];
+  if(!h){if(btn){btn.textContent='🎂';btn.disabled=false;}return;}
+  try{
+    const mel=await fetchMelissa(firstName,lastName,h.address,h.city,h.state||'OH',h.zip);
+    if(mel&&mel.dob){
+      const dob=mel.dob.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+      await sb('contacts?id=eq.'+contactId,{method:'PATCH',body:JSON.stringify({dob})});
+      // Update in memory
+      const m=(h.members||[]).find(c=>c.id===contactId);
+      if(m)m.dob=dob;
+      // Refresh contacts tab
+      showTab(householdIdx,'contacts');
+      if(btn){btn.textContent='✓';setTimeout(()=>{btn.textContent='🎂';btn.disabled=false;},2000);}
+    } else {
+      if(btn){btn.textContent='?';btn.title='No DOB found';setTimeout(()=>{btn.textContent='🎂';btn.disabled=false;},2000);}
+    }
+  }catch(e){
+    console.warn('Melissa fetch failed:',e.message);
+    if(btn){btn.textContent='✗';setTimeout(()=>{btn.textContent='🎂';btn.disabled=false;},2000);}
   }
-  btn.textContent=`🎂 Done (${found} found)`;
-  btn.disabled=false;
-  setTimeout(()=>{btn.textContent='🎂 Fetch Ages';},4000);
-  if(found)loadAll(); // reload to show updated DOBs
 }
 
 // ── AGC SCORES (DB-backed with local fallback) ──
@@ -1030,7 +1027,8 @@ function setProp(mode,h,result){
     <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${m.first_name} ${m.last_name}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
-    ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:''}
+    ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:
+    (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="font-size:.58rem;opacity:.6">(est.)</span></div>`:'')}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
     <button onclick="deleteContact('${m.id}','${m.first_name} ${m.last_name}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
     <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact">✏️</button>
@@ -1232,6 +1230,76 @@ function formatDOB(dob){
   if(clean.length<8)return null;
   const d=new Date(parseInt(clean.substring(0,4)),parseInt(clean.substring(4,6))-1,parseInt(clean.substring(6,8)));
   return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+
+// ── VOTER FILE IMPORT ──
+async function importVoterFile(lines){
+  const status=document.getElementById('imp_status');
+  status.textContent='Parsing voter file… (this may take a moment)';
+
+  // Build lookup map from your contacts: key = "LASTNAME|HOUSENUMBER"
+  const contactMap={};
+  households.forEach(h=>{
+    if(!h.address||h.noAddress)return;
+    // Extract house number from address (first token)
+    const houseNum=(h.address||'').trim().split(/\s+/)[0].toUpperCase();
+    (h.members||[]).forEach(m=>{
+      if(!m.last_name)return;
+      const key=m.last_name.toUpperCase()+'|'+houseNum;
+      if(!contactMap[key])contactMap[key]=[];
+      contactMap[key].push({m,h});
+    });
+  });
+
+  // Parse header to find column indices
+  const header=parseCSVLine(lines[0]);
+  const col=n=>header.indexOf(n);
+  const iLast=col('LAST_NAME'),iFirst=col('FIRST_NAME'),iDOB=col('DATE_OF_BIRTH');
+  const iAddr=col('RESIDENTIAL_ADDRESS1'),iCity=col('RESIDENTIAL_CITY'),iZip=col('RESIDENTIAL_ZIP');
+  if(iLast<0||iDOB<0||iAddr<0){throw new Error('Unexpected voter file format — check column headers.');}
+
+  let matched=0,updated=0,processed=0;
+  const total=lines.length-1;
+  const BATCH=5000;
+
+  // Process in chunks to keep UI responsive
+  for(let i=1;i<lines.length;i++){
+    if(i%BATCH===0){
+      status.textContent=`Scanning… ${Math.round(i/total*100)}% (${matched} matches so far)`;
+      await sleep(10); // yield to browser
+    }
+    const row=parseCSVLine(lines[i]);
+    if(!row[iLast]||!row[iDOB]||!row[iDOB].trim())continue;
+    const lastName=row[iLast].trim().toUpperCase();
+    const addr=row[iAddr]||'';
+    const houseNum=addr.trim().split(/\s+/)[0].toUpperCase();
+    const dob=row[iDOB].trim(); // already YYYY-MM-DD
+    const key=lastName+'|'+houseNum;
+    processed++;
+
+    if(contactMap[key]){
+      // Match found — find the right person by first name if multiple
+      const voterFirst=(row[iFirst]||'').trim().toUpperCase();
+      let matches=contactMap[key];
+      // Try to narrow by first name
+      const firstMatch=matches.find(({m})=>m.first_name&&m.first_name.toUpperCase().startsWith(voterFirst.substring(0,3)));
+      const target=firstMatch||matches[0];
+      if(target&&!target.m.dob){
+        // Update in DB
+        try{
+          await sb('contacts?id=eq.'+target.m.id,{method:'PATCH',body:JSON.stringify({dob})});
+          target.m.dob=dob;
+          updated++;
+        }catch(e){console.warn('DOB update failed:',e.message);}
+      }
+      matched++;
+    }
+  }
+
+  status.textContent=`✅ Done! Scanned ${processed.toLocaleString()} voter records · ${matched} name+address matches · ${updated} DOBs updated`;
+  if(updated>0){
+    setTimeout(()=>loadAll(),1500);
+  }
 }
 
 // ── GEOCODE ──
@@ -1504,16 +1572,21 @@ function setImportType(type){
   importType=type;
   document.getElementById('imp_contacts_btn').className='btn '+(type==='contacts'?'btn-pri':'btn-sec');
   document.getElementById('imp_donations_btn').className='btn '+(type==='donations'?'btn-pri':'btn-sec');
+  document.getElementById('imp_voter_btn').className='btn '+(type==='voter'?'btn-pri':'btn-sec');
   document.getElementById('imp_status').style.display='none';
   if(type==='contacts'){
     document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
     First Name · Last Name · Email · Phone · Street Address · City · State · ZIP · Contact ID · Gender<br><br>
     <b>How it works:</b> Matched by Contact ID. New contacts are added, existing ones updated. Contacts sharing the same address are automatically grouped into one household.`;
-  }else{
+  }else if(type==='donations'){
     document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
     Contact ID · Amount · Date · Notes<br>
     <em style="color:var(--txt3)">Donor Name column is optional — works with or without it.</em><br><br>
     <b>How it works:</b> Matched by Contact ID. Duplicates (same ID + date + amount) are skipped automatically.`;
+  }else{
+    document.getElementById('imp_format').innerHTML=`<b>Ohio Voter File (.txt)</b><br>
+    Download from Ohio Secretary of State → Elections → Voter Registration → Voter File.<br><br>
+    <b>How it works:</b> Matches your contacts by last name + house number. Updates DOB for any matches found. Large file — may take 20-30 seconds to process.`;
   }
 }
 
@@ -1521,7 +1594,7 @@ function handleDrop(event){
   event.preventDefault();event.stopPropagation();
   document.getElementById('dropZone').style.borderColor='var(--border2)';
   const file=event.dataTransfer.files[0];
-  if(!file||!file.name.endsWith('.csv')){alert('Please drop a CSV file.');return;}
+  if(!file||(!file.name.endsWith('.csv')&&!file.name.endsWith('.txt'))){alert('Please drop a CSV or TXT file.');return;}
   processFile(file);
 }
 
@@ -1538,7 +1611,8 @@ function processFile(file){
     status.style.display='block';status.textContent='Processing…';
     try{
       if(importType==='contacts')await importContacts(lines);
-      else await importDonations(lines);
+      else if(importType==='donations')await importDonations(lines);
+      else await importVoterFile(lines);
     }catch(err){status.textContent='⚠ Error: '+err.message;}
     event.target.value='';
   };
@@ -1819,9 +1893,10 @@ Return ONLY valid JSON, no markdown fences:
   "boardMemberships": "Jewish Federation board, Cleveland Clinic Foundation" or null,
   "philanthropy990": "Gave $25k to Jewish Federation (2022), $10k to JCC (2021)" or null,
   "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
+  "approximateAge": 58 or null,
   "builtAt": "${new Date().toISOString()}"
 }
-NEVER invent information. If nothing is found publicly, say so honestly in the notes fields.`,
+NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.`,
         messages:[{role:'user',content:`Enrich this contact profile with public research:
 
 NAME: ${fullName}
@@ -1844,7 +1919,7 @@ ${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join
 ACTIVITY LOG (${activity_list.length} interactions):
 ${activity_list.length?activity_list.slice(0,10).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}
 
-Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland, ProPublica Nonprofit Explorer, LinkedIn, Ohio Secretary of State business search, general web.`}]
+Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland, ProPublica Nonprofit Explorer, LinkedIn (graduation year → approximate age), Ohio Secretary of State business search, general web. For age: look for LinkedIn profile, news mentions, alumni records, or any public signal that indicates approximate birth year.`}]
       })
     });
 
@@ -2105,7 +2180,8 @@ function openFullPanel(idx){
           <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
           ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
           ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
-          ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">🎂 ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:''}
+          ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">🎂 ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:
+          (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated from public records)</span></div>`:'')}
           <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">ID: ${m.civicrm_id||'—'}</div>
         </div>`).join('')}
       </div>
@@ -2524,6 +2600,8 @@ ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
 HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''}${m.dob?' · DOB: '+formatDOB(m.dob)+' · Age '+calcAge(m.dob):''})`).join(', ')}
 PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
 EMAILS: ${(h.members||[]).map(m=>m.email).filter(Boolean).join(', ')||'none'}
+
+APPROXIMATE AGE: ${h.profile_data&&h.profile_data.approximateAge?h.profile_data.approximateAge+' (estimated from public records)':'unknown'}
 
 AGC SCORES (pre-calculated from database — treat as authoritative facts):
   Total: ${agc.total}/100
