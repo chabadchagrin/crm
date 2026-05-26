@@ -321,8 +321,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
     <!-- Search -->
     <div style="padding:10px 14px;border-bottom:1px solid var(--border2)">
-      <input type="text" placeholder="Search contacts…" autocomplete="new-password"
-        name="daas-search-x7k" autocomplete="off" role="searchbox"
+      <input type="search" placeholder="Search contacts…" autocomplete="off" name="daas-x7k"
         style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:.8rem;border-radius:5px;outline:none"
         oninput="document.getElementById('srch')?document.getElementById('srch').value=this.value:null;applyFilter()">
     </div>
@@ -1625,7 +1624,6 @@ let importType='contacts';
 function showImport(type){
   if(type)setImportType(type);
   document.getElementById('importModal').style.display='flex';
-}
 }
 function setImportType(type){
   importType=type;
