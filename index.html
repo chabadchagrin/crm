@@ -302,13 +302,19 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- Sidebar header -->
     <div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border2)">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" width="28" height="18" style="flex-shrink:0">
-        <style>.sfl1{fill:#b45309;opacity:.9}.sfl2{fill:#d97706;opacity:.75}.sflc{fill:#dc2626}.sfls{fill:none;stroke:#c87d2f;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.snl{stroke:#4a7fc1;stroke-width:1.8;fill:none;opacity:.85}.snc{fill:#5b8fd4;stroke:#7aaae0;stroke-width:1}.sng{fill:#c8952a;stroke:#e0b84a;stroke-width:1}</style>
-        <path class="sfl1" d="M360 40C335 72 302 100 288 138C270 182 270 218 280 250C290 280 310 305 334 320C322 302 318 276 322 250C326 222 342 202 360 180C378 202 394 222 398 250C402 276 398 302 386 320C410 305 430 280 440 250C450 218 450 182 432 138C418 100 385 72 360 40Z"/>
-        <path class="sfls" d="M360 40C335 72 300 104 286 142C268 188 268 222 280 254C292 282 314 306 334 320C324 300 320 274 324 250C328 222 344 202 360 178"/>
-        <path class="sfls" d="M360 40C385 72 420 104 434 142C452 188 452 222 440 254C428 282 406 306 386 320C396 300 400 274 396 250C392 222 376 202 360 178"/>
-        <path class="sflc" d="M360 168C348 188 340 202 340 218C340 236 349 250 360 254C371 250 380 236 380 218C380 202 372 188 360 168Z"/>
-        <line class="snl" x1="248" y1="108" x2="288" y2="90"/><line class="snl" x1="248" y1="108" x2="226" y2="155"/><line class="snl" x1="258" y1="195" x2="210" y2="228"/><line class="snl" x1="238" y1="270" x2="266" y2="318"/>
-        <circle class="snc" cx="248" cy="108" r="10"/><circle class="sng" cx="288" cy="90" r="7"/><circle class="snc" cx="258" cy="195" r="10"/><circle class="snc" cx="238" cy="270" r="9"/><circle class="snc" cx="266" cy="318" r="8"/>
+        <path fill="#b45309" opacity=".9" d="M360 40C335 72 302 100 288 138C270 182 270 218 280 250C290 280 310 305 334 320C322 302 318 276 322 250C326 222 342 202 360 180C378 202 394 222 398 250C402 276 398 302 386 320C410 305 430 280 440 250C450 218 450 182 432 138C418 100 385 72 360 40Z"/>
+        <path fill="none" stroke="#c87d2f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M360 40C335 72 300 104 286 142C268 188 268 222 280 254C292 282 314 306 334 320C324 300 320 274 324 250C328 222 344 202 360 178"/>
+        <path fill="none" stroke="#c87d2f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M360 40C385 72 420 104 434 142C452 188 452 222 440 254C428 282 406 306 386 320C396 300 400 274 396 250C392 222 376 202 360 178"/>
+        <path fill="#dc2626" d="M360 168C348 188 340 202 340 218C340 236 349 250 360 254C371 250 380 236 380 218C380 202 372 188 360 168Z"/>
+        <line stroke="#4a7fc1" stroke-width="1.8" opacity=".85" x1="248" y1="108" x2="288" y2="90"/>
+        <line stroke="#4a7fc1" stroke-width="1.8" opacity=".85" x1="248" y1="108" x2="226" y2="155"/>
+        <line stroke="#4a7fc1" stroke-width="1.8" opacity=".85" x1="258" y1="195" x2="210" y2="228"/>
+        <line stroke="#4a7fc1" stroke-width="1.8" opacity=".85" x1="238" y1="270" x2="266" y2="318"/>
+        <circle fill="#5b8fd4" stroke="#7aaae0" stroke-width="1" cx="248" cy="108" r="10"/>
+        <circle fill="#c8952a" stroke="#e0b84a" stroke-width="1" cx="288" cy="90" r="7"/>
+        <circle fill="#5b8fd4" stroke="#7aaae0" stroke-width="1" cx="258" cy="195" r="10"/>
+        <circle fill="#5b8fd4" stroke="#7aaae0" stroke-width="1" cx="238" cy="270" r="9"/>
+        <circle fill="#5b8fd4" stroke="#7aaae0" stroke-width="1" cx="266" cy="318" r="8"/>
       </svg>
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
@@ -316,6 +322,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- Search -->
     <div style="padding:10px 14px;border-bottom:1px solid var(--border2)">
       <input type="text" placeholder="Search contacts…" autocomplete="new-password"
+        name="daas-search-x7k" autocomplete="off" role="searchbox"
         style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:.8rem;border-radius:5px;outline:none"
         oninput="document.getElementById('srch')?document.getElementById('srch').value=this.value:null;applyFilter()">
     </div>
