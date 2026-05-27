@@ -319,19 +319,17 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
 
-    <!-- Search -->
-    <div style="padding:10px 14px;border-bottom:1px solid var(--border2)">
-      <input type="search" placeholder="Search contacts…" autocomplete="off" name="daas-x7k"
-        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:.8rem;border-radius:5px;outline:none"
-        oninput="document.getElementById('srch')?document.getElementById('srch').value=this.value:null;applyFilter()">
-    </div>
-
-    <!-- DATA section -->
+    
+    <!-- DATA-- DATA section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Data</div>
     <button class="sb-item" onclick="closeSidebar();showImport('contacts')">📥 Import Contacts</button>
     <button class="sb-item" onclick="closeSidebar();showImport('donations')">💝 Import Donations</button>
     <button class="sb-item" onclick="closeSidebar();showImport('voter')">🗳 Import Voter File</button>
     <button class="sb-item" onclick="closeSidebar();exportCSV()">📤 Export CSV</button>
+
+    <!-- INTELLIGENCE section -->
+    <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Intelligence</div>
+    <button class="sb-item" onclick="closeSidebar();openGlobalAsk()">🧠 Research Chat</button>
 
     <!-- MAP section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Map</div>
@@ -411,11 +409,25 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 
   <!-- Hidden tier inputs needed for recolorAll() logic -->
-  <div style="display:none"><input type="text" id="srch" value="">
+  <div style="display:none">
     <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
     <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
     <div id="valueTiers"></div><div id="givingTiers"></div>
     <button id="prefetchBtn" disabled></button>
+  </div>
+
+  <!-- RABBI CONTEXT MODAL -->
+  <div class="modal-bg" id="contextModal" style="display:none">
+    <div class="modal" style="width:520px">
+      <h2>🧠 Rabbi Context</h2>
+      <div style="font-size:.72rem;color:var(--txt3);margin-bottom:12px">This is included in every AI search and research session — tell Claude who you are, what you're working on, upcoming events, key relationships.</div>
+      <textarea id="globalContext" placeholder="I am Rabbi Shneur Itzinger of Chabad of Chagrin Falls. We are currently planning our annual gala in November..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+      <div class="modal-btns">
+        <button class="btn btn-sec" onclick="document.getElementById('contextModal').style.display='none'">Cancel</button>
+        <button class="btn btn-pri" onclick="saveGlobalContext()">Save</button>
+        <span id="contextSaved" style="display:none;font-size:.7rem;color:var(--green);align-self:center">✓ Saved</span>
+      </div>
+    </div>
   </div>
 
   <header class="hdr">
@@ -445,7 +457,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="toolbar-sep"></div>
     <span class="total" id="totalLbl">Loading…</span>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <input type="text" id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="new-password" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
+      <input type="text" id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="off" name="daas-ask-x3m" type="search" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
       <button onclick="runAISearch()" class="btn btn-pri" style="padding:4px 10px;border-radius:20px;font-size:.72rem">Ask</button>
       <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;border-radius:20px;font-size:.72rem;white-space:nowrap">🧠</button>
     </div>
@@ -487,6 +499,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
+      <div class="srch"><input type="search" id="srch" placeholder="Search contacts…" autocomplete="off" name="daas-srch-x9z" oninput="applyFilter()"></div>
       <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
@@ -547,19 +560,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">Ask anything about all your contacts</div>
     </div>
   </div>
-  <!-- Context panel -->
-  <div id="contextPanel" style="display:none;border-bottom:1px solid var(--border);background:var(--surf2);padding:16px 20px;flex-shrink:0">
-    <div style="max-width:760px;margin:0 auto">
-      <div style="font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">About You & Chabad — included in every search</div>
-      <textarea id="globalContext" placeholder="Who you are, what you're working on, current campaigns, key relationships, upcoming events..." style="width:100%;min-height:100px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:8px"></textarea>
-      <div style="display:flex;gap:8px">
-        <button onclick="saveGlobalContext()" class="btn btn-pri" style="font-size:.72rem;padding:5px 14px">Save Context</button>
-        <button onclick="document.getElementById('contextPanel').style.display='none'" class="btn btn-sec" style="font-size:.72rem;padding:5px 14px">Close</button>
-        <span id="contextSaved" style="display:none;font-size:.7rem;color:var(--green);align-self:center">✓ Saved</span>
-      </div>
-    </div>
-  </div>
-
   <div id="globalAskMessages" style="flex:1;overflow-y:auto;padding:20px;max-width:760px;width:100%;margin:0 auto"></div>
   <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surf);flex-shrink:0">
     <div style="max-width:760px;margin:0 auto;display:flex;gap:10px">
@@ -2734,6 +2734,7 @@ function toggleContextPanel(){
 }
 
 async function saveGlobalContext(){
+  document.getElementById('contextModal').style.display='none';
   const ctx=document.getElementById('globalContext').value.trim();
   localStorage.setItem('ci_context',ctx); // cache locally too
   try{
@@ -2890,12 +2891,11 @@ function showProgress(show,text,pct){
 
 // ── SIDEBAR ──
 function openRabbiContext(){
-  // Open the global ask page and immediately show context panel
-  openGlobalAsk();
-  setTimeout(()=>{
-    const p=document.getElementById('contextPanel');
-    if(p)p.style.display='block';
-  },100);
+  // Load current context into textarea
+  const ctx=localStorage.getItem('ci_context')||'';
+  document.getElementById('globalContext').value=ctx;
+  document.getElementById('contextSaved').style.display='none';
+  document.getElementById('contextModal').style.display='flex';
 }
 
 function openSidebar(){
