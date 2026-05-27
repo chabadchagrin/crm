@@ -1935,7 +1935,21 @@ function buildProfileDisplay(p, idx){
   `;
 }
 
-async function buildProfile(idx){
+async function buildProfile(idx, hints=''){
+  if(!hints&&hints!=='__skip'){
+    // Show hints dialog first
+    const h0=households[idx];
+    const existingProfile=h0.profile_data;
+    const defaultHint=existingProfile?.searchHints||'';
+    const userHints=prompt(
+      (existingProfile?'Rebuilding profile for '+h0.displayName+'.\n\nPrevious hints: '+defaultHint:'Building profile for '+h0.displayName+'.')+
+      '\n\nOptional: Add research hints to steer the search\n(e.g. "He is a dentist in Solon, not his father who is also named Michael", "Focus on the wife who is the main philanthropist", "She works at Cleveland Clinic"):',
+      defaultHint
+    );
+    if(userHints===null)return; // user cancelled
+    return buildProfile(idx, userHints||'__skip');
+  }
+  const researchHints=hints==='__skip'?'':hints;
   if(!ANTHROPIC_KEY){
     const k=prompt('Enter your Anthropic API key to build profiles (stored in this browser only):');
     if(!k)return;
@@ -2010,7 +2024,8 @@ Return ONLY valid JSON, no markdown fences:
   "philanthropy990": "Gave $25k to Jewish Federation (2022), $10k to JCC (2021)" or null,
   "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
   "approximateAge": 58 or null,
-  "builtAt": "${new Date().toISOString()}"
+  "builtAt": "${new Date().toISOString()}",
+  "searchHints": "${researchHints||''}"
 }
 NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.`,
         messages:[{role:'user',content:`Enrich this contact profile with public research:
@@ -2035,14 +2050,14 @@ ${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join
 ACTIVITY LOG (${activity_list.length} interactions):
 ${activity_list.length?activity_list.slice(0,10).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}
 
-Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland, ProPublica Nonprofit Explorer, LinkedIn (graduation year → approximate age), Ohio Secretary of State business search, general web. For age: look for LinkedIn profile, news mentions, alumni records, or any public signal that indicates approximate birth year.`}]
+Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland, ProPublica Nonprofit Explorer, LinkedIn (graduation year → approximate age), Ohio Secretary of State business search, general web. For age: look for LinkedIn profile, news mentions, alumni records, or any public signal that indicates approximate birth year.`+(researchHints?' IMPORTANT RESEARCH HINTS FROM RABBI: '+researchHints:'')}]
       })
     });
 
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const m=txt.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+    const m=txt.split('```json').join('').split('```').join('').match(/\{[\s\S]*\}/);
     if(!m)throw new Error('Could not parse response');
     const profile=JSON.parse(m[0]);
     profile.builtAt=new Date().toISOString();
@@ -2237,7 +2252,7 @@ function openFullPanel(idx){
             <div style="font-size:.72rem;font-weight:600;color:var(--txt)">${t.type==='donation'?fa(t.amount):t.label}</div>
             <div style="display:flex;align-items:center;gap:6px">
               <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap">${fd(t.date)}</div>
-              ${t.type!=='donation'?`<button onclick="editTimelineItem('${t.id}','${t.type}','${(t.text||'').replace(/'/g,"\'")}','${t.date}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit">✏️</button>`:''}
+              <button onclick="editTimelineItem('${t.id}','${t.type}',this.dataset.text,'${t.date}',${idx})" data-text="${(t.text||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit">✏️</button>
               <button onclick="deleteTimelineItem('${t.id}','${t.type}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Delete">🗑</button>
             </div>
           </div>
@@ -2376,14 +2391,18 @@ function openAddDonation(idx){
 }
 
 // Edit a note or interaction inline
-async function editTimelineItem(id, type, currentText, currentDate, idx){
-  const newText=prompt('Edit note:', currentText);
+async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
+  const currentText=typeof textOrEvent==='string'?textOrEvent:(textOrEvent?.target?.dataset?.text||'');
+  const newText=prompt('Edit'+(type==='donation'?' donation notes':' note')+':', currentText);
   if(newText===null)return; // cancelled
   try{
-    await sb('interactions?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
-    // Re-embed updated text
-    embedAndStore(id,(type==='note'?'Note: ':type+': ')+newText);
-    openFullPanel(idx); // refresh
+    if(type==='donation'){
+      await sb('donations?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
+    }else{
+      await sb('interactions?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
+      embedAndStore(id,(type==='note'?'Note: ':type+': ')+newText);
+    }
+    openFullPanel(idx);
   }catch(e){alert('Save failed: '+e.message);}
 }
 
