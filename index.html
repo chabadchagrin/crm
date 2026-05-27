@@ -198,7 +198,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <input type="hidden" id="li_household_idx">
     <div id="li_contact_select_wrap" style="margin-bottom:12px">
       <label>Who was this with?</label>
-      <select id="li_contact_id" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:0"></select>
+      <div id="li_contacts" style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2);margin-bottom:0"></div>
     </div>
     <label>Type</label>
     <select id="li_type" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
@@ -229,6 +229,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="modal" style="width:460px">
     <h2>📝 Add Note</h2>
     <input type="hidden" id="note_household_idx">
+    <label>About</label>
+    <div id="note_contacts" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2)"></div>
     <label>Date</label>
     <input type="date" id="note_date">
     <label>Note</label>
@@ -2067,15 +2069,21 @@ function openLogInteraction(idx){
   document.getElementById('li_date').value=new Date().toISOString().split('T')[0];
   document.getElementById('li_notes').value='';
   document.getElementById('li_status').style.display='none';
-  // Populate contact selector
-  const sel=document.getElementById('li_contact_id');
-  sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}">${m.first_name} ${m.last_name}</option>`).join('');
+  // Populate contact checkboxes — all checked by default
+  const members=h.members||[];
+  document.getElementById('li_contacts').innerHTML=members.map(m=>
+    `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
+      <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
+      ${m.first_name} ${m.last_name}
+    </label>`
+  ).join('');
   document.getElementById('logInteractionModal').style.display='flex';
 }
 
 async function saveInteraction(){
   const idx=parseInt(document.getElementById('li_household_idx').value);
-  const contactId=document.getElementById('li_contact_id').value;
+  const checked=[...document.querySelectorAll('#li_contacts input:checked')].map(cb=>cb.value);
+  if(!checked.length){alert('Please select at least one person.');return;}
   const type=document.getElementById('li_type').value;
   const date=document.getElementById('li_date').value;
   const notes=document.getElementById('li_notes').value.trim();
@@ -2083,13 +2091,13 @@ async function saveInteraction(){
   if(!date){alert('Please enter a date.');return;}
   status.style.display='block';status.textContent='Saving…';
   try{
-    const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+    for(const contactId of checked){
+      const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+      if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+    }
     document.getElementById('logInteractionModal').style.display='none';
-    // Generate embedding for semantic search (fire-and-forget)
-    if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
-    // Refresh AGC score since interactions affect affinity
     const hI=households[idx];if(hI)refreshAGCScore(hI.id).then(()=>recolorAll());
-    // Refresh interactions tab if open
+    showTab(idx,'interactions');
     loadInteractionsTab(idx);
   }catch(e){status.textContent='⚠ '+e.message;}
 }
@@ -2130,10 +2138,19 @@ async function deleteInteraction(id,idx,tabType){
 
 // ── NOTES ──
 function openAddNote(idx){
+  const h=households[idx];
   document.getElementById('note_household_idx').value=idx;
   document.getElementById('note_date').value=new Date().toISOString().split('T')[0];
   document.getElementById('note_text').value='';
   document.getElementById('note_status').style.display='none';
+  // Populate contact checkboxes — all checked by default
+  const members=h.members||[];
+  document.getElementById('note_contacts').innerHTML=members.map(m=>
+    `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
+      <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
+      ${m.first_name} ${m.last_name}
+    </label>`
+  ).join('');
   document.getElementById('addNoteModal').style.display='flex';
   setTimeout(()=>document.getElementById('note_text').focus(),100);
 }
@@ -2145,17 +2162,19 @@ async function saveNote(){
   const text=document.getElementById('note_text').value.trim();
   const status=document.getElementById('note_status');
   if(!text){alert('Please enter a note.');return;}
+  // Get checked contacts
+  const checked=[...document.querySelectorAll('#note_contacts input:checked')].map(cb=>cb.value);
+  if(!checked.length){alert('Please select at least one person.');return;}
   status.style.display='block';status.textContent='Saving…';
-  // Use primary contact id for notes
-  const contactId=h.members?.[0]?.id;
-  if(!contactId){status.textContent='⚠ No contact found.';return;}
+  const noteDate=date||new Date().toISOString().split('T')[0];
   try{
-    const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:date||new Date().toISOString().split('T')[0],notes:text})});
+    for(const contactId of checked){
+      const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text})});
+      if(savedN&&savedN[0])embedAndStore(savedN[0].id,'Note: '+text);
+    }
     document.getElementById('addNoteModal').style.display='none';
-    // Generate embedding for semantic search (fire-and-forget)
-    if(savedN&&savedN[0])embedAndStore(savedN[0].id,'Note: '+text);
-    // Refresh AGC score since notes affect affinity
     refreshAGCScore(h.id).then(()=>recolorAll());
+    showTab(idx,'notes');
     loadNotesTab(idx);
   }catch(e){status.textContent='⚠ '+e.message;}
 }
@@ -2216,7 +2235,11 @@ function openFullPanel(idx){
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="font-size:.72rem;font-weight:600;color:var(--txt)">${t.type==='donation'?fa(t.amount):t.label}</div>
-            <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap;margin-left:8px">${fd(t.date)}</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap">${fd(t.date)}</div>
+              ${t.type!=='donation'?`<button onclick="editTimelineItem('${t.id}','${t.type}','${(t.text||'').replace(/'/g,"\'")}','${t.date}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit">✏️</button>`:''}
+              <button onclick="deleteTimelineItem('${t.id}','${t.type}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Delete">🗑</button>
+            </div>
           </div>
           ${t.text?`<div style="font-size:.75rem;color:var(--txt2);margin-top:3px;line-height:1.5">${t.text}</div>`:''}
         </div>
@@ -2261,6 +2284,7 @@ function openFullPanel(idx){
         <div style="display:flex;gap:6px">
           <button onclick="openAddNote(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer">📝 Note</button>
           <button onclick="openLogInteraction(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer">🤝 Activity</button>
+          <button onclick="openAddDonation(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer">💝 Donation</button>
         </div>
       </div>
       ${timelineHtml}
@@ -2286,16 +2310,28 @@ function openFullPanel(idx){
       `:`<div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
     </div>
 
+    <!-- Household Notes (editable) -->
+    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">📋 Household Notes</div>
+        <button onclick="saveHouseholdNotes(${idx})" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
+      </div>
+      <textarea id="fullpanel-notes-${idx}" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
+    </div>
+
     <!-- Contacts + Property -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px">👥 People</div>
-        ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
-          <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
+        ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
+            <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}','${m.dob||''}','${m.gender||''}' )" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit">✏️</button>
+          </div>
           ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
           ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
           ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">🎂 ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:
-          (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated from public records)</span></div>`:'')}
+          (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated)</span></div>`:'')}
           <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">ID: ${m.civicrm_id||'—'}</div>
         </div>`).join('')}
       </div>
@@ -2323,9 +2359,49 @@ function closeFullPanel(){
   document.getElementById('fullPanel').style.display='none';
 }
 
+async function saveHouseholdNotes(idx){
+  const h=households[idx];
+  const text=document.getElementById(`fullpanel-notes-${idx}`)?.value||'';
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({notes:text})});
+    h.notes=text;
+    // Flash save confirmation
+    const btn=event.target;btn.textContent='✓ Saved';btn.style.background='var(--green)';
+    setTimeout(()=>{btn.textContent='Save';btn.style.background='';},2000);
+  }catch(e){alert('Save failed: '+e.message);}
+}
+
+function openAddDonation(idx){
+  showAddDonation(idx);
+}
+
+// Edit a note or interaction inline
+async function editTimelineItem(id, type, currentText, currentDate, idx){
+  const newText=prompt('Edit note:', currentText);
+  if(newText===null)return; // cancelled
+  try{
+    await sb('interactions?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
+    // Re-embed updated text
+    embedAndStore(id,(type==='note'?'Note: ':type+': ')+newText);
+    openFullPanel(idx); // refresh
+  }catch(e){alert('Save failed: '+e.message);}
+}
+
+async function deleteTimelineItem(id, type, idx){
+  const label=type==='donation'?'donation':type==='note'?'note':'interaction';
+  if(!confirm(`Delete this ${label}?`))return;
+  try{
+    if(type==='donation'){
+      await sb('donations?id=eq.'+id,{method:'DELETE'});
+    }else{
+      await sb('interactions?id=eq.'+id,{method:'DELETE'});
+    }
+    openFullPanel(idx); // refresh
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+
 async function saveFullNotes(idx){
-  // Redirect to add note modal from full panel
-  document.getElementById('fullPanel').style.display='none';
+  // Legacy redirect
   openAddNote(idx);
 }
 
