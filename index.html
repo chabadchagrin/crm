@@ -328,6 +328,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- INTELLIGENCE section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Intelligence</div>
     <button class="sb-item" onclick="closeSidebar();openGlobalAsk()">🧠 Research Chat</button>
+    <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()">🔄 Generate Embeddings</button>
+    <div id="embedBackfillStatus" style="padding:4px 18px 8px;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3);display:none"></div>
 
     <!-- MAP section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Map</div>
@@ -792,6 +794,53 @@ function getGivingStats(h){
   all.sort((a,b)=>new Date(b.date)-new Date(a.date));
   const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
   return{total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
+}
+
+// ── EMBEDDING BACKFILL ──
+async function startEmbedBackfill(){
+  if(!OPENAI_KEY){
+    const k=prompt('Enter OpenAI API key:');
+    if(!k)return;
+    OPENAI_KEY=k.trim();
+    localStorage.setItem('crm_oai_key',OPENAI_KEY);
+  }
+  const statusEl=document.getElementById('embedBackfillStatus');
+  const btn=document.getElementById('embedBackfillBtn');
+  statusEl.style.display='block';
+  btn.disabled=true;
+
+  // Get all interactions without embeddings
+  let rows=[];
+  try{
+    rows=await sb('interactions?select=id,type,notes&order=date.desc')||[];
+  }catch(e){statusEl.textContent='⚠ Failed to load interactions: '+e.message;btn.disabled=false;return;}
+
+  const toEmbed=rows.filter(r=>r.notes&&r.notes.trim());
+  let done=0,embedded=0,errors=0;
+  statusEl.textContent=`Found ${toEmbed.length} interactions with notes. Starting…`;
+
+  for(const row of toEmbed){
+    try{
+      await sleep(200); // ~5/sec to stay under OpenAI rate limit
+      const text=row.type+': '+row.notes;
+      const vec=await getEmbedding(text);
+      if(vec){
+        await fetch(SB_URL+'/rest/v1/interactions?id=eq.'+row.id,{
+          method:'PATCH',
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+_authToken,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({embedding:vec})
+        });
+        embedded++;
+      }
+    }catch(e){errors++;console.warn('Embed failed:',row.id,e.message);}
+    done++;
+    if(done%10===0||done===toEmbed.length){
+      statusEl.textContent=`${done}/${toEmbed.length} processed · ${embedded} embedded · ${errors} errors`;
+    }
+  }
+  statusEl.textContent=`✅ Done — ${embedded} embeddings stored. Semantic search is now active.`;
+  btn.disabled=false;
+  setTimeout(()=>{statusEl.style.display='none';btn.textContent='🔄 Generate Embeddings';},6000);
 }
 
 // ── MELISSA BULK FETCH ──
@@ -2854,30 +2903,40 @@ ${context.relevantNotes?'SEMANTICALLY RELEVANT NOTES & INTERACTIONS (matched to 
 }
 
 async function buildGlobalContext(semanticRows=[]){
-  // Build compact roster: all households with their DB AGC scores
+  // LEAN ROSTER — one line per household to keep tokens low
+  // Semantic search handles deep context for relevant matches
   const roster=households.map(h=>{
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const p=h.profile_data||{};
-    const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name).join(' & ');
-    return `${h.displayName} [${members}] | AGC:${agc.total}/100(A:${agc.affinity} G:${agc.generosity} C:${agc.capacity}) | HomeVal:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none'} | ${p.approach?'Approach:'+p.approach.substring(0,80):''}`;
+    const membersStr=(h.members||[]).map(m=>{
+      const age=m.dob?calcAge(m.dob):null;
+      const ageStr=age?' age '+age:(p.approximateAge?' ~age '+p.approximateAge:'');
+      return m.first_name+' '+m.last_name+ageStr+(m.gender?'/'+m.gender.charAt(0):'');
+    }).join(' & ');
+    const givingStr=g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none';
+    // Include one-line profile summary if built
+    const summaryStr=p.summary?'Profile: '+p.summary.substring(0,120)+'…':'';
+    const approachStr=p.approach?'Approach: '+p.approach.substring(0,80):'';
+    return h.displayName+' ['+membersStr+']'+
+      ' | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+')'+
+      ' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+
+      ' | Giving:'+givingStr+
+      (h.notes?' | Notes:'+h.notes.substring(0,80):'')+
+      (summaryStr?' | '+summaryStr:'')+
+      (approachStr?' | '+approachStr:'');
   }).join('\n');
 
-  // Build relevant notes block from semantic search results
+  // SEMANTIC NOTES — deep context only for query-relevant interactions
+  // Populated by pgvector similarity search (or recency fallback)
   let relevantNotes='';
   if(semanticRows&&semanticRows.length){
-    // Match rows back to household names for context
-    const contactToHousehold={};
-    households.forEach(h=>(h.members||[]).forEach(m=>{contactToHousehold[m.id]=h.displayName;}));
-    relevantNotes=semanticRows.map(r=>{
-      const who=contactToHousehold[r.contact_id]||'Unknown';
-      return `[${r.date}] ${who} — ${r.type}: ${r.notes||''}`;
-    }).join('\n');
+    const c2h={};
+    households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.displayName;}));
+    relevantNotes=semanticRows.map(r=>'['+r.date+'] '+(c2h[r.contact_id]||'Unknown')+' — '+r.type+': '+(r.notes||'')).join('\n');
   }
-
   return{roster,relevantNotes};
 }
-
 // ── PIN & UTILS ──
 function pinIcon(num,active,tier){
   const mode=document.getElementById('colorBy')?.value||'value';
