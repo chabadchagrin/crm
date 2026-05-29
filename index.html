@@ -812,39 +812,55 @@ async function startEmbedBackfill(){
   const btn=document.getElementById('embedBackfillBtn');
   statusEl.style.display='block';
   btn.disabled=true;
+  let embedded=0,errors=0;
 
-  // Get all interactions without embeddings
-  let rows=[];
-  try{
-    rows=await sb('interactions?select=id,type,notes&order=date.desc')||[];
-  }catch(e){statusEl.textContent='⚠ Failed to load interactions: '+e.message;btn.disabled=false;return;}
-
-  const toEmbed=rows.filter(r=>r.notes&&r.notes.trim());
-  let done=0,embedded=0,errors=0;
-  statusEl.textContent=`Found ${toEmbed.length} interactions with notes. Starting…`;
+  // 1. Embed interactions with notes
+  let iRows=[];
+  try{iRows=await sb('interactions?select=id,type,notes&order=date.desc')||[];}
+  catch(e){statusEl.textContent='⚠ Failed to load interactions: '+e.message;btn.disabled=false;return;}
+  const toEmbed=iRows.filter(r=>r.notes&&r.notes.trim());
+  statusEl.textContent=`Found ${toEmbed.length} interactions + ${households.filter(h=>h.notes).length} household notes. Starting…`;
 
   for(const row of toEmbed){
     try{
-      await sleep(200); // ~5/sec to stay under OpenAI rate limit
-      const text=row.type+': '+row.notes;
-      const vec=await getEmbedding(text);
+      await sleep(200);
+      const vec=await getEmbedding(row.type+': '+row.notes);
       if(vec){
         await fetch(SB_URL+'/rest/v1/interactions?id=eq.'+row.id,{
           method:'PATCH',
-          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+_authToken,'Content-Type':'application/json','Prefer':'return=minimal'},
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
           body:JSON.stringify({embedding:vec})
         });
         embedded++;
       }
-    }catch(e){errors++;console.warn('Embed failed:',row.id,e.message);}
-    done++;
-    if(done%10===0||done===toEmbed.length){
-      statusEl.textContent=`${done}/${toEmbed.length} processed · ${embedded} embedded · ${errors} errors`;
-    }
+    }catch(e){errors++;console.warn('Interaction embed failed:',row.id,e.message);}
+    statusEl.textContent=`Interactions: ${embedded} embedded · ${errors} errors…`;
   }
-  statusEl.textContent=`✅ Done — ${embedded} embeddings stored. Semantic search is now active.`;
+
+  // 2. Embed household notes
+  const hhWithNotes=households.filter(h=>h.notes&&h.notes.trim());
+  let hhEmbedded=0;
+  for(const h of hhWithNotes){
+    try{
+      await sleep(200);
+      const text='Household notes for '+h.displayName+': '+h.notes;
+      const vec=await getEmbedding(text);
+      if(vec){
+        await fetch(SB_URL+'/rest/v1/households?id=eq.'+h.id,{
+          method:'PATCH',
+          headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({embedding:vec})
+        });
+        hhEmbedded++;
+      }
+    }catch(e){errors++;console.warn('Household embed failed:',h.id,e.message);}
+    statusEl.textContent=`Interactions: ${embedded} · Households: ${hhEmbedded} · Errors: ${errors}`;
+  }
+
+  const total=embedded+hhEmbedded;
+  statusEl.textContent=`✅ Done — ${embedded} interactions + ${hhEmbedded} household notes embedded (${errors} errors)`;
   btn.disabled=false;
-  setTimeout(()=>{statusEl.style.display='none';btn.textContent='🔄 Generate Embeddings';},6000);
+  setTimeout(()=>{statusEl.style.display='none';},8000);
 }
 
 // ── MELISSA BULK FETCH ──
@@ -2414,6 +2430,19 @@ async function saveHouseholdNotes(idx,btn){
     });
     if(!res.ok)throw new Error('HTTP '+res.status+': '+await res.text());
     h.notes=text;
+    // Re-embed updated household notes (fire-and-forget)
+    if(text&&OPENAI_KEY){
+      setTimeout(async()=>{
+        const vec=await getEmbedding('Household notes for '+h.displayName+': '+text);
+        if(vec){
+          await fetch(SB_URL+'/rest/v1/households?id=eq.'+h.id,{
+            method:'PATCH',
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify({embedding:vec})
+          });
+        }
+      },500);
+    }
     if(btn){btn.textContent='✓ Saved';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent='Save';btn.style.background='';},2000);}
   }catch(e){alert('Save failed: '+e.message);}
 }
@@ -2705,11 +2734,15 @@ async function runAISearch(){
   panel.style.display='block';
   results.innerHTML='<div class="loading-row"><div class="spin"></div><span>Searching through your contacts, notes and interactions…</span></div>';
 
-  // Build context from all households
+  // Build lean context — one line per household
   const context=households.map((h,i)=>{
     const g=getGivingStats(h);
-    const score=getProspectScore(h);
-    return `Contact #${i+1}: ${h.displayName} | Address: ${h.address||'none'}, ${h.city||''} | Home Value: ${h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown'} | Total Giving: ${g?'$'+Math.round(g.total).toLocaleString()+' ('+g.count+' gifts)':'none'} | Prospect Score: ${score}/100 | Notes: ${h.notes||'none'} | Profile: ${h.profile_data?.summary||'none'}`;
+    const agc=getAGCScore(h);
+    const members=(h.members||[]).map(m=>{
+      const age=m.dob?calcAge(m.dob):null;
+      return m.first_name+' '+m.last_name+(age?' age '+age:'');
+    }).join(' & ');
+    return `${h.displayName} [${members}] | HomeVal:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | AGC:${agc.total}/100 | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts':'none'} | Notes:${(h.notes||'').substring(0,80)} | Profile:${(h.profile_data?.summary||'').substring(0,100)}`;
   }).join('\n');
 
   try{
@@ -2795,23 +2828,45 @@ async function embedAndStore(interactionId, text){
 }
 
 async function semanticSearch(query, limit=30){
-  // Try pgvector similarity search first; fall back to recent interactions
   try{
     if(!OPENAI_KEY){throw new Error('no key');}
     const vec=await getEmbedding(query);
     if(!vec)throw new Error('no embedding');
-    const resp=await fetch(SB_URL+'/rest/v1/rpc/match_interactions',{
+
+    // Search interactions
+    const iResp=await fetch(SB_URL+'/rest/v1/rpc/match_interactions',{
       method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
       body:JSON.stringify({query_embedding:vec,match_threshold:0.25,match_count:limit})
     });
-    const rows=await resp.json();
-    if(rows&&rows.length)return rows;
+    const iRows=(await iResp.json())||[];
+
+    // Search household notes
+    const hResp=await fetch(SB_URL+'/rest/v1/rpc/match_households',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
+      body:JSON.stringify({query_embedding:vec,match_threshold:0.25,match_count:15})
+    });
+    const hRows=(await hResp.json())||[];
+
+    // Convert household matches to same format as interaction rows
+    const hhFormatted=hRows.map(h=>({
+      id:h.id,
+      contact_id:null,
+      household_id:h.id,
+      type:'Household Notes',
+      date:null,
+      notes:h.notes,
+      household_name:h.joint_name,
+      similarity:h.similarity
+    }));
+
+    const combined=[...iRows,...hhFormatted].sort((a,b)=>(b.similarity||0)-(a.similarity||0));
+    if(combined.length)return combined;
     throw new Error('no results');
   }catch(e){
-    // Fall back to recent interactions (recency as proxy for relevance)
     console.warn('Vector search unavailable, using recency:',e.message);
-    const rows=await sb('interactions?select=id,contact_id,type,date,notes&order=date.desc&limit=150');
+    const rows=await sb('interactions?select=id,contact_id,type,date,notes&order=date.desc&limit=20');
     return rows||[];
   }
 }
@@ -3095,7 +3150,12 @@ async function buildGlobalContext(semanticRows=[]){
   if(semanticRows&&semanticRows.length){
     const c2h={};
     households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.displayName;}));
-    relevantNotes=semanticRows.map(r=>'['+r.date+'] '+(c2h[r.contact_id]||'Unknown')+' — '+r.type+': '+(r.notes||'')).join('\n');
+    relevantNotes=semanticRows.map(r=>{
+      if(r.type==='Household Notes'){
+        return '[Household Notes] '+(r.household_name||'Unknown')+': '+(r.notes||'');
+      }
+      return '['+(r.date||'?')+'] '+(c2h[r.contact_id]||'Unknown')+' — '+r.type+': '+(r.notes||'');
+    }).join('\n');
   }
   return{roster,relevantNotes};
 }
