@@ -562,12 +562,27 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <!-- GLOBAL ASK PANEL -->
 <div id="globalAskPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8500;flex-direction:column">
-  <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+  <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0">
     <button onclick="closeGlobalAsk()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.65rem">← Back</button>
     <div style="flex:1">
       <div style="font-family:'Lora',serif;font-size:1rem;font-weight:700;color:var(--txt)">Constituent Intelligence</div>
-      <div style="font-size:.65rem;color:var(--txt3);font-family:'DM Mono',monospace">Ask anything about all your contacts</div>
     </div>
+    <!-- Mode selector -->
+    <select id="searchMode" onchange="updateModeHint()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:5px 8px;font-family:'DM Mono',monospace;font-size:.62rem;border-radius:4px;outline:none">
+      <option value="standard">⚡ Standard</option>
+      <option value="power">🔍 Power Search</option>
+      <option value="quick">🏃 Quick</option>
+    </select>
+    <div id="modeHint" style="font-size:.6rem;color:var(--txt3);font-family:'DM Mono',monospace;white-space:nowrap">~35k tokens</div>
+    <!-- Session controls -->
+    <button onclick="newChatSession()" title="New conversation" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 9px;border-radius:4px;cursor:pointer;font-size:.75rem">✚ New</button>
+    <button onclick="showSessionHistory()" title="Past sessions" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 9px;border-radius:4px;cursor:pointer;font-size:.75rem">📋 History</button>
+    <div id="sessionTitle" style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+  </div>
+  <!-- Session history panel (hidden by default) -->
+  <div id="sessionHistoryPanel" style="display:none;background:var(--surf2);border-bottom:1px solid var(--border);padding:10px 20px;flex-shrink:0;max-height:200px;overflow-y:auto">
+    <div style="font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Past Sessions</div>
+    <div id="sessionList"></div>
   </div>
   <div id="globalAskMessages" style="flex:1;overflow-y:auto;padding:20px;max-width:760px;width:100%;margin:0 auto"></div>
   <div style="padding:16px 20px;border-top:1px solid var(--border);background:var(--surf);flex-shrink:0">
@@ -2139,13 +2154,11 @@ async function saveInteraction(){
     if(editId){
       // Edit mode — update existing record (first checked contact)
       await sb('interactions?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:checked[0],type,date,notes:notes||null})});
-      if(notes)embedAndStore(editId,type+': '+notes);
     }else{
       // Add mode — create one per checked contact
       for(const contactId of checked){
         const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
-        if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
-      }
+        }
     }
     // Reset modal to add mode
     document.getElementById('li_edit_id').value='';
@@ -2228,7 +2241,6 @@ async function saveNote(){
   try{
     for(const contactId of checked){
       const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text})});
-      if(savedN&&savedN[0])embedAndStore(savedN[0].id,'Note: '+text);
     }
     document.getElementById('addNoteModal').style.display='none';
     refreshAGCScore(h.id).then(()=>recolorAll());
@@ -2430,19 +2442,6 @@ async function saveHouseholdNotes(idx,btn){
     });
     if(!res.ok)throw new Error('HTTP '+res.status+': '+await res.text());
     h.notes=text;
-    // Re-embed updated household notes (fire-and-forget)
-    if(text&&OPENAI_KEY){
-      setTimeout(async()=>{
-        const vec=await getEmbedding('Household notes for '+h.displayName+': '+text);
-        if(vec){
-          await fetch(SB_URL+'/rest/v1/households?id=eq.'+h.id,{
-            method:'PATCH',
-            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
-            body:JSON.stringify({embedding:vec})
-          });
-        }
-      },500);
-    }
     if(btn){btn.textContent='✓ Saved';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent='Save';btn.style.background='';},2000);}
   }catch(e){alert('Save failed: '+e.message);}
 }
@@ -2732,18 +2731,32 @@ async function runAISearch(){
   const panel=document.getElementById('aiSearchPanel');
   const results=document.getElementById('aiSearchResults');
   panel.style.display='block';
-  results.innerHTML='<div class="loading-row"><div class="spin"></div><span>Searching through your contacts, notes and interactions…</span></div>';
+  results.innerHTML='<div class="loading-row"><div class="spin"></div><span>Searching…</span></div>';
 
-  // Build lean context — one line per household
-  const context=households.map((h,i)=>{
+  // Strict lean roster — names, AGC, home value, giving only
+  const roster=households.map(h=>{
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const members=(h.members||[]).map(m=>{
       const age=m.dob?calcAge(m.dob):null;
       return m.first_name+' '+m.last_name+(age?' age '+age:'');
     }).join(' & ');
-    return `${h.displayName} [${members}] | HomeVal:${h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?'} | AGC:${agc.total}/100 | Giving:${g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts':'none'} | Notes:${(h.notes||'').substring(0,80)} | Profile:${(h.profile_data?.summary||'').substring(0,100)}`;
+    return h.displayName+' ['+members+'] | AGC:'+agc.total+'/100 | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts':'none');
   }).join('\n');
+
+  // Semantic search for relevant notes (top 15)
+  let semanticCtx='';
+  try{
+    const semRows=await semanticSearch(query,15);
+    if(semRows&&semRows.length){
+      const c2h={};
+      households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.displayName;}));
+      semanticCtx=semRows.map(r=>{
+        if(r.type==='Household Notes')return '[Household Notes] '+(r.household_name||'Unknown')+': '+(r.notes||'');
+        return '['+(r.date||'?')+'] '+(c2h[r.contact_id]||'Unknown')+' — '+r.type+': '+(r.notes||'');
+      }).join('\n');
+    }
+  }catch(e){console.warn('Semantic search failed:',e.message);}
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -2751,12 +2764,9 @@ async function runAISearch(){
       headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1000,
-        system:`You are an intelligent assistant for a Chabad organization's CRM. You help the rabbi find the right contacts based on natural language queries. You have access to contact data including names, addresses, home values, giving history, prospect scores, private notes, and AI profiles. Answer helpfully and specifically, naming actual people from the data when relevant. Be concise but insightful.`,
-        messages:[{role:'user',content:`Query: "${query}"
-
-Contact database:
-${context}`}]
+        max_tokens:600,
+        system:`You are a quick-lookup assistant for a Chabad rabbi's CRM. Answer concisely and specifically — name actual people from the data. One paragraph max.`,
+        messages:[{role:'user',content:'Query: "'+query+'"\n\nROSTER:\n'+roster+(semanticCtx?'\n\nRELEVANT NOTES:\n'+semanticCtx:'')}]
       })
     });
     const d=await resp.json();
@@ -2764,7 +2774,7 @@ ${context}`}]
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     results.innerHTML=txt.replace(/\n/g,'<br>');
   }catch(e){
-    results.innerHTML=`<span style="color:var(--red)">⚠ ${e.message}</span>`;
+    results.innerHTML='<span style="color:var(--red)">⚠ '+e.message+'</span>';
   }
 }
 
@@ -2995,6 +3005,112 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
 
 // ── GLOBAL ASK VIEW ──
 let globalChatHistory=[];
+let currentSessionId=null;
+let sessionSaveTimer=null;
+
+// ── SEARCH MODE ──
+function updateModeHint(){
+  const mode=document.getElementById('searchMode')?.value||'standard';
+  const hint=document.getElementById('modeHint');
+  if(!hint)return;
+  if(mode==='power') hint.textContent='~80-100k tokens ⚠';
+  else if(mode==='quick') hint.textContent='~10k tokens';
+  else hint.textContent='~35k tokens';
+}
+
+// ── SESSION MANAGEMENT ──
+async function newChatSession(){
+  // Save current session if it has messages
+  if(globalChatHistory.length>0)await saveCurrentSession();
+  globalChatHistory=[];
+  currentSessionId=null;
+  document.getElementById('globalAskMessages').innerHTML=getWelcomeHTML();
+  document.getElementById('sessionTitle').textContent='';
+  document.getElementById('sessionHistoryPanel').style.display='none';
+}
+
+async function saveCurrentSession(){
+  if(!globalChatHistory.length)return;
+  try{
+    // Generate title from first user message
+    const firstMsg=globalChatHistory.find(m=>m.role==='user');
+    const title=firstMsg?firstMsg.content.substring(0,60):'Untitled';
+    const mode=document.getElementById('searchMode')?.value||'standard';
+    if(currentSessionId){
+      await sb('chat_sessions?id=eq.'+currentSessionId,{
+        method:'PATCH',
+        body:JSON.stringify({messages:globalChatHistory,title,updated_at:new Date().toISOString(),mode})
+      });
+    }else{
+      const rows=await sb('chat_sessions',{
+        method:'POST',
+        body:JSON.stringify({messages:globalChatHistory,title,mode})
+      });
+      if(rows&&rows[0])currentSessionId=rows[0].id;
+    }
+    document.getElementById('sessionTitle').textContent=title;
+  }catch(e){console.warn('Session save failed:',e.message);}
+}
+
+async function loadSession(sessionId){
+  try{
+    const rows=await sb('chat_sessions?id=eq.'+sessionId+'&select=*');
+    const s=rows?.[0];if(!s)return;
+    globalChatHistory=s.messages||[];
+    currentSessionId=sessionId;
+    document.getElementById('sessionTitle').textContent=s.title||'';
+    // Set mode
+    if(s.mode&&document.getElementById('searchMode'))document.getElementById('searchMode').value=s.mode;
+    // Render messages
+    const msgs=document.getElementById('globalAskMessages');
+    msgs.innerHTML='';
+    globalChatHistory.forEach(m=>{
+      if(m.role==='user'){
+        msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${m.content}</div></div>`;
+      }else{
+        msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${m.content.replace(/\n/g,'<br>')}</div></div>`;
+      }
+    });
+    msgs.scrollTop=msgs.scrollHeight;
+    document.getElementById('sessionHistoryPanel').style.display='none';
+  }catch(e){console.warn('Load session failed:',e.message);}
+}
+
+async function showSessionHistory(){
+  const panel=document.getElementById('sessionHistoryPanel');
+  if(panel.style.display!=='none'){panel.style.display='none';return;}
+  try{
+    const rows=await sb('chat_sessions?select=id,title,updated_at,mode&order=updated_at.desc&limit=20')||[];
+    const list=document.getElementById('sessionList');
+    if(!rows.length){list.innerHTML='<div style="font-size:.72rem;color:var(--txt3)">No past sessions yet.</div>';panel.style.display='block';return;}
+    list.innerHTML=rows.map(s=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <button onclick="loadSession('${s.id}')" style="background:none;border:none;cursor:pointer;text-align:left;font-size:.75rem;color:var(--txt);flex:1;padding:2px 0">
+          ${s.title||'Untitled'} <span style="color:var(--txt3);font-size:.65rem">${new Date(s.updated_at).toLocaleDateString()}</span>
+        </button>
+        <button onclick="deleteSession('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:.7rem;padding:0 4px">🗑</button>
+      </div>`).join('');
+    panel.style.display='block';
+  }catch(e){console.warn('Load sessions failed:',e.message);}
+}
+
+async function deleteSession(sessionId){
+  if(!confirm('Delete this conversation?'))return;
+  try{
+    await sb('chat_sessions?id=eq.'+sessionId,{method:'DELETE'});
+    if(currentSessionId===sessionId){globalChatHistory=[];currentSessionId=null;document.getElementById('globalAskMessages').innerHTML=getWelcomeHTML();}
+    showSessionHistory();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+
+function getWelcomeHTML(){
+  return `<div style="text-align:center;padding:30px;color:var(--txt3);font-size:.85rem;line-height:1.8">
+    <div style="font-size:1.8rem;margin-bottom:10px">🧠</div>
+    <div style="font-weight:600;color:var(--txt);margin-bottom:6px">Constituent Intelligence</div>
+    <div>Ask anything about your contacts, giving history, relationships, or strategy.</div>
+  </div>`;
+}
+
 
 function toggleContextPanel(){
   const p=document.getElementById('contextPanel');
@@ -3035,29 +3151,29 @@ async function loadGlobalContext(){
 }
 
 function openGlobalAsk(){
-  globalChatHistory=[];
-  // Load saved context from Supabase
-  loadGlobalContext().then(ctx=>{
-    const ta=document.getElementById('globalContext');
-    if(ta)ta.value=ctx;
-  });
-  document.getElementById('globalAskMessages').innerHTML=`<div style="text-align:center;padding:30px;color:var(--txt3);font-size:.85rem;line-height:1.8">
-    <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
-    Ask anything about your constituents.<br>
-    <span style="font-size:.75rem">Examples:<br>
-    "Who should I invite to a young professionals Shabbat?"<br>
-    "Who expressed interest in kids programming?"<br>
-    "Who are my top 5 prospects for the building campaign?"<br>
-    "Who hasn't been engaged in over a year?"</span>
-  </div>`;
-  document.getElementById('globalAskInput').value='';
   document.getElementById('globalAskPanel').style.display='flex';
   document.getElementById('globalAskInput').focus();
+  updateModeHint();
+  // Load most recent session automatically if no active session
+  if(!currentSessionId&&globalChatHistory.length===0){
+    sb('chat_sessions?select=id,title,updated_at,mode&order=updated_at.desc&limit=1').then(rows=>{
+      if(rows&&rows[0]){
+        loadSession(rows[0].id);
+      }else{
+        document.getElementById('globalAskMessages').innerHTML=getWelcomeHTML();
+        document.getElementById('globalAskInput').value='';
+      }
+    }).catch(()=>{
+      document.getElementById('globalAskMessages').innerHTML=getWelcomeHTML();
+      document.getElementById('globalAskInput').value='';
+    });
+  }
 }
 
 function closeGlobalAsk(){
+  // Save session before closing
+  saveCurrentSession();
   document.getElementById('globalAskPanel').style.display='none';
-  globalChatHistory=[];
 }
 
 async function sendGlobalAsk(){
@@ -3070,23 +3186,49 @@ async function sendGlobalAsk(){
   const input=document.getElementById('globalAskInput');
   const query=input.value.trim();
   if(!query)return;
-  input.value='';
+  const mode=document.getElementById('searchMode')?.value||'standard';
 
+  // Power search warning
+  if(mode==='power'){
+    if(!confirm('Power Search uses ~80-100k tokens (~$0.30) per query. Continue?'))return;
+  }
+
+  input.value='';
   const msgs=document.getElementById('globalAskMessages');
   msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${query}</div></div>`;
-  msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">Searching your contacts…</div></div>`;
+  msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">${mode==='power'?'Running power search…':mode==='quick'?'Searching…':'Searching your contacts…'}</div></div>`;
   msgs.scrollTop=msgs.scrollHeight;
 
-  // Run semantic search to find relevant interactions, then build context
-  let relevantNotes=[];
-  try{
-    relevantNotes=await semanticSearch(query,30);
-  }catch(e){}
-
-  // Build context: roster summary (all contacts) + semantically relevant notes
-  const context=await buildGlobalContext(relevantNotes);
-  globalChatHistory.push({role:'user',content:query});
+  // Build context based on mode
+  let contextStr='';
   const rabbiCtx=localStorage.getItem('ci_context')||'';
+
+  if(mode==='quick'){
+    // Quick: lean roster only, no semantic search
+    contextStr=households.map(h=>{
+      const g=getGivingStats(h);const agc=getAGCScore(h);
+      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
+      return h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none');
+    }).join('\n');
+  }else if(mode==='power'){
+    // Power: full roster with all profile data + semantic search (30 results) + recent interactions
+    const semRows=await semanticSearch(query,30).catch(()=>[]);
+    const ctx=await buildGlobalContext(semRows);
+    // Add full profile detail to roster
+    const fullRoster=households.map(h=>{
+      const g=getGivingStats(h);const agc=getAGCScore(h);const p=h.profile_data||{};
+      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
+      return h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
+    }).join('\n');
+    contextStr='FULL ROSTER:\n'+fullRoster+(ctx.relevantNotes?'\n\nSEMANTIC MATCHES:\n'+ctx.relevantNotes:'');
+  }else{
+    // Standard: lean roster + semantic search
+    const semRows=await semanticSearch(query,30).catch(()=>[]);
+    const ctx=await buildGlobalContext(semRows);
+    contextStr='ROSTER:\n'+ctx.roster+(ctx.relevantNotes?'\n\nRELEVANT NOTES:\n'+ctx.relevantNotes:'');
+  }
+
+  globalChatHistory.push({role:'user',content:query});
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -3094,16 +3236,9 @@ async function sendGlobalAsk(){
       headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1400,
-        system:`You are a relationship intelligence assistant for a Chabad rabbi. You have access to the full constituent database with pre-calculated AGC scores (Affinity/Generosity/Capacity — treat these as authoritative hard facts from the database, not estimates).
-
-Your role: help the rabbi identify the right people for specific purposes, surface patterns across the community, and give concrete, actionable recommendations. Always name specific people. Reference actual scores and data. Do not hedge on the scores — they are calculated facts.
-
-${rabbiCtx?'ABOUT THE RABBI AND CHABAD:\n'+rabbiCtx+'\n\n':''}CONSTITUENT ROSTER (all households with DB scores):
-${context.roster}
-
-${context.relevantNotes?'SEMANTICALLY RELEVANT NOTES & INTERACTIONS (matched to your query):\n'+context.relevantNotes:''}`,
-        messages:globalChatHistory
+        max_tokens:mode==='quick'?600:mode==='power'?2000:1400,
+        system:`You are a relationship intelligence assistant for a Chabad rabbi. AGC scores are pre-calculated database facts — treat them as authoritative. Help identify the right people, surface patterns, give concrete actionable recommendations. Always name specific people and reference actual data.${rabbiCtx?'\n\nABOUT THE RABBI:\n'+rabbiCtx:''}${mode==='quick'?'\n\nBe concise — one paragraph max.':''}`,
+        messages:[...globalChatHistory.slice(0,-1),{role:'user',content:query+'\n\n'+contextStr}]
       })
     });
     const d=await resp.json();
@@ -3113,6 +3248,8 @@ ${context.relevantNotes?'SEMANTICALLY RELEVANT NOTES & INTERACTIONS (matched to 
     document.getElementById('global-typing')?.remove();
     msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${reply.replace(/\n/g,'<br>')}</div></div>`;
     msgs.scrollTop=msgs.scrollHeight;
+    // Auto-save session after each exchange
+    saveCurrentSession();
   }catch(e){
     document.getElementById('global-typing')?.remove();
     msgs.innerHTML+=`<div style="color:var(--red);font-size:.78rem;padding:8px">⚠ ${e.message}</div>`;
