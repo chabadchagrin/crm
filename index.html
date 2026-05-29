@@ -194,8 +194,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <!-- LOG INTERACTION MODAL -->
 <div class="modal-bg" id="logInteractionModal" style="display:none">
   <div class="modal" style="width:480px">
-    <h2>📝 Log Interaction</h2>
+    <h2 id="li_modal_title">📝 Log Interaction</h2>
     <input type="hidden" id="li_household_idx">
+    <input type="hidden" id="li_edit_id" value="">
     <div id="li_contact_select_wrap" style="margin-bottom:12px">
       <label>Who was this with?</label>
       <div id="li_contacts" style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2);margin-bottom:0"></div>
@@ -218,7 +219,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
     <div id="li_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" onclick="saveInteraction()">Log Interaction</button>
+      <button class="btn btn-pri" id="li_save_btn" onclick="saveInteraction()">Log Interaction</button>
       <button class="btn btn-sec" onclick="document.getElementById('logInteractionModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -522,7 +523,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <!-- ADD DONATION MODAL -->
 <div class="modal-bg" id="addDonationModal" style="display:none">
   <div class="modal" style="width:400px">
-    <h2>💝 Add Donation</h2>
+    <h2 id="don_modal_title">💝 Add Donation</h2>
+    <input type="hidden" id="don_edit_id" value="">
     <div id="add_don_name" style="font-size:.85rem;color:var(--txt2);margin-bottom:16px"></div>
     <label>Contact</label>
     <select id="don_contact" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px"></select>
@@ -534,7 +536,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <input type="text" id="don_notes" placeholder="Annual gala, etc.">
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" onclick="saveDonation()">Save Donation</button>
+      <button class="btn btn-pri" id="don_save_btn" onclick="saveDonation()">Save Donation</button>
       <button class="btn btn-sec" onclick="document.getElementById('addDonationModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -1872,6 +1874,7 @@ function showAddDonation(idx){
 }
 
 async function saveDonation(){
+  const editId=document.getElementById('don_edit_id').value;
   const amount = parseFloat(document.getElementById('don_amount').value);
   const date = document.getElementById('don_date').value;
   const notes = document.getElementById('don_notes').value.trim();
@@ -1880,22 +1883,32 @@ async function saveDonation(){
   if(!amount||!date){alert('Please enter amount and date.');return;}
   status.style.display='block';status.textContent='Saving…';
   try{
-    await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
-    // Update local state
-    const h = households[addDonHouseholdIdx];
-    const member = h.members.find(m=>m.id===contactId);
-    if(member){
-      if(!member.donations)member.donations=[];
-      member.donations.unshift({contact_id:contactId,amount,date,notes});
-      member.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(editId){
+      await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+    }else{
+      await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+      // Update local state for new donation
+      const hNew=households[addDonHouseholdIdx];
+      const memberNew=hNew.members.find(m=>m.id===contactId);
+      if(memberNew){
+        if(!memberNew.donations)memberNew.donations=[];
+        memberNew.donations.unshift({contact_id:contactId,amount,date,notes});
+        memberNew.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      }
     }
+    // Reset to add mode
+    document.getElementById('don_edit_id').value='';
+    document.getElementById('don_modal_title').textContent='💝 Add Donation';
+    document.getElementById('don_save_btn').textContent='Save Donation';
     document.getElementById('addDonationModal').style.display='none';
     renderList();
     // Refresh AGC score — donations affect generosity and affinity
+    const h=households[addDonHouseholdIdx];
     refreshAGCScore(h.id).then(()=>recolorAll());
-    // Refresh the panel
-    setProp('data',h);
-    showTab(addDonHouseholdIdx,'giving');
+    // Refresh whichever view is open
+    const fp=document.getElementById('fullPanel');
+    if(fp&&fp.style.display!=='none')openFullPanel(addDonHouseholdIdx);
+    else{setProp('data',h);showTab(addDonHouseholdIdx,'giving');}
   }catch(e){status.textContent='⚠ '+e.message;}
 }
 
@@ -2097,6 +2110,7 @@ function openLogInteraction(idx){
 
 async function saveInteraction(){
   const idx=parseInt(document.getElementById('li_household_idx').value);
+  const editId=document.getElementById('li_edit_id').value;
   const checked=[...document.querySelectorAll('#li_contacts input:checked')].map(cb=>cb.value);
   if(!checked.length){alert('Please select at least one person.');return;}
   const type=document.getElementById('li_type').value;
@@ -2106,14 +2120,27 @@ async function saveInteraction(){
   if(!date){alert('Please enter a date.');return;}
   status.style.display='block';status.textContent='Saving…';
   try{
-    for(const contactId of checked){
-      const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
-      if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+    if(editId){
+      // Edit mode — update existing record (first checked contact)
+      await sb('interactions?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:checked[0],type,date,notes:notes||null})});
+      if(notes)embedAndStore(editId,type+': '+notes);
+    }else{
+      // Add mode — create one per checked contact
+      for(const contactId of checked){
+        const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+        if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+      }
     }
+    // Reset modal to add mode
+    document.getElementById('li_edit_id').value='';
+    document.getElementById('li_modal_title').textContent='📝 Log Interaction';
+    document.getElementById('li_save_btn').textContent='Log Interaction';
     document.getElementById('logInteractionModal').style.display='none';
     const hI=households[idx];if(hI)refreshAGCScore(hI.id).then(()=>recolorAll());
-    showTab(idx,'interactions');
-    loadInteractionsTab(idx);
+    // Refresh whichever view is open
+    const fp=document.getElementById('fullPanel');
+    if(fp&&fp.style.display!=='none')openFullPanel(idx);
+    else{showTab(idx,'interactions');loadInteractionsTab(idx);}
   }catch(e){status.textContent='⚠ '+e.message;}
 }
 
@@ -2189,8 +2216,9 @@ async function saveNote(){
     }
     document.getElementById('addNoteModal').style.display='none';
     refreshAGCScore(h.id).then(()=>recolorAll());
-    showTab(idx,'notes');
-    loadNotesTab(idx);
+    const fpN=document.getElementById('fullPanel');
+    if(fpN&&fpN.style.display!=='none')openFullPanel(idx);
+    else{showTab(idx,'notes');loadNotesTab(idx);}
   }catch(e){status.textContent='⚠ '+e.message;}
 }
 
@@ -2376,9 +2404,15 @@ function closeFullPanel(){
 
 async function saveHouseholdNotes(idx,btn){
   const h=households[idx];
-  const text=document.getElementById(`fullpanel-notes-${idx}`)?.value||'';
+  const el=document.getElementById('fullpanel-notes-'+idx);
+  const text=el?el.value:'';
   try{
-    await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({notes:text})});
+    const res=await fetch(SB_URL+'/rest/v1/households?id=eq.'+h.id,{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({notes:text})
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status+': '+await res.text());
     h.notes=text;
     if(btn){btn.textContent='✓ Saved';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent='Save';btn.style.background='';},2000);}
   }catch(e){alert('Save failed: '+e.message);}
@@ -2390,18 +2424,53 @@ function openAddDonation(idx){
 
 // Edit a note or interaction inline
 async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
-  const currentText=typeof textOrEvent==='string'?textOrEvent:(textOrEvent?.target?.dataset?.text||'');
-  const newText=prompt('Edit'+(type==='donation'?' donation notes':' note')+':', currentText);
-  if(newText===null)return; // cancelled
-  try{
-    if(type==='donation'){
-      await sb('donations?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
-    }else{
-      await sb('interactions?id=eq.'+id,{method:'PATCH',body:JSON.stringify({notes:newText})});
-      embedAndStore(id,(type==='note'?'Note: ':type+': ')+newText);
-    }
-    openFullPanel(idx);
-  }catch(e){alert('Save failed: '+e.message);}
+  // Load full record from DB then open appropriate modal
+  if(type==='donation'){
+    try{
+      const rows=await sb('donations?id=eq.'+id+'&select=*');
+      const d=rows?.[0];if(!d)return;
+      const h=households[idx];
+      // Set edit mode on donation modal
+      document.getElementById('don_edit_id').value=id;
+      document.getElementById('don_modal_title').textContent='✏️ Edit Donation';
+      document.getElementById('don_save_btn').textContent='Save Changes';
+      document.getElementById('add_don_name').textContent=h.displayName;
+      addDonHouseholdIdx=idx;
+      // Populate fields
+      const sel=document.getElementById('don_contact');
+      sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${m.first_name} ${m.last_name}</option>`).join('');
+      document.getElementById('don_amount').value=d.amount||'';
+      document.getElementById('don_date').value=d.date||'';
+      document.getElementById('don_notes').value=d.notes||'';
+      document.getElementById('don_status').style.display='none';
+      document.getElementById('addDonationModal').style.display='flex';
+    }catch(e){alert('Load failed: '+e.message);}
+  }else{
+    // Interaction or note — open log interaction modal in edit mode
+    try{
+      const rows=await sb('interactions?id=eq.'+id+'&select=*');
+      const r=rows?.[0];if(!r)return;
+      const h=households[idx];
+      // Set edit mode
+      document.getElementById('li_edit_id').value=id;
+      document.getElementById('li_modal_title').textContent='✏️ Edit '+(type==='note'?'Note':'Interaction');
+      document.getElementById('li_save_btn').textContent='Save Changes';
+      document.getElementById('li_household_idx').value=idx;
+      document.getElementById('li_date').value=r.date||'';
+      document.getElementById('li_notes').value=r.notes||'';
+      document.getElementById('li_type').value=r.type||'Note';
+      document.getElementById('li_status').style.display='none';
+      // Populate contacts — check the one this belongs to
+      const members=h.members||[];
+      document.getElementById('li_contacts').innerHTML=members.map(m=>
+        `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
+          <input type="checkbox" value="${m.id}"${m.id===r.contact_id?' checked':''} style="accent-color:var(--accent)">
+          ${m.first_name} ${m.last_name}
+        </label>`
+      ).join('');
+      document.getElementById('logInteractionModal').style.display='flex';
+    }catch(e){alert('Load failed: '+e.message);}
+  }
 }
 
 async function deleteTimelineItem(id, type, idx){
