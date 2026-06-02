@@ -331,6 +331,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- INTELLIGENCE section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Intelligence</div>
     <button class="sb-item" onclick="closeSidebar();openGlobalAsk()">🧠 Research Chat</button>
+    <button class="sb-item" onclick="closeSidebar();openCapture()">📥 Quick Capture</button>
     <button class="sb-item" onclick="closeSidebar();openEnrich()">📋 Build Missing Profiles</button>
     <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()">🔄 Generate Embeddings</button>
     <div id="embedBackfillStatus" style="padding:4px 18px 8px;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3);display:none"></div>
@@ -637,7 +638,15 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 // ── SUPABASE AUTH ──
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
-let RAPIDAPI_KEY=localStorage.getItem('crm_rapid_key')||'14de270a1fmshbf1b4b939eb9719p1189bcjsn00ba882a4194';
+let RAPIDAPI_KEY=localStorage.getItem('crm_rapid_key')||'';
+function ensureRapidKey(){
+  if(RAPIDAPI_KEY)return true;
+  const k=prompt('Enter your RapidAPI key (for Zillow property + DOB lookup). Stored in this browser only:');
+  if(!k)return false;
+  RAPIDAPI_KEY=k.trim();
+  localStorage.setItem('crm_rapid_key',RAPIDAPI_KEY);
+  return true;
+}
 let ANTHROPIC_KEY=localStorage.getItem('crm_ant_key')||'';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -954,25 +963,39 @@ function _calcAGCLocal(h){
   const g=getGivingStats(h);
   const p=h.profile_data||{};
   const notes=(h.notes||'').toLowerCase();
+  const jewishBoards=p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish');
+
+  // ── AFFINITY (35): closeness to Chabad ──
   let affinity=0;
-  if(g&&g.total>0)affinity+=15;
-  if(g&&g.count>=5)affinity+=5;else if(g&&g.count>=3)affinity+=3;else if(g&&g.count>=1)affinity+=1;
+  if(g&&g.total>0)affinity+=15;                                                   // gives to Chabad at all
+  if(g&&g.count>=5)affinity+=5;else if(g&&g.count>=3)affinity+=3;else if(g&&g.count>=1)affinity+=1; // loyalty/frequency
   if(notes.includes('warm')||notes.includes('close')||notes.includes('friend')||notes.includes('connected'))affinity+=5;
-  if(p.fedLevel)affinity+=5;
-  if(p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish'))affinity+=3;
-  affinity=Math.min(40,affinity);
-  let generosity=0;
-  if(g&&g.lastDate){const mo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);if(mo<=12)generosity+=10;else if(mo<=24)generosity+=7;else if(mo<=36)generosity+=4;else generosity+=2;}
-  if(g&&g.total>=10000)generosity+=10;else if(g&&g.total>=5000)generosity+=7;else if(g&&g.total>=1000)generosity+=5;else if(g&&g.total>=100)generosity+=3;else if(g&&g.total>0)generosity+=1;
-  if(g&&g.count>=5)generosity+=10;else if(g&&g.count>=3)generosity+=7;else if(g&&g.count>=2)generosity+=5;else if(g&&g.count>=1)generosity+=3;
-  if(p.philanthropy990)generosity+=5;
-  generosity=Math.min(35,generosity);
+  if(p.fedLevel)affinity+=5;                                                       // active in Jewish community
+  if(jewishBoards)affinity+=5;
+  affinity=Math.min(35,affinity);
+
+  // ── GENEROSITY (35): charitable nature — Chabad giving AND/OR external philanthropy ──
+  // Path A: evidence from giving to Chabad (a gift to us is real evidence of generosity)
+  let genChabad=0;
+  if(g&&g.lastDate){const mo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);if(mo<=12)genChabad+=8;else if(mo<=24)genChabad+=5;else if(mo<=36)genChabad+=3;else genChabad+=2;}
+  if(g&&g.total>=10000)genChabad+=10;else if(g&&g.total>=5000)genChabad+=8;else if(g&&g.total>=1800)genChabad+=6;else if(g&&g.total>=500)genChabad+=4;else if(g&&g.total>=100)genChabad+=3;else if(g&&g.total>0)genChabad+=2;
+  if(g&&g.count>=5)genChabad+=4;else if(g&&g.count>=3)genChabad+=3;else if(g&&g.count>=2)genChabad+=2;else if(g&&g.count>=1)genChabad+=1;
+  // Path B: evidence of external philanthropy (generous in general — can max on its own)
+  let genExternal=0;
+  if(p.philanthropy990)genExternal+=18;   // documented external giving (990s, named gifts)
+  if(p.fedLevel)genExternal+=9;            // Federation giving level = real external charitable giving
+  if(jewishBoards)genExternal+=8;          // board involvement implies giving
+  // Either path can carry the score; sum then cap at 35
+  let generosity=Math.min(35,genChabad+genExternal);
+
+  // ── CAPACITY (30): ability to give ──
   let capacity=0;
   const val=h.home_value||0;
-  if(val>=2000000)capacity+=15;else if(val>=1000000)capacity+=12;else if(val>=750000)capacity+=9;else if(val>=500000)capacity+=7;else if(val>=300000)capacity+=4;else if(val>0)capacity+=2;
-  if(p.businessInfo)capacity+=3;
+  if(val>=2000000)capacity+=20;else if(val>=1000000)capacity+=16;else if(val>=750000)capacity+=12;else if(val>=500000)capacity+=9;else if(val>=300000)capacity+=5;else if(val>0)capacity+=2;
+  if(p.businessInfo)capacity+=5;
   if(g&&g.total>=5000)capacity+=5;
-  capacity=Math.min(25,capacity);
+  capacity=Math.min(30,capacity);
+
   return{total:Math.min(100,affinity+generosity+capacity),affinity,generosity,capacity};
 }
 function getProspectScore(h){
@@ -1148,7 +1171,7 @@ function setProp(mode,h,result){
         const agc=getAGCScore(h);
         if(agc.total===0)return'';
         const sc=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
-        return `<span style="font-family:'DM Mono',monospace;font-size:.58rem;color:${sc};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px" title="Affinity: ${agc.affinity}/40 · Generosity: ${agc.generosity}/35 · Capacity: ${agc.capacity}/25">Score: ${agc.total}/100</span>`;
+        return `<span style="font-family:'DM Mono',monospace;font-size:.58rem;color:${sc};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px" title="Affinity: ${agc.affinity}/35 · Generosity: ${agc.generosity}/35 · Capacity: ${agc.capacity}/30">Score: ${agc.total}/100</span>`;
       })()}
     </div>
   </div>
@@ -1293,6 +1316,7 @@ async function retryLookup(i){households[i].property_data=null;households[i].hom
 // ── FETCH PROPERTY ──
 async function fetchProp(h){
   if(!h.address||h.noAddress)return{error:true,message:'No address on file.'};
+  if(!ensureRapidKey())return{error:true,message:'No RapidAPI key set.'};
   const addr=encodeURIComponent(`${h.address}, ${h.city}, OH${h.zip?' '+h.zip:''}`);
   try{
     const resp=await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${addr}`,{
@@ -1328,6 +1352,7 @@ async function fetchProp(h){
 // ── MELISSA PEOPLE DATA ──
 async function fetchMelissa(firstName, lastName, address, city, state, zip){
   if(!firstName||!lastName||!address)return null;
+  if(!ensureRapidKey())return null;
   try{
     const params=new URLSearchParams({
       act:'Append',
@@ -1626,6 +1651,7 @@ async function lookupByAddress(){
   acFormData={first,last,spouse:document.getElementById('ac_spouse').value.trim(),phone:document.getElementById('ac_phone').value.trim(),email:document.getElementById('ac_email').value.trim(),crmId:document.getElementById('ac_crmid').value.trim(),crmId2:document.getElementById('ac_crmid2').value.trim(),street,city,zip};
   const btn=document.getElementById('ac_actionBtn');btn.disabled=true;btn.textContent='⏳ Looking up…';
   const status=document.getElementById('ac_status');status.style.display='block';status.textContent='Fetching from Zillow…';
+  if(!ensureRapidKey()){btn.disabled=false;btn.textContent='📍 Look Up Property';status.textContent='RapidAPI key required for Zillow lookup.';return;}
   try{
     const addr=encodeURIComponent(`${street}, ${city}, OH${zip?' '+zip:''}`);
     const resp=await fetch(`https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${addr}`,{headers:{'Content-Type':'application/json','x-rapidapi-host':'private-zillow.p.rapidapi.com','x-rapidapi-key':RAPIDAPI_KEY}});
@@ -2180,9 +2206,9 @@ HOME VALUE: ${homeVal}
 
 PRE-CALCULATED AGC SCORES (treat as facts — do not recalculate):
   Total Score: ${agcScore.total}/100
-  Affinity: ${agcScore.affinity}/40
+  Affinity: ${agcScore.affinity}/35
   Generosity: ${agcScore.generosity}/35
-  Capacity: ${agcScore.capacity}/25
+  Capacity: ${agcScore.capacity}/30
 
 GIVING TO CHABAD (hard data):
 ${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
@@ -2435,7 +2461,7 @@ function openFullPanel(idx){
         <div style="font-size:3.5rem;font-weight:700;color:${scoreColor};font-family:'DM Mono',monospace;line-height:1">${score}</div>
         <div style="font-size:.6rem;color:var(--txt3);font-family:'DM Mono',monospace;margin-bottom:10px">PROSPECT SCORE</div>
         <div style="width:160px">
-          ${[['Affinity','#2563eb',agc.affinity,40],['Generosity','#16a34a',agc.generosity,35],['Capacity','#b45309',agc.capacity,25]].map(([label,color,val,max])=>`
+          ${[['Affinity','#2563eb',agc.affinity,35],['Generosity','#16a34a',agc.generosity,35],['Capacity','#b45309',agc.capacity,30]].map(([label,color,val,max])=>`
           <div style="margin-bottom:6px">
             <div style="display:flex;justify-content:space-between;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt3);margin-bottom:2px"><span>${label}</span><span>${val}/${max}</span></div>
             <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(val/max*100)}%;background:${color};border-radius:3px"></div></div>
@@ -3064,9 +3090,9 @@ APPROXIMATE AGE: ${h.profile_data&&h.profile_data.approximateAge?h.profile_data.
 
 AGC SCORES (pre-calculated from database — treat as authoritative facts):
   Total: ${agc.total}/100
-  Affinity: ${agc.affinity}/40  ← Connection to Chabad/Jewish causes + relationship warmth
-  Generosity: ${agc.generosity}/35  ← Giving history, frequency, recency, breadth
-  Capacity: ${agc.capacity}/25  ← Wealth signals, home value, business/professional role
+  Affinity: ${agc.affinity}/35  ← Connection to Chabad/Jewish causes + relationship warmth
+  Generosity: ${agc.generosity}/35  ← General charitable nature: giving to Chabad AND/OR external philanthropy (990s, Federation, boards)
+  Capacity: ${agc.capacity}/30  ← Wealth signals, home value, business/professional role
 
 HOME VALUE: ${h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown'}
 
@@ -3490,6 +3516,221 @@ window.addEventListener('DOMContentLoaded',async()=>{
 });
 
 // ════════════════════════════════════════════════════════════
+// ── QUICK CAPTURE ──
+// Dump text / PDF / image / voice → Claude matches it to a contact
+// and proposes interactions/notes to log. Nothing saves until the
+// rabbi confirms. Interactions & notes only (pledges go in as text).
+// ════════════════════════════════════════════════════════════
+
+let _captureFile=null;          // {kind:'pdf'|'image', mediaType, base64, name}
+let _captureMediaRec=null, _captureChunks=[], _captureStream=null;
+
+function openCapture(){
+  document.getElementById('captureOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+  document.getElementById('capture-text').value='';
+  document.getElementById('capture-results').innerHTML='';
+  _captureFile=null;
+  const fi=document.getElementById('capture-file-info'); fi.style.display='none'; fi.textContent='';
+}
+function closeCapture(){
+  _captureStopVoice();
+  document.getElementById('captureOverlay').style.display='none';
+  document.body.style.overflow='';
+}
+
+// ── File attach (PDF or image) → base64 ──
+function captureFilePicked(input){
+  const f=input.files&&input.files[0];
+  if(!f)return;
+  const isPdf=f.type==='application/pdf';
+  const isImg=f.type.indexOf('image/')===0;
+  if(!isPdf&&!isImg){alert('Please attach a PDF or an image.');return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const base64=reader.result.split(',')[1];
+    _captureFile={kind:isPdf?'pdf':'image',mediaType:f.type,base64,name:f.name};
+    const fi=document.getElementById('capture-file-info');
+    fi.style.display='block';
+    fi.innerHTML='📎 Attached: '+f.name+' <button onclick="captureClearFile()" style="margin-left:6px;background:none;border:none;color:var(--red);cursor:pointer;font-size:.72rem">remove</button>';
+  };
+  reader.onerror=()=>alert('Could not read that file.');
+  reader.readAsDataURL(f);
+}
+function captureClearFile(){
+  _captureFile=null;
+  document.getElementById('capture-file').value='';
+  const fi=document.getElementById('capture-file-info'); fi.style.display='none'; fi.textContent='';
+}
+
+// ── Voice note (records → Whisper → fills the text box) ──
+function captureRecordVoice(btn){
+  if(_captureMediaRec && _captureMediaRec.state==='recording'){ _captureStopVoice(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){alert('Audio recording isn\u2019t supported here. Use your keyboard mic into the text box.');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _captureStream=stream; _captureChunks=[];
+    let mime='';
+    if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
+    else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _captureMediaRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _captureMediaRec.ondataavailable=e=>{ if(e.data&&e.data.size>0)_captureChunks.push(e.data); };
+    _captureMediaRec.onstop=()=>{ _captureTranscribe(); };
+    _captureMediaRec.start();
+    btn.textContent='⏹'; btn.style.background='var(--red,#dc2626)';
+  }).catch(()=>alert('Microphone permission denied or unavailable.'));
+}
+function _captureStopVoice(){
+  if(_captureMediaRec && _captureMediaRec.state==='recording'){ try{_captureMediaRec.stop();}catch(e){} }
+  if(_captureStream){ try{_captureStream.getTracks().forEach(t=>t.stop());}catch(e){} _captureStream=null; }
+  const b=document.getElementById('capture-mic'); if(b){b.textContent='🎙️';b.style.background='var(--surf,#fff)';}
+}
+async function _captureTranscribe(){
+  if(_captureStream){ try{_captureStream.getTracks().forEach(t=>t.stop());}catch(e){} _captureStream=null; }
+  const b=document.getElementById('capture-mic'); if(b){b.textContent='🎙️';b.style.background='var(--surf,#fff)';}
+  if(!_captureChunks.length)return;
+  if(!OPENAI_KEY){const k=prompt('Enter your OpenAI API key (to transcribe; stored in this browser only):');if(!k)return;OPENAI_KEY=k.trim();localStorage.setItem('crm_oai_key',OPENAI_KEY);}
+  const blob=new Blob(_captureChunks,{type:_captureChunks[0].type||'audio/webm'});
+  const ta=document.getElementById('capture-text');
+  const prev=ta.value;
+  ta.value=(prev?prev+'\n':'')+'🎙️ Transcribing…';
+  try{
+    const fd=new FormData();
+    const ext=(blob.type.indexOf('mp4')>=0)?'mp4':'webm';
+    fd.append('file',blob,'note.'+ext);
+    fd.append('model','whisper-1');
+    const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+OPENAI_KEY},body:fd});
+    const d=await tr.json();
+    if(d.error)throw new Error(d.error.message);
+    ta.value=(prev?prev+'\n':'')+(d.text||'').trim();
+  }catch(e){ ta.value=prev; alert('Transcription failed: '+e.message); }
+}
+
+// ── Build a roster WITH contact IDs for matching ──
+function _captureRoster(){
+  const lines=[];
+  households.forEach(h=>{
+    (h.members||[]).forEach(m=>{
+      lines.push('contact_id='+m.id+' | '+m.first_name+' '+m.last_name+' | household: '+(h.displayName||'?')+(h.city?' ('+h.city+')':''));
+    });
+  });
+  return lines.join('\n');
+}
+
+// ── Analyze the dump → propose items ──
+async function captureAnalyze(btn){
+  const text=document.getElementById('capture-text').value.trim();
+  if(!text && !_captureFile){alert('Add some text, a file, or a voice note first.');return;}
+  if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key (stored in this browser only):');if(!k)return;ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
+  const results=document.getElementById('capture-results');
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Analyzing…';
+  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">Reading and matching to a contact…</div>';
+
+  const today=new Date().toISOString().split('T')[0];
+  const roster=_captureRoster();
+  const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
+    +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>"}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items.';
+
+  // Build user content (text + optional file)
+  const userContent=[];
+  if(_captureFile){
+    if(_captureFile.kind==='pdf'){
+      userContent.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:_captureFile.base64}});
+    }else{
+      userContent.push({type:'image',source:{type:'base64',media_type:_captureFile.mediaType,data:_captureFile.base64}});
+    }
+  }
+  userContent.push({type:'text',text:'TODAY: '+today+'\n\nROSTER:\n'+roster+'\n\nDUMPED CONTENT:\n'+(text||'(see attached file)')});
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,system:sys,messages:[{role:'user',content:userContent}]})
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('Could not read a proposal from the response.');
+    const parsed=JSON.parse(m[0]);
+    _captureRenderProposals(parsed);
+  }catch(e){
+    results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Analysis failed: '+_enrichEsc(e.message)+'</div>';
+  }
+  btn.disabled=false; btn.textContent=orig;
+}
+
+function _captureRenderProposals(parsed){
+  const results=document.getElementById('capture-results');
+  const items=(parsed&&parsed.items)||[];
+  if(!items.length){
+    results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px;font-size:.8rem;color:var(--txt2)">Couldn\u2019t match this to a contact. '+_enrichEsc(parsed&&parsed.unmatched_reason||'')+'<br><br>You can edit the text to add a name, or file it manually from the contact\u2019s page.</div>';
+    return;
+  }
+  // Contact options for the dropdown (all contacts)
+  let opts='';
+  households.forEach(h=>{(h.members||[]).forEach(m=>{
+    opts+='<option value="'+m.id+'">'+_enrichEsc(m.first_name+' '+m.last_name+' — '+(h.displayName||''))+'</option>';
+  });});
+
+  let html='';
+  items.forEach((it,i)=>{
+    const conf=it.match_confidence||'medium';
+    const confColor=conf==='high'?'#16a34a':conf==='low'?'#dc2626':'#b45309';
+    const date=it.date||new Date().toISOString().split('T')[0];
+    html+='<div class="capture-item" data-i="'+i+'" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+    html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
+    html+='</div>';
+    // Contact picker
+    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Contact</div>';
+    html+='<select id="cap-contact-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+    html+='<option value="">— no contact / skip —</option>'+opts;
+    html+='</select>';
+    // Type + date row
+    html+='<div style="display:flex;gap:8px;margin-bottom:9px">';
+    html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Type</div>';
+    html+='<select id="cap-type-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit">';
+    ['Note','Call','Meeting','Email','Conversation','Event'].forEach(t=>{html+='<option'+(t===(it.type||'Note')?' selected':'')+'>'+t+'</option>';});
+    html+='</select></div>';
+    html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Date</div>';
+    html+='<input type="date" id="cap-date-'+i+'" value="'+date+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
+    html+='</div>';
+    // Text
+    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">What to log</div>';
+    html+='<textarea id="cap-text-'+i+'" rows="3" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+_enrichEsc(it.text||'')+'</textarea>';
+    html+='<div style="display:flex;gap:8px;margin-top:10px"><button onclick="captureSaveItem('+i+',this)" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500">✓ Confirm & Save</button>';
+    html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button></div>';
+    html+='</div>';
+  });
+  results.innerHTML=html;
+  // Pre-select matched contacts
+  items.forEach((it,i)=>{
+    if(it.contact_id){const sel=document.getElementById('cap-contact-'+i);if(sel)sel.value=it.contact_id;}
+  });
+}
+
+async function captureSaveItem(i,btn){
+  const contactId=document.getElementById('cap-contact-'+i).value;
+  const type=document.getElementById('cap-type-'+i).value;
+  const date=document.getElementById('cap-date-'+i).value||new Date().toISOString().split('T')[0];
+  const text=document.getElementById('cap-text-'+i).value.trim();
+  if(!contactId){alert('Pick a contact first (or Dismiss this item).');return;}
+  if(!text){alert('Add some text to log.');return;}
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:contactId,type,date,notes:text})});
+    // Refresh AGC for the affected household
+    const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
+    if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
+    const card=btn.closest('.capture-item');
+    if(card)card.innerHTML='<div style="font-size:.82rem;color:#16a34a;padding:4px">✓ Saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
+  }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
+}
+
+// ════════════════════════════════════════════════════════════
 // ── BUILD MISSING PROFILES (Enrichment Tool) ──
 // Walk no-profile households (highest home value first), let the
 // rabbi edit existing data + add notes (typed or voice), then build
@@ -3499,8 +3740,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 let _enrichQueue=[];      // array of household indices (into global `households`)
 let _enrichPos=0;         // current position in queue
-let _enrichRecog=null;    // active SpeechRecognition instance
-let _enrichRecogTarget=null; // textarea id receiving dictation
+let _enrichRecogTarget=null; // (legacy, unused)
 
 function _enrichHasProfile(h){
   const p=h.profile_data;
@@ -3639,7 +3879,7 @@ async function renderEnrichCard(){
     });
     html+='</div>';
   }
-  html+=_enrichTextareaWithVoice('enrich-newnote', '', 'Brain-dump what you know. Tap 🎤 to dictate…', 4);
+  html+=_enrichTextareaWithVoice('enrich-newnote', '', 'Brain-dump what you know. Tap 🎙️ to record a voice note…', 4);
   html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center">';
   html+='<button onclick="enrichSaveNewNote('+idx+',this)" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">＋ Save Note</button>';
   html+='<button onclick="enrichCleanup(this)" title="Clean up & tidy the dictation with AI (uses tokens)" style="padding:6px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-size:.74rem">✨ Clean up</button>';
@@ -3709,48 +3949,102 @@ async function renderEnrichCard(){
   document.getElementById('enrichOverlay').scrollTop=0;
 }
 
-// Reusable textarea + 🎤 voice button
+// Reusable textarea + 🎙️ voice-note record button (records audio → Whisper → Claude clean+extract)
 function _enrichTextareaWithVoice(id, value, placeholder, rows){
   return '<div style="position:relative">'
     +'<textarea id="'+id+'" rows="'+rows+'" placeholder="'+placeholder+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+value+'</textarea>'
-    +'<button onclick="enrichToggleVoice(\''+id+'\',this)" title="Dictate (browser speech-to-text)" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎤</button>'
+    +'<button onclick="enrichRecordVoice(\''+id+'\',this)" title="Record a voice note — it gets transcribed and tidied automatically" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎙️</button>'
+    +'<div id="'+id+'-suggest" style="display:none;margin-top:8px"></div>'
     +'</div>';
 }
 
-// ── Voice dictation via Web Speech API (free, on-device/browser) ──
-function enrichToggleVoice(targetId, btn){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('Speech-to-text isn\u2019t supported in this browser. On iPhone, tap the 🎤 on your keyboard instead. Chrome on Android/desktop works here.');return;}
-  // If already recording into this target, stop it
-  if(_enrichRecog && _enrichRecogTarget===targetId){_enrichStopVoice();return;}
-  _enrichStopVoice(); // stop any other
-  const ta=document.getElementById(targetId);
-  if(!ta)return;
-  const recog=new SR();
-  recog.lang='en-US';
-  recog.continuous=true;
-  recog.interimResults=true;
-  const baseText=ta.value?ta.value.replace(/\s+$/,'')+' ':'';
-  let finalAppend='';
-  recog.onresult=(e)=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const tr=e.results[i];
-      if(tr.isFinal)finalAppend+=tr[0].transcript;
-      else interim+=tr[0].transcript;
-    }
-    ta.value=baseText+finalAppend+interim;
-  };
-  recog.onerror=(e)=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed')alert('Microphone permission denied. Allow mic access for this site and try again.'); _enrichStopVoice(); };
-  recog.onend=()=>{ if(_enrichRecog===recog){ btn.style.background='var(--surf,#fff)'; btn.textContent='🎤'; _enrichRecog=null; _enrichRecogTarget=null; } };
-  recog.start();
-  _enrichRecog=recog; _enrichRecogTarget=targetId;
-  btn.style.background='var(--red,#dc2626)'; btn.textContent='⏹';
+// ── Voice note: record audio → Whisper transcription → Claude clean + extract ──
+let _enrichMediaRec=null, _enrichChunks=[], _enrichRecTarget=null, _enrichRecStream=null;
+
+function enrichRecordVoice(targetId, btn){
+  // If already recording, stop and process
+  if(_enrichMediaRec && _enrichMediaRec.state==='recording'){
+    _enrichStopVoice();
+    return;
+  }
+  if(!navigator.mediaDevices||!window.MediaRecorder){
+    alert('Audio recording isn\u2019t supported in this browser. Try Chrome, or use your phone keyboard\u2019s mic into the text box.');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _enrichRecStream=stream;
+    _enrichChunks=[];
+    _enrichRecTarget=targetId;
+    // Pick a mime type Whisper accepts; Safari prefers mp4/m4a, others webm
+    let mime='';
+    if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
+    else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _enrichMediaRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _enrichMediaRec.ondataavailable=e=>{ if(e.data&&e.data.size>0)_enrichChunks.push(e.data); };
+    _enrichMediaRec.onstop=()=>{ _enrichProcessRecording(targetId); };
+    _enrichMediaRec.start();
+    btn.textContent='⏹'; btn.style.background='var(--red,#dc2626)'; btn.title='Tap to stop & transcribe';
+  }).catch(err=>{
+    alert('Microphone permission denied or unavailable. Allow mic access for this site and try again.');
+  });
 }
+
 function _enrichStopVoice(){
-  if(_enrichRecog){ try{_enrichRecog.stop();}catch(e){} _enrichRecog=null; _enrichRecogTarget=null; }
-  // reset any active mic buttons
-  document.querySelectorAll('#enrichBody button').forEach(b=>{ if(b.textContent==='⏹'){b.textContent='🎤';b.style.background='var(--surf,#fff)';} });
+  if(_enrichMediaRec && _enrichMediaRec.state==='recording'){
+    try{_enrichMediaRec.stop();}catch(e){}
+  }
+  if(_enrichRecStream){ try{_enrichRecStream.getTracks().forEach(t=>t.stop());}catch(e){} _enrichRecStream=null; }
+  // reset any active record buttons to idle look
+  document.querySelectorAll('#enrichBody button').forEach(b=>{ if(b.textContent==='⏹'){b.textContent='🎙️';b.style.background='var(--surf,#fff)';} });
+}
+
+async function _enrichProcessRecording(targetId){
+  const ta=document.getElementById(targetId);
+  const sug=document.getElementById(targetId+'-suggest');
+  if(_enrichRecStream){ try{_enrichRecStream.getTracks().forEach(t=>t.stop());}catch(e){} _enrichRecStream=null; }
+  if(!_enrichChunks.length){ return; }
+  if(!OPENAI_KEY){const k=prompt('Enter your OpenAI API key (used to transcribe the voice note; stored in this browser only):');if(!k){return;}OPENAI_KEY=k.trim();localStorage.setItem('crm_oai_key',OPENAI_KEY);}
+  const blob=new Blob(_enrichChunks,{type:_enrichChunks[0].type||'audio/webm'});
+  // Loading indicator in the suggestion area
+  if(sug){sug.style.display='block';sug.innerHTML='<div style="font-size:.72rem;color:var(--txt3);padding:4px">🎙️ Transcribing…</div>';}
+  try{
+    // 1) Whisper transcription
+    const fd=new FormData();
+    const ext=(blob.type.indexOf('mp4')>=0)?'mp4':'webm';
+    fd.append('file',blob,'note.'+ext);
+    fd.append('model','whisper-1');
+    const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+OPENAI_KEY},
+      body:fd
+    });
+    const trData=await tr.json();
+    if(trData.error)throw new Error(trData.error.message);
+    const transcript=(trData.text||'').trim();
+    if(!transcript){throw new Error('No speech detected in the recording.');}
+    // Show raw transcript immediately so nothing is lost even if cleanup fails
+    ta.value=(ta.value?ta.value.replace(/\s+$/,'')+'\n':'')+transcript;
+    if(sug)sug.innerHTML='<div style="font-size:.72rem;color:var(--txt3);padding:4px">✨ Tidying & extracting details…</div>';
+    // 2) Claude: clean the transcript into a tidy note
+    if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key (stored in this browser only):');if(!k){if(sug)sug.style.display='none';return;}ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
+    const ar=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:700,
+        system:'You tidy a rabbi\u2019s dictated voice note about a donor/household into a clean, concise note. Fix grammar and remove filler words and false starts. Keep ALL facts, names, numbers. Do not invent anything, and never fabricate dates or dollar amounts. Do not add commentary or headings. Return ONLY the cleaned note text.',
+        messages:[{role:'user',content:transcript}]
+      })
+    });
+    const arData=await ar.json();
+    if(arData.error)throw new Error(arData.error.message);
+    const cleaned=arData.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    if(cleaned){ ta.value=cleaned; }
+    if(sug){ sug.style.display='none'; }
+  }catch(e){
+    if(sug){sug.innerHTML='<div style="font-size:.72rem;color:var(--red);padding:4px">Voice note failed: '+_enrichEsc(e.message)+'</div>';}
+  }
 }
 
 // ── AI cleanup of the new-note dictation ──
@@ -3951,6 +4245,36 @@ function toggleModeHelp(){
   m.style.display = m.style.display==='flex' ? 'none' : 'flex';
 }
 </script>
+<!-- QUICK CAPTURE OVERLAY -->
+<div id="captureOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0">
+      <span style="font-family:'Lora',serif;font-weight:700;font-size:1rem;color:var(--txt);white-space:nowrap">📥 Quick Capture</span>
+    </div>
+    <button onclick="closeCapture()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap">✕ Close</button>
+  </div>
+  <div style="max-width:680px;margin:0 auto;padding:16px 16px 80px">
+    <p style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.</p>
+
+    <div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+      <div style="position:relative">
+        <textarea id="capture-text" rows="6" placeholder="Type or paste here. e.g. 'Met Carol on the street, she asked about Hebrew school for her grandkids'…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+        <button onclick="captureRecordVoice(this)" id="capture-mic" title="Record a voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎙️</button>
+      </div>
+      <div id="capture-file-info" style="font-size:.72rem;color:var(--txt3);margin-top:8px;display:none"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center">
+        <label style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem">📎 Attach PDF / image
+          <input type="file" id="capture-file" accept="application/pdf,image/*" onchange="captureFilePicked(this)" style="display:none">
+        </label>
+        <span style="flex:1"></span>
+        <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">Analyze →</button>
+      </div>
+    </div>
+
+    <div id="capture-results"></div>
+  </div>
+</div>
+
 <!-- ENRICHMENT / BUILD MISSING PROFILES OVERLAY -->
 <div id="enrichOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
   <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
