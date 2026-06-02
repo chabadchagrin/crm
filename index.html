@@ -1990,12 +1990,16 @@ function _profEditField(key,label,val,rows){
     +'<textarea id="prof-edit-'+key+'" rows="'+rows+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:7px;font-size:.72rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+esc(val||'')+'</textarea>'
     +'</div>';
 }
-function editProfileInline(idx){
+let _profEditCtx=null; // {idx, containerId, isFullPanel}
+function editProfileInline(idx, containerId){
   const h=households[idx];
   const p=h.profile_data||{};
-  const el=document.getElementById('tabcontent-profile-'+idx);
+  const cid=containerId||('tabcontent-profile-'+idx);
+  const isFull=cid.indexOf('fullpanel-profile-')===0;
+  _profEditCtx={idx,containerId:cid,isFullPanel:isFull};
+  const el=document.getElementById(cid);
   if(!el)return;
-  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-family:\'DM Mono\',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Editing Profile</div></div>';
+  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-family:\'DM Mono\',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">✏️ Editing Profile</div></div>';
   html+=_profEditField('summary','Summary',p.summary,4);
   html+=_profEditField('approach','Approach',p.approach,3);
   html+=_profEditField('capacity','Capacity label',p.capacity,1);
@@ -2014,9 +2018,21 @@ function editProfileInline(idx){
   html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">';
   html+='<button onclick="saveProfileInline('+idx+',this)" style="font-size:.68rem;padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer">💾 Save</button>';
   html+='<button onclick="rebuildProfileWithCorrection('+idx+')" style="font-size:.68rem;padding:5px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:5px;cursor:pointer">↻ Save &amp; rebuild with correction</button>';
-  html+='<button onclick="showTab('+idx+',\'profile\')" style="font-size:.68rem;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Cancel</button>';
+  html+='<button onclick="cancelProfileEdit('+idx+')" style="font-size:.68rem;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Cancel</button>';
   html+='</div>';
   el.innerHTML=html;
+}
+function cancelProfileEdit(idx){
+  if(_profEditCtx&&_profEditCtx.isFullPanel){ openFullPanel(idx); }
+  else { showTab(idx,'profile'); }
+  _profEditCtx=null;
+}
+function _profEditRerender(idx,p){
+  if(_profEditCtx&&_profEditCtx.isFullPanel){ openFullPanel(idx); }
+  else {
+    const el=document.getElementById('tabcontent-profile-'+idx);
+    if(el)el.innerHTML=buildProfileDisplay(p,idx);
+  }
 }
 function _collectProfileEdits(idx){
   const h=households[idx];
@@ -2039,8 +2055,8 @@ async function saveProfileInline(idx,btn){
   try{
     await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
     h.profile_data=p; h.property_data={...h.property_data,profile:p};
-    const el=document.getElementById('tabcontent-profile-'+idx);
-    if(el)el.innerHTML=buildProfileDisplay(p,idx);
+    _profEditRerender(idx,p);
+    _profEditCtx=null;
   }catch(e){alert('Save failed: '+e.message);if(btn){btn.disabled=false;btn.textContent='💾 Save';}}
 }
 async function rebuildProfileWithCorrection(idx){
@@ -2056,6 +2072,7 @@ async function rebuildProfileWithCorrection(idx){
     await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
     h.profile_data=p; h.property_data={...h.property_data,profile:p};
   }catch(e){alert('Save failed: '+e.message);return;}
+  _profEditCtx=null;
   // Now rebuild passing the combined hints (skips the prompt)
   buildProfile(idx, combined||'__skip');
 }
@@ -2135,6 +2152,8 @@ YOUR ROLE: Search for public information (LinkedIn, 990 filings, Cleveland Jewis
 
 DO NOT re-score. DO NOT second-guess the numbers. DO explain what you found publicly.
 
+CRITICAL — THE RABBI'S NOTES ARE GROUND TRUTH: Any facts in the rabbi's household notes or private notes (names, family relationships, who is whose spouse/parent/child, occupations, personal details) are authoritative and must be treated as correct. NEVER contradict them with web findings. If public research suggests something different from the rabbi's notes (e.g. the notes say a person named Carol is his mother, but the web associates a Carol with him differently), the rabbi's notes win — defer to them and do not assert a conflicting relationship. If you cannot confirm a relationship from the rabbi's notes, do not invent one from the web; describe public findings cautiously and never override a relationship the rabbi has stated.
+
 Return ONLY valid JSON, no markdown fences:
 {
   "affinityNotes": "Qualitative explanation of affinity signals found — Jewish community ties, board roles, Chabad connection indicators",
@@ -2168,6 +2187,9 @@ PRE-CALCULATED AGC SCORES (treat as facts — do not recalculate):
 GIVING TO CHABAD (hard data):
 ${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
 Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history on file'}
+
+RABBI'S HOUSEHOLD NOTES (authoritative — these are facts the rabbi knows personally):
+${h.notes&&h.notes.trim()?h.notes.trim():'None'}
 
 PRIVATE NOTES (${notes_list.length}):
 ${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None'}
@@ -2443,8 +2465,11 @@ function openFullPanel(idx){
     </div>
 
     <!-- AI Profile -->
-    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
-      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:12px">🔍 AI Profile</div>
+    <div id="fullpanel-profile-${idx}" style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">🔍 AI Profile</div>
+        ${profile?`<button onclick="editProfileInline(${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>`:''}
+      </div>
       ${profile?`
         ${profile.affinityNotes||profile.generosityNotes||profile.capacityNotes?`
         <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:12px">
