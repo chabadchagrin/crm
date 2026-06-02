@@ -659,10 +659,10 @@ let _authToken=null; // set after login
 async function sb(path,opts={}){
   // Always use current session token if available
   const token=_authToken||SB_KEY;
-  const res=await fetch(SB_URL+'/rest/v1/'+path,{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
-    ...opts
-  });
+  const baseHeaders={'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'};
+  const mergedHeaders={...baseHeaders,...(opts.headers||{})};
+  const finalOpts={...opts,headers:mergedHeaders};
+  const res=await fetch(SB_URL+'/rest/v1/'+path,finalOpts);
   if(!res.ok){const e=await res.text();throw new Error(e);}
   const txt=await res.text();
   return txt?JSON.parse(txt):null;
@@ -3629,7 +3629,8 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>"}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>"}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. When in doubt, prefer interaction. '
     +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items.';
 
   // Build user content (text + optional file)
@@ -3669,11 +3670,14 @@ function _captureRenderProposals(parsed){
     results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px;font-size:.8rem;color:var(--txt2)">Couldn\u2019t match this to a contact. '+_enrichEsc(parsed&&parsed.unmatched_reason||'')+'<br><br>You can edit the text to add a name, or file it manually from the contact\u2019s page.</div>';
     return;
   }
-  // Contact options for the dropdown (all contacts)
-  let opts='';
-  households.forEach(h=>{(h.members||[]).forEach(m=>{
-    opts+='<option value="'+m.id+'">'+_enrichEsc(m.first_name+' '+m.last_name+' — '+(h.displayName||''))+'</option>';
-  });});
+  // Contact options (individual names only) and household options
+  let copts='', hopts='';
+  households.forEach(h=>{
+    hopts+='<option value="'+h.id+'">'+_enrichEsc(h.displayName||'(unnamed household)')+(h.city?' — '+_enrichEsc(h.city):'')+'</option>';
+    (h.members||[]).forEach(m=>{
+      copts+='<option value="'+m.id+'" data-household="'+h.id+'">'+_enrichEsc(m.first_name+' '+m.last_name)+'</option>';
+    });
+  });
 
   let html='';
   items.forEach((it,i)=>{
@@ -3684,12 +3688,18 @@ function _captureRenderProposals(parsed){
     html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
     html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
     html+='</div>';
-    // Contact picker
+    // Save-as toggle
+    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Save as</div>';
+    html+='<select id="cap-mode-'+i+'" onchange="captureToggleMode('+i+')" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+    html+='<option value="interaction">Interaction (logged to one person)</option>';
+    html+='<option value="household">Household note (general, not a dated event)</option>';
+    html+='</select>';
+    // Interaction fields (default visible)
+    html+='<div id="cap-int-fields-'+i+'">';
     html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Contact</div>';
     html+='<select id="cap-contact-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
-    html+='<option value="">— no contact / skip —</option>'+opts;
+    html+='<option value="">— pick a person —</option>'+copts;
     html+='</select>';
-    // Type + date row
     html+='<div style="display:flex;gap:8px;margin-bottom:9px">';
     html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Type</div>';
     html+='<select id="cap-type-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit">';
@@ -3697,6 +3707,15 @@ function _captureRenderProposals(parsed){
     html+='</select></div>';
     html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Date</div>';
     html+='<input type="date" id="cap-date-'+i+'" value="'+date+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
+    html+='</div>';
+    html+='</div>';
+    // Household fields (hidden by default)
+    html+='<div id="cap-hh-fields-'+i+'" style="display:none">';
+    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Household</div>';
+    html+='<select id="cap-household-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+    html+='<option value="">— pick a household —</option>'+hopts;
+    html+='</select>';
+    html+='<div style="font-size:.6rem;color:var(--txt3);margin-bottom:9px">Appends to the household\u2019s notes (no date — for general background).</div>';
     html+='</div>';
     // Text
     html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">What to log</div>';
@@ -3706,23 +3725,58 @@ function _captureRenderProposals(parsed){
     html+='</div>';
   });
   results.innerHTML=html;
-  // Pre-select matched contacts
+  // Pre-select matched contacts, the household, and the AI-chosen save mode
   items.forEach((it,i)=>{
-    if(it.contact_id){const sel=document.getElementById('cap-contact-'+i);if(sel)sel.value=it.contact_id;}
+    if(it.contact_id){
+      const sel=document.getElementById('cap-contact-'+i);if(sel)sel.value=it.contact_id;
+      const h=households.find(hh=>(hh.members||[]).some(m=>m.id===it.contact_id));
+      if(h){const hsel=document.getElementById('cap-household-'+i);if(hsel)hsel.value=h.id;}
+    }
+    // Apply the AI's interaction-vs-household decision
+    if(it.save_as==='household'){
+      const msel=document.getElementById('cap-mode-'+i);
+      if(msel){msel.value='household';captureToggleMode(i);}
+    }
   });
 }
 
+// Toggle interaction vs household-note fields
+function captureToggleMode(i){
+  const mode=document.getElementById('cap-mode-'+i).value;
+  document.getElementById('cap-int-fields-'+i).style.display=(mode==='interaction')?'block':'none';
+  document.getElementById('cap-hh-fields-'+i).style.display=(mode==='household')?'block':'none';
+}
+
 async function captureSaveItem(i,btn){
+  const mode=document.getElementById('cap-mode-'+i).value;
+  const text=document.getElementById('cap-text-'+i).value.trim();
+  if(!text){alert('Add some text to log.');return;}
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+
+  if(mode==='household'){
+    const hid=document.getElementById('cap-household-'+i).value;
+    if(!hid){alert('Pick a household first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
+    const h=households.find(hh=>hh.id===hid);
+    try{
+      // Append to existing household notes with a dated prefix
+      const stamp=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const existing=(h&&h.notes)?h.notes.trim():'';
+      const combined=existing?(existing+'\n\n['+stamp+'] '+text):('['+stamp+'] '+text);
+      await sb('households?id=eq.'+hid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
+      if(h)h.notes=combined;
+      const card=btn.closest('.capture-item');
+      if(card)card.innerHTML='<div style="font-size:.82rem;color:#16a34a;padding:4px">✓ Saved to '+_enrichEsc(h?h.displayName:'household')+' notes</div>';
+    }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
+    return;
+  }
+
+  // Interaction mode
   const contactId=document.getElementById('cap-contact-'+i).value;
   const type=document.getElementById('cap-type-'+i).value;
   const date=document.getElementById('cap-date-'+i).value||new Date().toISOString().split('T')[0];
-  const text=document.getElementById('cap-text-'+i).value.trim();
-  if(!contactId){alert('Pick a contact first (or Dismiss this item).');return;}
-  if(!text){alert('Add some text to log.');return;}
-  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  if(!contactId){alert('Pick a contact first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
   try{
     await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:contactId,type,date,notes:text})});
-    // Refresh AGC for the affected household
     const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
     if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
     const card=btn.closest('.capture-item');
