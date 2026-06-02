@@ -331,6 +331,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- INTELLIGENCE section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Intelligence</div>
     <button class="sb-item" onclick="closeSidebar();openGlobalAsk()">🧠 Research Chat</button>
+    <button class="sb-item" onclick="closeSidebar();openEnrich()">📋 Build Missing Profiles</button>
     <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()">🔄 Generate Embeddings</button>
     <div id="embedBackfillStatus" style="padding:4px 18px 8px;font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3);display:none"></div>
 
@@ -574,6 +575,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <option value="quick">🏃 Quick</option>
     </select>
     <div id="modeHint" style="font-size:.6rem;color:var(--txt3);font-family:'DM Mono',monospace;white-space:nowrap">~35k tokens</div>
+    <button onclick="toggleModeHelp()" title="What do these modes do?" style="background:none;border:1px solid var(--border2);color:var(--txt2);width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.7rem;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">?</button>
     <!-- Session controls -->
     <button onclick="newChatSession()" title="New conversation" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 9px;border-radius:4px;cursor:pointer;font-size:.75rem">✚ New</button>
     <button onclick="showSessionHistory()" title="Past sessions" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 9px;border-radius:4px;cursor:pointer;font-size:.75rem">📋 History</button>
@@ -1951,6 +1953,7 @@ function buildProfileDisplay(p, idx){
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Prospect Profile</div>
       <div style="display:flex;align-items:center;gap:8px">
         <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${p.builtAt?new Date(p.builtAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
+        <button onclick="editProfileInline(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
         <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Refresh</button>
       </div>
     </div>
@@ -1977,6 +1980,84 @@ function buildProfileDisplay(p, idx){
     ${p.philanthropy990?`<div style="font-size:.7rem;margin-bottom:4px">📄 <b>990 Giving:</b> ${p.philanthropy990}</div>`:''}
     ${p.pressmentions?`<div style="font-size:.7rem;margin-bottom:4px">📰 <b>Press:</b> ${p.pressmentions}</div>`:''}
   `;
+}
+
+// ── Inline profile editing in the main panel ──
+function _profEditField(key,label,val,rows){
+  const esc=s=>(s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div style="margin-bottom:9px">'
+    +'<div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:3px">'+label+'</div>'
+    +'<textarea id="prof-edit-'+key+'" rows="'+rows+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:7px;font-size:.72rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+esc(val||'')+'</textarea>'
+    +'</div>';
+}
+function editProfileInline(idx){
+  const h=households[idx];
+  const p=h.profile_data||{};
+  const el=document.getElementById('tabcontent-profile-'+idx);
+  if(!el)return;
+  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-family:\'DM Mono\',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Editing Profile</div></div>';
+  html+=_profEditField('summary','Summary',p.summary,4);
+  html+=_profEditField('approach','Approach',p.approach,3);
+  html+=_profEditField('capacity','Capacity label',p.capacity,1);
+  html+=_profEditField('affinityNotes','Affinity',p.affinityNotes,2);
+  html+=_profEditField('generosityNotes','Generosity',p.generosityNotes,2);
+  html+=_profEditField('capacityNotes','Capacity notes',p.capacityNotes,2);
+  html+=_profEditField('fedLevel','Federation',p.fedLevel,1);
+  html+=_profEditField('businessInfo','Business',p.businessInfo,1);
+  html+=_profEditField('boardMemberships','Boards',p.boardMemberships,1);
+  html+=_profEditField('philanthropy990','990 giving',p.philanthropy990,1);
+  html+=_profEditField('pressmentions','Press',p.pressmentions,1);
+  html+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+  html+='<div style="font-size:.6rem;color:var(--txt3);margin-bottom:4px">Correction to steer a rebuild (optional):</div>';
+  html+='<input id="prof-edit-correction" placeholder="e.g. She runs the foundation, not her husband" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:7px;font-size:.7rem;color:var(--txt);font-family:inherit">';
+  html+='</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">';
+  html+='<button onclick="saveProfileInline('+idx+',this)" style="font-size:.68rem;padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer">💾 Save</button>';
+  html+='<button onclick="rebuildProfileWithCorrection('+idx+')" style="font-size:.68rem;padding:5px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:5px;cursor:pointer">↻ Save &amp; rebuild with correction</button>';
+  html+='<button onclick="showTab('+idx+',\'profile\')" style="font-size:.68rem;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Cancel</button>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+function _collectProfileEdits(idx){
+  const h=households[idx];
+  const p=Object.assign({},h.profile_data||{});
+  ['summary','approach','capacity','affinityNotes','generosityNotes','capacityNotes','fedLevel','businessInfo','boardMemberships','philanthropy990','pressmentions'].forEach(k=>{
+    const el=document.getElementById('prof-edit-'+k);
+    if(el)p[k]=el.value.trim()||null;
+  });
+  return p;
+}
+async function saveProfileInline(idx,btn){
+  const h=households[idx];
+  const p=_collectProfileEdits(idx);
+  const corrEl=document.getElementById('prof-edit-correction');
+  if(corrEl&&corrEl.value.trim()){
+    const prior=p.searchHints||'';
+    p.searchHints=prior?(prior+' | '+corrEl.value.trim()):corrEl.value.trim();
+  }
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
+    h.profile_data=p; h.property_data={...h.property_data,profile:p};
+    const el=document.getElementById('tabcontent-profile-'+idx);
+    if(el)el.innerHTML=buildProfileDisplay(p,idx);
+  }catch(e){alert('Save failed: '+e.message);if(btn){btn.disabled=false;btn.textContent='💾 Save';}}
+}
+async function rebuildProfileWithCorrection(idx){
+  const h=households[idx];
+  // Save edits first (incl. capturing the correction into searchHints)
+  const p=_collectProfileEdits(idx);
+  const corrEl=document.getElementById('prof-edit-correction');
+  const correction=corrEl?corrEl.value.trim():'';
+  const prior=p.searchHints||'';
+  const combined=correction?(prior?prior+' | '+correction:correction):prior;
+  p.searchHints=combined||null;
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
+    h.profile_data=p; h.property_data={...h.property_data,profile:p};
+  }catch(e){alert('Save failed: '+e.message);return;}
+  // Now rebuild passing the combined hints (skips the prompt)
+  buildProfile(idx, combined||'__skip');
 }
 
 async function buildProfile(idx, hints=''){
@@ -3374,6 +3455,505 @@ window.addEventListener('DOMContentLoaded',async()=>{
     setTimeout(()=>document.getElementById('loginEmail').focus(),100);
   }
 });
+
+// ════════════════════════════════════════════════════════════
+// ── BUILD MISSING PROFILES (Enrichment Tool) ──
+// Walk no-profile households (highest home value first), let the
+// rabbi edit existing data + add notes (typed or voice), then build
+// the profile. Done = profile built OR marked done. enrichDone flag
+// lives in property_data jsonb (no schema migration).
+// ════════════════════════════════════════════════════════════
+
+let _enrichQueue=[];      // array of household indices (into global `households`)
+let _enrichPos=0;         // current position in queue
+let _enrichRecog=null;    // active SpeechRecognition instance
+let _enrichRecogTarget=null; // textarea id receiving dictation
+
+function _enrichHasProfile(h){
+  const p=h.profile_data;
+  return !!(p && (p.summary || p.approach || p.affinityNotes));
+}
+function _enrichIsDone(h){
+  const pd=h.property_data||{};
+  return _enrichHasProfile(h) || pd.enrichDone===true;
+}
+
+function buildEnrichQueue(){
+  // Households with no profile and not marked done, highest home value first
+  const idxs=[];
+  households.forEach((h,i)=>{ if(!_enrichIsDone(h)) idxs.push(i); });
+  idxs.sort((a,b)=>(households[b].home_value||0)-(households[a].home_value||0));
+  return idxs;
+}
+
+function openEnrich(){
+  _enrichQueue=buildEnrichQueue();
+  _enrichPos=0;
+  document.getElementById('enrichOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+  renderEnrichCard();
+}
+
+function closeEnrich(){
+  _enrichStopVoice();
+  document.getElementById('enrichOverlay').style.display='none';
+  document.body.style.overflow='';
+  // Refresh the main map/list so newly built profiles show up
+  try{ renderList(); recolorAll(); }catch(e){}
+}
+
+function _enrichUpdateCounter(){
+  const el=document.getElementById('enrichCounter');
+  if(!el)return;
+  const remaining=_enrichQueue.length-_enrichPos;
+  el.textContent=remaining>0?(_enrichPos+1)+' of '+_enrichQueue.length+' · '+remaining+' left':'';
+}
+
+// Move to next item in the queue
+function enrichNext(){
+  _enrichStopVoice();
+  _enrichPos++;
+  renderEnrichCard();
+}
+
+// Skip for later — push current to back of THIS session's queue, advance
+function enrichSkipLater(){
+  _enrichStopVoice();
+  if(_enrichPos<_enrichQueue.length){
+    const cur=_enrichQueue.splice(_enrichPos,1)[0];
+    _enrichQueue.push(cur);
+  }
+  renderEnrichCard();
+}
+
+// Mark done permanently (no profile) — sets enrichDone flag in jsonb
+async function enrichMarkDone(idx){
+  const h=households[idx];
+  if(!confirm('Mark '+(h.displayName||'this household')+' as done without building a profile? It won\u2019t come back in this list.'))return;
+  try{
+    const pd=Object.assign({},h.property_data||{},{enrichDone:true});
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:pd})});
+    h.property_data=pd;
+    enrichNext();
+  }catch(e){alert('Could not mark done: '+e.message);}
+}
+
+function _enrichEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _enrichFmtDate(d){try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+
+async function renderEnrichCard(){
+  _enrichUpdateCounter();
+  const body=document.getElementById('enrichBody');
+  if(_enrichPos>=_enrichQueue.length){
+    body.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--txt2)">'
+      +'<div style="font-size:2.4rem;margin-bottom:12px">🎉</div>'
+      +'<div style="font-family:\'Lora\',serif;font-size:1.2rem;font-weight:700;color:var(--txt);margin-bottom:6px">All caught up</div>'
+      +'<div style="font-size:.85rem;line-height:1.5">Every household here either has a profile or is marked done.<br>New imports with no profile will show up next time.</div>'
+      +'<button onclick="closeEnrich()" style="margin-top:18px;padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.85rem">Close</button>'
+      +'</div>';
+    return;
+  }
+  const idx=_enrichQueue[_enrichPos];
+  const h=households[idx];
+  const g=getGivingStats(h);
+  const agc=(typeof getAGCScore==='function')?getAGCScore(h):{total:'?',affinity:'?',generosity:'?',capacity:'?'};
+  const members=(h.members||[]);
+  const memberLine=members.map(m=>m.first_name+' '+m.last_name+(m.dob&&typeof calcAge==='function'?' (age '+calcAge(m.dob)+')':'')).join(' & ')||'No contacts';
+  const homeVal=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown';
+
+  body.innerHTML='<div style="font-size:.7rem;color:var(--txt3);text-align:center;margin-bottom:10px">Loading existing data…</div>';
+
+  // Load interactions (incl. notes) + donations for editing
+  let interactions=[], donations=[];
+  try{
+    const memberIds=members.map(m=>'"'+m.id+'"').join(',');
+    if(memberIds){
+      interactions=await sb('interactions?contact_id=in.('+memberIds+')&order=date.desc&limit=100')||[];
+      donations=await sb('donations?contact_id=in.('+memberIds+')&order=date.desc&limit=100')||[];
+    }
+  }catch(e){}
+
+  const notesItems=interactions.filter(i=>i.type==='Note');
+  const activityItems=interactions.filter(i=>i.type!=='Note');
+
+  // ── Briefing ──
+  let html='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;margin-bottom:14px">';
+  html+='<div style="font-family:\'Lora\',serif;font-size:1.25rem;font-weight:700;color:var(--txt);line-height:1.2">'+_enrichEsc(h.displayName||'(unnamed)')+'</div>';
+  html+='<div style="font-size:.82rem;color:var(--txt2);margin-top:3px">'+_enrichEsc(memberLine)+'</div>';
+  if(h.address)html+='<div style="font-size:.72rem;color:var(--txt3);margin-top:2px">'+_enrichEsc(h.address)+', '+_enrichEsc(h.city||'')+'</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">';
+  html+='<div style="background:var(--surf2);border-radius:8px;padding:7px 11px;font-size:.72rem"><span style="color:var(--txt3)">AGC</span> <b style="color:var(--txt)">'+agc.total+'</b> <span style="color:var(--txt3);font-size:.62rem">A'+agc.affinity+' G'+agc.generosity+' C'+agc.capacity+'</span></div>';
+  html+='<div style="background:var(--surf2);border-radius:8px;padding:7px 11px;font-size:.72rem"><span style="color:var(--txt3)">Home</span> <b style="color:var(--txt)">'+homeVal+'</b></div>';
+  if(g)html+='<div style="background:var(--surf2);border-radius:8px;padding:7px 11px;font-size:.72rem"><span style="color:var(--txt3)">Giving</span> <b style="color:var(--txt)">$'+Math.round(g.total).toLocaleString()+'</b> <span style="color:var(--txt3);font-size:.62rem">'+g.count+' gifts · last '+_enrichFmtDate(g.lastDate)+'</span></div>';
+  else html+='<div style="background:var(--surf2);border-radius:8px;padding:7px 11px;font-size:.72rem;color:var(--txt3)">No giving on file</div>';
+  html+='</div></div>';
+
+  // ── Household notes (editable) ──
+  html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Household Notes</div>';
+  html+=_enrichTextareaWithVoice('enrich-hhnotes', _enrichEsc(h.notes||''), 'Anything about this household — family, background, sensitivities…', 3);
+  html+='<button onclick="enrichSaveHouseholdNotes('+idx+',this)" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">Save Notes</button>';
+  html+='</div>';
+
+  // ── Add a new note (the main capture box) ──
+  html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Add a Note</div>';
+  if(members.length>1){
+    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:5px">Attach to:</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:9px">';
+    members.forEach(m=>{
+      html+='<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;color:var(--txt2)"><input type="checkbox" class="enrich-note-member" value="'+m.id+'" checked style="accent-color:var(--accent)"> '+_enrichEsc(m.first_name+' '+m.last_name)+'</label>';
+    });
+    html+='</div>';
+  }
+  html+=_enrichTextareaWithVoice('enrich-newnote', '', 'Brain-dump what you know. Tap 🎤 to dictate…', 4);
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center">';
+  html+='<button onclick="enrichSaveNewNote('+idx+',this)" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">＋ Save Note</button>';
+  html+='<button onclick="enrichCleanup(this)" title="Clean up & tidy the dictation with AI (uses tokens)" style="padding:6px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-size:.74rem">✨ Clean up</button>';
+  html+='<span style="flex:1"></span>';
+  html+='<button onclick="enrichQuickInteraction('+idx+')" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem">📝 Log interaction</button>';
+  html+='<button onclick="enrichQuickGiving('+idx+')" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem">💝 Add giving note</button>';
+  html+='</div></div>';
+
+  // ── Existing notes (editable) ──
+  if(notesItems.length){
+    html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+    html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Existing Notes ('+notesItems.length+')</div>';
+    notesItems.forEach(n=>{
+      html+='<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
+      html+='<div style="font-size:.62rem;color:var(--txt3);margin-bottom:4px">'+_enrichFmtDate(n.date)+'</div>';
+      html+='<textarea id="enrich-int-'+n.id+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.78rem;color:var(--txt);font-family:inherit;resize:vertical;min-height:46px">'+_enrichEsc(n.notes||'')+'</textarea>';
+      html+='<button onclick="enrichSaveInteraction(\''+n.id+'\',this)" style="margin-top:4px;padding:4px 10px;font-size:.68rem;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Save</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // ── Existing activity (editable) ──
+  if(activityItems.length){
+    html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+    html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Activity Log ('+activityItems.length+')</div>';
+    activityItems.forEach(a=>{
+      html+='<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
+      html+='<div style="font-size:.62rem;color:var(--txt3);margin-bottom:4px">'+_enrichEsc(a.type)+' · '+_enrichFmtDate(a.date)+'</div>';
+      html+='<textarea id="enrich-int-'+a.id+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.78rem;color:var(--txt);font-family:inherit;resize:vertical;min-height:42px">'+_enrichEsc(a.notes||'')+'</textarea>';
+      html+='<button onclick="enrichSaveInteraction(\''+a.id+'\',this)" style="margin-top:4px;padding:4px 10px;font-size:.68rem;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Save</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // ── Donation notes (editable) ──
+  if(donations.length){
+    html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+    html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Donation Notes ('+donations.length+')</div>';
+    donations.forEach(d=>{
+      html+='<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">';
+      html+='<div style="font-size:.7rem;color:var(--txt);margin-bottom:4px"><b>$'+parseFloat(d.amount||0).toLocaleString()+'</b> <span style="color:var(--txt3);font-size:.62rem">'+_enrichFmtDate(d.date)+'</span></div>';
+      html+='<input id="enrich-don-'+d.id+'" value="'+_enrichEsc(d.notes||'')+'" placeholder="Add a note about this gift…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 8px;font-size:.76rem;color:var(--txt);font-family:inherit">';
+      html+='<button onclick="enrichSaveDonationNote(\''+d.id+'\',this)" style="margin-top:4px;padding:4px 10px;font-size:.68rem;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Save</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // ── Profile build + advance ──
+  html+='<div id="enrich-profile-zone" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Profile</div>';
+  html+='<div style="font-size:.76rem;color:var(--txt2);line-height:1.5;margin-bottom:10px">Save any notes above first — they feed into the research. Then build the profile.</div>';
+  html+='<button onclick="enrichBuildProfile('+idx+')" id="enrich-build-btn" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">🔍 Build Profile</button>';
+  html+='</div>';
+
+  // ── Bottom nav ──
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-top:6px">';
+  html+='<button onclick="enrichMarkDone('+idx+')" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.76rem">✓ Done (no profile)</button>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<button onclick="enrichSkipLater()" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.76rem">↪ Skip for later</button>';
+  html+='<button onclick="enrichNext()" style="padding:8px 16px;background:var(--surf2);border:1px solid var(--border2);color:var(--txt);border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:500">Next →</button>';
+  html+='</div></div>';
+
+  body.innerHTML=html;
+  document.getElementById('enrichOverlay').scrollTop=0;
+}
+
+// Reusable textarea + 🎤 voice button
+function _enrichTextareaWithVoice(id, value, placeholder, rows){
+  return '<div style="position:relative">'
+    +'<textarea id="'+id+'" rows="'+rows+'" placeholder="'+placeholder+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+value+'</textarea>'
+    +'<button onclick="enrichToggleVoice(\''+id+'\',this)" title="Dictate (browser speech-to-text)" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎤</button>'
+    +'</div>';
+}
+
+// ── Voice dictation via Web Speech API (free, on-device/browser) ──
+function enrichToggleVoice(targetId, btn){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Speech-to-text isn\u2019t supported in this browser. On iPhone, tap the 🎤 on your keyboard instead. Chrome on Android/desktop works here.');return;}
+  // If already recording into this target, stop it
+  if(_enrichRecog && _enrichRecogTarget===targetId){_enrichStopVoice();return;}
+  _enrichStopVoice(); // stop any other
+  const ta=document.getElementById(targetId);
+  if(!ta)return;
+  const recog=new SR();
+  recog.lang='en-US';
+  recog.continuous=true;
+  recog.interimResults=true;
+  const baseText=ta.value?ta.value.replace(/\s+$/,'')+' ':'';
+  let finalAppend='';
+  recog.onresult=(e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const tr=e.results[i];
+      if(tr.isFinal)finalAppend+=tr[0].transcript;
+      else interim+=tr[0].transcript;
+    }
+    ta.value=baseText+finalAppend+interim;
+  };
+  recog.onerror=(e)=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed')alert('Microphone permission denied. Allow mic access for this site and try again.'); _enrichStopVoice(); };
+  recog.onend=()=>{ if(_enrichRecog===recog){ btn.style.background='var(--surf,#fff)'; btn.textContent='🎤'; _enrichRecog=null; _enrichRecogTarget=null; } };
+  recog.start();
+  _enrichRecog=recog; _enrichRecogTarget=targetId;
+  btn.style.background='var(--red,#dc2626)'; btn.textContent='⏹';
+}
+function _enrichStopVoice(){
+  if(_enrichRecog){ try{_enrichRecog.stop();}catch(e){} _enrichRecog=null; _enrichRecogTarget=null; }
+  // reset any active mic buttons
+  document.querySelectorAll('#enrichBody button').forEach(b=>{ if(b.textContent==='⏹'){b.textContent='🎤';b.style.background='var(--surf,#fff)';} });
+}
+
+// ── AI cleanup of the new-note dictation ──
+async function enrichCleanup(btn){
+  const ta=document.getElementById('enrich-newnote');
+  if(!ta||!ta.value.trim()){alert('Nothing to clean up yet — dictate or type a note first.');return;}
+  if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key (stored in this browser only):');if(!k)return;ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
+  const orig=btn.textContent; btn.textContent='✨ …'; btn.disabled=true;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:500,
+        system:'You tidy a rabbi\u2019s rough dictated donor note into a clean, concise note. Fix grammar and remove filler words and false starts. Keep ALL facts, names, numbers and dates. Do not invent anything. Do not add commentary or headings. Return ONLY the cleaned note text.',
+        messages:[{role:'user',content:ta.value}]
+      })
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const cleaned=d.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    if(cleaned)ta.value=cleaned;
+  }catch(e){alert('Cleanup failed: '+e.message);}
+  btn.textContent=orig; btn.disabled=false;
+}
+
+// ── Save handlers (reuse existing tables via sb()) ──
+async function enrichSaveHouseholdNotes(idx,btn){
+  const h=households[idx];
+  const text=document.getElementById('enrich-hhnotes').value;
+  const orig=btn.textContent; btn.disabled=true;
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:text})});
+    h.notes=text;
+    btn.textContent='✓ Saved'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1600);
+  }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
+}
+
+async function enrichSaveNewNote(idx,btn){
+  const h=households[idx];
+  const text=document.getElementById('enrich-newnote').value.trim();
+  if(!text){alert('Write or dictate something first.');return;}
+  const members=h.members||[];
+  if(!members.length){alert('This household has no contacts to attach a note to.');return;}
+  // Which people to attach to
+  let targetIds;
+  if(members.length>1){
+    targetIds=[...document.querySelectorAll('.enrich-note-member:checked')].map(cb=>cb.value);
+    if(!targetIds.length){alert('Pick at least one person to attach the note to.');return;}
+  }else{
+    targetIds=[members[0].id];
+  }
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  const today=new Date().toISOString().split('T')[0];
+  try{
+    for(const cid of targetIds){
+      await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text})});
+    }
+    document.getElementById('enrich-newnote').value='';
+    if(typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
+    btn.textContent='✓ Saved'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
+    // Re-render to show it in the existing-notes list
+    setTimeout(()=>renderEnrichCard(),700);
+  }catch(e){alert('Save failed: '+e.message);btn.textContent=orig;btn.disabled=false;}
+}
+
+async function enrichSaveInteraction(id,btn){
+  const ta=document.getElementById('enrich-int-'+id);
+  if(!ta)return;
+  const orig=btn.textContent; btn.disabled=true;
+  try{
+    await sb('interactions?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:ta.value})});
+    btn.textContent='✓'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
+  }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
+}
+
+async function enrichSaveDonationNote(id,btn){
+  const inp=document.getElementById('enrich-don-'+id);
+  if(!inp)return;
+  const orig=btn.textContent; btn.disabled=true;
+  try{
+    await sb('donations?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:inp.value})});
+    btn.textContent='✓'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
+  }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
+}
+
+// Quick structured entries — reuse existing modals where present
+function enrichQuickInteraction(idx){
+  if(typeof openLogInteraction==='function'){openLogInteraction(idx);return;}
+  if(typeof logInteraction==='function'){logInteraction(idx);return;}
+  // Fallback: prompt
+  _enrichPromptInteraction(idx);
+}
+async function _enrichPromptInteraction(idx){
+  const h=households[idx];const members=h.members||[];
+  if(!members.length){alert('No contacts.');return;}
+  const type=prompt('Interaction type (e.g. Call, Meeting, Event):','Call');if(!type)return;
+  const note=prompt('Notes for this '+type+':','');if(note===null)return;
+  try{
+    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:members[0].id,type,date:new Date().toISOString().split('T')[0],notes:note||null})});
+    renderEnrichCard();
+  }catch(e){alert('Failed: '+e.message);}
+}
+function enrichQuickGiving(idx){
+  // A "giving note" = a Note tagged about giving; donations themselves come from CiviCRM import
+  const ta=document.getElementById('enrich-newnote');
+  if(ta){ta.value=(ta.value?ta.value+'\n':'')+'[Giving] ';ta.focus();}
+}
+
+// ── Build profile, then offer review or advance ──
+async function enrichBuildProfile(idx, hints){
+  const zone=document.getElementById('enrich-profile-zone');
+  const btn=document.getElementById('enrich-build-btn');
+  if(btn){btn.disabled=true;btn.textContent='🔍 Researching… (15-20s)';}
+  // Determine hints: explicit correction > previously stored searchHints > none
+  const h=households[idx];
+  let useHints=hints;
+  if(useHints===undefined){
+    useHints=(h.profile_data&&h.profile_data.searchHints)||'';
+  }
+  try{
+    await buildProfile(idx, useHints||'__skip');
+  }catch(e){
+    if(zone)zone.innerHTML+='<div style="color:var(--red);font-size:.76rem;margin-top:8px">Build failed: '+_enrichEsc(e.message)+'</div>';
+    if(btn){btn.disabled=false;btn.textContent='🔍 Build Profile';}
+    return;
+  }
+  // buildProfile saved into households[idx].profile_data
+  const p=h.profile_data||{};
+  // Render review UI
+  let rv='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Profile · review &amp; edit</div>';
+  rv+=_enrichProfileField('summary','Summary',p.summary,4);
+  rv+=_enrichProfileField('approach','Approach',p.approach,3);
+  rv+=_enrichProfileField('affinityNotes','Affinity notes',p.affinityNotes,2);
+  rv+=_enrichProfileField('generosityNotes','Generosity notes',p.generosityNotes,2);
+  rv+=_enrichProfileField('capacityNotes','Capacity notes',p.capacityNotes,2);
+  rv+=_enrichProfileField('businessInfo','Business',p.businessInfo,1);
+  rv+=_enrichProfileField('boardMemberships','Boards',p.boardMemberships,1);
+  rv+=_enrichProfileField('philanthropy990','990 giving',p.philanthropy990,1);
+  rv+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
+  rv+='<div style="font-size:.66rem;color:var(--txt3);margin-bottom:4px">Spot a mistake? Describe the correction and rebuild — it\u2019ll steer the new research.</div>';
+  rv+='<input id="enrich-prof-correction" placeholder="e.g. He\u2019s a dentist in Solon, not the father with the same name" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.76rem;color:var(--txt);font-family:inherit">';
+  rv+='<button onclick="enrichRebuildWithCorrection('+idx+',this)" style="margin-top:6px;padding:7px 14px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-size:.78rem">↻ Rebuild with correction</button>';
+  rv+='</div>';
+  rv+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">';
+  rv+='<button onclick="enrichSaveProfileAndNext('+idx+',this)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">💾 Save edits &amp; Next →</button>';
+  rv+='<button onclick="enrichNext()" style="padding:9px 16px;background:var(--surf2);border:1px solid var(--border2);color:var(--txt);border-radius:7px;cursor:pointer;font-size:.82rem">Looks good — Next →</button>';
+  rv+='</div>';
+  if(zone)zone.innerHTML=rv;
+  zone.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// Rebuild the profile with a user correction, persisted as a search hint
+async function enrichRebuildWithCorrection(idx,btn){
+  const inp=document.getElementById('enrich-prof-correction');
+  const correction=inp?inp.value.trim():'';
+  if(!correction){alert('Type what to correct first.');return;}
+  const h=households[idx];
+  const prior=(h.profile_data&&h.profile_data.searchHints)||'';
+  // Accumulate hints so prior corrections aren't lost
+  const combined=prior?(prior+' | '+correction):correction;
+  await enrichBuildProfile(idx, combined);
+}
+
+function _enrichProfileField(key,label,val,rows){
+  return '<div style="margin-bottom:10px">'
+    +'<div style="font-size:.66rem;color:var(--txt3);margin-bottom:3px">'+label+'</div>'
+    +'<textarea id="enrich-prof-'+key+'" rows="'+rows+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.78rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+_enrichEsc(val||'')+'</textarea>'
+    +'</div>';
+}
+
+async function enrichSaveProfileAndNext(idx,btn){
+  const h=households[idx];
+  const p=Object.assign({},h.profile_data||{});
+  ['summary','approach','affinityNotes','generosityNotes','capacityNotes','businessInfo','boardMemberships','philanthropy990'].forEach(k=>{
+    const el=document.getElementById('enrich-prof-'+k);
+    if(el)p[k]=el.value.trim()||null;
+  });
+  // If a correction was typed but not rebuilt, keep it as a hint for next time
+  const corrEl=document.getElementById('enrich-prof-correction');
+  if(corrEl&&corrEl.value.trim()){
+    const prior=p.searchHints||'';
+    p.searchHints=prior?(prior+' | '+corrEl.value.trim()):corrEl.value.trim();
+  }
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  try{
+    const pd=Object.assign({},h.property_data||{},{profile:p});
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:pd})});
+    h.property_data=pd; h.profile_data=p;
+    enrichNext();
+  }catch(e){alert('Save failed: '+e.message);if(btn){btn.disabled=false;btn.textContent='💾 Save edits & Next →';}}
+}
+
+// ── SEARCH MODE HELP ──
+function toggleModeHelp(){
+  const m=document.getElementById('modeHelpModal');
+  m.style.display = m.style.display==='flex' ? 'none' : 'flex';
+}
 </script>
+<!-- ENRICHMENT / BUILD MISSING PROFILES OVERLAY -->
+<div id="enrichOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0">
+      <span style="font-family:'Lora',serif;font-weight:700;font-size:1rem;color:var(--txt);white-space:nowrap">📋 Build Profiles</span>
+      <span id="enrichCounter" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3);white-space:nowrap"></span>
+    </div>
+    <button onclick="closeEnrich()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap">✕ Close</button>
+  </div>
+  <div id="enrichBody" style="max-width:680px;margin:0 auto;padding:16px 16px 80px"></div>
+</div>
+
+  <div style="background:var(--surf,#fff);color:var(--txt);max-width:480px;width:100%;border-radius:12px;border:1px solid var(--border2);padding:22px 24px;font-family:'DM Sans',system-ui,sans-serif;max-height:85vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-family:'Lora',serif;font-size:1.1rem;font-weight:700">Search modes explained</div>
+      <button onclick="toggleModeHelp()" style="background:none;border:none;color:var(--txt2);font-size:1.3rem;cursor:pointer;line-height:1">×</button>
+    </div>
+    <p style="font-size:.82rem;color:var(--txt2);line-height:1.6;margin:0 0 16px">All three answer questions about your people. The difference is <b>how much information they look at</b> before answering — which affects speed, depth, and cost.</p>
+
+    <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🏃 Quick <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~10k tokens · cheapest, fastest</span></div>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Skims a one-line summary of every household — name, family members, AGC score, home value, and total giving. It does <b>not</b> read your notes or interactions. Best for fast roster questions like "who are my top-AGC families in Pepper Pike?" Answers in a single paragraph.</p>
+    </div>
+
+    <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">⚡ Standard <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~35k tokens · the everyday default</span></div>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Everything Quick sees, <b>plus</b> it searches your notes and interactions for the ones most relevant to your question and reads those too. Best for most real questions — "who mentioned wanting to host a Shabbat dinner?" — where the answer lives in your notes. Needs embeddings generated to find notes.</p>
+    </div>
+
+    <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:6px">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🔍 Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow & costly (~$0.30)</span></div>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">The deepest look. Reads the <b>full detailed profile</b> of every household — AGC breakdown, gift history, AI research summary, suggested approach, business info — plus the relevant notes. Use for big cross-database thinking like "build me a major-gift prospect list with talking points for each." Asks you to confirm before running because of the cost.</p>
+    </div>
+
+    <p style="font-size:.72rem;color:var(--txt3);line-height:1.5;margin:14px 0 0">"Tokens" is roughly how much text the AI reads per question. More tokens = more thorough but slower and more expensive. When unsure, start with Standard.</p>
+  </div>
+</div>
 </body>
 </html>
