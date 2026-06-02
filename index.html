@@ -2482,6 +2482,7 @@ function openFullPanel(idx){
       <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
         <button onclick="openPersonChat(${idx})" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500">💬 Chat</button>
         <button onclick="buildProfile(${idx})" style="padding:8px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">${profile?'↺ Rebuild Profile':'🔍 Build Profile'}</button>
+        <button onclick="openEnrich('${households[idx].id}')" style="padding:8px 14px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">📋 Enrich / Add Notes</button>
       </div>
     </div>
 
@@ -3813,12 +3814,51 @@ function buildEnrichQueue(){
   return idxs;
 }
 
-function openEnrich(){
+function openEnrich(targetHouseholdId){
   _enrichQueue=buildEnrichQueue();
   _enrichPos=0;
+  // If a specific household was requested, make sure it's in the queue and jump to it
+  if(targetHouseholdId){
+    let qpos=_enrichQueue.findIndex(idx=>households[idx] && households[idx].id===targetHouseholdId);
+    if(qpos===-1){
+      // Not in the no-profile queue (already has a profile / marked done) — add it to the front
+      const hidx=households.findIndex(h=>h.id===targetHouseholdId);
+      if(hidx!==-1){_enrichQueue.unshift(hidx);qpos=0;}
+    }
+    if(qpos>=0)_enrichPos=qpos;
+  }
   document.getElementById('enrichOverlay').style.display='block';
   document.body.style.overflow='hidden';
+  _enrichPopulateJump();
   renderEnrichCard();
+}
+
+// Populate the jump-to dropdown with all households (sorted by name)
+function _enrichPopulateJump(){
+  const sel=document.getElementById('enrichJump');
+  if(!sel)return;
+  const sorted=households.map((h,idx)=>({h,idx})).filter(x=>x.h.displayName).sort((a,b)=>(a.h.displayName||'').localeCompare(b.h.displayName||''));
+  let opts='<option value="">⤳ Jump to…</option>';
+  sorted.forEach(x=>{
+    const done=_enrichIsDone(x.h)?' ✓':'';
+    opts+='<option value="'+x.h.id+'">'+_enrichEsc(x.h.displayName)+done+'</option>';
+  });
+  sel.innerHTML=opts;
+}
+
+// Jump to a specific household (adds to front of queue if not present)
+function enrichJumpTo(householdId){
+  if(!householdId)return;
+  let qpos=_enrichQueue.findIndex(idx=>households[idx] && households[idx].id===householdId);
+  if(qpos===-1){
+    const hidx=households.findIndex(h=>h.id===householdId);
+    if(hidx!==-1){_enrichQueue.splice(_enrichPos,0,hidx);qpos=_enrichPos;}
+  }
+  if(qpos>=0)_enrichPos=qpos;
+  _enrichStopVoice();
+  renderEnrichCard();
+  // reset the dropdown label
+  const sel=document.getElementById('enrichJump');if(sel)sel.value='';
 }
 
 function closeEnrich(){
@@ -4336,7 +4376,10 @@ function toggleModeHelp(){
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1rem;color:var(--txt);white-space:nowrap">📋 Build Profiles</span>
       <span id="enrichCounter" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3);white-space:nowrap"></span>
     </div>
-    <button onclick="closeEnrich()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap">✕ Close</button>
+    <div style="display:flex;align-items:center;gap:8px;min-width:0">
+      <select id="enrichJump" onchange="enrichJumpTo(this.value)" title="Jump to a specific household" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:6px 8px;border-radius:6px;font-size:.72rem;font-family:inherit;max-width:160px"></select>
+      <button onclick="closeEnrich()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap">✕ Close</button>
+    </div>
   </div>
   <div id="enrichBody" style="max-width:680px;margin:0 auto;padding:16px 16px 80px"></div>
 </div>
