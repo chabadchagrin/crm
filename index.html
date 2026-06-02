@@ -2205,8 +2205,10 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const m=txt.split('```json').join('').split('```').join('').match(/\{[\s\S]*\}/);
-    if(!m)throw new Error('Could not parse response');
-    const profile=JSON.parse(m[0]);
+    if(!m)throw new Error('Could not parse a profile from the response. '+(txt?'Model returned: "'+txt.slice(0,200)+'…"':'The response had no text — possibly a web-search timeout or the request was stopped. Try again.'));
+    let profile;
+    try{ profile=JSON.parse(m[0]); }
+    catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
     profile.builtAt=new Date().toISOString();
 
     // Save to Supabase household
@@ -2219,8 +2221,14 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     if(fp&&fp.style.display!=='none')openFullPanel(idx);
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
-    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
-    <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+    const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
+    if(tabContent&&!fpOpen){
+      tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
+      <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+    }else{
+      // Contact view (or no visible tab): surface the error so it isn't swallowed
+      alert('Profile build failed:\n\n'+e.message);
+    }
   }
 }
 
