@@ -3965,7 +3965,7 @@ async function renderEnrichCard(){
   html+='<button onclick="enrichDumpRecord(this)" id="enrich-dump-mic" title="Record voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎙️</button>';
   html+='</div>';
   html+='<div id="enrich-dump-result" style="margin-top:10px"></div>';
-  html+='<button onclick="enrichProcessDump('+idx+','+JSON.stringify(memberListJson)+')" style="margin-top:10px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">✨ Process</button>';
+  html+='<button id="enrich-process-btn" onclick="enrichProcessDump('+idx+')" style="margin-top:10px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">✨ Process</button>';
   html+='</div>';
 
   // ── Household notes (editable) ──
@@ -4172,7 +4172,7 @@ function enrichDumpRecord(btn){
 }
 
 // ── Brain-dump: AI processing — splits dump into typed chunks for review ──
-async function enrichProcessDump(idx, memberListJsonStr){
+async function enrichProcessDump(idx){
   const ta=document.getElementById('enrich-dump');
   const resultEl=document.getElementById('enrich-dump-result');
   if(!ta||!ta.value.trim()){alert('Nothing to process yet — type or dictate a brain-dump first.');return;}
@@ -4180,7 +4180,7 @@ async function enrichProcessDump(idx, memberListJsonStr){
   const h=households[idx];
   const members=h.members||[];
   const dumpText=ta.value.trim();
-  const processBtn=document.querySelector('button[onclick^="enrichProcessDump"]');
+  const processBtn=document.getElementById('enrich-process-btn');
   if(processBtn){processBtn.disabled=true;processBtn.textContent='✨ Processing…';}
   resultEl.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:6px 0">Analyzing…</div>';
   try{
@@ -4213,6 +4213,7 @@ Return ONLY a JSON array, no markdown, no explanation:
     try{chunks=JSON.parse(raw.replace(/^```json|^```|```$/gm,'').trim());}
     catch(e){throw new Error('Could not parse AI response. Try again.');}
     // Render confirm panel
+    _enrichPendingChunks=chunks;
     _enrichRenderDumpChunks(idx,chunks,members);
     ta.value='';
   }catch(e){
@@ -4267,16 +4268,19 @@ function _enrichRenderDumpChunks(idx,chunks,members){
     }
     html+='</div></div></div>';
   });
-  html+='<button onclick="_enrichSaveAllChunks('+idx+','+chunks.length+','+JSON.stringify(JSON.stringify(members.map(m=>({id:m.id,name:m.first_name+' '+m.last_name}))))+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">💾 Save All</button>';
+  html+='<button id="enrich-save-all-btn" onclick="_enrichSaveAllChunks('+idx+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">💾 Save All</button>';
   html+='<button onclick="document.getElementById(\'enrich-dump-result\').innerHTML=\'\'" style="margin-top:4px;margin-left:8px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:7px;cursor:pointer;font-size:.78rem">✕ Cancel</button>';
   html+='</div>';
   resultEl.innerHTML=html;
 }
+let _enrichPendingChunks=[];
 
-async function _enrichSaveAllChunks(idx,count,membersJsonStr){
+async function _enrichSaveAllChunks(idx){
   const h=households[idx];
-  const members=JSON.parse(membersJsonStr);
-  const btn=document.querySelector('button[onclick^="_enrichSaveAllChunks"]');
+  const members=h.members||[];
+  const chunks=_enrichPendingChunks;
+  const count=chunks.length;
+  const btn=document.getElementById('enrich-save-all-btn');
   if(btn){btn.disabled=true;btn.textContent='Saving…';}
   const today=new Date().toISOString().split('T')[0];
   let saved=0,errors=0;
