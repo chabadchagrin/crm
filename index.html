@@ -2418,6 +2418,27 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx);
     const fp2=document.getElementById('fullPanel');
     if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
+
+    // Post-build spouse add card — show if profile.spouseFound and still solo household
+    if(profile.spouseFound?.firstName&&h.members.length===1){
+      const sf=profile.spouseFound;
+      const spouseCardHtml=`<div id="spouseAddCard-${idx}" style="margin-top:10px;border:1px solid var(--border2);border-radius:8px;padding:12px 14px;background:var(--surf2)">
+        <div style="font-size:.75rem;color:var(--txt);margin-bottom:8px">👫 Add <b>${sf.firstName} ${sf.lastName}</b> to this household as a contact?</div>
+        <div style="display:flex;gap:7px">
+          <button onclick="_spouseAdd(${idx},'${sf.firstName.replace(/'/g,"\\'")}','${(sf.lastName||'').replace(/'/g,"\\'")}','${(sf.gender||'').replace(/'/g,"\\'")}',this)" style="padding:5px 13px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.73rem">➕ Add ${sf.firstName}</button>
+          <button onclick="document.getElementById('spouseAddCard-${idx}')?.remove()" style="padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;font-size:.73rem">✕ Dismiss</button>
+        </div>
+      </div>`;
+      // Inject into sidebar tab and full panel if open
+      const sidebarTab=document.getElementById(`tabcontent-profile-${idx}`);
+      if(sidebarTab)sidebarTab.insertAdjacentHTML('beforeend',spouseCardHtml);
+      const fpEl=document.getElementById(`fullpanel-profile-${idx}`);
+      if(fpEl&&document.getElementById('fullPanel')?.style.display!=='none'){
+        // Clone card with distinct id for full panel
+        const fpCard=spouseCardHtml.replace(/spouseAddCard-${idx}/g,`spouseAddCard-fp-${idx}`).replace(`this)`,`this,'fp')`);
+        fpEl.insertAdjacentHTML('beforeend',fpCard);
+      }
+    }
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
     const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
@@ -2448,7 +2469,6 @@ async function buildProfile(idx, hints=''){
           <input id="buildHintsInput-${idx}" placeholder='e.g. "She works at Cleveland Clinic, not her husband"' value="${(defaultHint||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border2);border-radius:5px;background:var(--bg);color:var(--txt);font-size:.74rem;font-family:inherit;margin-bottom:10px">
           <div style="display:flex;gap:7px;flex-wrap:wrap">
             <button onclick="buildProfile(${idx},document.getElementById('buildHintsInput-${idx}').value||'__skip')" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">🔍 Build</button>
-            <button onclick="buildProfile(${idx},'__skip')" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer;font-size:.75rem">No hints</button>
             <button onclick="${fpOpen?'openFullPanel('+idx+')':'showTab('+idx+',\'profile\')'}" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;font-size:.75rem">Cancel</button>
           </div>
         </div>`;
@@ -2482,7 +2502,9 @@ async function buildProfile(idx, hints=''){
 
   // ── Phase 1: spouse search (solo households only) ──
   if(h.members.length===1){
-    if(tabContent)tabContent.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:.75rem;color:var(--txt3)"><div class="spin" style="width:14px;height:14px;flex-shrink:0"></div>🔍 Searching for spouse…</div>`;
+    const fpOpen1=document.getElementById('fullPanel')?.style.display!=='none';
+    const activeTab1=fpOpen1?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+    if(activeTab1)activeTab1.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:.75rem;color:var(--txt3)"><div class="spin" style="width:14px;height:14px;flex-shrink:0"></div>🔍 Searching for spouse…</div>`;
     const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
     const location=`${h.city||'Chagrin Falls'}, Ohio`;
     const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
@@ -2523,15 +2545,17 @@ Search LinkedIn, Cleveland Jewish News, property records, general web. Return JS
           try{spouseResult=JSON.parse(sstripped.slice(sb1,sb2+1));}catch(e){}
         }
       }
-    }catch(e){/* phase 1 failure is silent — proceed without spouse */}
+    }catch(e){/* phase 1 failure is silent — fall through */}
 
     // If spouse found, show confirmation card and wait for user
     if(spouseResult&&spouseResult.firstName){
       const conf=spouseResult.confidence||'low';
       const confColor=conf==='high'?'var(--green)':'var(--gold)';
-      // Store pending state so button handlers can access it
       window._spousePending={idx,researchHints,interactions,spouseResult};
-      if(tabContent)tabContent.innerHTML=`
+      // Re-query fresh in case DOM changed during async call
+      const fpOpen2=document.getElementById('fullPanel')?.style.display!=='none';
+      const activeTab2=fpOpen2?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+      if(activeTab2)activeTab2.innerHTML=`
         <div style="border:1px solid var(--border2);border-radius:8px;padding:14px;background:var(--surf2)">
           <div style="font-size:.78rem;font-weight:600;color:var(--txt);margin-bottom:6px">👫 Found possible spouse</div>
           <div style="font-size:.82rem;color:var(--txt);margin-bottom:3px"><b>${spouseResult.firstName} ${spouseResult.lastName}</b></div>
@@ -2542,22 +2566,24 @@ Search LinkedIn, Cleveland Jewish News, property records, general web. Return JS
             <button onclick="_spouseConfirm(false)" style="padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer;font-size:.75rem">✕ No, skip</button>
             <button onclick="_spouseEditToggle()" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--accent);border-radius:5px;cursor:pointer;font-size:.75rem">✏️ Different name…</button>
           </div>
-          <div id="spouseEditRow" style="display:none;margin-top:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <div id="spouseEditRow" style="margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap">
             <input id="spouseEditFirst" placeholder="First" value="${spouseResult.firstName}" style="width:100px;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--txt);font-size:.75rem;font-family:inherit">
             <input id="spouseEditLast" placeholder="Last" value="${spouseResult.lastName}" style="width:120px;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--txt);font-size:.75rem;font-family:inherit">
             <button onclick="_spouseConfirmEdit()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Use this name →</button>
           </div>
         </div>`;
-      // Hide the edit row initially (it was rendered with display:none but inline style overrides — force hide)
-      const editRow=tabContent.querySelector('#spouseEditRow');
+      // Force hide edit row (avoid display:none vs inline display conflict)
+      const editRow=document.getElementById('spouseEditRow');
       if(editRow)editRow.style.display='none';
-      return; // pause here — phase 2 triggered by button
+      return;
     }
-    // Spouse not found — fall through silently to phase 2
+    // Spouse not found or error — fall through silently to phase 2
   }
 
-  // ── Phase 2 ──
-  await _buildProfilePhase2(idx, researchHints, null, tabContent, interactions);
+  // ── Phase 2 — re-query tabContent fresh ──
+  const fpOpen3=document.getElementById('fullPanel')?.style.display!=='none';
+  const freshTab=fpOpen3?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+  await _buildProfilePhase2(idx, researchHints, null, freshTab, interactions);
 }
 
 // Spouse confirmation handlers (called from inline buttons)
@@ -2568,10 +2594,11 @@ function _spouseEditToggle(){
 async function _spouseConfirm(yes){
   const p=window._spousePending;
   if(!p)return;
-  const tabContent=document.getElementById(`tabcontent-profile-${p.idx}`);
   const spouse=yes?p.spouseResult:null;
   window._spousePending=null;
-  await _buildProfilePhase2(p.idx, p.researchHints, spouse, tabContent, p.interactions);
+  const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
+  const freshTab=fpOpen?document.getElementById(`fullpanel-profile-${p.idx}`):document.getElementById(`tabcontent-profile-${p.idx}`);
+  await _buildProfilePhase2(p.idx, p.researchHints, spouse, freshTab, p.interactions);
 }
 async function _spouseConfirmEdit(){
   const p=window._spousePending;
@@ -2579,13 +2606,38 @@ async function _spouseConfirmEdit(){
   const first=(document.getElementById('spouseEditFirst')?.value||'').trim();
   const last=(document.getElementById('spouseEditLast')?.value||'').trim();
   if(!first){alert('Please enter a first name.');return;}
-  const tabContent=document.getElementById(`tabcontent-profile-${p.idx}`);
   const spouse={firstName:first,lastName:last,confidence:'manual',source:'Corrected manually'};
   window._spousePending=null;
-  await _buildProfilePhase2(p.idx, p.researchHints, spouse, tabContent, p.interactions);
+  const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
+  const freshTab=fpOpen?document.getElementById(`fullpanel-profile-${p.idx}`):document.getElementById(`tabcontent-profile-${p.idx}`);
+  await _buildProfilePhase2(p.idx, p.researchHints, spouse, freshTab, p.interactions);
+}
+async function _spouseAdd(idx,firstName,lastName,gender,btn){
+  const h=households[idx];
+  if(!h)return;
+  const origTxt=btn.textContent;
+  btn.disabled=true;btn.textContent='Adding…';
+  try{
+    const newContact={household_id:h.id,first_name:firstName,last_name:lastName};
+    if(gender)newContact.gender=gender;
+    const rows=await sb('contacts?select=*',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(newContact)});
+    const created=Array.isArray(rows)?rows[0]:rows;
+    if(created){h.members=h.members||[];h.members.push({...created,donations:[]});}
+    // Replace both card instances (sidebar + full panel) with success message
+    ['spouseAddCard-'+idx,'spouseAddCard-fp-'+idx].forEach(id=>{
+      const card=document.getElementById(id);
+      if(card)card.outerHTML=`<div style="margin-top:8px;font-size:.73rem;color:var(--green);padding:6px 0">✓ ${firstName} ${lastName} added</div>`;
+    });
+    // Refresh contacts tab if visible
+    const contactsTab=document.getElementById(`tabcontent-contacts-${idx}`);
+    if(contactsTab&&contactsTab.offsetParent!==null)loadContactsTab?.(idx);
+  }catch(e){
+    btn.disabled=false;btn.textContent=origTxt;
+    alert('Failed to add contact: '+e.message);
+  }
 }
 
-// ── INTERACTIONS ──
+
 function openLogInteraction(idx){
   const h=households[idx];
   document.getElementById('li_household_idx').value=idx;
