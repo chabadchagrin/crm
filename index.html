@@ -227,6 +227,22 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <!-- ADD NOTE MODAL -->
 <div class="modal-bg" id="addNoteModal" style="display:none">
+  <div class="modal" style="width:460px">
+    <h2>📝 Add Note</h2>
+    <input type="hidden" id="note_household_idx">
+    <label>About</label>
+    <div id="note_contacts" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2)"></div>
+    <label>Date</label>
+    <input type="date" id="note_date">
+    <label>Note</label>
+    <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <div id="note_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveNote()">Save Note</button>
+      <button class="btn btn-sec" onclick="document.getElementById('addNoteModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD SPOUSE MODAL -->
 <div class="modal-bg" id="addSpouseModal" style="display:none">
@@ -244,24 +260,6 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="saveSpouseContact()">➕ Add to Household</button>
       <button class="btn btn-sec" onclick="document.getElementById('addSpouseModal').style.display='none'">Cancel</button>
-    </div>
-  </div>
-</div>
-
-
-  <div class="modal" style="width:460px">
-    <h2>📝 Add Note</h2>
-    <input type="hidden" id="note_household_idx">
-    <label>About</label>
-    <div id="note_contacts" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2)"></div>
-    <label>Date</label>
-    <input type="date" id="note_date">
-    <label>Note</label>
-    <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
-    <div id="note_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
-    <div class="modal-btns">
-      <button class="btn btn-pri" onclick="saveNote()">Save Note</button>
-      <button class="btn btn-sec" onclick="document.getElementById('addNoteModal').style.display='none'">Cancel</button>
     </div>
   </div>
 </div>
