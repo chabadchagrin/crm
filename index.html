@@ -2537,6 +2537,7 @@ async function buildProfile(idx, hints=''){
     const location=`${h.city||'Chagrin Falls'}, Ohio`;
     const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
     let spouseResult=null;
+    let phase1Error=null;
     try{
       const sr=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
@@ -2548,10 +2549,14 @@ async function buildProfile(idx, hints=''){
         },
         body:JSON.stringify({
           model:'claude-sonnet-4-5',
-          max_tokens:500,
+          max_tokens:1000,
           tools:[{type:'web_search_20250305',name:'web_search'}],
-          system:`You are searching for the spouse or partner of a person. Search the web only. Return ONLY a raw JSON object, nothing else.
-If a spouse or partner is found: {"firstName":"Jane","lastName":"Smith","confidence":"high","source":"one-line explanation of where found"}
+          system:`You are finding the spouse or partner of a person for a rabbi's CRM. 
+
+CRITICAL: First check the HOUSEHOLD NOTES and PRIVATE NOTES provided — the spouse may already be named there. If you find a spouse name in the notes, use that with confidence "high" and source "Stated in rabbi's household notes". Only search the web if the notes don't contain the answer.
+
+Return ONLY a raw JSON object, nothing else.
+If found: {"firstName":"Jane","lastName":"Smith","confidence":"high","source":"one-line explanation"}
 If nothing found: {"firstName":null}
 No markdown. No explanation. Just the JSON object.`,
           messages:[{role:'user',content:`Find the spouse or partner of this person.
@@ -2559,21 +2564,42 @@ No markdown. No explanation. Just the JSON object.`,
 NAME: ${fullName}
 LOCATION: ${location}
 HOME VALUE: ${homeVal}
-HOUSEHOLD NOTES: ${h.notes&&h.notes.trim()?h.notes.trim():'None'}
 
-Search LinkedIn, Cleveland Jewish News, property records, general web. Return JSON only.`}]
+HOUSEHOLD NOTES (check here first):
+${h.notes&&h.notes.trim()?h.notes.trim():'None'}
+
+PRIVATE NOTES (check here first):
+${interactions.filter(i=>i.type==='Note').slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join('\n')||'None'}
+
+If not found in notes above, search LinkedIn, Cleveland Jewish News, property records, general web. Return JSON only.`}]
         })
       });
       const sd=await sr.json();
-      if(!sd.error){
+      console.log('[Phase1] raw response:', JSON.stringify(sd).slice(0,500));
+      if(sd.error){
+        phase1Error='API error: '+sd.error.message;
+      }else{
         const stxt=sd.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+        console.log('[Phase1] text content:', stxt.slice(0,300));
         const sstripped=stxt.replace(/```json/g,'').replace(/```/g,'').trim();
         const sb1=sstripped.indexOf('{'),sb2=sstripped.lastIndexOf('}');
         if(sb1>=0&&sb2>sb1){
-          try{spouseResult=JSON.parse(sstripped.slice(sb1,sb2+1));}catch(e){}
+          try{spouseResult=JSON.parse(sstripped.slice(sb1,sb2+1));}
+          catch(pe){phase1Error='JSON parse failed: '+pe.message;}
+        }else{
+          phase1Error='No JSON found in response: '+stxt.slice(0,100);
         }
       }
-    }catch(e){/* phase 1 failure is silent — fall through */}
+    }catch(e){phase1Error='Fetch error: '+e.message;}
+
+    if(phase1Error){
+      console.warn('[Phase1] spouse search failed:',phase1Error);
+      // Show briefly in spinner area then fall through
+      const fpOpenE=document.getElementById('fullPanel')?.style.display!=='none';
+      const errTab=fpOpenE?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+      if(errTab)errTab.innerHTML=`<div style="font-size:.7rem;color:var(--txt3);padding:6px 0">⚠ Spouse search failed (${phase1Error}) — proceeding to profile build…</div>`;
+      await new Promise(r=>setTimeout(r,1500));
+    }
 
     // If spouse found, show confirmation card and wait for user
     if(spouseResult&&spouseResult.firstName){
