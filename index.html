@@ -3160,8 +3160,8 @@ Return ONLY valid JSON, no markdown fences:
   "builtAt": "${new Date().toISOString()}",
   "searchHints": "${researchHints||''}"
 }
-NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.`,
-        messages:[{role:'user',content:`Enrich this contact profile with public research:
+NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.\n\nFINAL OUTPUT RULE: After all web searches are complete, your text response MUST be a single raw JSON object only — starting with { and ending with }. No sentences before or after the JSON. No markdown. No search narration. Just the JSON.`,
+        messages:[{role:'user',content:`Enrich this contact profile with public research. After all your research is complete, output ONLY a raw JSON object — no text before or after the JSON, no markdown, just the object starting with { and ending with }.
 
 NAME: ${fullName}
 LOCATION: ${location}
@@ -4466,7 +4466,14 @@ async function deployToGitHub(){
   document.body.appendChild(statusEl);
   try{
     const src=document.documentElement.outerHTML;
-    const encoded=btoa(unescape(encodeURIComponent(src)));
+    // Safe base64 encoding that handles Hebrew and other Unicode
+    const bytes=new TextEncoder().encode(src);
+    let binary='';
+    const chunkSize=8192;
+    for(let i=0;i<bytes.length;i+=chunkSize){
+      binary+=String.fromCharCode(...bytes.subarray(i,i+chunkSize));
+    }
+    const encoded=btoa(binary);
     statusEl.textContent='🚀 Getting file SHA…';
     const infoResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH,{
       headers:{Authorization:'Bearer '+pat,'Accept':'application/vnd.github+json'}
