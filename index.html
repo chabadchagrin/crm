@@ -1994,16 +1994,22 @@ function _profileStaleness(p, idx, newInteractions, newDonations){
   // Returns {suggestFull, suggestSoft, monthsOld, newInteractions, newDonations}
   const lastUpdated=p.softBuiltAt&&p.softBuiltAt>p.builtAt?p.softBuiltAt:p.builtAt;
   if(!lastUpdated)return{suggestFull:false,suggestSoft:false,monthsOld:null,newInteractions:0,newDonations:0};
+  // Suppress badge entirely if built within the last 2 minutes
+  if(Date.now()-new Date(lastUpdated)<120000)
+    return{suggestFull:false,suggestSoft:false,monthsOld:0,newInteractions:0,newDonations:0};
   const ms=Date.now()-new Date(lastUpdated);
   const monthsOld=ms/(1000*60*60*24*30.44);
   const h=households[idx];
   const agc=getAGCScore(h);
   const g=getGivingStats(h);
-  // Count new donations after lastUpdated (always available)
   const lastTs=lastUpdated;
+  // Count new donations — prefer created_at over date if present
   const newDons=(newDonations!=null)?newDonations:(()=>{
     let c=0;
-    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d.date&&d.date>lastTs.slice(0,10))c++;}));
+    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
+      const entryDate=d.created_at?d.created_at.slice(0,10):d.date;
+      if(entryDate&&entryDate>lastTs.slice(0,10))c++;
+    }));
     return c;
   })();
   const newInts=(newInteractions!=null)?newInteractions:0;
@@ -2012,9 +2018,9 @@ function _profileStaleness(p, idx, newInteractions, newDonations){
   return{suggestFull,suggestSoft,monthsOld:Math.floor(monthsOld),newInteractions:newInts,newDonations:newDons};
 }
 
-function buildProfileDisplay(p, idx, newInteractions){
+function buildProfileDisplay(p, idx, newInteractions, newDonations){
   const scoreColor=p.score>=70?'var(--green)':p.score>=40?'var(--gold)':'var(--red)';
-  const stale=_profileStaleness(p,idx,newInteractions??null,null);
+  const stale=_profileStaleness(p,idx,newInteractions??null,newDonations??null);
   const lastUpdated=p.softBuiltAt&&p.softBuiltAt>p.builtAt?p.softBuiltAt:p.builtAt;
   const badgeHtml=stale.suggestFull
     ?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:8px">🔍 Profile is ${stale.monthsOld} months old — Full Rebuild suggested</div>`
@@ -2415,7 +2421,7 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     h.profile_data=profile;
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile}})});
     document.getElementById('fullPanelLoading')?.remove();
-    if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx);
+    if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx,0,0);
     const fp2=document.getElementById('fullPanel');
     if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
 
@@ -2673,7 +2679,7 @@ async function saveInteraction(){
     }else{
       // Add mode — create one per checked contact
       for(const contactId of checked){
-        const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null})});
+        const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null,created_at:new Date().toISOString()})});
         }
     }
     // Reset modal to add mode
@@ -2756,7 +2762,7 @@ async function saveNote(){
   const noteDate=date||new Date().toISOString().split('T')[0];
   try{
     for(const contactId of checked){
-      const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text})});
+      const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text,created_at:new Date().toISOString()})});
     }
     document.getElementById('addNoteModal').style.display='none';
     refreshAGCScore(h.id).then(()=>recolorAll());
@@ -2808,7 +2814,10 @@ function openFullPanel(idx){
     const notes=interactions.filter(i=>i.type==='Note');
     const activities=interactions.filter(i=>i.type!=='Note');
     // Compute staleness for badges
-    const fpStale=profile?_profileStaleness(profile,idx,activities.length,null):null;
+    const lastUpdatedTs=profile?(profile.softBuiltAt&&profile.softBuiltAt>profile.builtAt?profile.softBuiltAt:profile.builtAt):null;
+    const newIntCount=lastUpdatedTs?activities.filter(i=>{const d=i.created_at?i.created_at.slice(0,10):i.date;return d&&d>lastUpdatedTs.slice(0,10);}).length:0;
+    const newDonCount=lastUpdatedTs?(h.members||[]).reduce((c,m)=>{return c+(m.donations||[]).filter(d=>{const ed=d.created_at?d.created_at.slice(0,10):d.date;return ed&&ed>lastUpdatedTs.slice(0,10);}).length;},0):0;
+    const fpStale=profile?_profileStaleness(profile,idx,newIntCount,newDonCount):null;
     
     // Build unified timeline: notes + activities + donations
     const timeline=[];
