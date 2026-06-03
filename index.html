@@ -3510,7 +3510,7 @@ async function deployToGitHub(){
   statusEl.textContent='🚀 Fetching current file…';
   document.body.appendChild(statusEl);
   try{
-    const src=await fetch(location.href).then(r=>r.text());
+    const src=document.documentElement.outerHTML;
     const encoded=btoa(unescape(encodeURIComponent(src)));
     statusEl.textContent='🚀 Getting file SHA…';
     const infoResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH,{
@@ -4446,8 +4446,8 @@ async function enrichSaveDonationNote(id,btn){
 
 // ── Build profile, then offer review or advance ──
 async function enrichBuildProfile(idx, hints){
-  const zone=document.getElementById('enrich-profile-zone');
-  const btn=document.getElementById('enrich-build-btn');
+  let zone=document.getElementById('enrich-profile-zone');
+  let btn=document.getElementById('enrich-build-btn');
   if(btn){btn.disabled=true;btn.textContent='🔍 Researching… (15-20s)';}
   // Determine hints: explicit correction > previously stored searchHints > none
   const h=households[idx];
@@ -4458,12 +4458,22 @@ async function enrichBuildProfile(idx, hints){
   try{
     await buildProfile(idx, useHints||'__skip');
   }catch(e){
+    zone=document.getElementById('enrich-profile-zone');
     if(zone)zone.innerHTML+='<div style="color:var(--red);font-size:.76rem;margin-top:8px">Build failed: '+_enrichEsc(e.message)+'</div>';
+    btn=document.getElementById('enrich-build-btn');
     if(btn){btn.disabled=false;btn.textContent='🔍 Build Profile';}
     return;
   }
+  // Re-query after async — DOM may have been replaced
+  zone=document.getElementById('enrich-profile-zone');
+  btn=document.getElementById('enrich-build-btn');
   // buildProfile saved into households[idx].profile_data
   const p=h.profile_data||{};
+  if(!p.summary&&!p.approach){
+    if(zone)zone.innerHTML='<div style="color:var(--red);font-size:.76rem;padding:8px">Build returned no profile — household may have no contacts, or the AI response was empty. Try again.</div>'
+      +'<button onclick="enrichBuildProfile('+idx+')" style="margin-top:8px;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem">🔍 Try Again</button>';
+    return;
+  }
   // Render review UI
   let rv='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Profile · review &amp; edit</div>';
   rv+=_enrichProfileField('summary','Summary',p.summary,4);
