@@ -409,6 +409,11 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input type="password" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:'DM Mono',monospace;font-size:.72rem;border-radius:5px">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Used for Zillow property data (Personator age lookup)</div>
       </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">GitHub PAT <span style="font-weight:400;text-transform:none;letter-spacing:0">(for 🚀 Deploy)</span></label>
+        <input type="password" id="apiGitHubInput" placeholder="ghp_..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:'DM Mono',monospace;font-size:.72rem;border-radius:5px">
+        <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Classic token · repo scope · <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">generate at github.com/settings/tokens</a></div>
+      </div>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('apiKeysModal').style.display='none'">Cancel</button>
         <button class="btn btn-pri" onclick="saveAPIKeys()">Save</button>
@@ -3495,10 +3500,9 @@ function goHome(){
 async function deployToGitHub(){
   let pat=localStorage.getItem('crm_gh_pat');
   if(!pat){
-    pat=prompt('GitHub Personal Access Token (repo scope — stored locally only):');
-    if(!pat)return;
-    localStorage.setItem('crm_gh_pat',pat.trim());
-    pat=pat.trim();
+    alert('Add your GitHub PAT in Settings → API Keys first.');
+    openAPIKeys();
+    return;
   }
   const OWNER='chabadchagrin', REPO='crm', PATH='index.html', BRANCH='main';
   const statusEl=document.createElement('div');
@@ -3506,38 +3510,36 @@ async function deployToGitHub(){
   statusEl.textContent='🚀 Fetching current file…';
   document.body.appendChild(statusEl);
   try{
-    // Read own source
     const src=await fetch(location.href).then(r=>r.text());
     const encoded=btoa(unescape(encodeURIComponent(src)));
-    // Get current SHA (required for update)
     statusEl.textContent='🚀 Getting file SHA…';
     const infoResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH,{
       headers:{Authorization:'Bearer '+pat,'Accept':'application/vnd.github+json'}
     });
-    if(!infoResp.ok){
-      if(infoResp.status===401){localStorage.removeItem('crm_gh_pat');throw new Error('Bad token — cleared. Try again.');}
-      throw new Error('GitHub API error: '+infoResp.status);
+    if(infoResp.status===401||infoResp.status===403){
+      localStorage.removeItem('crm_gh_pat');
+      throw new Error('Token rejected ('+infoResp.status+') — cleared. Re-enter in API Keys.');
     }
-    const info=await infoResp.json();
-    const sha=info.sha;
-    // Push
+    if(!infoResp.ok) throw new Error('GitHub API error: '+infoResp.status);
+    const sha=(await infoResp.json()).sha;
     statusEl.textContent='🚀 Pushing to GitHub…';
     const pushResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH,{
       method:'PUT',
       headers:{Authorization:'Bearer '+pat,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
       body:JSON.stringify({message:'Deploy from DAAS CRM '+new Date().toISOString().slice(0,16).replace('T',' '),content:encoded,sha,branch:BRANCH})
     });
-    if(!pushResp.ok){
-      const err=await pushResp.json();
-      throw new Error(err.message||'Push failed: '+pushResp.status);
+    if(pushResp.status===401||pushResp.status===403){
+      localStorage.removeItem('crm_gh_pat');
+      throw new Error('Token rejected on push ('+pushResp.status+') — cleared. Re-enter in API Keys.');
     }
+    if(!pushResp.ok){const e=await pushResp.json();throw new Error(e.message||'Push failed: '+pushResp.status);}
     statusEl.textContent='✅ Deployed! Live in ~60s';
     statusEl.style.color='var(--green)';
   }catch(e){
     statusEl.textContent='❌ '+e.message;
     statusEl.style.color='var(--red)';
   }
-  setTimeout(()=>statusEl.remove(),5000);
+  setTimeout(()=>statusEl.remove(),6000);
 }
 function updateSidebarTiers(){
   const mode=document.getElementById('colorBy')?.value||'value';
@@ -3550,15 +3552,18 @@ function openAPIKeys(){
   document.getElementById('apiAnthropicInput').value=ANTHROPIC_KEY||'';
   document.getElementById('apiOpenAIInput').value=OPENAI_KEY||'';
   document.getElementById('apiRapidInput').value=RAPIDAPI_KEY||'';
+  document.getElementById('apiGitHubInput').value=localStorage.getItem('crm_gh_pat')||'';
   document.getElementById('apiKeysModal').style.display='flex';
 }
 function saveAPIKeys(){
   const ant=document.getElementById('apiAnthropicInput').value.trim();
   const oai=document.getElementById('apiOpenAIInput').value.trim();
   const rap=document.getElementById('apiRapidInput').value.trim();
+  const gh=document.getElementById('apiGitHubInput').value.trim();
   if(ant){ANTHROPIC_KEY=ant;localStorage.setItem('crm_ant_key',ant);}
   if(oai){OPENAI_KEY=oai;localStorage.setItem('crm_oai_key',oai);}
   if(rap){RAPIDAPI_KEY=rap;localStorage.setItem('crm_rapid_key',rap);}
+  if(gh){localStorage.setItem('crm_gh_pat',gh);}else{localStorage.removeItem('crm_gh_pat');}
   document.getElementById('apiKeysModal').style.display='none';
   alert('API keys saved.');
 }
