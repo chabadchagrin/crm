@@ -122,7 +122,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 }
 @media(min-width:769px){.mobile-bar{display:none}}
 </style>
-<script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
+</head>
 <body>
 
 <!-- ADD CONTACT MODAL -->
@@ -454,9 +454,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
-    <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
+    <div class="prog-wrap" id="geoProgress" style="display: none;">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
+      <span class="prog-lbl" id="progLbl">✓ Done</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -509,7 +509,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 
   <div class="main">
-    <div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(-652px, -584px, 0px) scale(2);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-652px, -584px, 0px) scale(1);"><img alt="" src="https://b.tile.openstreetmap.org/11/560/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/561/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/560/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/561/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/559/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 752px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/562/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 752px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/559/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 1008px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/562/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 496px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 496px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/558/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 752px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/563/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 752px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/558/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 1008px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/563/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 1008px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 1264px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/557/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/564/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/557/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/564/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 1264px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(787px, 343px, 0px); z-index: 343; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">1</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 579px, 0px); z-index: 579; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">2</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(630px, 214px, 0px); z-index: 214; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">3</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(746px, 309px, 0px); z-index: 309; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">4</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(789px, 305px, 0px); z-index: 305; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">5</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 286px, 0px); z-index: 286; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">6</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 302px, 0px); z-index: 302; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">7</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(743px, 435px, 0px); z-index: 435; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">9</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(817px, 313px, 0px); z-index: 313; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">10</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(946px, 387px, 0px); z-index: 387; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">11</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(708px, 165px, 0px); z-index: 165; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">12</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(725px, 374px, 0px); z-index: 374; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">13</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 368px, 0px); z-index: 368; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">14</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(806px, 700px, 0px); z-index: 700; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">17</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(856px, 337px, 0px); z-index: 337; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">18</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(663px, 299px, 0px); z-index: 299; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">19</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(854px, 305px, 0px); z-index: 305; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">20</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(723px, 170px, 0px); z-index: 170; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">21</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(792px, 333px, 0px); z-index: 333; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">22</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(822px, 321px, 0px); z-index: 321; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">23</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" aria-describedby="leaflet-tooltip-329" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(680px, 328px, 0px); z-index: 328; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">25</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 484px, 0px); z-index: 484; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">26</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(780px, 355px, 0px); z-index: 355; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">27</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 371px, 0px); z-index: 371; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">28</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(818px, 385px, 0px); z-index: 385; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">31</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(841px, 386px, 0px); z-index: 386; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">33</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 355px, 0px); z-index: 355; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">34</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 168px, 0px); z-index: 168; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">35</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 249px, 0px); z-index: 249; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">36</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(808px, 312px, 0px); z-index: 312; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">37</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(744px, 283px, 0px); z-index: 283; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">38</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(781px, 292px, 0px); z-index: 292; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">39</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(816px, 353px, 0px); z-index: 353; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">40</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(773px, 305px, 0px); z-index: 305; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">41</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(687px, 241px, 0px); z-index: 241; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">42</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(791px, 317px, 0px); z-index: 317; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">43</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(661px, 325px, 0px); z-index: 325; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">44</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(735px, 269px, 0px); z-index: 269; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">45</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(857px, 373px, 0px); z-index: 373; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">47</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 278px, 0px); z-index: 278; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">48</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(632px, 232px, 0px); z-index: 232; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">49</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(834px, 330px, 0px); z-index: 330; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">50</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(762px, 393px, 0px); z-index: 393; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">51</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(807px, 491px, 0px); z-index: 491; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">52</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(809px, 296px, 0px); z-index: 296; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">53</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(951px, 323px, 0px); z-index: 323; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">54</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 324px, 0px); z-index: 324; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">56</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(672px, 222px, 0px); z-index: 222; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">58</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 313px, 0px); z-index: 313; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">59</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(731px, 316px, 0px); z-index: 316; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">60</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(628px, 216px, 0px); z-index: 216; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">62</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(862px, 429px, 0px); z-index: 429; opacity: 1;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">63</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 378px, 0px); z-index: 378; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">65</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(716px, 368px, 0px); z-index: 368; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">66</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 305px, 0px); z-index: 305; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">67</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(868px, 330px, 0px); z-index: 330; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">68</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 346px, 0px); z-index: 346; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">69</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(729px, 283px, 0px); z-index: 283; opacity: 1;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">70</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(728px, 322px, 0px); z-index: 322; opacity: 1;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">71</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(805px, 325px, 0px); z-index: 325; opacity: 1;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">74</div></div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(143604px, 195849px, 0px) scale(1024);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div>
+    <div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(-652px, -584px, 0px) scale(2);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-652px, -584px, 0px) scale(1);"><img alt="" src="https://b.tile.openstreetmap.org/11/560/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/561/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/560/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/561/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/559/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 752px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/562/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 752px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/559/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 1008px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/562/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 496px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 496px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 1264px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/558/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 752px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/563/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 752px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/558/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 1008px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/563/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 1008px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 1264px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/557/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/564/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 752px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/557/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/564/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 1008px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 496px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 496px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 1264px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 1264px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(787px, 343px, 0px); z-index: 343;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">1</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 579px, 0px); z-index: 579;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">2</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(630px, 214px, 0px); z-index: 214;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">3</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(746px, 309px, 0px); z-index: 309;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">4</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(789px, 305px, 0px); z-index: 305;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">5</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 286px, 0px); z-index: 286;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">6</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 302px, 0px); z-index: 302;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">7</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(743px, 435px, 0px); z-index: 435;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">9</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(817px, 313px, 0px); z-index: 313;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">10</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(946px, 387px, 0px); z-index: 387;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">11</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(708px, 165px, 0px); z-index: 165;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">12</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(725px, 374px, 0px); z-index: 374;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">13</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 368px, 0px); z-index: 368;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">14</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(806px, 700px, 0px); z-index: 700;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">17</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(856px, 337px, 0px); z-index: 337;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">18</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(663px, 299px, 0px); z-index: 299;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">19</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(854px, 305px, 0px); z-index: 305;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">20</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(723px, 170px, 0px); z-index: 170;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">21</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(792px, 333px, 0px); z-index: 333;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">22</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(822px, 321px, 0px); z-index: 321;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">23</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(680px, 328px, 0px); z-index: 328;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">25</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 484px, 0px); z-index: 484;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">26</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(780px, 355px, 0px); z-index: 355;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">27</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 371px, 0px); z-index: 371;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">28</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(818px, 385px, 0px); z-index: 385;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">31</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(841px, 386px, 0px); z-index: 386;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">33</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 355px, 0px); z-index: 355;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">34</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 168px, 0px); z-index: 168;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">35</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 249px, 0px); z-index: 249;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">36</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(808px, 312px, 0px); z-index: 312;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">37</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(744px, 283px, 0px); z-index: 283;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">38</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(781px, 292px, 0px); z-index: 292;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">39</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(816px, 353px, 0px); z-index: 353;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">40</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(773px, 305px, 0px); z-index: 305;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">41</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(687px, 241px, 0px); z-index: 241;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">42</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(791px, 317px, 0px); z-index: 317;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">43</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(661px, 325px, 0px); z-index: 325;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">44</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(735px, 269px, 0px); z-index: 269;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">45</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(857px, 373px, 0px); z-index: 373;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">47</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 278px, 0px); z-index: 278;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">48</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(632px, 232px, 0px); z-index: 232;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">49</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(834px, 330px, 0px); z-index: 330;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">50</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(762px, 393px, 0px); z-index: 393;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">51</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" aria-describedby="leaflet-tooltip-329" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(807px, 491px, 0px); z-index: 491;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">52</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(809px, 296px, 0px); z-index: 296;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">53</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(951px, 323px, 0px); z-index: 323;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">54</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 324px, 0px); z-index: 324;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">56</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(672px, 222px, 0px); z-index: 222;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">58</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 313px, 0px); z-index: 313;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">59</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(731px, 316px, 0px); z-index: 316;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">60</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(628px, 216px, 0px); z-index: 216;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">62</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(862px, 429px, 0px); z-index: 429;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">63</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 378px, 0px); z-index: 378;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">65</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(716px, 368px, 0px); z-index: 368;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">66</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 305px, 0px); z-index: 305;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">67</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(868px, 330px, 0px); z-index: 330;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">68</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 346px, 0px); z-index: 346;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">69</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(729px, 283px, 0px); z-index: 283;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">70</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(728px, 322px, 0px); z-index: 322;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">71</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(805px, 325px, 0px); z-index: 325;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">74</div></div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(143604px, 195849px, 0px) scale(1024);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div>
     <div class="sidebar">
       <div class="mobile-bar">
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
@@ -1128,18 +1128,18 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(47)">
-      <div class="pindot ">48</div>
+      <div class="pindot gold">48</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Melissa Morton</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">155 Hunting Trail, Chagrin Falls 44022</div>
         <div class="cphone">8583442878</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 26</div>
+          <div class="cval gold">$886,500</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 48</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $18 · 1 gift</div>
       </div>
-      
+      <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(48)">
       <div class="pindot ">49</div>
       <div style="flex:1;min-width:0">
@@ -2935,15 +2935,46 @@ async function saveDonation(){
 }
 
 // ── PROFILE BUILDER ──
-function buildProfileDisplay(p, idx){
+function _profileStaleness(p, idx, newInteractions, newDonations){
+  // Returns {suggestFull, suggestSoft, monthsOld, newInteractions, newDonations}
+  const lastUpdated=p.softBuiltAt&&p.softBuiltAt>p.builtAt?p.softBuiltAt:p.builtAt;
+  if(!lastUpdated)return{suggestFull:false,suggestSoft:false,monthsOld:null,newInteractions:0,newDonations:0};
+  const ms=Date.now()-new Date(lastUpdated);
+  const monthsOld=ms/(1000*60*60*24*30.44);
+  const h=households[idx];
+  const agc=getAGCScore(h);
+  const g=getGivingStats(h);
+  // Count new donations after lastUpdated (always available)
+  const lastTs=lastUpdated;
+  const newDons=(newDonations!=null)?newDonations:(()=>{
+    let c=0;
+    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d.date&&d.date>lastTs.slice(0,10))c++;}));
+    return c;
+  })();
+  const newInts=(newInteractions!=null)?newInteractions:0;
+  const suggestFull=monthsOld>12||(monthsOld>6&&(agc.total>=70||(g&&g.total>=1000)));
+  const suggestSoft=!suggestFull&&(newInts>=3||newDons>=1);
+  return{suggestFull,suggestSoft,monthsOld:Math.floor(monthsOld),newInteractions:newInts,newDonations:newDons};
+}
+
+function buildProfileDisplay(p, idx, newInteractions){
   const scoreColor=p.score>=70?'var(--green)':p.score>=40?'var(--gold)':'var(--red)';
+  const stale=_profileStaleness(p,idx,newInteractions??null,null);
+  const lastUpdated=p.softBuiltAt&&p.softBuiltAt>p.builtAt?p.softBuiltAt:p.builtAt;
+  const badgeHtml=stale.suggestFull
+    ?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:8px">🔍 Profile is ${stale.monthsOld} months old — Full Rebuild suggested</div>`
+    :stale.suggestSoft
+    ?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:8px">↺ ${stale.newInteractions>0?stale.newInteractions+' new interaction'+(stale.newInteractions>1?'s':'')+(stale.newDonations>0?' + '+stale.newDonations+' donation'+(stale.newDonations>1?'s':''):''):stale.newDonations+' new donation'+(stale.newDonations>1?'s':'')} since last update — Quick Update suggested</div>`
+    :'';
   return`
+    ${badgeHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Prospect Profile</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${p.builtAt?new Date(p.builtAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${lastUpdated?new Date(lastUpdated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
         <button onclick="editProfileInline(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
-        <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Refresh</button>
+        <button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>
+        <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">🔍 Full Rebuild</button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--surf2);border-radius:6px">
@@ -3066,32 +3097,165 @@ async function rebuildProfileWithCorrection(idx){
   buildProfile(idx, combined||'__skip');
 }
 
-async function buildProfile(idx, hints=''){
-  if(!hints&&hints!=='__skip'){
-    // Show hints dialog first
-    const h0=households[idx];
-    const existingProfile=h0.profile_data;
-    const defaultHint=existingProfile?.searchHints||'';
-    const userHints=prompt(
-      (existingProfile?'Rebuilding profile for '+h0.displayName+'.\n\nPrevious hints: '+defaultHint:'Building profile for '+h0.displayName+'.')+
-      '\n\nOptional: Add research hints to steer the search\n(e.g. "He is a dentist in Solon, not his father who is also named Michael", "Focus on the wife who is the main philanthropist", "She works at Cleveland Clinic"):',
-      defaultHint
-    );
-    if(userHints===null)return; // user cancelled
-    return buildProfile(idx, userHints||'__skip');
-  }
-  const researchHints=hints==='__skip'?'':hints;
+async function buildProfileSoft(idx){
   if(!ANTHROPIC_KEY){
-    const k=prompt('Enter your Anthropic API key to build profiles (stored in this browser only):');
+    const k=prompt('Enter your Anthropic API key (stored in this browser only):');
     if(!k)return;
     ANTHROPIC_KEY=k.trim();
     localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
   }
   const h=households[idx];
-  const btn=document.getElementById(`buildProfileBtn-${idx}`);
+  const existingProfile=h.profile_data;
+  if(!existingProfile){alert('No existing profile to update. Run a Full Build first.');return;}
+
   const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
+  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Quick Update for ${h.displayName}…</span></div>`;
+  document.getElementById('fullPanelLoading')?.remove();
+  const fp=document.getElementById('fullPanel');
+  if(fp&&fp.style.display!=='none'){
+    const loadDiv=document.createElement('div');
+    loadDiv.id='fullPanelLoading';
+    loadDiv.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;padding:10px 16px;border-radius:8px;font-size:.78rem;font-family:DM Sans,sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+    loadDiv.innerHTML='<div class="spin" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Quick Update for '+h.displayName+'…';
+    document.body.appendChild(loadDiv);
+  }
+
+  const primaryMember=h.members?.[0];
+  if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
+  const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
+  const g=getGivingStats(h);
+  const agcScore=getAGCScore(h);
+
+  let interactions=[];
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(memberIds){
+      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=30`);
+      interactions=iRows||[];
+    }
+  }catch(e){}
+
+  const notes_list=interactions.filter(i=>i.type==='Note');
+  const activity_list=interactions.filter(i=>i.type!=='Note');
+
+  // Ground truth fields from existing profile (don't re-research)
+  const {affinityNotes,generosityNotes,capacityNotes,businessInfo,boardMemberships,philanthropy990,pressmentions,approximateAge,fedLevel,score,capacity,builtAt,searchHints}=existingProfile;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':ANTHROPIC_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:2000,
+        system:`You are a donor intelligence assistant for a Chabad rabbi. You are doing a QUICK UPDATE — not a full rebuild. The research fields (affinityNotes, generosityNotes, capacityNotes, businessInfo, boardMemberships, philanthropy990, pressmentions, approximateAge, fedLevel) are GROUND TRUTH from a previous full research session. Do NOT re-research or change them.
+
+Your ONLY job: re-synthesize the "approach" and "summary" fields based on the updated interactions, donations, and notes provided. Everything else must be passed through unchanged.
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "approach": "Updated personalized outreach strategy based on recent interactions",
+  "summary": "Updated 2-3 paragraph narrative incorporating recent activity",
+  "affinityNotes": "(copy from input — unchanged)",
+  "generosityNotes": "(copy from input — unchanged)",
+  "capacityNotes": "(copy from input — unchanged)",
+  "capacity": "(copy from input — unchanged)",
+  "score": (copy from input — unchanged),
+  "fedLevel": (copy from input — unchanged),
+  "businessInfo": "(copy from input — unchanged)",
+  "boardMemberships": "(copy from input — unchanged)",
+  "philanthropy990": "(copy from input — unchanged)",
+  "pressmentions": "(copy from input — unchanged)",
+  "approximateAge": (copy from input — unchanged),
+  "searchHints": "(copy from input — unchanged)"
+}`,
+        messages:[{role:'user',content:`Quick Update for ${fullName}.
+
+EXISTING RESEARCH FIELDS (pass through unchanged):
+affinityNotes: ${affinityNotes||'null'}
+generosityNotes: ${generosityNotes||'null'}
+capacityNotes: ${capacityNotes||'null'}
+businessInfo: ${businessInfo||'null'}
+boardMemberships: ${boardMemberships||'null'}
+philanthropy990: ${philanthropy990||'null'}
+pressmentions: ${pressmentions||'null'}
+approximateAge: ${approximateAge||'null'}
+fedLevel: ${fedLevel||'null'}
+score: ${score||'null'}
+capacity: ${capacity||'null'}
+searchHints: ${searchHints||''}
+
+CURRENT AGC SCORES:
+  Total: ${agcScore.total}/100 | Affinity: ${agcScore.affinity}/35 | Generosity: ${agcScore.generosity}/35 | Capacity: ${agcScore.capacity}/30
+
+GIVING TO CHABAD (updated):
+${g?`Total: $${Math.round(g.total).toLocaleString()} over ${g.count} gifts. Last gift: ${g.lastDate}.
+Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${d.date}${d.notes?' ('+d.notes+')':''}`).join('; ')}`:'No giving history'}
+
+HOUSEHOLD NOTES (authoritative):
+${h.notes&&h.notes.trim()?h.notes.trim():'None'}
+
+PRIVATE NOTES (${notes_list.length}):
+${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None'}
+
+RECENT ACTIVITY (${activity_list.length} interactions):
+${activity_list.length?activity_list.slice(0,15).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}
+
+Re-synthesize ONLY approach and summary based on the above. Return all other fields unchanged.`}]
+      })
+    });
+
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const stripped=txt.replace(/```json/g,'').replace(/```/g,'').trim();
+    const firstBrace=stripped.indexOf('{');
+    const lastBrace=stripped.lastIndexOf('}');
+    const jsonStr=firstBrace>=0&&lastBrace>firstBrace?stripped.slice(firstBrace,lastBrace+1):'';
+    if(!jsonStr)throw new Error('Could not parse response.');
+    let updated;
+    try{updated=JSON.parse(jsonStr);}
+    catch(pe){throw new Error('Malformed JSON in response.');}
+
+    // Preserve builtAt, stamp softBuiltAt
+    updated.builtAt=builtAt;
+    updated.softBuiltAt=new Date().toISOString();
+
+    h.profile_data=updated;
+    await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
+    document.getElementById('fullPanelLoading')?.remove();
+    // Count new interactions for badge
+    const lastTs=updated.softBuiltAt; // just set, so 0 new from here — use old softBuiltAt for display
+    if(tabContent)tabContent.innerHTML=buildProfileDisplay(updated,idx,0);
+    const fp2=document.getElementById('fullPanel');
+    if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
+  }catch(e){
+    document.getElementById('fullPanelLoading')?.remove();
+    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
+      <button onclick="buildProfileSoft(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+    else alert('Quick Update failed:\n\n'+e.message);
+  }
+}
+
+// ── PROFILE BUILD — Phase 2 (full research) ──
+async function _buildProfilePhase2(idx, researchHints, confirmedSpouse, tabContent, interactions){
+  const h=households[idx];
+  const primaryMember=h.members[0];
+  const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
+  const g=getGivingStats(h);
+  const agcScore=getAGCScore(h);
+  const location=`${h.city||'Chagrin Falls'}, Ohio`;
+  const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
+  const notes_list=interactions.filter(i=>i.type==='Note');
+  const activity_list=interactions.filter(i=>i.type!=='Note');
+
+  // Phase 2 loading state
   if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Researching ${h.displayName}… this may take 15-20 seconds</span></div>`;
-  // Show toast in full screen view if open
   document.getElementById('fullPanelLoading')?.remove();
   const fp=document.getElementById('fullPanel');
   if(fp&&fp.style.display!=='none'){
@@ -3102,25 +3266,15 @@ async function buildProfile(idx, hints=''){
     document.body.appendChild(loadDiv);
   }
 
-  // Get primary contact name
-  const primaryMember=h.members?.[0];
-  if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
-  const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
-  const g=getGivingStats(h);
-  const agcScore=getAGCScore(h);
-  // Load recent interactions
-  let interactions=[];
-  try{
-    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
-    if(memberIds){
-      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=30`);
-      interactions=iRows||[];
-    }
-  }catch(e){}
-  const location=`${h.city||'Chagrin Falls'}, Ohio`;
-  const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
-  const notes_list=interactions.filter(i=>i.type==='Note');
-  const activity_list=interactions.filter(i=>i.type!=='Note');
+  const spouseClause=confirmedSpouse
+    ?`\n\nThis is a two-person household. Research both members. Populate "spouseFound" with confirmed spouse details for potential contact creation after the build.`
+    :'';
+  const spouseSchemaLine=confirmedSpouse
+    ?`\n  "spouseFound": {"firstName":"${confirmedSpouse.firstName}","lastName":"${confirmedSpouse.lastName}"} or null,`
+    :'';
+  const membersLine=confirmedSpouse
+    ?`\nHOUSEHOLD MEMBERS: ${fullName}, ${confirmedSpouse.firstName} ${confirmedSpouse.lastName}`
+    :'';
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -3141,7 +3295,7 @@ YOUR ROLE: Search for public information (LinkedIn, 990 filings, Cleveland Jewis
 
 DO NOT re-score. DO NOT second-guess the numbers. DO explain what you found publicly.
 
-CRITICAL — THE RABBI'S NOTES ARE GROUND TRUTH: Any facts in the rabbi's household notes or private notes (names, family relationships, who is whose spouse/parent/child, occupations, personal details) are authoritative and must be treated as correct. NEVER contradict them with web findings. If public research suggests something different from the rabbi's notes (e.g. the notes say a person named Carol is his mother, but the web associates a Carol with him differently), the rabbi's notes win — defer to them and do not assert a conflicting relationship. If you cannot confirm a relationship from the rabbi's notes, do not invent one from the web; describe public findings cautiously and never override a relationship the rabbi has stated.
+CRITICAL — THE RABBI'S NOTES ARE GROUND TRUTH: Any facts in the rabbi's household notes or private notes (names, family relationships, who is whose spouse/parent/child, occupations, personal details) are authoritative and must be treated as correct. NEVER contradict them with web findings. If public research suggests something different from the rabbi's notes (e.g. the notes say a person named Carol is his mother, but the web associates a Carol with him differently), the rabbi's notes win — defer to them and do not assert a conflicting relationship. If you cannot confirm a relationship from the rabbi's notes, do not invent one from the web; describe public findings cautiously and never override a relationship the rabbi has stated.${spouseClause}
 
 Return ONLY valid JSON, no markdown fences:
 {
@@ -3156,14 +3310,14 @@ Return ONLY valid JSON, no markdown fences:
   "boardMemberships": "Jewish Federation board, Cleveland Clinic Foundation" or null,
   "philanthropy990": "Gave $25k to Jewish Federation (2022), $10k to JCC (2021)" or null,
   "pressmentions": "Featured in CJN for $50k gift to Federation (2023)" or null,
-  "approximateAge": 58 or null,
+  "approximateAge": 58 or null,${spouseSchemaLine}
   "builtAt": "${new Date().toISOString()}",
   "searchHints": "${researchHints||''}"
 }
 NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.\n\nFINAL OUTPUT RULE: After all web searches are complete, your text response MUST be a single raw JSON object only — starting with { and ending with }. No sentences before or after the JSON. No markdown. No search narration. Just the JSON.`,
         messages:[{role:'user',content:`Enrich this contact profile with public research. After all your research is complete, output ONLY a raw JSON object — no text before or after the JSON, no markdown, just the object starting with { and ending with }.
 
-NAME: ${fullName}
+NAME: ${fullName}${membersLine}
 LOCATION: ${location}
 HOME VALUE: ${homeVal}
 
@@ -3197,21 +3351,19 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     const firstBrace=stripped.indexOf('{');
     const lastBrace=stripped.lastIndexOf('}');
     const jsonStr=firstBrace>=0&&lastBrace>firstBrace?stripped.slice(firstBrace,lastBrace+1):'';
-    const m=jsonStr?[jsonStr]:null;
-    if(!m)throw new Error('Could not parse a profile from the response. '+(txt?'Model returned: "'+txt.slice(0,200)+'…"':'The response had no text — possibly a web-search timeout or the request was stopped. Try again.'));
+    if(!jsonStr)throw new Error('Could not parse a profile from the response. '+(txt?'Model returned: "'+txt.slice(0,200)+'…"':'The response had no text — possibly a web-search timeout or the request was stopped. Try again.'));
     let profile;
     try{ profile=JSON.parse(jsonStr); }
     catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
     profile.builtAt=new Date().toISOString();
+    delete profile.softBuiltAt;
 
-    // Save to Supabase household
     h.profile_data=profile;
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile}})});
     document.getElementById('fullPanelLoading')?.remove();
     if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx);
-    // Refresh full panel if open
-    const fp=document.getElementById('fullPanel');
-    if(fp&&fp.style.display!=='none')openFullPanel(idx);
+    const fp2=document.getElementById('fullPanel');
+    if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
     const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
@@ -3219,10 +3371,150 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
       tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
       <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     }else{
-      // Contact view (or no visible tab): surface the error so it isn't swallowed
       alert('Profile build failed:\n\n'+e.message);
     }
   }
+}
+
+// ── PROFILE BUILD — entry point ──
+async function buildProfile(idx, hints=''){
+  if(!hints&&hints!=='__skip'){
+    const h0=households[idx];
+    const existingProfile=h0.profile_data;
+    const defaultHint=existingProfile?.searchHints||'';
+    const userHints=prompt(
+      (existingProfile?'Rebuilding profile for '+h0.displayName+'.\n\nPrevious hints: '+defaultHint:'Building profile for '+h0.displayName+'.')+
+      '\n\nOptional: Add research hints to steer the search\n(e.g. "He is a dentist in Solon, not his father who is also named Michael", "Focus on the wife who is the main philanthropist", "She works at Cleveland Clinic"):',
+      defaultHint
+    );
+    if(userHints===null)return;
+    return buildProfile(idx, userHints||'__skip');
+  }
+  const researchHints=hints==='__skip'?'':hints;
+  if(!ANTHROPIC_KEY){
+    const k=prompt('Enter your Anthropic API key to build profiles (stored in this browser only):');
+    if(!k)return;
+    ANTHROPIC_KEY=k.trim();
+    localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);
+  }
+  const h=households[idx];
+  const primaryMember=h.members?.[0];
+  const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
+  if(!primaryMember){if(tabContent)tabContent.innerHTML='<div style="color:var(--red);font-size:.75rem">No contact found.</div>';return;}
+
+  // Pre-fetch interactions now (used by both phases)
+  let interactions=[];
+  try{
+    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+    if(memberIds){
+      const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=30`);
+      interactions=iRows||[];
+    }
+  }catch(e){}
+
+  // ── Phase 1: spouse search (solo households only) ──
+  if(h.members.length===1){
+    if(tabContent)tabContent.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:.75rem;color:var(--txt3)"><div class="spin" style="width:14px;height:14px;flex-shrink:0"></div>🔍 Searching for spouse…</div>`;
+    const fullName=`${primaryMember.first_name} ${primaryMember.last_name}`;
+    const location=`${h.city||'Chagrin Falls'}, Ohio`;
+    const homeVal=h.home_value?`$${Math.round(h.home_value).toLocaleString()}`:'unknown';
+    let spouseResult=null;
+    try{
+      const sr=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':ANTHROPIC_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-5',
+          max_tokens:500,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          system:`You are searching for the spouse or partner of a person. Search the web only. Return ONLY a raw JSON object, nothing else.
+If a spouse or partner is found: {"firstName":"Jane","lastName":"Smith","confidence":"high","source":"one-line explanation of where found"}
+If nothing found: {"firstName":null}
+No markdown. No explanation. Just the JSON object.`,
+          messages:[{role:'user',content:`Find the spouse or partner of this person.
+
+NAME: ${fullName}
+LOCATION: ${location}
+HOME VALUE: ${homeVal}
+HOUSEHOLD NOTES: ${h.notes&&h.notes.trim()?h.notes.trim():'None'}
+
+Search LinkedIn, Cleveland Jewish News, property records, general web. Return JSON only.`}]
+        })
+      });
+      const sd=await sr.json();
+      if(!sd.error){
+        const stxt=sd.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+        const sstripped=stxt.replace(/```json/g,'').replace(/```/g,'').trim();
+        const sb1=sstripped.indexOf('{'),sb2=sstripped.lastIndexOf('}');
+        if(sb1>=0&&sb2>sb1){
+          try{spouseResult=JSON.parse(sstripped.slice(sb1,sb2+1));}catch(e){}
+        }
+      }
+    }catch(e){/* phase 1 failure is silent — proceed without spouse */}
+
+    // If spouse found, show confirmation card and wait for user
+    if(spouseResult&&spouseResult.firstName){
+      const conf=spouseResult.confidence||'low';
+      const confColor=conf==='high'?'var(--green)':'var(--gold)';
+      // Store pending state so button handlers can access it
+      window._spousePending={idx,researchHints,interactions,spouseResult};
+      if(tabContent)tabContent.innerHTML=`
+        <div style="border:1px solid var(--border2);border-radius:8px;padding:14px;background:var(--surf2)">
+          <div style="font-size:.78rem;font-weight:600;color:var(--txt);margin-bottom:6px">👫 Found possible spouse</div>
+          <div style="font-size:.82rem;color:var(--txt);margin-bottom:3px"><b>${spouseResult.firstName} ${spouseResult.lastName}</b></div>
+          <div style="font-size:.68rem;color:var(--txt2);margin-bottom:4px">${spouseResult.source||''}</div>
+          <div style="font-size:.65rem;font-family:'DM Mono',monospace;color:${confColor};margin-bottom:12px">Confidence: ${conf}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center">
+            <button onclick="_spouseConfirm(true)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">✓ Yes, include ${spouseResult.firstName}</button>
+            <button onclick="_spouseConfirm(false)" style="padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer;font-size:.75rem">✕ No, skip</button>
+            <button onclick="_spouseEditToggle()" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--accent);border-radius:5px;cursor:pointer;font-size:.75rem">✏️ Different name…</button>
+          </div>
+          <div id="spouseEditRow" style="display:none;margin-top:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input id="spouseEditFirst" placeholder="First" value="${spouseResult.firstName}" style="width:100px;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--txt);font-size:.75rem;font-family:inherit">
+            <input id="spouseEditLast" placeholder="Last" value="${spouseResult.lastName}" style="width:120px;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--txt);font-size:.75rem;font-family:inherit">
+            <button onclick="_spouseConfirmEdit()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Use this name →</button>
+          </div>
+        </div>`;
+      // Hide the edit row initially (it was rendered with display:none but inline style overrides — force hide)
+      const editRow=tabContent.querySelector('#spouseEditRow');
+      if(editRow)editRow.style.display='none';
+      return; // pause here — phase 2 triggered by button
+    }
+    // Spouse not found — fall through silently to phase 2
+  }
+
+  // ── Phase 2 ──
+  await _buildProfilePhase2(idx, researchHints, null, tabContent, interactions);
+}
+
+// Spouse confirmation handlers (called from inline buttons)
+function _spouseEditToggle(){
+  const row=document.getElementById('spouseEditRow');
+  if(row)row.style.display=row.style.display==='none'?'flex':'none';
+}
+async function _spouseConfirm(yes){
+  const p=window._spousePending;
+  if(!p)return;
+  const tabContent=document.getElementById(`tabcontent-profile-${p.idx}`);
+  const spouse=yes?p.spouseResult:null;
+  window._spousePending=null;
+  await _buildProfilePhase2(p.idx, p.researchHints, spouse, tabContent, p.interactions);
+}
+async function _spouseConfirmEdit(){
+  const p=window._spousePending;
+  if(!p)return;
+  const first=(document.getElementById('spouseEditFirst')?.value||'').trim();
+  const last=(document.getElementById('spouseEditLast')?.value||'').trim();
+  if(!first){alert('Please enter a first name.');return;}
+  const tabContent=document.getElementById(`tabcontent-profile-${p.idx}`);
+  const spouse={firstName:first,lastName:last,confidence:'manual',source:'Corrected manually'};
+  window._spousePending=null;
+  await _buildProfilePhase2(p.idx, p.researchHints, spouse, tabContent, p.interactions);
 }
 
 // ── INTERACTIONS ──
@@ -3395,6 +3687,8 @@ function openFullPanel(idx){
   const renderFull = (interactions) => {
     const notes=interactions.filter(i=>i.type==='Note');
     const activities=interactions.filter(i=>i.type!=='Note');
+    // Compute staleness for badges
+    const fpStale=profile?_profileStaleness(profile,idx,activities.length,null):null;
     
     // Build unified timeline: notes + activities + donations
     const timeline=[];
@@ -3448,7 +3742,9 @@ function openFullPanel(idx){
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
         <button onclick="openPersonChat(${idx})" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500">💬 Chat</button>
-        <button onclick="buildProfile(${idx})" style="padding:8px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">${profile?'↺ Rebuild Profile':'🔍 Build Profile'}</button>
+        ${fpStale&&fpStale.suggestFull?`<div style="padding:4px 8px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.57rem;text-align:center">🔍 ${fpStale.monthsOld}mo old — Full Rebuild suggested</div>`:fpStale&&fpStale.suggestSoft?`<div style="padding:4px 8px;border-radius:20px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);font-family:'DM Mono',monospace;font-size:.57rem;text-align:center">↺ Quick Update suggested</div>`:''}
+        ${profile?`<button onclick="buildProfileSoft(${idx})" style="padding:8px 14px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">↺ Quick Update</button>`:''}
+        <button onclick="buildProfile(${idx})" style="padding:8px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">${profile?'🔍 Full Rebuild':'🔍 Build Profile'}</button>
         <button onclick="openEnrich('${households[idx].id}')" style="padding:8px 14px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">📋 Enrich / Add Notes</button>
       </div>
     </div>
@@ -3468,10 +3764,15 @@ function openFullPanel(idx){
 
     <!-- AI Profile -->
     <div id="fullpanel-profile-${idx}" style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${(fpStale?.suggestFull||fpStale?.suggestSoft)?'6':'12'}px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">🔍 AI Profile</div>
-        ${profile?`<button onclick="editProfileInline(${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>`:''}
+        <div style="display:flex;align-items:center;gap:6px">
+          ${profile?`<button onclick="editProfileInline(${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>`:''}
+          ${profile?`<button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>`:''}
+          <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">${profile?'🔍 Full Rebuild':'🔍 Build'}</button>
+        </div>
       </div>
+      ${fpStale?.suggestFull?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:10px">🔍 Profile is ${fpStale.monthsOld} months old — Full Rebuild suggested</div>`:fpStale?.suggestSoft?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:10px">↺ ${fpStale.newInteractions>0?fpStale.newInteractions+' new interaction'+(fpStale.newInteractions>1?'s':'')+(fpStale.newDonations>0?' + '+fpStale.newDonations+' donation'+(fpStale.newDonations>1?'s':''):''):fpStale.newDonations+' new donation'+(fpStale.newDonations>1?'s':'')} since last update — Quick Update suggested</div>`:''}
       ${profile?`
         ${profile.affinityNotes||profile.generosityNotes||profile.capacityNotes?`
         <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:12px">
@@ -3485,7 +3786,7 @@ function openFullPanel(idx){
         ${profile.boardMemberships?`<div style="font-size:.72rem;margin-bottom:4px">📋 <b>Boards:</b> ${profile.boardMemberships}</div>`:''}
         ${profile.philanthropy990?`<div style="font-size:.72rem;margin-bottom:4px">📄 <b>990:</b> ${profile.philanthropy990}</div>`:''}
         ${profile.pressmentions?`<div style="font-size:.72rem;margin-bottom:4px">📰 <b>Press:</b> ${profile.pressmentions}</div>`:''}
-        ${profile.builtAt?`<div style="font-size:.6rem;color:var(--txt3);margin-top:8px">Built ${fd(profile.builtAt)}</div>`:''}
+        ${profile.builtAt?`<div style="font-size:.6rem;color:var(--txt3);margin-top:8px">Built ${fd(profile.builtAt)}${profile.softBuiltAt?` · Quick Update ${fd(profile.softBuiltAt)}`:''}</div>`:''}
       `:`<div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
     </div>
 
@@ -4473,12 +4774,7 @@ async function deployToGitHub(){
   // Yield to browser so the status text paints before the heavy sync loop
   await new Promise(r=>setTimeout(r,50));
   try{
-    // Remove toast from DOM before capturing so it doesn't get baked into the file
-    statusEl.remove();
     const src=document.documentElement.outerHTML;
-    document.body.appendChild(statusEl);
-    statusEl.textContent='🚀 Encoding file…';
-    await new Promise(r=>setTimeout(r,20));
     const bytes=new TextEncoder().encode(src);
     let binary='';
     for(let i=0;i<bytes.length;i++){binary+=String.fromCharCode(bytes[i]);}
@@ -5589,4 +5885,4 @@ function toggleModeHelp(){
 
 
 
-</body></html>
+<div title="Click to dismiss" style="position: fixed; bottom: 24px; right: 24px; background: var(--surf); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; font-size: 0.82rem; color: var(--txt); z-index: 9999; box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 20px; font-family: &quot;DM Sans&quot;, sans-serif; min-width: 220px; cursor: pointer;">🚀 Encoding file…</div></body></html>
