@@ -227,6 +227,28 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <!-- ADD NOTE MODAL -->
 <div class="modal-bg" id="addNoteModal" style="display:none">
+
+<!-- ADD SPOUSE MODAL -->
+<div class="modal-bg" id="addSpouseModal" style="display:none">
+  <div class="modal" style="width:460px">
+    <h2>👫 Add Spouse / Partner</h2>
+    <p id="addSpouseSubtitle" style="font-size:.78rem;color:var(--txt2);margin-bottom:14px"></p>
+    <input type="hidden" id="asp_household_idx">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>First Name *</label><input type="text" id="asp_first" placeholder="Mark"></div>
+      <div><label>Last Name *</label><input type="text" id="asp_last" placeholder="Kleid"></div>
+      <div><label>Phone</label><input type="tel" id="asp_phone" placeholder="216-555-1234"></div>
+      <div><label>Email</label><input type="email" id="asp_email" placeholder="mark@email.com"></div>
+    </div>
+    <div id="asp_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="saveSpouseContact()">➕ Add to Household</button>
+      <button class="btn btn-sec" onclick="document.getElementById('addSpouseModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
   <div class="modal" style="width:460px">
     <h2>📝 Add Note</h2>
     <input type="hidden" id="note_household_idx">
@@ -2568,8 +2590,8 @@ Search LinkedIn, Cleveland Jewish News, property records, general web. Return JS
           <div style="font-size:.68rem;color:var(--txt2);margin-bottom:4px">${spouseResult.source||''}</div>
           <div style="font-size:.65rem;font-family:'DM Mono',monospace;color:${confColor};margin-bottom:12px">Confidence: ${conf}</div>
           <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center">
-            <button onclick="_spouseConfirm(true)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">✓ Yes, include ${spouseResult.firstName}</button>
-            <button onclick="_spouseConfirm(false)" style="padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer;font-size:.75rem">✕ No, skip</button>
+            <button onclick="_spouseConfirm(true)" style="padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">✓ Yes, add ${spouseResult.firstName}</button>
+            <button onclick="_spouseConfirm(false)" style="padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer;font-size:.75rem">✕ Skip (build only)</button>
             <button onclick="_spouseEditToggle()" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--accent);border-radius:5px;cursor:pointer;font-size:.75rem">✏️ Different name…</button>
           </div>
           <div id="spouseEditRow" style="margin-top:10px;gap:6px;align-items:center;flex-wrap:wrap">
@@ -2597,11 +2619,69 @@ function _spouseEditToggle(){
   const row=document.getElementById('spouseEditRow');
   if(row)row.style.display=row.style.display==='none'?'flex':'none';
 }
+
+function openAddSpouseModal(idx, firstName, lastName){
+  const h=households[idx];
+  document.getElementById('asp_household_idx').value=idx;
+  document.getElementById('asp_first').value=firstName||'';
+  document.getElementById('asp_last').value=lastName||h?.members?.[0]?.last_name||'';
+  document.getElementById('asp_phone').value='';
+  document.getElementById('asp_email').value='';
+  document.getElementById('asp_status').style.display='none';
+  const subtitle=document.getElementById('addSpouseSubtitle');
+  if(subtitle)subtitle.textContent=`Adding to household: ${h?.displayName||''}`;
+  document.getElementById('addSpouseModal').style.display='flex';
+  setTimeout(()=>document.getElementById('asp_first').focus(),80);
+}
+
+async function saveSpouseContact(){
+  const idx=parseInt(document.getElementById('asp_household_idx').value);
+  const h=households[idx];
+  const first=document.getElementById('asp_first').value.trim();
+  const last=document.getElementById('asp_last').value.trim();
+  const phone=document.getElementById('asp_phone').value.trim();
+  const email=document.getElementById('asp_email').value.trim();
+  const status=document.getElementById('asp_status');
+  if(!first){status.style.display='block';status.textContent='First name is required.';return;}
+  if(!last){status.style.display='block';status.textContent='Last name is required.';return;}
+  status.style.display='block';status.textContent='Saving…';
+  try{
+    // POST new contact to existing household
+    const rows=await sb('contacts?select=*',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({household_id:h.id,first_name:first,last_name:last,phone:phone||null,email:email||null,created_at:new Date().toISOString()})});
+    const created=Array.isArray(rows)?rows[0]:rows;
+    if(created){h.members=h.members||[];h.members.push({...created,donations:[]});}
+    // Update joint_name to include spouse
+    const existingFirstNames=(h.members||[]).map(m=>m.first_name);
+    const primaryLast=h.members?.[0]?.last_name||last;
+    const newJointName=existingFirstNames.join(' and ')+' '+primaryLast;
+    await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({joint_name:newJointName})});
+    h.joint_name=newJointName;
+    h.displayName=newJointName;
+    // Replace spouse add card in profile tab if present
+    ['spouseAddCard-'+idx,'spouseAddCard-fp-'+idx].forEach(id=>{
+      const card=document.getElementById(id);
+      if(card)card.outerHTML=`<div style="margin-top:8px;font-size:.73rem;color:var(--green);padding:6px 0">✓ ${first} ${last} added</div>`;
+    });
+    document.getElementById('addSpouseModal').style.display='none';
+    // Refresh sidebar entry name + contacts tab
+    const nameEl=document.getElementById(`sb-name-${idx}`);
+    if(nameEl)nameEl.textContent=newJointName;
+    const contactsTab=document.getElementById(`tabcontent-contacts-${idx}`);
+    if(contactsTab&&contactsTab.offsetParent!==null)loadContactsTab?.(idx);
+    if(document.getElementById('fullPanel')?.style.display!=='none')openFullPanel(idx);
+  }catch(e){status.textContent='⚠ '+e.message;}
+}
+
 async function _spouseConfirm(yes){
   const p=window._spousePending;
   if(!p)return;
   const spouse=yes?p.spouseResult:null;
   window._spousePending=null;
+  // If yes, open the add spouse modal pre-filled — contact creation happens independently
+  if(yes&&spouse?.firstName){
+    openAddSpouseModal(p.idx, spouse.firstName, spouse.lastName||'');
+  }
+  // Always proceed to phase 2 (profile build includes spouse context regardless)
   const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
   const freshTab=fpOpen?document.getElementById(`fullpanel-profile-${p.idx}`):document.getElementById(`tabcontent-profile-${p.idx}`);
   await _buildProfilePhase2(p.idx, p.researchHints, spouse, freshTab, p.interactions);
@@ -2614,6 +2694,7 @@ async function _spouseConfirmEdit(){
   if(!first){alert('Please enter a first name.');return;}
   const spouse={firstName:first,lastName:last,confidence:'manual',source:'Corrected manually'};
   window._spousePending=null;
+  openAddSpouseModal(p.idx, first, last);
   const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
   const freshTab=fpOpen?document.getElementById(`fullpanel-profile-${p.idx}`):document.getElementById(`tabcontent-profile-${p.idx}`);
   await _buildProfilePhase2(p.idx, p.researchHints, spouse, freshTab, p.interactions);
