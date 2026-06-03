@@ -3955,32 +3955,25 @@ async function renderEnrichCard(){
   else html+='<div style="background:var(--surf2);border-radius:8px;padding:7px 11px;font-size:.72rem;color:var(--txt3)">No giving on file</div>';
   html+='</div></div>';
 
-  // ── Household notes (editable) ──
-  html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
-  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Household Notes</div>';
-  html+=_enrichTextareaWithVoice('enrich-hhnotes', _enrichEsc(h.notes||''), 'Anything about this household — family, background, sensitivities…', 3);
-  html+='<button onclick="enrichSaveHouseholdNotes('+idx+',this)" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">Save Notes</button>';
+  // ── Brain-dump box ──
+  const memberListJson=JSON.stringify(members.map(m=>({id:m.id,name:m.first_name+' '+m.last_name})));
+  html+='<div style="background:var(--surf,#fff);border:2px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
+  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:6px;font-weight:600">🧠 Brain Dump</div>';
+  html+='<div style="font-size:.74rem;color:var(--txt3);margin-bottom:9px;line-height:1.4">Dump everything you know — calls, meetings, background, family details, giving context. Claude will sort it out.</div>';
+  html+='<div style="position:relative">';
+  html+='<textarea id="enrich-dump" rows="5" placeholder="e.g. Ran into David at shul Sunday, he asked about the new building. His wife Sarah handles the checkbook. They moved here from Chicago 3 years ago. Pledged $5k last Yom Kippur but hasn\'t paid yet…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>';
+  html+='<button onclick="enrichDumpRecord(this)" id="enrich-dump-mic" title="Record voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎙️</button>';
+  html+='</div>';
+  html+='<div id="enrich-dump-result" style="margin-top:10px"></div>';
+  html+='<button onclick="enrichProcessDump('+idx+','+JSON.stringify(memberListJson)+')" style="margin-top:10px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">✨ Process</button>';
   html+='</div>';
 
-  // ── Add a new note (the main capture box) ──
+  // ── Household notes (editable) ──
   html+='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
-  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Add a Note</div>';
-  if(members.length>1){
-    html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:5px">Attach to:</div>';
-    html+='<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:9px">';
-    members.forEach(m=>{
-      html+='<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;color:var(--txt2)"><input type="checkbox" class="enrich-note-member" value="'+m.id+'" checked style="accent-color:var(--accent)"> '+_enrichEsc(m.first_name+' '+m.last_name)+'</label>';
-    });
-    html+='</div>';
-  }
-  html+=_enrichTextareaWithVoice('enrich-newnote', '', 'Brain-dump what you know. Tap 🎙️ to record a voice note…', 4);
-  html+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center">';
-  html+='<button onclick="enrichSaveNewNote('+idx+',this)" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">＋ Save Note</button>';
-  html+='<button onclick="enrichCleanup(this)" title="Clean up & tidy the dictation with AI (uses tokens)" style="padding:6px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-size:.74rem">✨ Clean up</button>';
-  html+='<span style="flex:1"></span>';
-  html+='<button onclick="enrichQuickInteraction('+idx+')" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem">📝 Log interaction</button>';
-  html+='<button onclick="enrichQuickGiving('+idx+')" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem">💝 Add giving note</button>';
-  html+='</div></div>';
+  html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Household Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.68rem">(timeless background — edited directly)</span></div>';
+  html+='<textarea id="enrich-hhnotes" rows="3" placeholder="Anything about this household — family, background, sensitivities…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+_enrichEsc(h.notes||'')+'</textarea>';
+  html+='<button onclick="enrichSaveHouseholdNotes('+idx+',this)" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.76rem">Save Notes</button>';
+  html+='</div>';
 
   // ── Existing notes (editable) ──
   if(notesItems.length){
@@ -4141,22 +4134,203 @@ async function _enrichProcessRecording(targetId){
   }
 }
 
-// ── AI cleanup of the new-note dictation ──
-async function enrichCleanup(btn){
-  const ta=document.getElementById('enrich-newnote');
-  if(!ta||!ta.value.trim()){alert('Nothing to clean up yet — dictate or type a note first.');return;}
-  if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key (stored in this browser only):');if(!k)return;ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
-  const orig=btn.textContent; btn.textContent='✨ …'; btn.disabled=true;
+// ── Brain-dump: voice recording (same Whisper pipeline, targets enrich-dump) ──
+let _dumpMediaRec=null,_dumpChunks=[],_dumpStream=null;
+function enrichDumpRecord(btn){
+  if(_dumpMediaRec&&_dumpMediaRec.state==='recording'){
+    _dumpMediaRec.stop();
+    return;
+  }
+  if(!navigator.mediaDevices||!window.MediaRecorder){alert('Audio recording not supported here. Try Chrome or type directly.');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _dumpStream=stream;_dumpChunks=[];
+    let mime='';
+    if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
+    else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _dumpMediaRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _dumpMediaRec.ondataavailable=e=>{if(e.data.size>0)_dumpChunks.push(e.data);};
+    _dumpMediaRec.onstop=async()=>{
+      _dumpStream.getTracks().forEach(t=>t.stop());
+      btn.textContent='🎙️';btn.style.background='var(--surf,#fff)';btn.style.boxShadow='';
+      if(!_dumpChunks.length)return;
+      const blob=new Blob(_dumpChunks,{type:mime||'audio/webm'});
+      btn.textContent='⏳';btn.disabled=true;
+      try{
+        if(!OPENAI_KEY){const k=prompt('Enter your OpenAI API key (for Whisper transcription):');if(!k){btn.textContent='🎙️';btn.disabled=false;return;}OPENAI_KEY=k.trim();localStorage.setItem('crm_oai_key',OPENAI_KEY);}
+        const fd=new FormData();fd.append('file',blob,'audio.'+(mime==='audio/mp4'?'mp4':'webm'));fd.append('model','whisper-1');
+        const r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+OPENAI_KEY},body:fd});
+        const d=await r.json();
+        if(d.error)throw new Error(d.error.message);
+        const ta=document.getElementById('enrich-dump');
+        if(ta){ta.value=(ta.value?ta.value+'\n':'')+d.text;ta.focus();}
+      }catch(e){alert('Transcription failed: '+e.message);}
+      btn.textContent='🎙️';btn.disabled=false;
+    };
+    _dumpMediaRec.start();
+    btn.textContent='⏹️';btn.style.background='#fee2e2';btn.style.boxShadow='0 0 0 3px rgba(220,38,38,.3)';
+  }).catch(()=>alert('Microphone permission denied. Allow mic access for this site and try again.'));
+}
+
+// ── Brain-dump: AI processing — splits dump into typed chunks for review ──
+async function enrichProcessDump(idx, memberListJsonStr){
+  const ta=document.getElementById('enrich-dump');
+  const resultEl=document.getElementById('enrich-dump-result');
+  if(!ta||!ta.value.trim()){alert('Nothing to process yet — type or dictate a brain-dump first.');return;}
+  if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key:');if(!k)return;ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
+  const h=households[idx];
+  const members=h.members||[];
+  const dumpText=ta.value.trim();
+  const processBtn=document.querySelector('button[onclick^="enrichProcessDump"]');
+  if(processBtn){processBtn.disabled=true;processBtn.textContent='✨ Processing…';}
+  resultEl.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:6px 0">Analyzing…</div>';
   try{
+    const memberNames=members.map(m=>m.first_name+' '+m.last_name).join(', ')||'(no contacts listed)';
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:500,
-        system:'You tidy a rabbi\u2019s rough dictated donor note into a clean, concise note. Fix grammar and remove filler words and false starts. Keep ALL facts, names, numbers and dates. Do not invent anything. Do not add commentary or headings. Return ONLY the cleaned note text.',
-        messages:[{role:'user',content:ta.value}]
+        max_tokens:1200,
+        system:`You are a smart assistant helping a Chabad rabbi organize donor notes. The rabbi has brain-dumped raw notes about a household. Split the dump into discrete chunks and classify each one. Household members: ${memberNames}.
+
+Rules:
+- "household" = timeless background facts about the family (where they moved from, family composition, personality, kosher/observance level, general relationship dynamics). NOT a dated event.
+- "note" = a specific observation or piece of info tied to a person, but not a datable event/meeting (e.g. he mentioned he's interested in X, she tends to write checks not her husband).
+- "interaction" = a specific dated or datable event (call, meeting, ran into them, email, pledge conversation, event attendance). If a date is implied (Sunday, last week, Yom Kippur) include it as best_date in YYYY-MM-DD format relative to today ${new Date().toISOString().split('T')[0]}; otherwise omit best_date.
+- For "note" and "interaction", assign person_id from the members list by matching first names. If it's about both people or unclear, use the first member's id.
+- Clean up the text: fix grammar, remove filler words, keep all facts/names/numbers/dates.
+- If the whole dump is one coherent thing, return one chunk. Split only when genuinely separate.
+
+Return ONLY a JSON array, no markdown, no explanation:
+[{"type":"household"|"note"|"interaction","text":"cleaned text","person_id":"uuid or null","person_name":"First Last or null","interaction_type":"Call|Meeting|Event|Email|Other (only for interaction type)","best_date":"YYYY-MM-DD or null"}]`,
+        messages:[{role:'user',content:dumpText}]
       })
+    });
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error.message);
+    const raw=d.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    let chunks;
+    try{chunks=JSON.parse(raw.replace(/^```json|^```|```$/gm,'').trim());}
+    catch(e){throw new Error('Could not parse AI response. Try again.');}
+    // Render confirm panel
+    _enrichRenderDumpChunks(idx,chunks,members);
+    ta.value='';
+  }catch(e){
+    resultEl.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:6px 0">Failed: '+_enrichEsc(e.message)+'</div>';
+  }
+  if(processBtn){processBtn.disabled=false;processBtn.textContent='✨ Process';}
+}
+
+function _enrichRenderDumpChunks(idx,chunks,members){
+  const resultEl=document.getElementById('enrich-dump-result');
+  if(!resultEl)return;
+  const typeIcon={household:'🏠',note:'📝',interaction:'🤝'};
+  const typeLabel={household:'Household note',note:'Note',interaction:'Interaction'};
+  const typeColor={household:'rgba(22,163,74,.12)',note:'rgba(37,99,235,.1)',interaction:'rgba(180,83,9,.1)'};
+  const typeBorder={household:'rgba(22,163,74,.3)',note:'rgba(37,99,235,.25)',interaction:'rgba(180,83,9,.25)'};
+  const typeText={household:'var(--green)',note:'var(--accent)',interaction:'var(--gold)'};
+  let html='<div style="border:1px solid var(--border2);border-radius:10px;padding:12px 14px;background:var(--surf2)">';
+  html+='<div style="font-size:.7rem;font-weight:600;color:var(--txt);margin-bottom:10px">Review — uncheck anything you don\'t want to save:</div>';
+  chunks.forEach((c,i)=>{
+    const icon=typeIcon[c.type]||'📝';
+    const label=typeLabel[c.type]||c.type;
+    const bg=typeColor[c.type]||'rgba(37,99,235,.1)';
+    const border=typeBorder[c.type]||'rgba(37,99,235,.25)';
+    const color=typeText[c.type]||'var(--accent)';
+    html+='<div id="dump-chunk-'+i+'" style="margin-bottom:10px;padding:10px 12px;background:'+bg+';border:1px solid '+border+';border-radius:8px">';
+    html+='<div style="display:flex;align-items:flex-start;gap:8px">';
+    html+='<input type="checkbox" id="dump-chk-'+i+'" checked style="accent-color:var(--accent);margin-top:3px;flex-shrink:0">';
+    html+='<div style="flex:1">';
+    html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap">';
+    html+='<span style="font-size:.68rem;font-weight:600;color:'+color+';background:'+bg+';padding:2px 7px;border-radius:10px;border:1px solid '+border+'">'+icon+' '+label+'</span>';
+    if(c.person_name&&c.type!=='household')html+='<span style="font-size:.68rem;color:var(--txt3)">→ '+_enrichEsc(c.person_name)+'</span>';
+    if(c.interaction_type)html+='<span style="font-size:.68rem;color:var(--txt3)">· '+_enrichEsc(c.interaction_type)+'</span>';
+    if(c.best_date)html+='<span style="font-size:.68rem;color:var(--txt3)">· '+c.best_date+'</span>';
+    html+='</div>';
+    // Editable fields
+    html+='<textarea id="dump-text-'+i+'" rows="2" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.6);border:1px solid '+border+';border-radius:6px;padding:7px 8px;font-size:.8rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.4">'+_enrichEsc(c.text)+'</textarea>';
+    // Person picker (for note/interaction on multi-member households)
+    if(c.type!=='household'&&members.length>1){
+      html+='<div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--txt3)">Person:</span>';
+      html+='<select id="dump-person-'+i+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
+      members.forEach(m=>{
+        const sel=(m.id===c.person_id)?' selected':'';
+        html+='<option value="'+m.id+'"'+sel+'>'+_enrichEsc(m.first_name+' '+m.last_name)+'</option>';
+      });
+      html+='</select></div>';
+    }
+    // Date picker for interactions
+    if(c.type==='interaction'){
+      html+='<div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--txt3)">Date:</span>';
+      html+='<input type="date" id="dump-date-'+i+'" value="'+(c.best_date||new Date().toISOString().split('T')[0])+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
+      html+='</div>';
+    }
+    html+='</div></div></div>';
+  });
+  html+='<button onclick="_enrichSaveAllChunks('+idx+','+chunks.length+','+JSON.stringify(JSON.stringify(members.map(m=>({id:m.id,name:m.first_name+' '+m.last_name}))))+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">💾 Save All</button>';
+  html+='<button onclick="document.getElementById(\'enrich-dump-result\').innerHTML=\'\'" style="margin-top:4px;margin-left:8px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:7px;cursor:pointer;font-size:.78rem">✕ Cancel</button>';
+  html+='</div>';
+  resultEl.innerHTML=html;
+}
+
+async function _enrichSaveAllChunks(idx,count,membersJsonStr){
+  const h=households[idx];
+  const members=JSON.parse(membersJsonStr);
+  const btn=document.querySelector('button[onclick^="_enrichSaveAllChunks"]');
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  const today=new Date().toISOString().split('T')[0];
+  let saved=0,errors=0;
+  for(let i=0;i<count;i++){
+    const chk=document.getElementById('dump-chk-'+i);
+    if(!chk||!chk.checked)continue;
+    const text=(document.getElementById('dump-text-'+i)||{}).value||'';
+    if(!text.trim())continue;
+    // Determine type from the chunk's badge color — re-read from data stored in id
+    const chunkEl=document.getElementById('dump-chunk-'+i);
+    // We'll infer type from which person/date elements exist
+    const dateEl=document.getElementById('dump-date-'+i);
+    const personEl=document.getElementById('dump-person-'+i);
+    try{
+      if(dateEl){
+        // interaction
+        const cid=personEl?personEl.value:(members[0]||{}).id;
+        const intType=(chunkEl?chunkEl.querySelector('span[style*="var(--gold)"]'):null);
+        // read interaction_type from the label spans
+        const spans=chunkEl?[...chunkEl.querySelectorAll('span')]:[];
+        let iType='Note';
+        spans.forEach(s=>{if(['Call','Meeting','Event','Email','Other'].includes(s.textContent.trim()))iType=s.textContent.trim();});
+        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim()})});
+      }else if(personEl){
+        // note (person-specific, no date picker)
+        const cid=personEl.value||(members[0]||{}).id;
+        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim()})});
+      }else{
+        // household note — append to existing
+        const existing=h.notes||'';
+        const combined=existing?(existing+'\n\n'+text.trim()):text.trim();
+        await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
+        h.notes=combined;
+      }
+      saved++;
+    }catch(e){errors++;console.error('Chunk '+i+' failed:',e);}
+  }
+  try{if(typeof refreshAGCScore==='function')await refreshAGCScore(h.id);}catch(e){}
+  const resultEl=document.getElementById('enrich-dump-result');
+  if(resultEl)resultEl.innerHTML='<div style="font-size:.82rem;color:var(--green);padding:6px 0">✓ Saved '+saved+' item'+(saved===1?'':'s')+(errors?' ('+errors+' failed)':'')+'</div>';
+  setTimeout(()=>renderEnrichCard(),900);
+}
+
+// ── AI cleanup of the new-note dictation (kept for compatibility) ──
+async function enrichCleanup(btn){
+  const ta=document.getElementById('enrich-newnote')||document.getElementById('enrich-dump');
+  if(!ta||!ta.value.trim()){alert('Nothing to clean up yet.');return;}
+  if(!ANTHROPIC_KEY){const k=prompt('Enter your Anthropic API key:');if(!k)return;ANTHROPIC_KEY=k.trim();localStorage.setItem('crm_ant_key',ANTHROPIC_KEY);}
+  const orig=btn.textContent; btn.textContent='✨ …'; btn.disabled=true;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:'Tidy a rough dictated donor note. Fix grammar, remove filler. Keep all facts. Return ONLY the cleaned text.',messages:[{role:'user',content:ta.value}]})
     });
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
@@ -4166,7 +4340,7 @@ async function enrichCleanup(btn){
   btn.textContent=orig; btn.disabled=false;
 }
 
-// ── Save handlers (reuse existing tables via sb()) ──
+// ── Save handlers ──
 async function enrichSaveHouseholdNotes(idx,btn){
   const h=households[idx];
   const text=document.getElementById('enrich-hhnotes').value;
@@ -4178,33 +4352,7 @@ async function enrichSaveHouseholdNotes(idx,btn){
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
 }
 
-async function enrichSaveNewNote(idx,btn){
-  const h=households[idx];
-  const text=document.getElementById('enrich-newnote').value.trim();
-  if(!text){alert('Write or dictate something first.');return;}
-  const members=h.members||[];
-  if(!members.length){alert('This household has no contacts to attach a note to.');return;}
-  // Which people to attach to
-  let targetIds;
-  if(members.length>1){
-    targetIds=[...document.querySelectorAll('.enrich-note-member:checked')].map(cb=>cb.value);
-    if(!targetIds.length){alert('Pick at least one person to attach the note to.');return;}
-  }else{
-    targetIds=[members[0].id];
-  }
-  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
-  const today=new Date().toISOString().split('T')[0];
-  try{
-    for(const cid of targetIds){
-      await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text})});
-    }
-    document.getElementById('enrich-newnote').value='';
-    if(typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
-    btn.textContent='✓ Saved'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
-    // Re-render to show it in the existing-notes list
-    setTimeout(()=>renderEnrichCard(),700);
-  }catch(e){alert('Save failed: '+e.message);btn.textContent=orig;btn.disabled=false;}
-}
+
 
 async function enrichSaveInteraction(id,btn){
   const ta=document.getElementById('enrich-int-'+id);
@@ -4224,29 +4372,6 @@ async function enrichSaveDonationNote(id,btn){
     await sb('donations?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:inp.value})});
     btn.textContent='✓'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
-}
-
-// Quick structured entries — reuse existing modals where present
-function enrichQuickInteraction(idx){
-  if(typeof openLogInteraction==='function'){openLogInteraction(idx);return;}
-  if(typeof logInteraction==='function'){logInteraction(idx);return;}
-  // Fallback: prompt
-  _enrichPromptInteraction(idx);
-}
-async function _enrichPromptInteraction(idx){
-  const h=households[idx];const members=h.members||[];
-  if(!members.length){alert('No contacts.');return;}
-  const type=prompt('Interaction type (e.g. Call, Meeting, Event):','Call');if(!type)return;
-  const note=prompt('Notes for this '+type+':','');if(note===null)return;
-  try{
-    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:members[0].id,type,date:new Date().toISOString().split('T')[0],notes:note||null})});
-    renderEnrichCard();
-  }catch(e){alert('Failed: '+e.message);}
-}
-function enrichQuickGiving(idx){
-  // A "giving note" = a Note tagged about giving; donations themselves come from CiviCRM import
-  const ta=document.getElementById('enrich-newnote');
-  if(ta){ta.value=(ta.value?ta.value+'\n':'')+'[Giving] ';ta.focus();}
 }
 
 // ── Build profile, then offer review or advance ──
@@ -4370,7 +4495,7 @@ function toggleModeHelp(){
 </div>
 
 <!-- ENRICHMENT / BUILD MISSING PROFILES OVERLAY -->
-<div id="enrichOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="enrichOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:9000;overflow-y:auto;-webkit-overflow-scrolling:touch">
   <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
     <div style="display:flex;align-items:center;gap:10px;min-width:0">
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1rem;color:var(--txt);white-space:nowrap">📋 Build Profiles</span>
