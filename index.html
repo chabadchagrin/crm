@@ -455,8 +455,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 1/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -3133,7 +3133,7 @@ async function buildProfile(idx, hints=''){
       },
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1800,
+        max_tokens:4000,
         tools:[{type:'web_search_20250305',name:'web_search'}],
         system:`You are a prospect research assistant for a Chabad rabbi in Chagrin Falls, Ohio. Your job is to ENRICH a contact profile using public web research — not to recalculate scores. The AGC scores below are authoritative pre-calculated database scores. Accept them as facts.
 
@@ -3193,10 +3193,14 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const m=txt.split('```json').join('').split('```').join('').match(/\{[\s\S]*\}/);
+    const stripped=txt.replace(/```json/g,'').replace(/```/g,'').trim();
+    const firstBrace=stripped.indexOf('{');
+    const lastBrace=stripped.lastIndexOf('}');
+    const jsonStr=firstBrace>=0&&lastBrace>firstBrace?stripped.slice(firstBrace,lastBrace+1):'';
+    const m=jsonStr?[jsonStr]:null;
     if(!m)throw new Error('Could not parse a profile from the response. '+(txt?'Model returned: "'+txt.slice(0,200)+'…"':'The response had no text — possibly a web-search timeout or the request was stopped. Try again.'));
     let profile;
-    try{ profile=JSON.parse(m[0]); }
+    try{ profile=JSON.parse(jsonStr); }
     catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
     profile.builtAt=new Date().toISOString();
 
@@ -4465,14 +4469,11 @@ async function deployToGitHub(){
   statusEl.textContent='🚀 Fetching current file…';
   document.body.appendChild(statusEl);
   try{
+    statusEl.textContent='🚀 Encoding file…';
     const src=document.documentElement.outerHTML;
-    // Safe base64 encoding that handles Hebrew and other Unicode
     const bytes=new TextEncoder().encode(src);
     let binary='';
-    const chunkSize=8192;
-    for(let i=0;i<bytes.length;i+=chunkSize){
-      binary+=String.fromCharCode(...bytes.subarray(i,i+chunkSize));
-    }
+    for(let i=0;i<bytes.length;i++){binary+=String.fromCharCode(bytes[i]);}
     const encoded=btoa(binary);
     statusEl.textContent='🚀 Getting file SHA…';
     const infoResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH,{
@@ -5580,4 +5581,4 @@ function toggleModeHelp(){
 
 
 
-<div style="position: fixed; bottom: 24px; right: 24px; background: var(--surf); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; font-size: 0.82rem; color: var(--txt); z-index: 9999; box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 20px; font-family: &quot;DM Sans&quot;, sans-serif; min-width: 220px;">🚀 Fetching current file…</div></body></html>
+<div style="position: fixed; bottom: 24px; right: 24px; background: var(--surf); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; font-size: 0.82rem; color: var(--txt); z-index: 9999; box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 20px; font-family: &quot;DM Sans&quot;, sans-serif; min-width: 220px;">🚀 Encoding file…</div></body></html>
