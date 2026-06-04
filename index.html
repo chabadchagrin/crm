@@ -388,6 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:15 AM</div>
     </div>
   </div>
 
@@ -470,8 +471,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 67%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 3/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -4757,6 +4758,27 @@ function goHome(){
   document.body.style.overflow='';
 }
 
+async function loadLatestVersionInfo(){
+  const el=document.getElementById('versionInfo');
+  if(!el)return;
+  const pat=localStorage.getItem('crm_gh_pat');
+  if(!pat){el.textContent='Latest Update: Token missing in Settings';return;}
+  try{
+    const resp=await fetch('https://api.github.com/repos/chabadchagrin/crm/commits?path=index.html&page=1&per_page=1',{
+      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
+    });
+    if(!resp.ok){el.textContent='Latest Update: Unable to fetch ('+resp.status+')';return;}
+    const data=await resp.json();
+    if(!data||!data[0]){el.textContent='Latest Update: No commits found';return;}
+    const iso=data[0].commit?.author?.date;
+    if(!iso){el.textContent='Latest Update: Date unavailable';return;}
+    const formatted=new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});
+    el.textContent='Latest Update: '+formatted;
+  }catch(e){
+    el.textContent='Latest Update: Error';
+  }
+}
+
 async function deployToGitHub(){
   let pat=localStorage.getItem('crm_gh_pat');
   if(!pat){
@@ -4806,6 +4828,7 @@ async function deployToGitHub(){
     statusEl.textContent='✅ Deployed! Live in ~60s';
     statusEl.style.color='var(--green)';
     setTimeout(()=>statusEl.remove(),10000);
+    loadLatestVersionInfo();
   }catch(e){
     statusEl.textContent='❌ '+e.message+' (click to dismiss)';
     statusEl.style.color='var(--red)';
@@ -4848,6 +4871,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if(session){
     _authToken=session.access_token;
     showApp();
+    loadLatestVersionInfo();
   }else{
     // No session — show login screen
     document.getElementById('app').style.display='none';
