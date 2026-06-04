@@ -473,7 +473,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="toolbar-sep"></div>
     <span class="total" id="totalLbl">75 households · 113 contacts</span>
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <input id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="off" name="daas-ask-x3m" type="search" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
+      <input type="text" id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="off" name="daas-ask-x3m" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
       <button onclick="runAISearch()" class="btn btn-pri" style="padding:4px 10px;border-radius:20px;font-size:.72rem">Ask</button>
       <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;border-radius:20px;font-size:.72rem;white-space:nowrap">🧠</button>
     </div>
@@ -1925,7 +1925,7 @@ async function refreshAGCScore(householdId){
   try{
     const rows=await fetch(SB_URL+'/rest/v1/rpc/calculate_agc',{
       method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
       body:JSON.stringify({household_id:householdId})
     }).then(r=>r.json());
     if(rows){
@@ -2262,7 +2262,7 @@ function setProp(mode,h,result){
   // Profile tab
   const existingProfile=h.profile_data;
   const profileHtml=existingProfile
-    ? buildProfileDisplay(existingProfile, idx)
+    ? buildProfileDisplay(existingProfile, idx, undefined, undefined, `tabcontent-profile-${idx}`)
     : `<div style="text-align:center;padding:16px 0">
         <div style="font-size:.8rem;color:var(--txt2);margin-bottom:12px">No profile built yet.</div>
         <button onclick="buildProfile(${idx})" id="buildProfileBtn-${idx}" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500">🔍 Build Profile</button>
@@ -2555,18 +2555,27 @@ function stopPrefetch(){prefetching=false;document.getElementById('pfBar').style
 // ── EXPORT ──
 function exportCSV(){
   const minVal=parseFloat(document.getElementById('minValue').value)||0;
-  const since=prompt('Export contacts added since date? (YYYY-MM-DD or blank for all):','')?.trim()||null;
   let list=minVal>0?filtered:households;
-  if(since)list=list.filter(h=>!h.date_added||h.date_added>=since);
   if(!list.length){alert('No contacts match.');return;}
-  const rows=[['CivicCRM ID','First Name','Last Name','Address Notes']];
-  list.forEach(h=>(h.members||[]).forEach(m=>{
-    const val=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
-    rows.push([m.civicrm_id||'',m.first_name,m.last_name,val]);
-  }));
+  const rows=[['CivicCRM ID','First Name','Last Name','Home Value','Total Giving','Last Gift Date','Date Added']];
+  list.forEach(h=>{
+    const g=getGivingStats(h);
+    (h.members||[]).forEach(m=>{
+      const val=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
+      rows.push([
+        m.civicrm_id||'',
+        m.first_name,
+        m.last_name,
+        val,
+        g?'$'+Math.round(g.total).toLocaleString():'',
+        g?g.lastDate:'',
+        h.date_added||''
+      ]);
+    });
+  });
   const csv=rows.map(r=>r.map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download=since?`contacts_since_${since}.csv`:'contacts.csv';a.click();
+  a.download='contacts.csv';a.click();
 }
 
 // ── ADD CONTACT ──
@@ -2986,7 +2995,7 @@ function _profileStaleness(p, idx, newInteractions, newDonations){
   return{suggestFull,suggestSoft,monthsOld:Math.floor(monthsOld),newInteractions:newInts,newDonations:newDons};
 }
 
-function buildProfileDisplay(p, idx, newInteractions, newDonations){
+function buildProfileDisplay(p, idx, newInteractions, newDonations, containerId){
   const scoreColor=p.score>=70?'var(--green)':p.score>=40?'var(--gold)':'var(--red)';
   const stale=_profileStaleness(p,idx,newInteractions??null,newDonations??null);
   const lastUpdated=p.softBuiltAt&&p.softBuiltAt>p.builtAt?p.softBuiltAt:p.builtAt;
@@ -3001,7 +3010,7 @@ function buildProfileDisplay(p, idx, newInteractions, newDonations){
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Prospect Profile</div>
       <div style="display:flex;align-items:center;gap:8px">
         <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${lastUpdated?new Date(lastUpdated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
-        <button onclick="editProfileInline(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
+        <button onclick="editProfileInline(${idx}${containerId?`,'${containerId}'`:''})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
         <button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>
         <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">🔍 Full Rebuild</button>
       </div>
@@ -3080,7 +3089,7 @@ function _profEditRerender(idx,p){
   if(_profEditCtx&&_profEditCtx.isFullPanel){ openFullPanel(idx); }
   else {
     const el=document.getElementById('tabcontent-profile-'+idx);
-    if(el)el.innerHTML=buildProfileDisplay(p,idx);
+    if(el)el.innerHTML=buildProfileDisplay(p,idx,undefined,undefined,'tabcontent-profile-'+idx);
   }
 }
 function _collectProfileEdits(idx){
@@ -3379,7 +3388,7 @@ Search targets: Cleveland Jewish News (cjn.org), Jewish Federation of Cleveland,
     h.profile_data=profile;
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile}})});
     document.getElementById('fullPanelLoading')?.remove();
-    if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx,0,0);
+    if(tabContent)tabContent.innerHTML=buildProfileDisplay(profile,idx,0,0,tabContent.id);
     const fp2=document.getElementById('fullPanel');
     if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
 
@@ -4007,18 +4016,14 @@ If this is the only contact in the household, the household and all its property
     await sb('contacts?id=eq.'+contactId,{method:'DELETE'});
     // Check if household still has contacts
     const h=households[hIdx];
-    h.members=h.members.filter(m=>m.id!==contactId);
-    if(h.members.length===0){
-      // Delete household too
+    const remaining=(h.members||[]).filter(m=>m.id!==contactId);
+    if(remaining.length===0){
       await sb('households?id=eq.'+h.id,{method:'DELETE'});
-      if(markers[hIdx])map.removeLayer(markers[hIdx]);
-      households.splice(hIdx,1);filtered=[...households];markers.splice(hIdx,1);
-      setProp('hint');activeIdx=-1;
-    }else{
-      setProp('data',h);showTab(hIdx,'contacts');
     }
-    document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
-    renderList();
+    // Full reload keeps all indices clean
+    activeIdx=-1;
+    setProp('hint');
+    await loadAll();
   }catch(e){alert('Delete failed: '+e.message);}
 }
 
@@ -4451,13 +4456,7 @@ function getWelcomeHTML(){
 
 
 function toggleContextPanel(){
-  const p=document.getElementById('contextPanel');
-  const isOpen=p.style.display!=='none';
-  p.style.display=isOpen?'none':'block';
-  if(!isOpen){
-    // Load saved context
-    document.getElementById('globalContext').value=localStorage.getItem('ci_context')||'';
-  }
+  openRabbiContext();
 }
 
 async function saveGlobalContext(){
@@ -5040,7 +5039,7 @@ async function captureSaveItem(i,btn){
   const date=document.getElementById('cap-date-'+i).value||new Date().toISOString().split('T')[0];
   if(!contactId){alert('Pick a contact first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
   try{
-    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:contactId,type,date,notes:text})});
+    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:contactId,type,date,notes:text,created_at:new Date().toISOString()})});
     const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
     if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
     const card=btn.closest('.capture-item');
@@ -5570,16 +5569,12 @@ async function _enrichSaveAllChunks(idx){
       if(dateEl){
         // interaction
         const cid=personEl?personEl.value:(members[0]||{}).id;
-        const intType=(chunkEl?chunkEl.querySelector('span[style*="var(--gold)"]'):null);
-        // read interaction_type from the label spans
-        const spans=chunkEl?[...chunkEl.querySelectorAll('span')]:[];
-        let iType='Note';
-        spans.forEach(s=>{if(['Call','Meeting','Event','Email','Other'].includes(s.textContent.trim()))iType=s.textContent.trim();});
-        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim()})});
+        const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
+        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim(),created_at:new Date().toISOString()})});
       }else if(personEl){
         // note (person-specific, no date picker)
         const cid=personEl.value||(members[0]||{}).id;
-        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim()})});
+        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim(),created_at:new Date().toISOString()})});
       }else{
         // household note — append to existing
         const existing=h.notes||'';
