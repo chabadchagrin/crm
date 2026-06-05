@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 5, 2026, 1:03 PM</div>
+      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 5, 2026, 1:09 PM</div>
     </div>
   </div>
 
@@ -470,9 +470,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)"></span>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
-    <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
+    <div class="prog-wrap" id="geoProgress" style="display: none;">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
+      <span class="prog-lbl" id="progLbl">✓ Done</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -488,10 +488,24 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </select>
     <div class="toolbar-sep"></div>
     <span class="total" id="totalLbl">76 households · 115 contacts</span>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <input type="text" id="aiSearchInput" placeholder="🔍 Ask…" autocomplete="off" name="daas-ask-x3m" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:20px;outline:none;width:130px" onkeydown="if(event.key==='Enter')runAISearch()">
-      <button onclick="runAISearch()" class="btn btn-pri" style="padding:4px 10px;border-radius:20px;font-size:.72rem">Ask</button>
-      <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;border-radius:20px;font-size:.72rem;white-space:nowrap">🧠</button>
+    <div style="position:relative;display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:5px">
+        <input type="search" id="headerSearch" placeholder="Shorthand or deep search… (v &gt; 500k, g &gt; 10k, y &gt; 500)" autocomplete="off" name="daas-hdr-s" oninput="executeHeaderSearchFilter()" onkeydown="if(event.key==='Enter')triggerDeepSearchModal()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:6px;outline:none;width:280px">
+        <button onclick="toggleShorthandGuide()" class="btn btn-sec" style="padding:4px 8px;font-size:.68rem" title="View shorthand syntax">❓</button>
+        <button onclick="triggerDeepSearchModal()" class="btn btn-pri" style="padding:4px 10px;font-size:.72rem;white-space:nowrap">🔍 Deep</button>
+        <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;font-size:.72rem;white-space:nowrap">🧠</button>
+      </div>
+      <div id="shorthandGuidePanel" style="display: block; position: absolute; top: 100%; right: 0px; margin-top: 4px; padding: 12px 14px; background: var(--surf); border: 1px solid var(--border2); border-radius: 8px; box-shadow: rgba(0, 0, 0, 0.12) 0px 4px 16px; z-index: 1000; font-family: &quot;DM Mono&quot;, monospace; font-size: 0.63rem; line-height: 1.6; color: var(--txt2); width: 340px;">
+        <div style="font-weight:700;margin-bottom:6px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:4px">💡 Shorthand Filter Syntax</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div>• <b>v &gt; 500k</b> or <b>$ &gt; 1.2m</b> — Home value</div>
+          <div>• <b>g &gt; 10k</b> — Lifetime giving total</div>
+          <div>• <b>y &gt; 500</b> — Current year (2026) giving</div>
+          <div>• <b>kids &gt; 2</b> — Children count in profile</div>
+          <div>• Supports <b>&gt;</b>, <b>&lt;</b>, <b>=</b> and <b>k</b>/<b>m</b> suffixes</div>
+        </div>
+        <div style="margin-top:6px;font-style:italic;color:var(--txt3);border-top:1px solid var(--border);padding-top:4px">Plain text = full-text search across notes &amp; names</div>
+      </div>
     </div>
   </header>
   <!-- AI Search Results -->
@@ -2111,8 +2125,7 @@ function toggleFilterPanel(){
   document.getElementById('filterToggle').textContent=isVisible?'⚙ Filter':'✕ Filter';
 }
 function applyFilter(){
-  const rawQ=document.getElementById('srch').value.trim();
-  const q=rawQ.toLowerCase();
+  const q=(document.getElementById('srch')?.value||'').trim().toLowerCase();
   const minVal=parseFloat(document.getElementById('minValue').value)||0;
   const minGiving=parseFloat(document.getElementById('minGiving')?.value)||0;
   const dateFrom=document.getElementById('filterDateFrom')?.value||'';
@@ -2120,58 +2133,11 @@ function applyFilter(){
   const kidAgeMin=parseInt(document.getElementById('filterKidAgeMin')?.value)||0;
   const kidAgeMax=parseInt(document.getElementById('filterKidAgeMax')?.value)||0;
   const currentYear=new Date().getFullYear();
-
-  // Parse shorthand: v > 500k, $ > 1m, g > 5k, y > 36, kids > 2
-  let shorthandFilter=null;
-  const shMatch=rawQ.match(/^(v|\$|g|y|kids)\s*(>|<|=)\s*([0-9.]+[km]?)$/i);
-  if(shMatch){
-    const key=shMatch[1].toLowerCase();
-    const op=shMatch[2];
-    let rawVal=shMatch[3].toLowerCase();
-    let numVal=parseFloat(rawVal);
-    if(rawVal.endsWith('k'))numVal*=1000;
-    if(rawVal.endsWith('m'))numVal*=1000000;
-    shorthandFilter={key,op,val:numVal};
-  }
-
   filtered=households.filter(h=>{
-    if(shorthandFilter){
-      const sf=shorthandFilter;
-      if(sf.key==='v'||sf.key==='$'){
-        const val=h.home_value||0;
-        if(sf.op==='>'&&val<=sf.val)return false;
-        if(sf.op==='<'&&val>=sf.val)return false;
-        if(sf.op==='='&&Math.round(val)!==sf.val)return false;
-      } else if(sf.key==='g'){
-        const stats=getGivingStats(h);
-        const val=stats?stats.total:0;
-        if(sf.op==='>'&&val<=sf.val)return false;
-        if(sf.op==='<'&&val>=sf.val)return false;
-        if(sf.op==='='&&Math.round(val)!==sf.val)return false;
-      } else if(sf.key==='y'){
-        let yearTotal=0;
-        const targetY=currentYear.toString();
-        (h.members||[]).forEach(m=>{(m.donations||[]).forEach(d=>{if(d.date&&d.date.startsWith(targetY))yearTotal+=parseFloat(d.amount||0);});});
-        if(sf.op==='>'&&yearTotal<=sf.val)return false;
-        if(sf.op==='<'&&yearTotal>=sf.val)return false;
-        if(sf.op==='='&&Math.round(yearTotal)!==sf.val)return false;
-      } else if(sf.key==='kids'){
-        const val=((h.profile_data&&h.profile_data.estimated_children)||[]).length;
-        if(sf.op==='>'&&val<=sf.val)return false;
-        if(sf.op==='<'&&val>=sf.val)return false;
-        if(sf.op==='='&&val!==sf.val)return false;
-      }
-    } else if(q){
-      // Deep text search: name, address, member names, donation notes, interaction notes
-      let masterText=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'');
-      (h.members||[]).forEach(m=>{
-        masterText+=' '+(m.first_name||'')+' '+(m.last_name||'');
-        (m.donations||[]).forEach(d=>{masterText+=' '+(d.notes||'');});
-      });
-      if(!masterText.toLowerCase().includes(q))return false;
+    if(q){
+      const matchText=(h.displayName||'').toLowerCase()+' '+(h.address||'').toLowerCase()+' '+(h.city||'').toLowerCase();
+      if(!matchText.includes(q))return false;
     }
-
-    // Existing filter panel controls
     if(minVal>0&&(!h.home_value||h.home_value<minVal))return false;
     if(minGiving>0||dateFrom||dateTo){
       const g=getGivingStats(h);
@@ -6265,9 +6231,9 @@ function toggleModeHelp(){
 
 // ── DEEP NOTE SEARCH MODAL ──
 async function triggerDeepSearchModal(){
-  const queryTerm=document.getElementById('srch').value.trim();
+  const queryTerm=document.getElementById('headerSearch').value.trim();
   if(queryTerm.length<2){alert('Enter at least 2 characters for a deep search.');return;}
-  if(queryTerm.match(/^(v|\$|g|y|kids)\s*(>|<|=)/i))return; // shorthand — no snippet view
+  if(queryTerm.match(/^(v|\$|g|y|kids)\s*(>|<|=)/i))return;
   const q=queryTerm.toLowerCase();
   const modal=document.getElementById('deepSearchModal');
   const container=document.getElementById('deepSearchResultsList');
@@ -6312,6 +6278,65 @@ function navigateToHouseholdFromSearch(householdId){
   document.getElementById('deepSearchModal').style.display='none';
   const hIdx=households.findIndex(hh=>hh.id===householdId);
   if(hIdx!==-1)selectHousehold(hIdx);
+}
+function executeHeaderSearchFilter(){
+  const rawQ=document.getElementById('headerSearch').value.trim();
+  const q=rawQ.toLowerCase();
+  const currentYear=new Date().getFullYear();
+  let shorthandFilter=null;
+  const shMatch=rawQ.match(/^(v|\$|g|y|kids)\s*(>|<|=)\s*([0-9.]+[km]?)$/i);
+  if(shMatch){
+    const key=shMatch[1].toLowerCase();
+    const op=shMatch[2];
+    let rawVal=shMatch[3].toLowerCase();
+    let numVal=parseFloat(rawVal);
+    if(rawVal.includes('k'))numVal*=1000;
+    if(rawVal.includes('m'))numVal*=1000000;
+    shorthandFilter={key,op,val:numVal};
+  }
+  filtered=households.filter(h=>{
+    if(shorthandFilter){
+      const sf=shorthandFilter;
+      if(sf.key==='v'||sf.key==='$'){
+        const val=h.home_value||0;
+        if(sf.op==='>'&&val<=sf.val)return false;
+        if(sf.op==='<'&&val>=sf.val)return false;
+        if(sf.op==='='&&Math.round(val)!==sf.val)return false;
+      } else if(sf.key==='g'){
+        const stats=getGivingStats(h);
+        const val=stats?stats.total:0;
+        if(sf.op==='>'&&val<=sf.val)return false;
+        if(sf.op==='<'&&val>=sf.val)return false;
+        if(sf.op==='='&&Math.round(val)!==sf.val)return false;
+      } else if(sf.key==='y'){
+        let yearTotal=0;
+        const targetY=currentYear.toString();
+        (h.members||[]).forEach(m=>{(m.donations||[]).forEach(d=>{if(d.date&&d.date.startsWith(targetY))yearTotal+=parseFloat(d.amount||0);});});
+        if(sf.op==='>'&&yearTotal<=sf.val)return false;
+        if(sf.op==='<'&&yearTotal>=sf.val)return false;
+        if(sf.op==='='&&Math.round(yearTotal)!==sf.val)return false;
+      } else if(sf.key==='kids'){
+        const val=((h.profile_data&&h.profile_data.estimated_children)||[]).length;
+        if(sf.op==='>'&&val<=sf.val)return false;
+        if(sf.op==='<'&&val>=sf.val)return false;
+        if(sf.op==='='&&val!==sf.val)return false;
+      }
+    } else if(q){
+      let masterText=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'');
+      (h.members||[]).forEach(m=>{
+        masterText+=' '+(m.first_name||'')+' '+(m.last_name||'');
+        (m.donations||[]).forEach(d=>{masterText+=' '+(d.notes||'');});
+      });
+      if(!masterText.toLowerCase().includes(q))return false;
+    }
+    return true;
+  });
+  households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(filtered.includes(h)?1:0.12);});
+  renderList();
+}
+function toggleShorthandGuide(){
+  const p=document.getElementById('shorthandGuidePanel');
+  p.style.display=p.style.display==='none'?'block':'none';
 }
 </script>
 <!-- QUICK CAPTURE OVERLAY -->
