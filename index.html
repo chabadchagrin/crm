@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:15 PM</div>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:39 PM</div>
     </div>
   </div>
 
@@ -471,8 +471,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 67%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 3/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
+      <span class="prog-lbl" id="progLbl">✓ Done</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -1431,7 +1431,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <div class="cval gold">$855,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 25</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 17</div>
         </div>
         
       </div>
@@ -3427,7 +3427,9 @@ Return ONLY valid JSON, no markdown fences:
   "builtAt": "${new Date().toISOString()}",
   "searchHints": "${researchHints||''}"
 }
-NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate. For estimated_children: scan public records (Cleveland Jewish News, press mentions, social announcements) for milestone indicators. A Bar Mitzvah occurs at age 13 — deduce birth year as milestone_year minus 13. A Bat Mitzvah occurs at age 12 or 13 — use 12 as default. Never store static ages; always output the calculated four-digit estimated_birth_year. Return an empty array [] if no signals found.\n\nFINAL OUTPUT RULE: After all web searches are complete, your text response MUST be a single raw JSON object only — starting with { and ending with }. No sentences before or after the JSON. No markdown. No search narration. Just the JSON.`,
+NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.
+
+ESTIMATED CHILDREN — CRITICAL RULE: If you mention ANY child, Bar Mitzvah, Bat Mitzvah, or child's name ANYWHERE in your summary, affinityNotes, pressmentions, or approach fields, you MUST also populate the estimated_children array with that child's entry. Do NOT leave estimated_children empty if you have written about a child elsewhere in the JSON. Scan your own output before finalizing and cross-check. A Bar Mitzvah occurs at age 13 — birth year = milestone_year minus 13. A Bat Mitzvah occurs at age 12 or 13 — use 12 as default. Never store static ages; always output the calculated four-digit estimated_birth_year. Return [] only if truly no child signals exist anywhere in your research.\n\nFINAL OUTPUT RULE: After all web searches are complete, your text response MUST be a single raw JSON object only — starting with { and ending with }. No sentences before or after the JSON. No markdown. No search narration. Just the JSON.`,
         messages:[{role:'user',content:`Enrich this contact profile with public research. After all your research is complete, output ONLY a raw JSON object — no text before or after the JSON, no markdown, just the object starting with { and ending with }.
 
 HOUSEHOLD: ${fullName}
