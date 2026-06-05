@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:39 PM</div>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:53 PM</div>
     </div>
   </div>
 
@@ -471,8 +471,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
-      <span class="prog-lbl" id="progLbl">✓ Done</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 1/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -3255,7 +3255,7 @@ async function buildProfileSoft(idx){
   const activity_list=interactions.filter(i=>i.type!=='Note');
 
   // Ground truth fields from existing profile (don't re-research)
-  const {affinityNotes,generosityNotes,capacityNotes,businessInfo,boardMemberships,philanthropy990,pressmentions,approximateAge,fedLevel,score,capacity,builtAt,searchHints}=existingProfile;
+  const {affinityNotes,generosityNotes,capacityNotes,businessInfo,boardMemberships,philanthropy990,pressmentions,approximateAge,fedLevel,score,capacity,builtAt,searchHints,estimated_children}=existingProfile;
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -3271,7 +3271,9 @@ async function buildProfileSoft(idx){
         max_tokens:2000,
         system:`You are a donor intelligence assistant for a Chabad rabbi. You are doing a QUICK UPDATE — not a full rebuild. The research fields (affinityNotes, generosityNotes, capacityNotes, businessInfo, boardMemberships, philanthropy990, pressmentions, approximateAge, fedLevel) are GROUND TRUTH from a previous full research session. Do NOT re-research or change them.
 
-Your ONLY job: re-synthesize the "approach" and "summary" fields based on the updated interactions, donations, and notes provided. Everything else must be passed through unchanged.
+Your ONLY job: re-synthesize the "approach" and "summary" fields based on the updated interactions, donations, and notes provided. Also update "estimated_children" if the household notes or private notes mention any children, their names, or milestone events (Bar/Bat Mitzvah years). Everything else must be passed through unchanged.
+
+ESTIMATED CHILDREN RULE: If the household notes or private notes mention a child's Bar Mitzvah or Bat Mitzvah year, calculate estimated_birth_year (Bar Mitzvah year − 13, Bat Mitzvah year − 12). If notes mention a child's current age, calculate estimated_birth_year = current year − stated age. If a child is already in the existing estimated_children array, preserve them unless the notes provide a correction. If no child signals exist in notes, copy the existing estimated_children array unchanged. CRITICAL: If you mention ANY child anywhere in summary or approach, that child MUST appear in estimated_children.
 
 Return ONLY valid JSON, no markdown fences:
 {
@@ -3288,7 +3290,8 @@ Return ONLY valid JSON, no markdown fences:
   "philanthropy990": "(copy from input — unchanged)",
   "pressmentions": "(copy from input — unchanged)",
   "approximateAge": (copy from input — unchanged),
-  "searchHints": "(copy from input — unchanged)"
+  "searchHints": "(copy from input — unchanged)",
+  "estimated_children": [{"name": "Name", "estimated_birth_year": 2009, "basis": "Bar Mitzvah in 2022"}] or []
 }`,
         messages:[{role:'user',content:`Quick Update for ${fullName}.
 
@@ -3305,6 +3308,7 @@ fedLevel: ${fedLevel||'null'}
 score: ${score||'null'}
 capacity: ${capacity||'null'}
 searchHints: ${searchHints||''}
+estimated_children (existing — update only if notes provide new info): ${JSON.stringify(estimated_children||[])}
 
 CURRENT AGC SCORES:
   Total: ${agcScore.total}/100 | Affinity: ${agcScore.affinity}/35 | Generosity: ${agcScore.generosity}/35 | Capacity: ${agcScore.capacity}/30
@@ -3322,7 +3326,7 @@ ${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join
 RECENT ACTIVITY (${activity_list.length} interactions):
 ${activity_list.length?activity_list.slice(0,15).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}
 
-Re-synthesize ONLY approach and summary based on the above. Return all other fields unchanged.`}]
+Re-synthesize ONLY approach, summary, and estimated_children based on the above. Return all other fields unchanged.`}]
       })
     });
 
@@ -3853,19 +3857,43 @@ function openFullPanel(idx){
 
     <!-- Family & Children -->
     <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px">
-      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px">👶 Family & Children</div>
-      ${(()=>{
-        const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
-        if(!kids.length)return '<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
-        const currentYear=new Date().getFullYear();
-        return kids.map(c=>{
-          const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
-          return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem">
-            <span style="font-weight:500">${c.name||'Unknown'}</span> — ~${age!==null?age+'yrs old':'age unknown'}
-            <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${c.basis||'—'})</span>
-          </div>`;
-        }).join('');
-      })()}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">👶 Family & Children</div>
+        <button onclick="editChildrenCard(${idx})" id="children-edit-btn-${idx}" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
+      </div>
+      <div id="children-display-${idx}">
+        ${(()=>{
+          const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
+          if(!kids.length)return '<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
+          const currentYear=new Date().getFullYear();
+          return kids.map(c=>{
+            const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
+            return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+              <span style="font-weight:500">${c.name||'Unknown'}</span> — ~${age!==null?age+' yrs old':'age unknown'}
+              <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${c.basis||'—'})</span>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+      <div id="children-editor-${idx}" style="display:none">
+        <div id="children-rows-${idx}">
+          ${(()=>{
+            const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
+            return kids.map((c,ci)=>`
+              <div class="child-row-${idx}" style="display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">
+                <input placeholder="Name" value="${(c.name||'').replace(/"/g,'&quot;')}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+                <input type="number" placeholder="Birth Yr" value="${c.estimated_birth_year||''}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+                <input placeholder="Basis (e.g. Bar Mitzvah 2022)" value="${(c.basis||'').replace(/"/g,'&quot;')}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+                <button onclick="this.closest('.child-row-${idx}' in this.parentElement ? this.parentElement : this.closest('[class*=child-row]')||this).remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>
+              </div>`).join('');
+          })()}
+        </div>
+        <button onclick="addChildRow(${idx})" style="font-size:.72rem;padding:4px 10px;background:none;border:1px dashed var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;margin-top:4px;width:100%">+ Add Child</button>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="saveChildrenEdit(${idx})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:500">Save</button>
+          <button onclick="cancelChildrenEdit(${idx})" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.78rem">Cancel</button>
+        </div>
+      </div>
     </div>`;
 
     document.getElementById('fullPanelContent').innerHTML=html;
@@ -3884,6 +3912,58 @@ function openFullPanel(idx){
 }
 function closeFullPanel(){
   document.getElementById('fullPanel').style.display='none';
+}
+
+function editChildrenCard(idx){
+  document.getElementById('children-display-'+idx).style.display='none';
+  document.getElementById('children-editor-'+idx).style.display='block';
+  document.getElementById('children-edit-btn-'+idx).style.display='none';
+}
+function cancelChildrenEdit(idx){
+  document.getElementById('children-display-'+idx).style.display='block';
+  document.getElementById('children-editor-'+idx).style.display='none';
+  document.getElementById('children-edit-btn-'+idx).style.display='';
+}
+function addChildRow(idx){
+  const container=document.getElementById('children-rows-'+idx);
+  const row=document.createElement('div');
+  row.className='child-row-'+idx;
+  row.style.cssText='display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML=`<input placeholder="Name" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+    <input type="number" placeholder="Birth Yr" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+    <input placeholder="Basis (e.g. Bar Mitzvah 2022)" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
+    <button onclick="this.closest('div').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>`;
+  container.appendChild(row);
+  row.querySelector('input').focus();
+}
+async function saveChildrenEdit(idx){
+  const h=households[idx];
+  const rows=[...document.querySelectorAll('.child-row-'+idx)];
+  const kids=rows.map(row=>{
+    const inputs=row.querySelectorAll('input');
+    return{
+      name:(inputs[0]?.value||'').trim(),
+      estimated_birth_year:parseInt(inputs[1]?.value)||null,
+      basis:(inputs[2]?.value||'').trim()
+    };
+  }).filter(c=>c.name||c.estimated_birth_year);
+  const updated={...(h.profile_data||{}),estimated_children:kids};
+  try{
+    await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
+    h.profile_data=updated;
+    cancelChildrenEdit(idx);
+    // Re-render display
+    const currentYear=new Date().getFullYear();
+    const display=document.getElementById('children-display-'+idx);
+    if(display){
+      display.innerHTML=kids.length
+        ?kids.map(c=>{
+          const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
+          return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem"><span style="font-weight:500">${c.name||'Unknown'}</span> — ~${age!==null?age+' yrs old':'age unknown'}<span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${c.basis||'—'})</span></div>`;
+        }).join('')
+        :'<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
+    }
+  }catch(e){alert('Save failed: '+e.message);}
 }
 
 async function saveHouseholdNotes(idx,btn){
