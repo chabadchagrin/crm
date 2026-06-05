@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 5, 2026, 1:21 AM</div>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 5, 2026, 1:26 AM</div>
     </div>
   </div>
 
@@ -471,8 +471,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 67%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 3/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 1/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -950,9 +950,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <div class="cphone">9084512377</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <div class="cval red">$1,435,400</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 42</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 44</div>
         </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $18 · 1 gift</div>
+        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $72 · 3 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(32)">
@@ -3091,6 +3091,7 @@ function buildProfileDisplay(p, idx, newInteractions, newDonations, containerId)
         <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${lastUpdated?new Date(lastUpdated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
         <button onclick="editProfileInline(${idx}${containerId?`,'${containerId}'`:''})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
         <button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>
+        <button onclick="(()=>{const el=document.getElementById(containerId||'tabcontent-profile-${idx}');if(el)el.innerHTML=buildProfileDisplay(households[${idx}].profile_data,${idx},undefined,undefined,containerId||'tabcontent-profile-${idx}');const fp=document.getElementById('fullPanel');if(fp&&fp.style.display!=='none')openFullPanel(${idx});})()" style="font-size:.62rem;padding:2px 8px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace" title="Refresh display">🔄</button>
         <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">🔍 Full Rebuild</button>
       </div>
     </div>
@@ -3434,7 +3435,9 @@ Return ONLY valid JSON, no markdown fences:
 }
 NEVER invent information. If nothing is found publicly, say so honestly in the notes fields. For age, an estimate from LinkedIn graduation year, news articles, or other public signals is acceptable — flag it as approximate.
 
-ESTIMATED CHILDREN — CRITICAL RULE: If you mention ANY child, Bar Mitzvah, Bat Mitzvah, or child's name ANYWHERE in your summary, affinityNotes, pressmentions, or approach fields, you MUST also populate the estimated_children array with that child's entry. Do NOT leave estimated_children empty if you have written about a child elsewhere in the JSON. Scan your own output before finalizing and cross-check. A Bar Mitzvah occurs at age 13 — birth year = milestone_year minus 13. A Bat Mitzvah occurs at age 12 or 13 — use 12 as default. Never store static ages; always output the calculated four-digit estimated_birth_year. Return [] only if truly no child signals exist anywhere in your research.\n\nFINAL OUTPUT RULE: After all web searches are complete, your text response MUST be a single raw JSON object only — starting with { and ending with }. No sentences before or after the JSON. No markdown. No search narration. Just the JSON.`,
+ESTIMATED CHILDREN — CRITICAL RULE: If you mention ANY child, Bar Mitzvah, Bat Mitzvah, or child's name ANYWHERE in your summary, affinityNotes, pressmentions, or approach fields, you MUST also populate the estimated_children array with that child's entry. Do NOT leave estimated_children empty if you have written about a child elsewhere in the JSON. Scan your own output before finalizing and cross-check. A Bar Mitzvah occurs at age 13 — birth year = milestone_year minus 13. A Bat Mitzvah occurs at age 12 or 13 — use 12 as default. Never store static ages; always output the calculated four-digit estimated_birth_year. Return [] only if truly no child signals exist anywhere in your research.
+
+ABSOLUTE FINAL OUTPUT RULE — NO EXCEPTIONS: Your ENTIRE response after completing all web searches must be ONE raw JSON object. No introduction. No explanation. No caveats before or after. If you found conflicting information, ambiguous results, or want to share a note, put it INSIDE the relevant JSON field (e.g. in affinityNotes or summary). Do NOT write any sentences outside the JSON. If you violate this rule the entire build fails. The response must start with { and end with } and contain nothing else.`,
         messages:[{role:'user',content:`Enrich this contact profile with public research. After all your research is complete, output ONLY a raw JSON object — no text before or after the JSON, no markdown, just the object starting with { and ending with }.
 
 HOUSEHOLD: ${fullName}
@@ -3469,7 +3472,25 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
     const firstBrace=stripped.indexOf('{');
     const lastBrace=stripped.lastIndexOf('}');
     const jsonStr=firstBrace>=0&&lastBrace>firstBrace?stripped.slice(firstBrace,lastBrace+1):'';
-    if(!jsonStr)throw new Error('Could not parse a profile from the response. '+(txt?'Model returned: "'+txt.slice(0,200)+'…"':'The response had no text — possibly a web-search timeout or the request was stopped. Try again.'));
+    if(!jsonStr){
+      // Model returned prose instead of JSON — wrap it into a minimal profile so it doesn't hard-fail
+      const fallbackProfile={
+        summary:txt.slice(0,1000),
+        approach:'Model returned a narrative instead of structured data. Review summary and rebuild if needed.',
+        affinityNotes:'',generosityNotes:'',capacityNotes:'',capacity:'',
+        fedLevel:null,businessInfo:null,boardMemberships:null,philanthropy990:null,
+        pressmentions:null,approximateAge:null,estimated_children:[],
+        builtAt:new Date().toISOString(),searchHints:researchHints||''
+      };
+      h.profile_data=fallbackProfile;
+      h.property_data={...h.property_data,profile:fallbackProfile};
+      await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:fallbackProfile}})});
+      document.getElementById('fullPanelLoading')?.remove();
+      if(tabContent)tabContent.innerHTML=buildProfileDisplay(fallbackProfile,idx,0,0,tabContent.id);
+      const fp2=document.getElementById('fullPanel');
+      if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
+      return;
+    }
     let profile;
     try{ profile=JSON.parse(jsonStr); }
     catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
