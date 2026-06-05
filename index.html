@@ -388,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 4, 2026, 11:53 PM</div>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: Jun 5, 2026, 12:02 AM</div>
     </div>
   </div>
 
@@ -471,8 +471,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 1/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -1431,7 +1431,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <div class="cval gold">$855,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 17</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 55</div>
         </div>
         
       </div>
@@ -5153,9 +5153,9 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""}}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
-    +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. When in doubt between interaction and household, prefer interaction. '
-    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items.';
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. When in doubt between interaction and household, prefer interaction. '
+    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items. TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
 
   // Build user content (text + optional file)
   const userContent=[];
@@ -5188,6 +5188,7 @@ async function captureAnalyze(btn){
 }
 
 function _captureRenderProposals(parsed){
+  window._captureLastParsed=parsed;
   const results=document.getElementById('capture-results');
   const items=(parsed&&parsed.items)||[];
   if(!items.length){
@@ -5209,7 +5210,31 @@ function _captureRenderProposals(parsed){
     const confColor=conf==='high'?'#16a34a':conf==='low'?'#dc2626':'#b45309';
     const date=it.date||new Date().toISOString().split('T')[0];
 
-    // ── NEW CONTACT card ──
+    // ── CHILDREN card ──
+    if(it.save_as==='children'){
+      const kids=it.children_fields||[];
+      const currentYear=new Date().getFullYear();
+      html+='<div class="capture-item" data-i="'+i+'" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+      html+='<div style="font-size:.82rem;font-weight:600;color:#15803d;margin-bottom:6px">👶 Children / Family Info Detected</div>';
+      html+='<div style="font-size:.72rem;color:var(--txt3);margin-bottom:10px">For: <strong>'+_enrichEsc(it.contact_name||'Unknown')+'</strong></div>';
+      html+='<div id="cap-kids-rows-'+i+'">';
+      kids.forEach(k=>{
+        html+='<div class="cap-kid-row" style="display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">';
+        html+='<input placeholder="Name" value="'+_enrichEsc(k.name||'')+'" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">';
+        html+='<input type="number" placeholder="Birth Yr" value="'+(k.estimated_birth_year||'')+'" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">';
+        html+='<input placeholder="Basis" value="'+_enrichEsc(k.basis||'')+'" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">';
+        html+='<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>';
+        html+='</div>';
+      });
+      html+='</div>';
+      html+='<button onclick="addCaptureKidRow('+i+')" style="font-size:.72rem;padding:4px 10px;background:none;border:1px dashed #86efac;color:#15803d;border-radius:5px;cursor:pointer;margin-top:2px;width:100%;margin-bottom:10px">+ Add Child</button>';
+      html+='<div style="display:flex;gap:8px">';
+      html+='<button onclick="captureConfirmChildren('+i+',this)" style="padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500">✓ Save to Children Card</button>';
+      html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #86efac;color:#15803d;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button>';
+      html+='</div></div>';
+      return;
+    }
+
     if(it.save_as==='new_contact'){
       const f=it.new_contact_fields||{};
       html+='<div class="capture-item" data-i="'+i+'" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
@@ -5281,6 +5306,7 @@ function _captureRenderProposals(parsed){
   // Pre-select matched contacts, the household, and the AI-chosen save mode
   items.forEach((it,i)=>{
     if(it.save_as==='new_contact')return; // handled by captureLaunchContactCreator
+    if(it.save_as==='children')return; // handled by captureConfirmChildren
     if(it.contact_id){
       const sel=document.getElementById('cap-contact-'+i);if(sel)sel.value=it.contact_id;
       const h=households.find(hh=>(hh.members||[]).some(m=>m.id===it.contact_id));
@@ -5327,6 +5353,55 @@ function captureLaunchContactCreator(i){
   // Focus first field for keyboard flow
   const firstEl=document.getElementById('ac_first');
   if(firstEl)firstEl.focus();
+}
+
+function addCaptureKidRow(i){
+  const container=document.getElementById('cap-kids-rows-'+i);
+  if(!container)return;
+  const row=document.createElement('div');
+  row.className='cap-kid-row';
+  row.style.cssText='display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML='<input placeholder="Name" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">'
+    +'<input type="number" placeholder="Birth Yr" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">'
+    +'<input placeholder="Basis" style="background:#fff;border:1px solid #86efac;border-radius:5px;padding:5px 7px;font-size:.75rem;font-family:inherit;color:var(--txt)">'
+    +'<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>';
+  container.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+async function captureConfirmChildren(i,btn){
+  const card=btn.closest('.capture-item');
+  const rows=[...document.querySelectorAll('#cap-kids-rows-'+i+' .cap-kid-row')];
+  const kids=rows.map(row=>{
+    const inputs=row.querySelectorAll('input');
+    return{name:(inputs[0]?.value||'').trim(),estimated_birth_year:parseInt(inputs[1]?.value)||null,basis:(inputs[2]?.value||'').trim()};
+  }).filter(c=>c.name||c.estimated_birth_year);
+  if(!kids.length){alert('Add at least one child entry.');return;}
+
+  const parsed=window._captureLastParsed;
+  const it=parsed&&parsed.items&&parsed.items[i];
+  if(!it||!it.contact_id){alert('Could not match to a contact. Please add manually via the contact\'s Children card.');return;}
+
+  let targetHousehold=households.find(h=>(h.members||[]).some(m=>m.id===it.contact_id));
+  if(!targetHousehold){alert('Household not found. Please add manually via the contact\'s Children card.');return;}
+
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const existing=(targetHousehold.profile_data&&targetHousehold.profile_data.estimated_children)||[];
+    const merged=[...existing];
+    kids.forEach(newKid=>{
+      const idx=merged.findIndex(e=>e.name&&newKid.name&&e.name.toLowerCase()===newKid.name.toLowerCase());
+      if(idx>=0)merged[idx]=newKid; else merged.push(newKid);
+    });
+    const updatedProfile={...(targetHousehold.profile_data||{}),estimated_children:merged};
+    await sb(`households?id=eq.${targetHousehold.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...targetHousehold.property_data,profile:updatedProfile}})});
+    targetHousehold.profile_data=updatedProfile;
+    btn.textContent='✓ Saved!'; btn.style.background='var(--green)';
+    setTimeout(()=>{card.style.display='none';},1500);
+  }catch(e){
+    btn.disabled=false; btn.textContent=orig;
+    alert('Save failed: '+e.message);
+  }
 }
 
 // Toggle interaction vs household-note fields
