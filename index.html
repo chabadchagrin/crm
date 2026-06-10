@@ -159,7 +159,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .contacts-view{display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg)}
 .contacts-view.active{display:flex}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
-.ct-wrap{flex:1;overflow:auto}
+.ct-wrap{flex:1;overflow:auto;padding:18px 24px}
+.ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .ct-table{width:100%;border-collapse:collapse}
 .ct-table th{position:sticky;top:0;background:var(--surf2);text-align:left;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);border-bottom:1px solid var(--border2);cursor:pointer;user-select:none;white-space:nowrap;z-index:5}
 .ct-table th:hover{color:var(--accent)}
@@ -366,9 +367,10 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
 
-    <!-- HOME -->
-    <button class="sb-item" onclick="closeSidebar();goHome()" style="font-weight:600">🏠 Home</button>
+    <!-- NAVIGATION -->
     <button class="sb-item" onclick="closeSidebar();switchView('dash')" style="font-weight:600">📊 Dashboard</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('crm')" style="font-weight:600">🗺 Map</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('contacts')" style="font-weight:600">📋 Contacts</button>
 
     <!-- DATA-- DATA section -->
     <div style="padding:14px 18px 6px;font-family:'DM Mono',monospace;font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Data</div>
@@ -400,7 +402,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- Pin color thresholds -->
     <div style="padding:10px 18px">
       <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3);margin-bottom:8px">📍 Pin Thresholds</div>
-      <div id="sb-valueTiers" style="display: block;">
+      <div id="sb-valueTiers" style="display: none;">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Home Value</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green)">Green &lt;</span>
@@ -411,7 +413,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
           <input type="number" class="tier-input" id="tier2sb" style="width:90px" oninput="document.getElementById('tier2').value=this.value;recolorAll()">
         </div>
       </div>
-      <div id="sb-givingTiers" style="display: none; margin-top: 4px;">
+      <div id="sb-givingTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Giving</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green)">Green &lt;</span>
@@ -422,8 +424,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
           <input type="number" class="tier-input" id="gtier2sb" style="width:90px" oninput="document.getElementById('gtier2').value=this.value;recolorAll()">
         </div>
       </div>
-      <div id="sb-scoreTiers" style="display: none; margin-top: 4px;">
-        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">AGC Score</div>
+      <div id="sb-scoreTiers" style="display:none;margin-top:4px">
+        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Prospect Score</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green)">Green ≥</span>
           <input type="number" class="tier-input" id="stier1sb" value="70" style="width:70px" oninput="recolorAll()">
@@ -433,12 +435,34 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
           <input type="number" class="tier-input" id="stier2sb" value="40" style="width:70px" oninput="recolorAll()">
         </div>
       </div>
+      <div id="sb-lastcontactTiers" style="display: block; margin-top: 4px;">
+        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Last Contact (days)</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green)">Green ≤</span>
+          <input type="number" class="tier-input" id="lctier1sb" value="30" style="width:70px" oninput="recolorAll()">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--gold)">Gold ≤</span>
+          <input type="number" class="tier-input" id="lctier2sb" value="90" style="width:70px" oninput="recolorAll()">
+        </div>
+      </div>
+      <div id="sb-giftcountTiers" style="display:none;margin-top:4px">
+        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Gift Count</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--green)">Green &lt;</span>
+          <input type="number" class="tier-input" id="gctier1sb" value="3" style="width:70px" oninput="recolorAll()">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--gold)">Gold &lt;</span>
+          <input type="number" class="tier-input" id="gctier2sb" value="6" style="width:70px" oninput="recolorAll()">
+        </div>
+      </div>
     </div>
 
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 9, 2026, 10:06 PM</div>
+      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 11:25 AM</div>
     </div>
   </div>
 
@@ -475,7 +499,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div style="display:none">
     <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
     <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
-    <div id="valueTiers" style="display: flex;"></div><div id="givingTiers" style="display: none;"></div>
+    <div id="valueTiers" style="display: none;"></div><div id="givingTiers" style="display: none;"></div>
     <button id="prefetchBtn"></button>
   </div>
 
@@ -516,27 +540,27 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 </svg>
     <span style="font-family:'Lora',serif;font-weight:700;font-size:1.1rem;color:var(--txt);flex-shrink:0">דַּעַת</span>
     <div class="toolbar-sep"></div>
-    <button class="dash-nav-btn active" id="navCRM" onclick="switchView('crm')" style="padding:4px 12px">🗺 Map</button>
+    <button class="dash-nav-btn" id="navCRM" onclick="switchView('crm')" style="padding:4px 12px">🗺 Map</button>
     <button class="dash-nav-btn" id="navContacts" onclick="switchView('contacts')" style="padding:4px 12px">📋 Contacts</button>
-    <button class="dash-nav-btn" id="navDash" onclick="switchView('dash')" style="padding:4px 12px">📊 Dashboard</button>
+    <button class="dash-nav-btn active" id="navDash" onclick="switchView('dash')" style="padding:4px 12px">📊 Dashboard</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
-    <div class="prog-wrap" id="geoProgress" style="display: none;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
-      <span class="prog-lbl" id="progLbl">✓ Done</span>
+    <div class="prog-wrap" id="geoProgress" style="display: flex;">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">&lt; $500,000</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div><span id="leg2">&lt; $1,000,000</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">$1,000,000+</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">≤30 days</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div><span id="leg2">≤90 days</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">90+ / never</span></div>
     </div>
     <select id="colorBy" onchange="switchColorMode();updateSidebarTiers();saveUIPrefs()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
       <option value="value">Home Value</option>
       <option value="giving">Total Giving</option>
-      <option value="score">AGC Score</option>
+      <option value="score">Prospect Score</option>
       <option value="lastcontact">Last Contact</option>
       <option value="giftcount">Gift Count</option>
     </select>
@@ -563,9 +587,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
   <!-- Filter Panel -->
   <!-- FILTER STRIP — always visible on Map + Contacts, hidden on Dashboard. All conditions AND together. -->
-  <div id="filterStrip" style="display: flex; background: var(--surf2); border-bottom: 1px solid var(--border); padding: 7px 14px; flex-wrap: wrap; gap: 10px; align-items: flex-end; flex-shrink: 0;">
+  <div id="filterStrip" style="display: none; background: var(--surf2); border-bottom: 1px solid var(--border); padding: 7px 14px; flex-wrap: wrap; gap: 10px; align-items: flex-end; flex-shrink: 0;">
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min AGC</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="applyFilter()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="applyFilter()"></div>
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift After</div><input type="date" class="tier-input fs-inp" id="filterDateFrom" style="width:130px" oninput="applyFilter()"></div>
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift Before</div><input type="date" class="tier-input fs-inp" id="filterDateTo" style="width:130px" oninput="applyFilter()"></div>
@@ -576,49 +600,49 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
   </div>
 
-  <div class="crm-view" id="crmView">
+  <div class="crm-view hidden" id="crmView">
   <div class="main">
-    <div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(469px, 81px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(-181px, -475px, 0px) scale(2);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-181px, -475px, 0px) scale(1);"><img alt="" src="https://b.tile.openstreetmap.org/11/560/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(258px, 534px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/561/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(514px, 534px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/560/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(258px, 790px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/561/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(514px, 790px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(258px, 278px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(514px, 278px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/559/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2px, 534px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/562/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(770px, 534px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/559/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2px, 790px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/562/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(770px, 790px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(258px, 1046px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(514px, 1046px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2px, 278px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(770px, 278px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2px, 1046px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(770px, 1046px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/558/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-254px, 534px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/563/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1026px, 534px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/558/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-254px, 790px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/563/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1026px, 790px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-254px, 278px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1026px, 278px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-254px, 1046px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1026px, 1046px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/557/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-510px, 534px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/564/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1282px, 534px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/557/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-510px, 790px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/564/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1282px, 790px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-510px, 278px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1282px, 278px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-510px, 1046px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1282px, 1046px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(318px, 234px, 0px); z-index: 234;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">1</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(364px, 470px, 0px); z-index: 470;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">2</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(161px, 105px, 0px); z-index: 105;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">3</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(277px, 200px, 0px); z-index: 200;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">4</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(320px, 196px, 0px); z-index: 196;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">5</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(306px, 177px, 0px); z-index: 177;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">6</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(328px, 193px, 0px); z-index: 193;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">7</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(274px, 326px, 0px); z-index: 326;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">9</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(348px, 204px, 0px); z-index: 204;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">10</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(477px, 278px, 0px); z-index: 278;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">11</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(239px, 56px, 0px); z-index: 56;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">12</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(256px, 265px, 0px); z-index: 265;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">13</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(290px, 259px, 0px); z-index: 259;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">14</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(337px, 591px, 0px); z-index: 591;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">17</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(387px, 228px, 0px); z-index: 228;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">18</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(194px, 190px, 0px); z-index: 190;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">19</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(385px, 196px, 0px); z-index: 196;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">20</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(254px, 61px, 0px); z-index: 61;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">21</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(323px, 224px, 0px); z-index: 224;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">22</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(353px, 212px, 0px); z-index: 212;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">23</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(211px, 219px, 0px); z-index: 219;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">25</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(364px, 375px, 0px); z-index: 375;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">26</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(311px, 246px, 0px); z-index: 246;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">27</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(329px, 185px, 0px); z-index: 185;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">28</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(245px, 262px, 0px); z-index: 262;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">29</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(349px, 276px, 0px); z-index: 276;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">32</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(372px, 277px, 0px); z-index: 277;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">34</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(324px, 246px, 0px); z-index: 246;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">35</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(245px, 59px, 0px); z-index: 59;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">36</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(245px, 140px, 0px); z-index: 140;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">37</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(339px, 203px, 0px); z-index: 203;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">38</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(275px, 174px, 0px); z-index: 174;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">39</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(312px, 183px, 0px); z-index: 183;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">40</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(347px, 244px, 0px); z-index: 244;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">41</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(304px, 196px, 0px); z-index: 196;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">42</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(218px, 132px, 0px); z-index: 132;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">43</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(322px, 208px, 0px); z-index: 208;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">44</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(192px, 216px, 0px); z-index: 216;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">45</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(266px, 160px, 0px); z-index: 160;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">46</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(388px, 264px, 0px); z-index: 264;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">48</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(324px, 169px, 0px); z-index: 169;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">49</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(163px, 123px, 0px); z-index: 123;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">50</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(365px, 221px, 0px); z-index: 221;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">51</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(293px, 284px, 0px); z-index: 284;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">52</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(338px, 382px, 0px); z-index: 382;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">53</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(340px, 187px, 0px); z-index: 187;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">54</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(482px, 214px, 0px); z-index: 214;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">55</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(306px, 215px, 0px); z-index: 215;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">57</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(203px, 113px, 0px); z-index: 113;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">59</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(328px, 204px, 0px); z-index: 204;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">60</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(262px, 207px, 0px); z-index: 207;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">61</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(159px, 107px, 0px); z-index: 107;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">63</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(393px, 320px, 0px); z-index: 320;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">64</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(290px, 269px, 0px); z-index: 269;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">66</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(247px, 259px, 0px); z-index: 259;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">67</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(332px, 196px, 0px); z-index: 196;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">68</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(231px, 207px, 0px); z-index: 207;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">69</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(399px, 221px, 0px); z-index: 221;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">70</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(332px, 237px, 0px); z-index: 237;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">71</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(260px, 174px, 0px); z-index: 174;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">72</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(259px, 213px, 0px); z-index: 213;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">73</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(336px, 216px, 0px); z-index: 216;"><div class="mpin pin-grey"><div class="mpin-n" style="font-size:8px">76</div></div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(143604px, 195849px, 0px) scale(1024);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div>
+    <div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;"><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(-652px, -557px, 0px) scale(2);"></div><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 19; transform: translate3d(-652px, -557px, 0px) scale(1);"><img alt="" src="https://b.tile.openstreetmap.org/11/560/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 698px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/561/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 698px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/560/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 954px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/561/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 954px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 442px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 442px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/559/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 698px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/562/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 698px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/559/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 954px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/562/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 954px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/560/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1198px, 1210px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/561/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1454px, 1210px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 442px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 442px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/559/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(942px, 1210px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/562/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1710px, 1210px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/558/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 698px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/563/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 698px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/558/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 954px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/563/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 954px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 442px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 442px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/558/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(686px, 1210px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/563/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1966px, 1210px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/557/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 698px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/564/764.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 698px, 0px); opacity: 1;"><img alt="" src="https://c.tile.openstreetmap.org/11/557/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 954px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/564/765.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 954px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 442px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/763.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 442px, 0px); opacity: 1;"><img alt="" src="https://a.tile.openstreetmap.org/11/557/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(430px, 1210px, 0px); opacity: 1;"><img alt="" src="https://b.tile.openstreetmap.org/11/564/766.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(2222px, 1210px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(787px, 316px, 0px); z-index: 316;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">1</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 552px, 0px); z-index: 552;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">2</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(630px, 187px, 0px); z-index: 187;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">3</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(746px, 282px, 0px); z-index: 282;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">4</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(789px, 278px, 0px); z-index: 278;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">5</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 259px, 0px); z-index: 259;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">6</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 275px, 0px); z-index: 275;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">7</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(743px, 408px, 0px); z-index: 408;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">9</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(817px, 286px, 0px); z-index: 286;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">10</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(946px, 360px, 0px); z-index: 360;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">11</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(708px, 138px, 0px); z-index: 138;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">12</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(725px, 347px, 0px); z-index: 347;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">13</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 341px, 0px); z-index: 341;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">14</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(806px, 673px, 0px); z-index: 673;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">17</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(856px, 310px, 0px); z-index: 310;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">18</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(663px, 272px, 0px); z-index: 272;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">19</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(854px, 278px, 0px); z-index: 278;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">20</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(723px, 143px, 0px); z-index: 143;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">21</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(792px, 306px, 0px); z-index: 306;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">22</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(822px, 294px, 0px); z-index: 294;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">23</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(680px, 301px, 0px); z-index: 301;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">25</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(833px, 457px, 0px); z-index: 457;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">26</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(780px, 328px, 0px); z-index: 328;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">27</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(798px, 267px, 0px); z-index: 267;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">28</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 344px, 0px); z-index: 344;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">29</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(818px, 358px, 0px); z-index: 358;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">32</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(841px, 359px, 0px); z-index: 359;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">34</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 328px, 0px); z-index: 328;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">35</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 141px, 0px); z-index: 141;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">36</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(714px, 222px, 0px); z-index: 222;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">37</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(808px, 285px, 0px); z-index: 285;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">38</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(744px, 256px, 0px); z-index: 256;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">39</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(781px, 265px, 0px); z-index: 265;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">40</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(816px, 326px, 0px); z-index: 326;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">41</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(773px, 278px, 0px); z-index: 278;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">42</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(687px, 214px, 0px); z-index: 214;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">43</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(791px, 290px, 0px); z-index: 290;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">44</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(661px, 298px, 0px); z-index: 298;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">45</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(735px, 242px, 0px); z-index: 242;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">46</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(857px, 346px, 0px); z-index: 346;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">48</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(793px, 251px, 0px); z-index: 251;"><div class="mpin pin-gold"><div class="mpin-n" style="font-size:8px">49</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(632px, 205px, 0px); z-index: 205;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">50</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(834px, 303px, 0px); z-index: 303;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">51</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(762px, 366px, 0px); z-index: 366;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">52</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(807px, 464px, 0px); z-index: 464;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">53</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(809px, 269px, 0px); z-index: 269;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">54</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(951px, 296px, 0px); z-index: 296;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">55</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(775px, 297px, 0px); z-index: 297;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">57</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(672px, 195px, 0px); z-index: 195;"><div class="mpin pin-green"><div class="mpin-n" style="font-size:8px">59</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(797px, 286px, 0px); z-index: 286;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">60</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(731px, 289px, 0px); z-index: 289;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">61</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(628px, 189px, 0px); z-index: 189;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">63</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(862px, 402px, 0px); z-index: 402;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">64</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(759px, 351px, 0px); z-index: 351;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">66</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(716px, 341px, 0px); z-index: 341;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">67</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 278px, 0px); z-index: 278;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">68</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(700px, 289px, 0px); z-index: 289;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">69</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(868px, 303px, 0px); z-index: 303;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">70</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(801px, 319px, 0px); z-index: 319;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">71</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(729px, 256px, 0px); z-index: 256;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">72</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(728px, 295px, 0px); z-index: 295;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">73</div></div></div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -28px; width: 28px; height: 28px; transform: translate3d(805px, 298px, 0px); z-index: 298;"><div class="mpin pin-red"><div class="mpin-n" style="font-size:8px">76</div></div></div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(143604px, 195849px, 0px) scale(1024);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap</div></div></div></div>
     <div class="sidebar">
       <div class="mobile-bar">
         <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
-      <div class="srch"><input type="search" id="srch" placeholder="Search contacts…" autocomplete="off" name="daas-srch-x9z" oninput="document.getElementById('headerSearch').value=this.value;_applyFilterDebounced()"></div>
+      <div class="srch"><input type="search" id="srch" placeholder="Narrow list by name…" autocomplete="off" name="daas-srch-x9z" oninput="_applyFilterDebounced()"></div>
       <div class="clist" id="clist"><div class="citem" onclick="selectHousehold(0)">
-      <div class="pindot green">1</div>
+      <div class="pindot red">1</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Esther D. Aber</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6000 Nob Hill Dr Apt 318, Chagrin Falls 44022</div>
         <div class="cphone">4406007224</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$57,000</div>
+          <div class="cval red">$57,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 17</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(1)">
-      <div class="pindot gold">2</div>
+      <div class="pindot red">2</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Robert &amp; Stefani Apple</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">681-25 Claridge Ln, Aurora 44202</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$633,000</div>
+          <div class="cval red">$633,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 23</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(2)">
-      <div class="pindot gold">3</div>
+      <div class="pindot red">3</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Alan and Marcia Arons</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24499 Albert Lane, Beachwood 44122</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$513,700</div>
+          <div class="cval red">$513,700</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 26</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $126 · 2 gifts</div>
@@ -638,46 +662,46 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(4)">
-      <div class="pindot gold">5</div>
+      <div class="pindot red">5</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Ken and Nancy Bernstein</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5 Timber Ridge Dr, Chagrin Falls 44022</div>
         <div class="cphone">4402231983 · 4402234669</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$827,200</div>
+          <div class="cval red">$827,200</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 29</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(5)">
-      <div class="pindot red">6</div>
+      <div class="pindot green">6</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Larry and Marilyn Blaustein</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">603 N Main St, Chagrin Falls 44022</div>
         <div class="cphone">2162721800 · 216-470-4084</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$3,039,500</div>
+          <div class="cval green">$3,039,500</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 48</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,800 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(6)">
-      <div class="pindot gold">7</div>
+      <div class="pindot green">7</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Michael and Shelley Bloomfield</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">156 Willow Ln, Chagrin Falls 44022</div>
         <div class="cphone">4406652902</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$576,500</div>
+          <div class="cval green">$576,500</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 41</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $252 · 2 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(7)">
-      <div class="pindot ">8</div>
+      <div class="pindot red">8</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Anna Borenstein</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -690,85 +714,85 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(8)">
-      <div class="pindot gold">9</div>
+      <div class="pindot red">9</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Tanya Borshov</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6889 Silkwood Ln, Solon 44139</div>
         <div class="cphone">4405671107</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$654,200</div>
+          <div class="cval red">$654,200</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 23</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(9)">
-      <div class="pindot gold">10</div>
+      <div class="pindot red">10</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Rodger and Susan Cahn</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">257 Hickory Hill Rd, Chagrin Falls 44022</div>
         <div class="cphone">216-337-2419</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$544,100</div>
+          <div class="cval red">$544,100</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 28</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,000 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(10)">
-      <div class="pindot green">11</div>
+      <div class="pindot red">11</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Julie and Bob Cohen</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">113 Renaissance Ct, Chagrin Falls 44023</div>
         <div class="cphone">216-905-7267 · 2165700456</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$499,100</div>
+          <div class="cval red">$499,100</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 20</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(11)">
-      <div class="pindot green">12</div>
+      <div class="pindot red">12</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Sally and Dave Cunix</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">160 Fox Hollow Drive #402, Mayfield Hts 44124</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$244,200</div>
+          <div class="cval red">$244,200</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 20</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(12)">
-      <div class="pindot green">13</div>
+      <div class="pindot red">13</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Leah Dicker</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5765 SOM Center Rd, Solon 44139</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$414,100</div>
+          <div class="cval red">$414,100</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 22</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(13)">
-      <div class="pindot red">14</div>
+      <div class="pindot gold">14</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Howard and Linda Dickey-White</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">35968 Solon Rd, Bentleyville 44022</div>
         <div class="cphone">216-319-1677</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$2,343,900</div>
+          <div class="cval gold">$2,343,900</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 56</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $2,500 · 2 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(14)">
-      <div class="pindot ">15</div>
+      <div class="pindot red">15</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Yuliya Frid</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -781,7 +805,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(15)">
-      <div class="pindot ">16</div>
+      <div class="pindot red">16</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Roman Frid</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -794,33 +818,33 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(16)">
-      <div class="pindot green">17</div>
+      <div class="pindot red">17</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Helen and Alex Friedman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">256 Ruby Lane, Streetsboro 44241</div>
         <div class="cphone">2165980318</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$60,000</div>
+          <div class="cval red">$60,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 22</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $252 · 2 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(17)">
-      <div class="pindot red">18</div>
+      <div class="pindot green">18</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Ian and Jamie Friedman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16405 Majestic Oaks Dr, Chagrin Falls 44023</div>
         <div class="cphone">2167011072 · 2169061981</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,174,600</div>
+          <div class="cval green">$1,174,600</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 63</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $3,654 · 2 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(18)">
-      <div class="pindot ">19</div>
+      <div class="pindot red">19</div>
       <div style="flex:1;min-width:0">
         <div class="cname">ELIOT and Helene GELB</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">250 Jackson Dr, Orange 44022</div>
@@ -833,59 +857,59 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(19)">
-      <div class="pindot red">20</div>
+      <div class="pindot green">20</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Alex Geyer</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">400 Reserve Trail, Chagrin Falls 44022</div>
         <div class="cphone">917-207-0481</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,180,800</div>
+          <div class="cval green">$1,180,800</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 44</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,100 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(20)">
-      <div class="pindot green">21</div>
+      <div class="pindot red">21</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Patricia Greene</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6380 Gates Mills Blvd, Mayfield Hts 44124</div>
         <div class="cphone">2165778201</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$416,000</div>
+          <div class="cval red">$416,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 23</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(21)">
-      <div class="pindot gold">22</div>
+      <div class="pindot red">22</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Melanie and Andrew Halvorson</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">80 Carriage Stone Dr, Chagrin Falls 44022</div>
         <div class="cphone">7347177927</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$834,300</div>
+          <div class="cval red">$834,300</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 27</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $118 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(22)">
-      <div class="pindot gold">23</div>
+      <div class="pindot red">23</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Alex and Carly Hamerstone</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">492 Laurelbrook Dr, Chagrin Falls 44022</div>
         <div class="cphone">2164036349 · (216) 272-0660</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$767,900</div>
+          <div class="cval red">$767,900</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 27</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(23)">
-      <div class="pindot ">24</div>
+      <div class="pindot red">24</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Marcie Harrison</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -898,20 +922,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(24)">
-      <div class="pindot green">25</div>
+      <div class="pindot red">25</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Lindsay and Ryan Heksch</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">145 E Orange Hill Cir, Orange 44022</div>
         <div class="cphone">330-328-1595</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$480,000</div>
+          <div class="cval red">$480,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 21</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(25)">
-      <div class="pindot ">26</div>
+      <div class="pindot red">26</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Daniel Hoicowitz</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">850 Dipper Ln, Aurora 44202</div>
@@ -924,7 +948,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(26)">
-      <div class="pindot ">27</div>
+      <div class="pindot red">27</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Mark and Tara Howard</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">50 Glennridge Ct, Bentleyville 44022</div>
@@ -937,20 +961,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(27)">
-      <div class="pindot gold">28</div>
+      <div class="pindot green">28</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Simi and Shneur Itzinger</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">506 Coy Ln, Chagrin Falls 44022</div>
         <div class="cphone">3475432764</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$674,700</div>
+          <div class="cval green">$674,700</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 18</div>
         </div>
         
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(28)">
-      <div class="pindot ">29</div>
+      <div class="pindot red">29</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Michael and Laura Jaffe</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">32570 Stony Brook Ln, Solon 44139</div>
@@ -963,7 +987,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(29)">
-      <div class="pindot ">30</div>
+      <div class="pindot red">30</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Brian Johnson</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -976,7 +1000,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(30)">
-      <div class="pindot ">31</div>
+      <div class="pindot red">31</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Dori Kaplansky</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">260 Falls Walk Way, Chagrin Falls 44022</div>
@@ -1002,7 +1026,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(32)">
-      <div class="pindot ">33</div>
+      <div class="pindot red">33</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Norma Kronenberg</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1022,7 +1046,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <div class="cphone">7168641474</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <div class="cval red">$1,103,700</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 38</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 32</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $650 · 1 gift</div>
       </div>
@@ -1041,7 +1065,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(35)">
-      <div class="pindot ">36</div>
+      <div class="pindot red">36</div>
       <div style="flex:1;min-width:0">
         <div class="cname">David and Beverly Lavetter</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6441 Woodhawk Dr, Mayfield Heights 44124</div>
@@ -1067,7 +1091,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(37)">
-      <div class="pindot ">38</div>
+      <div class="pindot red">38</div>
       <div style="flex:1;min-width:0">
         <div class="cname">NANCY LUDWIG</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">105 Hamlet Hills Dr Apt 11, Chagrin Falls 44022</div>
@@ -1080,7 +1104,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(38)">
-      <div class="pindot ">39</div>
+      <div class="pindot red">39</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Mila Lukova</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">3987 Wiltshire Rd, Moreland Hills 44022</div>
@@ -1093,20 +1117,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(39)">
-      <div class="pindot red">40</div>
+      <div class="pindot green">40</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Howard and Missy Mandel</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">511 N Main St, Chagrin Falls 44022</div>
         <div class="cphone">2164966182</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,354,900</div>
+          <div class="cval green">$1,354,900</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 49</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $5,000 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(40)">
-      <div class="pindot ">41</div>
+      <div class="pindot red">41</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Jerry Mandel</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16715 Brigadoon Dr, Chagrin Falls 44023</div>
@@ -1119,20 +1143,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(41)">
-      <div class="pindot red">42</div>
+      <div class="pindot green">42</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Randy Markey</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">40 Addison Ln, Moreland Hills 44022</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$2,706,000</div>
+          <div class="cval green">$2,706,000</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 45</div>
         </div>
         
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(42)">
-      <div class="pindot ">43</div>
+      <div class="pindot red">43</div>
       <div style="flex:1;min-width:0">
         <div class="cname">David and Melissa Markowitz</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">29975 Bolingbrook Rd, Pepper Pike 44124</div>
@@ -1171,7 +1195,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(45)">
-      <div class="pindot ">46</div>
+      <div class="pindot red">46</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Courtney and Seth Mendelsohn</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">72 Wychwood Dr, Moreland Hills 44022</div>
@@ -1184,7 +1208,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(46)">
-      <div class="pindot ">47</div>
+      <div class="pindot red">47</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Michelle and Clark Miller</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">18675 Auburn Glen Dr, Chagrin Falls 44022</div>
@@ -1197,13 +1221,13 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(47)">
-      <div class="pindot gold">48</div>
+      <div class="pindot red">48</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Alla and Mike Model</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">17139 Sunset Dr, Chagrin Falls 44023</div>
         <div class="cphone">2169036929</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$605,900</div>
+          <div class="cval red">$605,900</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 24</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
@@ -1223,33 +1247,33 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(49)">
-      <div class="pindot gold">50</div>
+      <div class="pindot red">50</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Alyse and Joseph Muttillo</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24818 Wimbledon Rd, Beachwood 44122</div>
         <div class="cphone">2167804444 · 2164699494</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$649,300</div>
+          <div class="cval red">$649,300</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 26</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(50)">
-      <div class="pindot red">51</div>
+      <div class="pindot green">51</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Rob and Tracy Myers</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">9 Deerfield Dr, Chagrin Falls 44022</div>
         <div class="cphone">440-487-4444</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,191,400</div>
+          <div class="cval green">$1,191,400</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 53</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $2,800 · 2 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(51)">
-      <div class="pindot ">52</div>
+      <div class="pindot red">52</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Nicole Newman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">37250 Valley Forge Dr, Solon 44139</div>
@@ -1262,7 +1286,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(52)">
-      <div class="pindot ">53</div>
+      <div class="pindot red">53</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Klara Pogrebinsky</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">3791 East Blvd, Aurora 44202</div>
@@ -1275,7 +1299,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(53)">
-      <div class="pindot ">54</div>
+      <div class="pindot red">54</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Kate and Will Reiter</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">120 Edgewood Ct, Chagrin Falls 44022</div>
@@ -1288,7 +1312,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(54)">
-      <div class="pindot ">55</div>
+      <div class="pindot red">55</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Janine Rigano</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16165 Wake Robin Dr, Newbury 44065</div>
@@ -1301,7 +1325,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(55)">
-      <div class="pindot ">56</div>
+      <div class="pindot red">56</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Janine Rigano</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1314,7 +1338,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(56)">
-      <div class="pindot ">57</div>
+      <div class="pindot red">57</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Rob and Trish Risman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">309 Bentleyville Rd, Moreland Hills 44022</div>
@@ -1327,7 +1351,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(57)">
-      <div class="pindot ">58</div>
+      <div class="pindot red">58</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Gary Ross</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1340,20 +1364,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(58)">
-      <div class="pindot gold">59</div>
+      <div class="pindot green">59</div>
       <div style="flex:1;min-width:0">
         <div class="cname">WAYNE ROTHMAN</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">28899 Edgedale Rd, Pepper Pike 44124</div>
         <div class="cphone">3303512300</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$569,100</div>
+          <div class="cval green">$569,100</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 39</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $900 · 6 gifts</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(59)">
-      <div class="pindot ">60</div>
+      <div class="pindot red">60</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Andrew and Mia Rutsky</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">89 E Cottage St, Chagrin Falls 44022</div>
@@ -1379,7 +1403,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(61)">
-      <div class="pindot ">62</div>
+      <div class="pindot red">62</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Sandy Seiger</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5685D Emerald Ridge Parkway, Solon 44139</div>
@@ -1392,7 +1416,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(62)">
-      <div class="pindot ">63</div>
+      <div class="pindot red">63</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Donna Shafran</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24497 Hawthorne Dr, Beachwood 44122</div>
@@ -1405,20 +1429,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(63)">
-      <div class="pindot green">64</div>
+      <div class="pindot red">64</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Jan and Ron Silverman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">18220 Rolling Brook Dr, Chagrin Falls 44023</div>
         <div class="cphone">216-970-6668</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$466,900</div>
+          <div class="cval red">$466,900</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 22</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $50 · 1 gift</div>
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(64)">
-      <div class="pindot ">65</div>
+      <div class="pindot red">65</div>
       <div style="flex:1;min-width:0">
         <div class="cname">David Silverstein</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1431,7 +1455,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(65)">
-      <div class="pindot ">66</div>
+      <div class="pindot red">66</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Ed and Julia Simms</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">37165 Landings Dr, Solon 44139</div>
@@ -1444,7 +1468,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(66)">
-      <div class="pindot ">67</div>
+      <div class="pindot red">67</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Melvin and Linda Solomon</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">32682 Springside Lane, Solon 44139</div>
@@ -1457,7 +1481,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(67)">
-      <div class="pindot ">68</div>
+      <div class="pindot red">68</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Lauren and Jeff Sonkin</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">293 N Cleveland Street, Chagrin Falls 44022</div>
@@ -1470,20 +1494,20 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(68)">
-      <div class="pindot gold">69</div>
+      <div class="pindot red">69</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Daniel and Maria Strom</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">90 Sterncrest Dr, Moreland Hills 44022</div>
         
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$855,300</div>
+          <div class="cval red">$855,300</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 40</div>
         </div>
         
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(69)">
-      <div class="pindot ">70</div>
+      <div class="pindot red">70</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Edith and Walker Todd</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">1164 Sheerbrook Dr, Chagrin Falls 44022</div>
@@ -1496,7 +1520,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(70)">
-      <div class="pindot ">71</div>
+      <div class="pindot red">71</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Mike and Fran Weissman</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">7125 Bingham Ln #305, Chagrin Falls 44023</div>
@@ -1509,13 +1533,13 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(71)">
-      <div class="pindot gold">72</div>
+      <div class="pindot red">72</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Marc and Cindy Wolf</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">110 N Strawberry Ln, Moreland Hills 44022</div>
         <div class="cphone">(216) 570-3691</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$552,800</div>
+          <div class="cval red">$552,800</div>
           <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px">AGC 31</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $86 · 3 gifts</div>
@@ -1535,7 +1559,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <span class="ck">✓</span>
     </div><div class="citem" onclick="selectHousehold(73)">
-      <div class="pindot ">74</div>
+      <div class="pindot red">74</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Vera Yudovina</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1548,7 +1572,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(74)">
-      <div class="pindot ">75</div>
+      <div class="pindot green">75</div>
       <div style="flex:1;min-width:0">
         <div class="cname">JOHN ZACHARIAH</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
@@ -1561,7 +1585,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       
     </div><div class="citem" onclick="selectHousehold(75)">
-      <div class="pindot ">76</div>
+      <div class="pindot red">76</div>
       <div style="flex:1;min-width:0">
         <div class="cname">Melissa and Cullen Zwick</div>
         <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">40 Heather Ct, Chagrin Falls 44022</div>
@@ -1593,14 +1617,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <button class="ct-preset" id="ctp-financial" onclick="setContactsPreset('financial')">Financial</button>
       <button class="ct-preset" id="ctp-outreach" onclick="setContactsPreset('outreach')">Outreach</button>
       <div class="spacer" style="flex:1"></div>
-      <span id="ctCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3)">76 households</span>
+      <span id="ctCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3)"></span>
       <button class="btn btn-sec" onclick="exportContactsCSV()" style="font-size:.66rem;padding:4px 10px">⬇ Export CSV</button>
     </div>
-    <div class="ct-wrap"><table class="ct-table" id="ctTable"><tbody><tr><th onclick="sortContacts('name')">Household</th><th onclick="sortContacts('email')">Email</th><th onclick="sortContacts('phone')">Phone</th><th onclick="sortContacts('agc')">AGC ▾</th><th onclick="sortContacts('homeValue')">Home Value</th><th onclick="sortContacts('lastContact')">Last Contact</th></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(17),120)"><td><div style="font-weight:600">Ian and Jamie Friedman</div><div class="ct-sub">16405 Majestic Oaks Dr, Chagrin Falls</div></td><td><div>Ian: inf@fanlegal.com</div><div>Jamie: jstarkey101@gmail.com</div></td><td><div>Ian: 2167011072</div><div>Jamie: 2169061981</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">63</span></td><td>$1,174,600</td><td>2026-05-24</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(13),120)"><td><div style="font-weight:600">Howard and Linda Dickey-White</div><div class="ct-sub">35968 Solon Rd, Bentleyville</div></td><td><div>Howard: hdwmd@aol.com</div></td><td><div>Howard: 216-319-1677</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">56</span></td><td>$2,343,900</td><td>2026-04-22</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(50),120)"><td><div style="font-weight:600">Rob and Tracy Myers</div><div class="ct-sub">9 Deerfield Dr, Chagrin Falls</div></td><td><div>Rob: rob@myershomesco.com</div></td><td><div>Rob: 440-487-4444</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">53</span></td><td>$1,191,400</td><td>2026-05-24</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(39),120)"><td><div style="font-weight:600">Howard and Missy Mandel</div><div class="ct-sub">511 N Main St, Chagrin Falls</div></td><td><div>Howard: fhmandel@outlook.com</div><div>Missy: elizabeth.wright@thompsonhine.com</div></td><td><div>Howard: 2164966182</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">49</span></td><td>$1,354,900</td><td>2026-06-09</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(5),120)"><td><div style="font-weight:600">Larry and Marilyn Blaustein</div><div class="ct-sub">603 N Main St, Chagrin Falls</div></td><td><div>Larry: blausteinla@gmail.com</div></td><td><div>Larry: 2162721800</div><div>Marilyn: 216-470-4084</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">48</span></td><td>$3,039,500</td><td>2026-06-09</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(41),120)"><td><div style="font-weight:600">Randy Markey</div><div class="ct-sub">40 Addison Ln, Moreland Hills</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">45</span></td><td>$2,706,000</td><td>2026-05-29</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(19),120)"><td><div style="font-weight:600">Alex Geyer</div><div class="ct-sub">400 Reserve Trail, Chagrin Falls</div></td><td><div>Alex: ageyermd@gmail.com</div></td><td><div>Alex: 917-207-0481</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">44</span></td><td>$1,180,800</td><td>2026-06-05</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(6),120)"><td><div style="font-weight:600">Michael and Shelley Bloomfield</div><div class="ct-sub">156 Willow Ln, Chagrin Falls</div></td><td><div>Michael: bloomfm@gmail.com</div><div>Shelley: s_bloomfield@sbcglobal.net</div></td><td><div>Shelley: 4406652902</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">41</span></td><td>$576,500</td><td>2026-06-07</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(48),120)"><td><div style="font-weight:600">Melissa Morton</div><div class="ct-sub">155 Hunting Trail, Chagrin Falls</div></td><td><div>Melissa: mortonkleid@gmail.com</div></td><td><div>Melissa: 8583442878</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">41</span></td><td>$886,500</td><td>2026-05-08</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(72),120)"><td><div style="font-weight:600">David and Barbara Wolfort</div><div class="ct-sub">70 Ridgecreek Trl, Moreland Hills</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">41</span></td><td>$1,218,300</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(31),120)"><td><div style="font-weight:600">Melissa Keenan</div><div class="ct-sub">7491 Faraway Trl, Chagrin Falls</div></td><td><div>Melissa: mjkeenan2@hotmail.com</div></td><td><div>Melissa: 9084512377</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">40</span></td><td>$1,435,400</td><td>2023-12-13</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(44),120)"><td><div style="font-weight:600">Stacy Maxson</div><div class="ct-sub">173 Orange Lake Dr, Orange</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">40</span></td><td>$1,254,100</td><td>2025-12-02</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(68),120)"><td><div style="font-weight:600">Daniel and Maria Strom</div><div class="ct-sub">90 Sterncrest Dr, Moreland Hills</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--gold)">40</span></td><td>$855,300</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(58),120)"><td><div style="font-weight:600">WAYNE ROTHMAN</div><div class="ct-sub">28899 Edgedale Rd, Pepper Pike</div></td><td><div>WAYNE: wayneonthego@gmail.com</div></td><td><div>WAYNE: 3303512300</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">39</span></td><td>$569,100</td><td>2026-06-09</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(33),120)"><td><div style="font-weight:600">Ben and Jessica Kulick</div><div class="ct-sub">17361 Owls Hollow Ln., Chagrin Falls</div></td><td><div>Ben: blouiek@aol.com</div></td><td><div>Ben: 7168641474</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">38</span></td><td>$1,103,700</td><td>2026-06-09</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(74),120)"><td><div style="font-weight:600">JOHN ZACHARIAH</div><div class="ct-sub">No address on file</div></td><td><div>JOHN: jkzach@aol.com</div></td><td><div>JOHN: 330.360.8888</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">33</span></td><td><span class="ct-sub">—</span></td><td>2026-06-09</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(43),120)"><td><div style="font-weight:600">Valerie Markowitz</div><div class="ct-sub">36 W Orange St, Chagrin Falls</div></td><td><div>Valerie: valeriemarkowitz@yahoo.com</div></td><td><div>Valerie: 2165332897</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">32</span></td><td>$1,514,600</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(60),120)"><td><div style="font-weight:600">Brad and Heather Schlang</div><div class="ct-sub">30 Winterberry Ln, Moreland Hills</div></td><td><div>Brad: bschlang@etonfinancial.com</div></td><td><div>Brad: (216) 956-3272</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">32</span></td><td>$1,228,600</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(66),120)"><td><div style="font-weight:600">Melvin and Linda Solomon</div><div class="ct-sub">32682 Springside Lane, Solon</div></td><td><div>Melvin: soli030947@yahoo.com</div><div>Linda: purple6636@sbcglobal.net</div></td><td><div>Melvin: 4403822615</div><div>Linda: 4403824635</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">32</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(3),120)"><td><div style="font-weight:600">Nanette and Daniel Auerhahn</div><div class="ct-sub">37840 Jackson Road, Chagrin Falls</div></td><td><div>Nanette: nanetteca@aol.com</div></td><td><div>Nanette: 2167987515</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">31</span></td><td>$1,061,800</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(71),120)"><td><div style="font-weight:600">Marc and Cindy Wolf</div><div class="ct-sub">110 N Strawberry Ln, Moreland Hills</div></td><td><div>Marc: mdwolf200@gmail.com</div><div>Cindy: cindyonthesea@gmail.com</div></td><td><div>Marc: (216) 570-3691</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">31</span></td><td>$552,800</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(34),120)"><td><div style="font-weight:600">Norman Kumins</div><div class="ct-sub">45 Quail Ridge Dr, Bentleyville</div></td><td><div>Norman: nkumins@gmail.com</div></td><td><div>Norman: 630-222-0513</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">30</span></td><td>$1,584,600</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(36),120)"><td><div style="font-weight:600">Madeline and Brent Lieberman</div><div class="ct-sub">32450 Meadowlark Way, Pepper Pike</div></td><td><div>Madeline: mbleiwei@gmail.com</div></td><td><div>Madeline: 2168553668</div><div>Brent: 440-227-9297</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">30</span></td><td>$1,190,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(4),120)"><td><div style="font-weight:600">Ken and Nancy Bernstein</div><div class="ct-sub">5 Timber Ridge Dr, Chagrin Falls</div></td><td><div>Nancy: nlbernstein@icloud.com</div></td><td><div>Ken: 4402231983</div><div>Nancy: 4402234669</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">29</span></td><td>$827,200</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(9),120)"><td><div style="font-weight:600">Rodger and Susan Cahn</div><div class="ct-sub">257 Hickory Hill Rd, Chagrin Falls</div></td><td><div>Rodger: rncahn@gmail.com</div></td><td><div>Rodger: 216-337-2419</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">28</span></td><td>$544,100</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(21),120)"><td><div style="font-weight:600">Melanie and Andrew Halvorson</div><div class="ct-sub">80 Carriage Stone Dr, Chagrin Falls</div></td><td><div>Melanie: melaniehalvorson@gmail.com</div></td><td><div>Melanie: 7347177927</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">27</span></td><td>$834,300</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(22),120)"><td><div style="font-weight:600">Alex and Carly Hamerstone</div><div class="ct-sub">492 Laurelbrook Dr, Chagrin Falls</div></td><td><div>Alex: ahamerstone@gmail.com</div><div>Carly: carly.hamerstone@gmail.com</div></td><td><div>Alex: 2164036349</div><div>Carly: (216) 272-0660</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">27</span></td><td>$767,900</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(2),120)"><td><div style="font-weight:600">Alan and Marcia Arons</div><div class="ct-sub">24499 Albert Lane, Beachwood</div></td><td><div>Alan: alanarons@gmail.com</div></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">26</span></td><td>$513,700</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(49),120)"><td><div style="font-weight:600">Alyse and Joseph Muttillo</div><div class="ct-sub">24818 Wimbledon Rd, Beachwood</div></td><td><div>Alyse: alyse@ffcc.com</div></td><td><div>Alyse: 2167804444</div><div>Joseph: 2164699494</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">26</span></td><td>$649,300</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(56),120)"><td><div style="font-weight:600">Rob and Trish Risman</div><div class="ct-sub">309 Bentleyville Rd, Moreland Hills</div></td><td><div>Trish: trish.risman@gmail.com</div></td><td><div>Rob: 2168326140</div><div>Trish: 4407854291</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">25</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(47),120)"><td><div style="font-weight:600">Alla and Mike Model</div><div class="ct-sub">17139 Sunset Dr, Chagrin Falls</div></td><td><div>Alla: amodel1990@gmail.com</div></td><td><div>Alla: 2169036929</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">24</span></td><td>$605,900</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(67),120)"><td><div style="font-weight:600">Lauren and Jeff Sonkin</div><div class="ct-sub">293 N Cleveland Street, Chagrin Falls</div></td><td><div>Lauren: laurensonkin@gmail.com</div><div>Jeff: jsonkin@sklawllc.com</div></td><td><div>Lauren: 2167989608</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">24</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(1),120)"><td><div style="font-weight:600">Robert &amp; Stefani Apple</div><div class="ct-sub">681-25 Claridge Ln, Aurora</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">23</span></td><td>$633,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(8),120)"><td><div style="font-weight:600">Tanya Borshov</div><div class="ct-sub">6889 Silkwood Ln, Solon</div></td><td><div>Tanya: tpatent@hotmail.com</div></td><td><div>Tanya: 4405671107</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">23</span></td><td>$654,200</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(20),120)"><td><div style="font-weight:600">Patricia Greene</div><div class="ct-sub">6380 Gates Mills Blvd, Mayfield Hts</div></td><td><div>Patricia: pattigreene817@gmail.com</div></td><td><div>Patricia: 2165778201</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">23</span></td><td>$416,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(12),120)"><td><div style="font-weight:600">Leah Dicker</div><div class="ct-sub">5765 SOM Center Rd, Solon</div></td><td><div>Leah: ld1029@sbcglobal.net</div></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">22</span></td><td>$414,100</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(16),120)"><td><div style="font-weight:600">Helen and Alex Friedman</div><div class="ct-sub">256 Ruby Lane, Streetsboro</div></td><td><div>Helen: friedmanhelen@yahoo.com</div></td><td><div>Helen: 2165980318</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">22</span></td><td>$60,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(63),120)"><td><div style="font-weight:600">Jan and Ron Silverman</div><div class="ct-sub">18220 Rolling Brook Dr, Chagrin Falls</div></td><td><div>Jan: jansilverm@aol.com</div></td><td><div>Jan: 216-970-6668</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">22</span></td><td>$466,900</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(24),120)"><td><div style="font-weight:600">Lindsay and Ryan Heksch</div><div class="ct-sub">145 E Orange Hill Cir, Orange</div></td><td><div>Lindsay and Ryan: lindsayheksch@gmail.com</div></td><td><div>Lindsay and Ryan: 330-328-1595</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">21</span></td><td>$480,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(28),120)"><td><div style="font-weight:600">Michael and Laura Jaffe</div><div class="ct-sub">32570 Stony Brook Ln, Solon</div></td><td><span class="ct-sub">—</span></td><td><div>Michael and Laura: 440-804-6218</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">21</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(52),120)"><td><div style="font-weight:600">Klara Pogrebinsky</div><div class="ct-sub">3791 East Blvd, Aurora</div></td><td><div>Klara: klarapo3@gmail.com</div></td><td><div>Klara: 2169040698</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">21</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(10),120)"><td><div style="font-weight:600">Julie and Bob Cohen</div><div class="ct-sub">113 Renaissance Ct, Chagrin Falls</div></td><td><div>Julie: julie.bravohomes@gmail.com</div></td><td><div>Julie: 216-905-7267</div><div>Bob: 2165700456</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">20</span></td><td>$499,100</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(11),120)"><td><div style="font-weight:600">Sally and Dave Cunix</div><div class="ct-sub">160 Fox Hollow Drive #402, Mayfield Hts</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">20</span></td><td>$244,200</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(75),120)"><td><div style="font-weight:600">Melissa and Cullen Zwick</div><div class="ct-sub">40 Heather Ct, Chagrin Falls</div></td><td><div>Melissa: melissa.zwick@gmail.com</div></td><td><div>Melissa: 2163182803</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">20</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(18),120)"><td><div style="font-weight:600">ELIOT and Helene GELB</div><div class="ct-sub">250 Jackson Dr, Orange</div></td><td><div>ELIOT: eliotgelb@gmail.com</div></td><td><div>ELIOT: 216-469-1202</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">19</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(26),120)"><td><div style="font-weight:600">Mark and Tara Howard</div><div class="ct-sub">50 Glennridge Ct, Bentleyville</div></td><td><div>Mark: mharep.mh@gmail.com</div><div>Tara: taraesq@aol.com</div></td><td><div>Mark: 4407856510</div><div>Tara: 4407246920</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">19</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(62),120)"><td><div style="font-weight:600">Donna Shafran</div><div class="ct-sub">24497 Hawthorne Dr, Beachwood</div></td><td><span class="ct-sub">—</span></td><td><div>Donna: 216-389-1234</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">19</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(65),120)"><td><div style="font-weight:600">Ed and Julia Simms</div><div class="ct-sub">37165 Landings Dr, Solon</div></td><td><div>Ed: epsimms@hotmail.com</div><div>Julia: vaytsmanjulia@hotmail.com</div></td><td><div>Ed: 2164960886</div><div>Julia: 2166503338</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">19</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(27),120)"><td><div style="font-weight:600">Simi and Shneur Itzinger</div><div class="ct-sub">506 Coy Ln, Chagrin Falls</div></td><td><div>Shneur: rabbi@jewishchagrinfalls.com</div></td><td><div>Shneur: 3475432764</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">18</span></td><td>$674,700</td><td>2026-06-07</td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(30),120)"><td><div style="font-weight:600">Dori Kaplansky</div><div class="ct-sub">260 Falls Walk Way, Chagrin Falls</div></td><td><div>Dori: doraly1029@gmail.com</div></td><td><div>Dori: 4405674795</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">18</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(54),120)"><td><div style="font-weight:600">Janine Rigano</div><div class="ct-sub">16165 Wake Robin Dr, Newbury</div></td><td><div>Janine: janine@dollhousesandmore.com</div></td><td><div>Janine: 2163190895</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">18</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(0),120)"><td><div style="font-weight:600">Esther D. Aber</div><div class="ct-sub">6000 Nob Hill Dr Apt 318, Chagrin Falls</div></td><td><span class="ct-sub">—</span></td><td><div>Esther D.: 4406007224</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td>$57,000</td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(14),120)"><td><div style="font-weight:600">Yuliya Frid</div><div class="ct-sub">No address on file</div></td><td><div>Yuliya: y.volokh@gmail.com</div></td><td><div>Yuliya: +12169901446</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(35),120)"><td><div style="font-weight:600">David and Beverly Lavetter</div><div class="ct-sub">6441 Woodhawk Dr, Mayfield Heights</div></td><td><div>David: blavetter@aol.com</div></td><td><div>David: 440-446-1959</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(42),120)"><td><div style="font-weight:600">David and Melissa Markowitz</div><div class="ct-sub">29975 Bolingbrook Rd, Pepper Pike</div></td><td><div>David: markowitz@gmail.com</div></td><td><div>David: 9174005813</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(46),120)"><td><div style="font-weight:600">Michelle and Clark Miller</div><div class="ct-sub">18675 Auburn Glen Dr, Chagrin Falls</div></td><td><div>Michelle: mkatz0209@hotmail.com</div></td><td><div>Michelle: 2164061246</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(55),120)"><td><div style="font-weight:600">Janine Rigano</div><div class="ct-sub">No address on file</div></td><td><div>Janine: dollhouseminiaturelady@gmail.com</div></td><td><div>Janine: 2163190895</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(59),120)"><td><div style="font-weight:600">Andrew and Mia Rutsky</div><div class="ct-sub">89 E Cottage St, Chagrin Falls</div></td><td><div>Andrew: arutsky1@gmail.com</div></td><td><div>Andrew: 2165025848</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(61),120)"><td><div style="font-weight:600">Sandy Seiger</div><div class="ct-sub">5685D Emerald Ridge Parkway, Solon</div></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">17</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(7),120)"><td><div style="font-weight:600">Anna Borenstein</div><div class="ct-sub">No address on file</div></td><td><div>Anna: aaborenstein@gmail.com</div></td><td><span class="ct-sub">—</span></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(23),120)"><td><div style="font-weight:600">Marcie Harrison</div><div class="ct-sub">No address on file</div></td><td><div>Marcie: marcie_harrison@att.net</div></td><td><div>Marcie: 4406656799</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(25),120)"><td><div style="font-weight:600">Daniel Hoicowitz</div><div class="ct-sub">850 Dipper Ln, Aurora</div></td><td><div>Daniel: dhoicowitz@gmail.com</div></td><td><div>Daniel: 2169781511</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(29),120)"><td><div style="font-weight:600">Brian Johnson</div><div class="ct-sub">No address on file</div></td><td><div>Brian: brian.johnson.847@gmail.com</div></td><td><div>Brian: 8479221283</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(32),120)"><td><div style="font-weight:600">Norma Kronenberg</div><div class="ct-sub">No address on file</div></td><td><div>Norma: norma.kron@gmail.com</div></td><td><div>Norma: 4402474611</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(37),120)"><td><div style="font-weight:600">NANCY LUDWIG</div><div class="ct-sub">105 Hamlet Hills Dr Apt 11, Chagrin Falls</div></td><td><div>NANCY: nluwig@gmail.com</div></td><td><div>NANCY: 2169708237</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(38),120)"><td><div style="font-weight:600">Mila Lukova</div><div class="ct-sub">3987 Wiltshire Rd, Moreland Hills</div></td><td><div>Mila: milalukova@yahoo.com</div></td><td><div>Mila: 4402797300</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(40),120)"><td><div style="font-weight:600">Jerry Mandel</div><div class="ct-sub">16715 Brigadoon Dr, Chagrin Falls</div></td><td><div>Jerry: jerrymandel@sbcglobal.net</div></td><td><div>Jerry: 2162354180</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(45),120)"><td><div style="font-weight:600">Courtney and Seth Mendelsohn</div><div class="ct-sub">72 Wychwood Dr, Moreland Hills</div></td><td><div>Courtney: csil65@aol.com</div></td><td><div>Courtney: 2167897292</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(51),120)"><td><div style="font-weight:600">Nicole Newman</div><div class="ct-sub">37250 Valley Forge Dr, Solon</div></td><td><div>Nicole: nical115@hotmail.com</div></td><td><div>Nicole: 2163334099</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(53),120)"><td><div style="font-weight:600">Kate and Will Reiter</div><div class="ct-sub">120 Edgewood Ct, Chagrin Falls</div></td><td><div>Kate: kereiter@gmail.com</div></td><td><div>Kate: 3176910878</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(57),120)"><td><div style="font-weight:600">Gary Ross</div><div class="ct-sub">No address on file</div></td><td><div>Gary: gmr420@gmail.com</div></td><td><div>Gary: 440-241-4053</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(64),120)"><td><div style="font-weight:600">David Silverstein</div><div class="ct-sub">No address on file</div></td><td><div>David: dasilverstein@hotmail.com</div></td><td><div>David: 2166500847</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(69),120)"><td><div style="font-weight:600">Edith and Walker Todd</div><div class="ct-sub">1164 Sheerbrook Dr, Chagrin Falls</div></td><td><div>Edith: egmtoddd@gmail.com</div></td><td><div>Edith: 2162722901</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(70),120)"><td><div style="font-weight:600">Mike and Fran Weissman</div><div class="ct-sub">7125 Bingham Ln #305, Chagrin Falls</div></td><td><div>Mike: mikew1934@gmail.com</div></td><td><div>Mike: 216-401-0114</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(73),120)"><td><div style="font-weight:600">Vera Yudovina</div><div class="ct-sub">No address on file</div></td><td><div>Vera: verayudshop@gmail.com</div></td><td><div>Vera: 4402894527</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">16</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr><tr class="ct-row" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(15),120)"><td><div style="font-weight:600">Roman Frid</div><div class="ct-sub">No address on file</div></td><td><div>Roman: romfrid@gmail.com</div></td><td><div>Roman: 2162338048</div></td><td><span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--red)">0</span></td><td><span class="ct-sub">—</span></td><td><span class="ct-sub">never</span></td></tr></tbody></table></div>
+    <div class="ct-wrap"><div class="ct-wrap-inner"><table class="ct-table" id="ctTable"></table></div></div>
   </div>
 
   <!-- DASHBOARD VIEW -->
-  <div class="dash-view" id="dashView"><style type="text/css" gs-style-id="gs-id-0"></style>
+  <div class="dash-view active" id="dashView"><style type="text/css" gs-style-id="gs-id-0"></style>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
       <h2 style="font-family:'Lora',serif;font-size:1.1rem;color:var(--txt)">📊 Dashboard</h2>
       <div style="display:flex;gap:8px">
@@ -1644,7 +1668,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <div class="heat-cell heat-0" data-tip="2026-06-08: 0 interactions" style=""></div>
         <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Mon</div>
       </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-4" data-tip="2026-06-09: 5 interactions" style=""></div>
+        <div class="heat-cell heat-3" data-tip="2026-06-09: 4 interactions" style=""></div>
         <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Tue</div>
       </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
         <div class="heat-cell heat-0" data-tip="2026-06-10: 0 interactions" style="box-shadow:0 0 0 2px var(--accent)"></div>
@@ -2016,7 +2040,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <td style="padding:6px 8px;cursor:pointer;color:var(--accent)" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(33),150)">Ben and Jessica Kulick</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">1/3</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">1</td>
-        <td style="padding:6px 8px;font-size:.65rem;line-height:1.4"><span style="color:var(--txt)">Left VM</span> <span style="color:var(--txt3)">2026-06-09</span></td>
+        <td style="padding:6px 8px;font-size:.65rem;line-height:1.4">-</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace;color:var(--txt2)">2026-06-13</td>
         <td style="padding:6px 8px;text-align:center;white-space:nowrap">
           <button onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(33),150)" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:none;cursor:pointer;color:var(--txt2)">Open</button>
@@ -2323,9 +2347,12 @@ async function loadAll(){
     // Load AGC scores from DB (non-blocking, will overwrite local calc with DB values)
     loadAGCScores();
     loadAGCInteractionAggregates().then(()=>recolorAll());
-    loadUIPrefs().then(()=>{if(_uiPrefs.landing&&_uiPrefs.landing!=='crm')switchView(_uiPrefs.landing);});
-    // Load outreach tracks (non-blocking)
-    loadOutreachTracks();
+    // Tracks load is non-blocking, but the dashboard needs them — defer landing on dash until ready
+    const tracksP=loadOutreachTracks();
+    loadUIPrefs().then(async()=>{
+      if(_uiPrefs.landing==='dash'){await tracksP;}
+      if(_uiPrefs.landing&&_uiPrefs.landing!=='crm')switchView(_uiPrefs.landing);
+    });
 
     // Place known pins
     households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
@@ -2658,17 +2685,20 @@ function getTier(i){
     if(g.total<g1)return'green';if(g.total<g2)return'gold';return'red';
   }
   if(mode==='lastcontact'){
-    // Cold-to-warm: green = recent contact, red = cold/never
     const lc=(_agcInterAgg[h.id]||{}).lastContact;
     if(!lc)return'red';
+    const t1=parseFloat(document.getElementById('lctier1sb')?.value)||30;
+    const t2=parseFloat(document.getElementById('lctier2sb')?.value)||90;
     const d=(Date.now()-new Date(lc))/86400000;
-    if(d<=30)return'green';if(d<=90)return'gold';return'red';
+    if(d<=t1)return'green';if(d<=t2)return'gold';return'red';
   }
   if(mode==='giftcount'){
     const g=getGivingStats(h);
     const n=g?g.count:0;
     if(!n)return'grey';
-    if(n<3)return'green';if(n<6)return'gold';return'red';
+    const t1=parseFloat(document.getElementById('gctier1sb')?.value)||3;
+    const t2=parseFloat(document.getElementById('gctier2sb')?.value)||6;
+    if(n<t1)return'green';if(n<t2)return'gold';return'red';
   }
   const val=h.home_value;if(!val)return'grey';
   const t1=parseFloat(document.getElementById('tier1').value)||500000;
@@ -2693,13 +2723,17 @@ function recolorAll(){
     document.getElementById('leg2').textContent='40–69';
     document.getElementById('leg3').textContent='70–100';
   } else if(mode==='lastcontact'){
-    document.getElementById('leg1').textContent='≤30 days';
-    document.getElementById('leg2').textContent='≤90 days';
-    document.getElementById('leg3').textContent='90+ / never';
+    const t1=parseFloat(document.getElementById('lctier1sb')?.value)||30;
+    const t2=parseFloat(document.getElementById('lctier2sb')?.value)||90;
+    document.getElementById('leg1').textContent='≤'+t1+' days';
+    document.getElementById('leg2').textContent='≤'+t2+' days';
+    document.getElementById('leg3').textContent=t2+'+ / never';
   } else if(mode==='giftcount'){
-    document.getElementById('leg1').textContent='1–2 gifts';
-    document.getElementById('leg2').textContent='3–5 gifts';
-    document.getElementById('leg3').textContent='6+ gifts';
+    const t1=parseFloat(document.getElementById('gctier1sb')?.value)||3;
+    const t2=parseFloat(document.getElementById('gctier2sb')?.value)||6;
+    document.getElementById('leg1').textContent='<'+t1+' gifts';
+    document.getElementById('leg2').textContent='<'+t2+' gifts';
+    document.getElementById('leg3').textContent=t2+'+ gifts';
   } else if(mode==='giving'){
     const g1=parseFloat(document.getElementById('gtier1').value)||1000;
     const g2=parseFloat(document.getElementById('gtier2').value)||5000;
@@ -2718,10 +2752,24 @@ function recolorAll(){
 }
 
 // ── FILTER ──
-// Text match for live search: names, members, address, city
-function _searchMatch(h,q){
+// Sidebar (in-map) search: just narrow down by name/address
+function _nameMatch(h,q){
   let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'');
-  (h.members||[]).forEach(m=>{t+=' '+(m.first_name||'')+' '+(m.last_name||'')+' '+(m.email||'')+' '+(m.phone||'');});
+  (h.members||[]).forEach(m=>{t+=' '+(m.first_name||'')+' '+(m.last_name||'');});
+  return t.toLowerCase().includes(q);
+}
+
+// Header search: full text — names, members, address, donation notes, household notes, all profile fields, interactions
+const _PROFILE_KEYS=['summary','approach','capacity','businessInfo','boardMemberships','philanthropy990','pressmentions','affinityNotes','generosityNotes','capacityNotes','fedLevel'];
+function _searchMatch(h,q){
+  let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'')+' '+(h.notes||'');
+  (h.members||[]).forEach(m=>{
+    t+=' '+(m.first_name||'')+' '+(m.last_name||'')+' '+(m.email||'')+' '+(m.phone||'');
+    (m.donations||[]).forEach(d=>{t+=' '+(d.notes||'');});
+    (m.interactions||[]).forEach(it=>{t+=' '+(it.notes||'')+' '+(it.type||'');});
+  });
+  const p=h.profile_data||{};
+  _PROFILE_KEYS.forEach(k=>{const v=p[k];if(v)t+=' '+(typeof v==='string'?v:JSON.stringify(v));});
   return t.toLowerCase().includes(q);
 }
 
@@ -2773,10 +2821,13 @@ function _filterBase(){
 // Search text → matches across FULL roster (find anyone by name), unless "in filtered" is checked.
 function applyFilter(){
   const q=(document.getElementById('headerSearch')?.value||'').trim().toLowerCase();
+  const sidebarQ=(document.getElementById('srch')?.value||'').trim().toLowerCase();
   const within=document.getElementById('searchWithinFiltered')?.checked;
   const base=_filterBase();
   if(!q)filtered=base;
   else filtered=(within?base:households).filter(h=>_searchMatch(h,q));
+  // Sidebar search narrows the map sidebar list further (names only); doesn't change pins or contacts table
+  window._sidebarFiltered=sidebarQ?filtered.filter(h=>_nameMatch(h,sidebarQ)):null;
   households.forEach((h,i)=>{if(markers[i])markers[i].setOpacity(filtered.includes(h)?1:0.12);});
   let anyActive=false;
   document.querySelectorAll('.fs-inp').forEach(el=>{
@@ -2798,8 +2849,9 @@ function mobileSrch(){const v=document.getElementById('srch-mobile').value;docum
 // ── RENDER LIST ──
 function renderList(){
   const el=document.getElementById('clist');
-  if(!filtered.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
-  el.innerHTML=filtered.map(h=>{
+  const list=window._sidebarFiltered||filtered;
+  if(!list.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
+  el.innerHTML=list.map(h=>{
     const i=households.indexOf(h);const tier=getTier(i);
     const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
     const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
@@ -5741,6 +5793,8 @@ function updateSidebarTiers(){
   document.getElementById('sb-valueTiers').style.display=mode==='value'?'block':'none';
   document.getElementById('sb-givingTiers').style.display=mode==='giving'?'block':'none';
   document.getElementById('sb-scoreTiers').style.display=mode==='score'?'block':'none';
+  document.getElementById('sb-lastcontactTiers').style.display=mode==='lastcontact'?'block':'none';
+  document.getElementById('sb-giftcountTiers').style.display=mode==='giftcount'?'block':'none';
 }
 
 function openAPIKeys(){
@@ -7075,7 +7129,7 @@ const CT_COLS={
   name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${h.displayName||''}</div><div class="ct-sub">${h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''))}</div>`},
   email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${m.first_name}: ${m.email}</div>`).join('')||'<span class="ct-sub">—</span>'},
   phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${m.first_name}: ${m.phone}</div>`).join('')||'<span class="ct-sub">—</span>'},
-  agc:{label:'AGC',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--gold)':'var(--red)';return `<span style="font-family:'DM Mono',monospace;font-weight:700;color:${c}">${t}</span>`;}},
+  agc:{label:'Prospect',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--gold)':'var(--red)';return `<span style="font-family:'DM Mono',monospace;font-weight:700;color:${c}">${t}</span>`;}},
   homeValue:{label:'Home Value',val:h=>h.home_value||0,html:h=>h.home_value?'$'+Math.round(h.home_value).toLocaleString():'<span class="ct-sub">—</span>'},
   lastContact:{label:'Last Contact',val:h=>(_agcInterAgg[h.id]||{}).lastContact||'',html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc||'<span class="ct-sub">never</span>';}},
   daysSince:{label:'Days Since',val:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc?Math.floor((Date.now()-new Date(lc))/86400000):99999;},html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return '<span style="color:var(--red);font-family:\'DM Mono\',monospace">never</span>';const d=Math.floor((Date.now()-new Date(lc))/86400000);const c=d<=30?'var(--green)':d<=90?'var(--gold)':'var(--red)';return `<span style="font-family:'DM Mono',monospace;color:${c}">${d}d</span>`;}},
