@@ -462,7 +462,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 3:32 PM</div>
+      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 3:38 PM</div>
     </div>
   </div>
 
@@ -547,8 +547,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 1/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
     </div>
     <div class="spacer"></div>
     <div class="legend" id="legend">
@@ -1634,7 +1634,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button class="btn btn-sec" onclick="resetDashLayout()" style="font-size:.65rem;padding:4px 10px">↺ Reset Layout</button>
       </div>
     </div>
-    <div class="grid-stack gs-12 gs-id-0 grid-stack-animate" id="dashGrid" gs-current-row="20" style="height: 1200px;"><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="0" gs-w="12" gs-h="3" gs-id="panel-heatmap"><div class="grid-stack-item-content gs-panel">
+    <div class="grid-stack gs-12 gs-id-0 grid-stack-animate" id="dashGrid" gs-current-row="16" style="height: 960px;"><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="0" gs-w="5" gs-h="4" gs-id="panel-heatmap"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🔥 Activity Heatmap</h3>
       <span onclick="showPanelHelp('panel-heatmap')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -1684,7 +1684,127 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="heat-cell heat-0" style="width:14px;height:14px"></div><div class="heat-cell heat-1" style="width:14px;height:14px"></div><div class="heat-cell heat-2" style="width:14px;height:14px"></div><div class="heat-cell heat-3" style="width:14px;height:14px"></div><div class="heat-cell heat-4" style="width:14px;height:14px"></div>
     <span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--txt3)">More</span>
   </div></div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="3" gs-w="7" gs-h="8" gs-id="panel-daily5"><div class="grid-stack-item-content gs-panel">
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="5" gs-y="0" gs-w="3" gs-h="4" gs-id="panel-gifts"><div class="grid-stack-item-content gs-panel">
+    <div class="gs-panel-hdr">
+      <h3>💝 Recent Gifts</h3>
+      <span onclick="showPanelHelp('panel-gifts')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
+    </div>
+    <div class="gs-panel-body" id="body-panel-gifts">
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(50),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rob and Tracy Myers</div>
+        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Asked to be a lead donor for kids programming, asked for 1800 specificaly, he gave it.</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-21</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(19),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex Geyer</div>
+        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Course sponsorship</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,100</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-18</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Larry and Marilyn Blaustein</div>
+        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">for kids programming 2027</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-14</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-11</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
+        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">shavuos kiddush sponsor</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$360</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-05</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(74),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">JOHN ZACHARIAH</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$100</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-29</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$36</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-28</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(71),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marc and Cindy Wolf</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$18</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-27</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(22),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex and Carly Hamerstone</div>
+        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">donation at lag baomer signup</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$180</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-19</div>
+      </div>
+    </div>
+    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
+        
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-10</div>
+      </div>
+    </div></div>
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="8" gs-y="0" gs-w="4" gs-h="4" gs-id="panel-wins"><div class="grid-stack-item-content gs-panel">
+    <div class="gs-panel-hdr">
+      <h3>🏆 Wins of the Week</h3>
+      <span onclick="showPanelHelp('panel-wins')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
+    </div>
+    <div class="gs-panel-body" id="body-panel-wins"><div class="win-row">
+      <div class="win-dot"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">Larry and Marilyn Blaustein</div>
+        
+        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-09</div>
+      </div>
+      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
+    </div></div>
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="4" gs-w="7" gs-h="8" gs-id="panel-daily5"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>📞 Daily Five</h3>
       <span onclick="showPanelHelp('panel-daily5')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -1795,7 +1915,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         </div>
       </div>
     </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="3" gs-w="5" gs-h="4" gs-id="panel-coldfloor"><div class="grid-stack-item-content gs-panel">
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="4" gs-w="5" gs-h="4" gs-id="panel-coldfloor"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🧊 Cold Floor</h3>
       <span onclick="showPanelHelp('panel-coldfloor')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -1811,127 +1931,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button onclick="addToDaily(68,'2026-06-11')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;background:none;cursor:pointer">Tomorrow</button>
       </div>
     </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="7" gs-w="5" gs-h="4" gs-id="panel-wins"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🏆 Wins of the Week</h3>
-      <span onclick="showPanelHelp('panel-wins')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-wins"><div class="win-row">
-      <div class="win-dot"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">Larry and Marilyn Blaustein</div>
-        
-        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-09</div>
-      </div>
-      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="11" gs-w="6" gs-h="5" gs-id="panel-gifts"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>💝 Recent Gifts</h3>
-      <span onclick="showPanelHelp('panel-gifts')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-gifts">
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(50),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rob and Tracy Myers</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Asked to be a lead donor for kids programming, asked for 1800 specificaly, he gave it.</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-21</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(19),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex Geyer</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Course sponsorship</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,100</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-18</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Larry and Marilyn Blaustein</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">for kids programming 2027</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-14</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-11</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">shavuos kiddush sponsor</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$360</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-05</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(74),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">JOHN ZACHARIAH</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$100</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-29</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$36</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-28</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(71),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marc and Cindy Wolf</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$18</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-27</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(22),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex and Carly Hamerstone</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">donation at lag baomer signup</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$180</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-19</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-10</div>
-      </div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="6" gs-y="11" gs-w="6" gs-h="5" gs-id="panel-sri"><div class="grid-stack-item-content gs-panel">
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="8" gs-w="5" gs-h="4" gs-id="panel-sri"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🎯 Solicitation Readiness</h3>
       <span onclick="showPanelHelp('panel-sri')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -2022,7 +2022,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
       <div id="sri-why-3" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $1062k home ≥ $750k</div>
     </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="16" gs-w="8" gs-h="4" gs-id="panel-tracks"><div class="grid-stack-item-content gs-panel">
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="12" gs-w="8" gs-h="4" gs-id="panel-tracks"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🔁 Active Tracks</h3>
       <span onclick="showPanelHelp('panel-tracks')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -2048,7 +2048,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         </td>
       </tr></tbody>
   </table></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="8" gs-y="16" gs-w="4" gs-h="4" gs-id="panel-insights"><div class="grid-stack-item-content gs-panel">
+  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="8" gs-y="12" gs-w="4" gs-h="4" gs-id="panel-insights"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🧠 Smart Insights</h3>
       <span onclick="showPanelHelp('panel-insights')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
@@ -2207,10 +2207,18 @@ async function sb(path,opts={}){
   const baseHeaders={'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'};
   const mergedHeaders={...baseHeaders,...(opts.headers||{})};
   const finalOpts={...opts,headers:mergedHeaders};
-  const res=await fetch(SB_URL+'/rest/v1/'+path,finalOpts);
-  if(!res.ok){const e=await res.text();throw new Error(e);}
-  const txt=await res.text();
-  return txt?JSON.parse(txt):null;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/'+path,{...finalOpts,signal:controller.signal});
+    clearTimeout(timer);
+    if(!res.ok){const e=await res.text();throw new Error(e);}
+    const txt=await res.text();
+    return txt?JSON.parse(txt):null;
+  }catch(e){
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 // ── AUTH FUNCTIONS ──
@@ -2359,9 +2367,9 @@ async function loadAll(){
     fitMap();
     renderList();
 
-    // Geocode missing
+    // Geocode missing — fire and forget, never block dashboard init
     const needsGeo=households.filter(h=>!h.lat&&h.address);
-    if(needsGeo.length)await geocodeMissing(needsGeo);
+    if(needsGeo.length)geocodeMissing(needsGeo);
 
   }catch(e){
     document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
@@ -3279,10 +3287,15 @@ async function geocodeOne(h){
     try{
       const q=encodeURIComponent(addr);
       const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&countrycodes=us`,{headers:{'Accept-Language':'en','User-Agent':'CRMPropertyMap/1.0'}});
+      if(r.status===429)return null; // rate limited — stop trying
       const d=await r.json();
       if(d&&d.length)return{lat:+d[0].lat,lon:+d[0].lon};
       await sleep(300);
-    }catch(e){}
+    }catch(e){
+      // CORS block or network error — Nominatim doesn't allow cross-origin from GitHub Pages
+      console.warn('geocodeOne failed (likely CORS):',e.message);
+      return null; // bail immediately, no point retrying other formats
+    }
   }
   return null;
 }
@@ -7253,12 +7266,14 @@ async function saveUIPrefs(){
 
 async function initDashboard(){
   _dashLoaded=true;
+  console.log('[DAAS] initDashboard start, households:',households.length);
   // Load engine settings + pinned contacts first so panels render with correct thresholds
   await loadEngineSettings();
+  console.log('[DAAS] engine settings loaded');
   try{
     const pinRows=await sb('app_settings?key=eq.daily_pins&limit=1');
     if(pinRows&&pinRows.length&&pinRows[0].value)_dailyPins=JSON.parse(pinRows[0].value)||[];
-  }catch(e){}
+  }catch(e){console.warn('[DAAS] daily_pins load failed',e);}
   // Load saved layout — but only use it if it has ALL current panels
   let layout=DASH_DEFAULT_LAYOUT;
   try{
@@ -7274,13 +7289,14 @@ async function initDashboard(){
       const exactMatch=savedIds.size===defaultIds.size&&DASH_DEFAULT_LAYOUT.every(p=>savedIds.has(p.id));
       if(savedVersion===DASH_LAYOUT_VERSION&&exactMatch){
         layout=savedPanels;
+        console.log('[DAAS] using saved layout v'+savedVersion);
       }else{
-        console.warn('Saved dashboard layout discarded — version or panel-set mismatch (saved v'+savedVersion+', code v'+DASH_LAYOUT_VERSION+'). Resetting to defaults.');
+        console.warn('[DAAS] Saved dashboard layout discarded — version or panel-set mismatch (saved v'+savedVersion+', code v'+DASH_LAYOUT_VERSION+'). Resetting to defaults.');
         // Clear the stale layout so it doesn't keep causing trouble
         try{await sb('app_settings?key=eq.dashboard_layout',{method:'DELETE'});}catch(e){}
       }
-    }
-  }catch(e){}
+    }else{console.log('[DAAS] no saved layout, using defaults');}
+  }catch(e){console.warn('[DAAS] layout load failed',e);}
   // Load cached smart insights
   try{
     const siRows=await sb('app_settings?key=eq.smart_insights_cache&limit=1');
@@ -7288,6 +7304,7 @@ async function initDashboard(){
   }catch(e){}
 
   // Init gridstack
+  console.log('[DAAS] GridStack.init, dashGrid visible:',document.getElementById('dashGrid')?.offsetParent!==null);
   _dashGrid=GridStack.init({
     column:12,
     cellHeight:60,
@@ -7302,11 +7319,19 @@ async function initDashboard(){
     const el=_makePanelEl(p);
     _dashGrid.addWidget(el,{id:p.id,x:p.x,y:p.y,w:p.w,h:p.h});
   });
+  console.log('[DAAS] panels added to grid, body-panel-heatmap exists:',!!document.getElementById('body-panel-heatmap'));
 
   // Save layout on change
   _dashGrid.on('change',()=>saveDashLayout());
 
-  await renderAllPanels();
+  try{
+    await renderAllPanels();
+    console.log('[DAAS] renderAllPanels complete');
+  }catch(e){
+    console.error('[DAAS] renderAllPanels failed',e);
+    const dg=document.getElementById('dashGrid');
+    if(dg)dg.innerHTML=`<div style="padding:20px;color:var(--red);font-size:.8rem">Dashboard render error: ${e.message}</div>`;
+  }
 }
 
 // ── AGC COMPARE — old scorer vs new scorer, side by side, for calibration on known households ──
