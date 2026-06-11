@@ -462,7 +462,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 9:19 PM</div>
+      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 9:51 PM</div>
     </div>
   </div>
 
@@ -547,8 +547,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
     <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 67%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 3/3…</span>
     </div>
     <div class="spacer"></div>
     <div id="mapControls" style="display:none;align-items:center;gap:8px">
@@ -1052,7 +1052,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <div class="cphone">7168641474</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <div class="cval red">$1,103,700</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">32</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">38</div>
         </div>
         <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $650 · 1 gift</div>
       </div>
@@ -1826,6 +1826,22 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="gs-panel-body" id="body-panel-wins"><div class="win-row">
       <div class="win-dot"></div>
       <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(33),100)">Ben and Jessica Kulick</div>
+        
+        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-11</div>
+      </div>
+      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
+    </div><div class="win-row">
+      <div class="win-dot"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(33),100)">Ben and Jessica Kulick</div>
+        
+        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-11</div>
+      </div>
+      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
+    </div><div class="win-row">
+      <div class="win-dot"></div>
+      <div style="flex:1;min-width:0">
         <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">Larry and Marilyn Blaustein</div>
         
         <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-09</div>
@@ -2034,27 +2050,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <h3>🔁 Active Tracks</h3>
       <span onclick="showPanelHelp('panel-tracks')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
     </div>
-    <div class="gs-panel-body" id="body-panel-tracks"><table style="width:100%;border-collapse:collapse;font-size:.72rem">
-    <thead><tr style="border-bottom:2px solid var(--border)">
-      <th style="text-align:left;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Contact</th>
-      <th style="text-align:center;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Step</th>
-      <th style="text-align:center;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Tries</th>
-      <th style="text-align:left;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Last Contact</th>
-      <th style="text-align:center;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Due</th>
-      <th style="text-align:center;padding:4px 8px;font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500"></th>
-    </tr></thead>
-    <tbody><tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:6px 8px;cursor:pointer;color:var(--accent)" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(33),150)">Ben and Jessica Kulick</td>
-        <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">1/3</td>
-        <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">1</td>
-        <td style="padding:6px 8px;font-size:.65rem;line-height:1.4">-</td>
-        <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace;color:var(--txt2)">2026-06-13</td>
-        <td style="padding:6px 8px;text-align:center;white-space:nowrap">
-          <button onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(33),150)" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:none;cursor:pointer;color:var(--txt2)">Open</button>
-          <button onclick="deleteTrack('04287a27-d1fd-459e-8fa6-213d810a7568')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--red);border-radius:3px;background:none;cursor:pointer;color:var(--red);margin-left:3px">✕</button>
-        </td>
-      </tr></tbody>
-  </table></div>
+    <div class="gs-panel-body" id="body-panel-tracks"><div class="hint"><div class="hi">🔁</div><p>No active outreach tracks — add contacts from Cold Floor or Daily Five</p></div></div>
   </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="16" gs-w="5" gs-h="4" gs-id="panel-insights"><div class="grid-stack-item-content gs-panel">
     <div class="gs-panel-hdr">
       <h3>🧠 Smart Insights</h3>
@@ -2177,7 +2173,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-10.2';
+const BUILD_STAMP='2026-06-10.3';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -2261,11 +2257,11 @@ async function signOut(){
   document.getElementById('loginEmail').focus();
 }
 
-function showApp(){
+async function showApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('ppanel').innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div>';
-  loadAll();
+  await loadAll();
 }
 
 // Refresh token on session change
@@ -2419,13 +2415,6 @@ async function loadAll(){
     // Load AGC scores from DB (non-blocking, will overwrite local calc with DB values)
     loadAGCScores();
     loadAGCInteractionAggregates().then(()=>recolorAll());
-    // Await both UI prefs and tracks before switching to dash, so households are
-    // already in memory when initDashboard/renderAllPanels runs — no empty-flash.
-    const tracksP=loadOutreachTracks();
-    loadUIPrefs().then(async()=>{
-      if(_uiPrefs.landing==='dash'){await tracksP;}
-      if(_uiPrefs.landing&&_uiPrefs.landing!=='crm')switchView(_uiPrefs.landing);
-    });
 
     // Place known pins
     households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
@@ -2435,6 +2424,12 @@ async function loadAll(){
     // Geocode missing — fire and forget, never block dashboard init
     const needsGeo=households.filter(h=>!h.lat&&h.address);
     if(needsGeo.length)geocodeMissing(needsGeo);
+
+    // Land on the configured view — households are fully populated at this point.
+    // Tracks and UI prefs are awaited before switching to dash so panels render
+    // with real data on first paint (no empty-box flash).
+    const [,tracksResult]=await Promise.all([loadUIPrefs(),loadOutreachTracks()]);
+    if(_uiPrefs.landing&&_uiPrefs.landing!=='crm')switchView(_uiPrefs.landing);
 
   }catch(e){
     document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
