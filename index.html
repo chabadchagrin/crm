@@ -353,7 +353,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
-<div id="app">
+<div id="app" style="display:none">
   <!-- SIDEBAR OVERLAY -->
   <div id="sidebarOverlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9100"></div>
 
@@ -612,7 +612,12 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
   </div>
 
-  <div class="crm-view" id="crmView">
+  <div id="appLoading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--txt3)">
+    <div style="font-size:1.5rem">⏳</div>
+    <div style="font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.08em">LOADING DAAS…</div>
+  </div>
+
+  <div class="crm-view hidden" id="crmView">
   <div class="main">
     <div id="map"></div>
     <div class="sidebar">
@@ -1048,6 +1053,8 @@ async function loadAll(){
 
   }catch(e){
     document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
+    console.error('[DAAS] loadAll failed',e);
+    switchView('crm');
   }
 }
 
@@ -4370,6 +4377,12 @@ function goHome(){
 }
 
 let _deployPollTimer=null;
+// Pristine page source, captured at DOMContentLoaded before any JS touches the
+// DOM. This is what Deploy to GitHub pushes. NEVER deploy a serialization of
+// the live DOM — it bakes rendered data (dashboard panels, Leaflet map markup,
+// donor names) into the public repo, which caused the doubled-panels and
+// ghost-map bugs on the deployed site.
+let _PRISTINE_SRC='';
 
 async function loadLatestVersionInfo(){
   const el=document.getElementById('versionInfo');
@@ -4439,10 +4452,8 @@ async function deployToGitHub(){
   // Yield to browser so the status text paints before the heavy sync loop
   await new Promise(r=>setTimeout(r,50));
   try{
-    // Detach toast before capture so it isn't baked into the pushed file
-    document.body.removeChild(statusEl);
-    const src=document.documentElement.outerHTML;
-    document.body.appendChild(statusEl);
+    const src=_PRISTINE_SRC;
+    if(!src||src.length<10000)throw new Error('Source snapshot missing — reload the page and deploy again.');
     const bytes=new TextEncoder().encode(src);
     let binary='';
     for(let i=0;i<bytes.length;i++){binary+=String.fromCharCode(bytes[i]);}
@@ -4516,6 +4527,8 @@ function saveAPIKeys(){
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
+  // Capture the page source BEFORE any JS mutates the DOM — used by Deploy to GitHub.
+  _PRISTINE_SRC='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
   // Check for existing persistent session
   const{data:{session}}=await _sb.auth.getSession();
   if(session){
@@ -5782,6 +5795,7 @@ const DASH_DEFAULT_LAYOUT=[
 ];
 
 function switchView(view){
+  document.getElementById('appLoading')?.remove();
   const crm=document.getElementById('crmView');
   const dash=document.getElementById('dashView');
   const contacts=document.getElementById('contactsView');
@@ -5997,9 +6011,11 @@ async function initDashboard(){
   if(_dashGrid){
     try{_dashGrid.removeAll();_dashGrid.destroy(false);}catch(e){}
     _dashGrid=null;
-    const dgEl=document.getElementById('dashGrid');
-    if(dgEl)dgEl.innerHTML='';
   }
+  // ALWAYS start from an empty container — clears any stale grid markup
+  // (including panels baked into the HTML by old live-DOM deploys).
+  const _dgEl=document.getElementById('dashGrid');
+  if(_dgEl)_dgEl.innerHTML='';
   _dashGrid=GridStack.init({
     column:12,
     cellHeight:60,
