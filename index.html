@@ -779,7 +779,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-10.7';
+const BUILD_STAMP='2026-06-10.8';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -1044,7 +1044,7 @@ async function loadAll(){
     // Tracks and UI prefs are awaited before switching to dash so panels render
     // with real data on first paint (no empty-box flash).
     const [,tracksResult]=await Promise.all([loadUIPrefs(),loadOutreachTracks()]);
-    if(_uiPrefs.landing&&_uiPrefs.landing!=='crm')switchView(_uiPrefs.landing);
+    switchView(_uiPrefs.landing||'dash');
 
   }catch(e){
     document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
