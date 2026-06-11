@@ -801,11 +801,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 // ── API key missing — inline nudge instead of prompt() ──
 function _keyNudge(el,keyLabel,retryCall){
-  const escaped=retryCall.replace(/"/g,'&quot;');
+  const escaped=(retryCall||'').replace(/"/g,'&quot;');
   const html='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 12px;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:7px;font-size:.74rem;color:var(--txt2)">'
     +'<span>🔑 <b>'+keyLabel+' API key required</b></span>'
     +'<button onclick="openAPIKeys()" style="padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:.71rem;font-family:inherit">Settings → API Keys</button>'
-    +'<button onclick="'+escaped+'" style="padding:4px 10px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;cursor:pointer;font-size:.71rem;font-family:inherit">↺ Retry</button>'
+    +(escaped?'<button onclick="'+escaped+'" style="padding:4px 10px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;cursor:pointer;font-size:.71rem;font-family:inherit">↺ Retry</button>':'')
     +'</div>';
   if(el){el.innerHTML=html;return;}
   const t=document.createElement('div');
@@ -898,7 +898,7 @@ function _debounce(fn,ms){
   return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};
 }
 const _applyFilterDebounced=_debounce(()=>applyFilter(),180);
-const _headerSearchDebounced=_debounce(()=>{applyFilter();_showSearchPopout();},180);
+const _headerSearchDebounced=_debounce(()=>{_showSearchPopout();},180);
 const _ctSearchDebounced=_debounce(()=>renderContacts(),180);
 
 // ── HEADER SEARCH POPOUT ──
@@ -1038,8 +1038,12 @@ async function loadAll(){
     const needsGeo=households.filter(h=>!h.lat&&h.address);
     if(needsGeo.length){
       if(onGHPages){
-        const names=needsGeo.map(h=>h.displayName||h.joint_name||'Unknown').join(', ');
-        _keyNudge(document.getElementById('totalLbl'),`${needsGeo.length} household${needsGeo.length>1?'s':''} missing map pin: ${names}. Open each and click 📍 Re-geocode.`);
+        // Informational note only — must NEVER throw, or the landing-view switch below dies.
+        try{
+          const names=needsGeo.map(h=>h.displayName||h.joint_name||'Unknown').join(', ');
+          const lbl=document.getElementById('totalLbl');
+          if(lbl)lbl.innerHTML+=' · <span title="'+names.replace(/"/g,'&quot;')+'" style="color:var(--gold);cursor:help">📍 '+needsGeo.length+' missing pin'+(needsGeo.length>1?'s':'')+'</span>';
+        }catch(e){console.warn('[DAAS] geo banner failed',e);}
       }else{
         geocodeMissing(needsGeo);
       }
@@ -1048,7 +1052,10 @@ async function loadAll(){
     // Land on the configured view — households are fully populated at this point.
     // Tracks and UI prefs are awaited before switching to dash so panels render
     // with real data on first paint (no empty-box flash).
-    const [,tracksResult]=await Promise.all([loadUIPrefs(),loadOutreachTracks()]);
+    const [,tracksResult]=await Promise.all([
+      loadUIPrefs().catch(e=>console.warn('[DAAS] loadUIPrefs failed',e)),
+      loadOutreachTracks().catch(e=>console.warn('[DAAS] loadOutreachTracks failed',e))
+    ]);
     switchView(_uiPrefs.landing||'dash');
 
   }catch(e){
@@ -1507,13 +1514,11 @@ function _filterBase(){
   });
 }
 
-// Header search always scans full roster regardless of filters
+// Header search NEVER narrows the map / list / contacts — it only drives the
+// popout and the Deep Search modal. Same behavior on every page.
 function applyFilter(){
-  const q=(document.getElementById('headerSearch')?.value||'').trim().toLowerCase();
   const sidebarQ=(document.getElementById('srch')?.value||'').trim().toLowerCase();
-  const base=_filterBase();
-  if(!q)filtered=base;
-  else filtered=households.filter(h=>_searchMatch(h,q));
+  filtered=_filterBase();
   // Sidebar search narrows the map sidebar list further (names only); doesn't change pins or contacts table
   window._sidebarFiltered=sidebarQ?filtered.filter(h=>_nameMatch(h,sidebarQ)):null;
   households.forEach((h,i)=>{if(markers[i])markers[i]&&map&&markers[i].setOpacity(filtered.includes(h)?1:0.12);});
@@ -1523,7 +1528,7 @@ function applyFilter(){
     el.classList.toggle('fs-active',on);
   });
   const fc=document.getElementById('filterCount');
-  if(fc)fc.textContent=(anyActive||q)?`${filtered.length} of ${households.length}`:'';
+  if(fc)fc.textContent=anyActive?`${filtered.length} of ${households.length}`:'';
   renderList();
   if(document.getElementById('contactsView')?.classList.contains('active'))renderContacts();
 }
@@ -1533,7 +1538,7 @@ function clearFilter(){
   _hideSearchPopout();
   applyFilter();
 }
-function mobileSrch(){const v=document.getElementById('srch-mobile').value;document.getElementById('srch').value=v;document.getElementById('headerSearch').value=v;applyFilter();}
+function mobileSrch(){const v=document.getElementById('srch-mobile').value;document.getElementById('srch').value=v;applyFilter();}
 
 // ── RENDER LIST ──
 function renderList(){
@@ -6378,7 +6383,8 @@ async function triggerDeepSearchModal(){
   container.innerHTML='';
   modal.style.display='flex';
   const matches=[];
-  for(const h of filtered){
+  // Search All always scans the ENTIRE roster — ignores structured filters.
+  for(const h of households){
     // Scan profile fields (in memory)
     const p=h.profile_data||{};
     const profileText=['summary','approach','capacity','businessInfo','boardMemberships','philanthropy990','pressmentions','affinityNotes','generosityNotes','capacityNotes','fedLevel'].map(k=>p[k]||'').join(' ');
@@ -6393,19 +6399,21 @@ async function triggerDeepSearchModal(){
         }
       });
     });
-    // Scan interaction/activity notes from Supabase
-    const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
-    if(!memberIds)continue;
-    try{
-      const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc`);
-      (rows||[]).forEach(r=>{
-        if(r.notes&&r.notes.toLowerCase().includes(q)){
-          matches.push({id:h.id,displayName:h.displayName,date:r.date||'—',type:r.type||'Activity',snippet:_extractSnippet(r.notes,q)});
-        }
-      });
-    }catch(e){console.warn('Deep search skipped household:',h.id);}
   }
-  document.getElementById('deepSearchQueryDisplay').textContent=`${matches.length} result${matches.length!==1?'s':''} for "${queryTerm}" across ${filtered.length} contacts`;
+  // Scan interaction/activity notes — ONE server-side query for the whole roster
+  // (was one Supabase query per household, which would crawl on a full-roster scan).
+  try{
+    const pat='*'+q.replace(/[%_]/g,'')+'*';
+    const rows=await sb(`interactions?notes=ilike.${encodeURIComponent(pat)}&order=date.desc&limit=500`);
+    const cmap={};
+    households.forEach(h=>(h.members||[]).forEach(m=>{cmap[m.id]=h;}));
+    (rows||[]).forEach(r=>{
+      const h=cmap[r.contact_id];
+      if(!h||!r.notes||!r.notes.toLowerCase().includes(q))return;
+      matches.push({id:h.id,displayName:h.displayName,date:r.date||'—',type:r.type||'Activity',snippet:_extractSnippet(r.notes,q)});
+    });
+  }catch(e){console.warn('Deep search interactions query failed',e);}
+  document.getElementById('deepSearchQueryDisplay').textContent=`${matches.length} result${matches.length!==1?'s':''} for "${queryTerm}" across ${households.length} households`;
   if(!matches.length){
     container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);font-size:.8rem">No matches found in notes or activity logs for "<strong>${queryTerm}</strong>".</div>`;
     return;
