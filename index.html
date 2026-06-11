@@ -1,13 +1,15 @@
-<html lang="en"><head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>דעת</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'&gt;&lt;path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/&gt;&lt;path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/&gt;&lt;path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/&gt;&lt;/svg&gt;">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'><path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/><path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Lora:wght@600;700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -351,18 +353,18 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
-<div id="app" style="display: flex;">
+<div id="app">
   <!-- SIDEBAR OVERLAY -->
-  <div id="sidebarOverlay" onclick="closeSidebar()" style="display: none; position: fixed; inset: 0px; background: rgba(0, 0, 0, 0.35); z-index: 9100;"></div>
+  <div id="sidebarOverlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9100"></div>
 
   <!-- SIDEBAR PANEL -->
-  <div id="sidebarPanel" style="position: fixed; top: 0px; left: -280px; width: 280px; height: 100vh; background: var(--surf); border-right: 1px solid var(--border2); z-index: 9200; display: flex; flex-direction: column; transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto;">
+  <div id="sidebarPanel" style="position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--surf);border-right:1px solid var(--border2);z-index:9200;display:flex;flex-direction:column;transition:left .22s cubic-bezier(.4,0,.2,1);overflow-y:auto">
     <!-- Sidebar header -->
     <div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border2)">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="28" height="35" style="display:block;flex-shrink:0">
-        <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"></path>
-        <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"></path>
-        <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"></path>
+        <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"/>
+        <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"/>
+        <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"/>
       </svg>
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
@@ -462,7 +464,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 10:04 PM</div>
+      <div id="versionInfo" style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--txt3);margin-top:12px;padding:0 18px;text-align:left;line-height:1.4">Latest Update: —</div>
     </div>
   </div>
 
@@ -499,8 +501,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div style="display:none">
     <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
     <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
-    <div id="valueTiers" style="display: flex;"></div><div id="givingTiers" style="display: none;"></div>
-    <button id="prefetchBtn"></button>
+    <div id="valueTiers"></div><div id="givingTiers"></div>
+    <button id="prefetchBtn" disabled></button>
   </div>
 
   <!-- RABBI CONTEXT MODAL -->
@@ -534,29 +536,29 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <header class="hdr">
     <button onclick="openSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;color:var(--txt2);font-size:1.2rem;flex-shrink:0;line-height:1" title="Menu">☰</button>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="20" height="26" style="display:block;flex-shrink:0">
-  <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"></path>
-  <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"></path>
-  <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"></path>
+  <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"/>
+  <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"/>
+  <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"/>
 </svg>
     <span style="font-family:'Lora',serif;font-weight:700;font-size:1.1rem;color:var(--txt);flex-shrink:0">דַּעַת</span>
     <div class="toolbar-sep"></div>
     <button class="dash-nav-btn" id="navCRM" onclick="switchView('crm')" style="padding:4px 12px">🗺 Map</button>
     <button class="dash-nav-btn" id="navContacts" onclick="switchView('contacts')" style="padding:4px 12px">📋 Contacts</button>
-    <button class="dash-nav-btn active" id="navDash" onclick="switchView('dash')" style="padding:4px 12px">📊 Dashboard</button>
+    <button class="dash-nav-btn" id="navDash" onclick="switchView('dash')" style="padding:4px 12px">📊 Dashboard</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
-    <div class="prog-wrap" id="geoProgress" style="display: flex;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
-      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
+    <div class="prog-wrap" id="geoProgress" style="display:none">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <span class="prog-lbl" id="progLbl">Loading…</span>
     </div>
     <div class="spacer"></div>
     <div id="mapControls" style="display:none;align-items:center;gap:8px">
       <div class="legend" id="legend">
         <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">&lt; $500,000</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div><span id="leg2">&lt; $1,000,000</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">$1,000,000+</span></div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div><span id="leg2">Tier 2</span></div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">Tier 3</span></div>
       </div>
       <select id="colorBy" onchange="switchColorMode();updateSidebarTiers();saveUIPrefs()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:'DM Mono',monospace;font-size:.65rem;border-radius:4px;outline:none">
         <option value="value">Home Value</option>
@@ -567,10 +569,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </select>
     </div>
     <div class="toolbar-sep"></div>
-    <span class="total" id="totalLbl">76 households · 115 contacts</span>
+    <span class="total" id="totalLbl">Loading…</span>
     <div style="position:relative;flex-shrink:0" id="headerSearchWrap">
       <div style="display:flex;align-items:center;gap:5px">
-        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s" oninput="_headerSearchDebounced();_showSearchPopout()" onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}" onfocus="_showSearchPopout()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:6px;outline:none;width:240px">
+        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s"
+          oninput="_headerSearchDebounced();_showSearchPopout()"
+          onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}"
+          onfocus="_showSearchPopout()"
+          style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:6px;outline:none;width:240px">
         <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;font-size:.72rem;white-space:nowrap">🧠</button>
       </div>
       <!-- Search popout -->
@@ -593,7 +599,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
   <!-- Filter Panel -->
   <!-- FILTER STRIP — always visible on Map + Contacts, hidden on Dashboard. All conditions AND together. -->
-  <div id="filterStrip" style="display: none; background: var(--surf2); border-bottom: 1px solid var(--border); padding: 7px 14px; flex-wrap: wrap; gap: 10px; align-items: flex-end; flex-shrink: 0;">
+  <div id="filterStrip" style="display:flex;background:var(--surf2);border-bottom:1px solid var(--border);padding:7px 14px;flex-wrap:wrap;gap:10px;align-items:flex-end;flex-shrink:0">
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="applyFilter()"></div>
     <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
@@ -606,7 +612,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
   </div>
 
-  <div class="crm-view hidden" id="crmView">
+  <div class="crm-view" id="crmView">
   <div class="main">
     <div id="map"></div>
     <div class="sidebar">
@@ -615,995 +621,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button class="mobile-add-btn" onclick="showAddContact()">＋ Add</button>
       </div>
       <div class="srch"><input type="search" id="srch" placeholder="Narrow list by name…" autocomplete="off" name="daas-srch-x9z" oninput="_applyFilterDebounced()"></div>
-      <div class="clist" id="clist"><div class="citem" onclick="selectHousehold(0)">
-      <div class="pindot green">1</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Esther D. Aber</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6000 Nob Hill Dr Apt 318, Chagrin Falls 44022</div>
-        <div class="cphone">4406007224</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$57,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(1)">
-      <div class="pindot gold">2</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Robert &amp; Stefani Apple</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">681-25 Claridge Ln, Aurora 44202</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$633,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">23</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(2)">
-      <div class="pindot gold">3</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Alan and Marcia Arons</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24499 Albert Lane, Beachwood 44122</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$513,700</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">26</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $126 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(3)">
-      <div class="pindot red">4</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Nanette and Daniel Auerhahn</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">37840 Jackson Road, Chagrin Falls 44022</div>
-        <div class="cphone">2167987515</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,061,800</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">31</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $50 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(4)">
-      <div class="pindot gold">5</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Ken and Nancy Bernstein</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5 Timber Ridge Dr, Chagrin Falls 44022</div>
-        <div class="cphone">4402231983 · 4402234669</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$827,200</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">29</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(5)">
-      <div class="pindot red">6</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Larry and Marilyn Blaustein</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">603 N Main St, Chagrin Falls 44022</div>
-        <div class="cphone">2162721800 · 216-470-4084</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$3,039,500</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">48</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,800 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(6)">
-      <div class="pindot gold">7</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Michael and Shelley Bloomfield</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">156 Willow Ln, Chagrin Falls 44022</div>
-        <div class="cphone">4406652902</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$576,500</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">41</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $252 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(7)">
-      <div class="pindot ">8</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Anna Borenstein</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(8)">
-      <div class="pindot gold">9</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Tanya Borshov</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6889 Silkwood Ln, Solon 44139</div>
-        <div class="cphone">4405671107</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$654,200</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">23</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(9)">
-      <div class="pindot gold">10</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Rodger and Susan Cahn</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">257 Hickory Hill Rd, Chagrin Falls 44022</div>
-        <div class="cphone">216-337-2419</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$544,100</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">28</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,000 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(10)">
-      <div class="pindot green">11</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Julie and Bob Cohen</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">113 Renaissance Ct, Chagrin Falls 44023</div>
-        <div class="cphone">216-905-7267 · 2165700456</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$499,100</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">20</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(11)">
-      <div class="pindot green">12</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Sally and Dave Cunix</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">160 Fox Hollow Drive #402, Mayfield Hts 44124</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$244,200</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">20</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(12)">
-      <div class="pindot green">13</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Leah Dicker</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5765 SOM Center Rd, Solon 44139</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$414,100</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">22</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(13)">
-      <div class="pindot red">14</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Howard and Linda Dickey-White</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">35968 Solon Rd, Bentleyville 44022</div>
-        <div class="cphone">216-319-1677</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$2,343,900</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">56</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $2,500 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(14)">
-      <div class="pindot ">15</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Yuliya Frid</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">+12169901446</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $118 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(15)">
-      <div class="pindot ">16</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Roman Frid</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">2162338048</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          
-        </div>
-        
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(16)">
-      <div class="pindot green">17</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Helen and Alex Friedman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">256 Ruby Lane, Streetsboro 44241</div>
-        <div class="cphone">2165980318</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$60,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">22</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $252 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(17)">
-      <div class="pindot red">18</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Ian and Jamie Friedman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16405 Majestic Oaks Dr, Chagrin Falls 44023</div>
-        <div class="cphone">2167011072 · 2169061981</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,174,600</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">63</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $3,654 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(18)">
-      <div class="pindot ">19</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">ELIOT and Helene GELB</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">250 Jackson Dr, Orange 44022</div>
-        <div class="cphone">216-469-1202</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">19</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(19)">
-      <div class="pindot red">20</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Alex Geyer</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">400 Reserve Trail, Chagrin Falls 44022</div>
-        <div class="cphone">917-207-0481</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,180,800</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">44</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,100 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(20)">
-      <div class="pindot green">21</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Patricia Greene</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6380 Gates Mills Blvd, Mayfield Hts 44124</div>
-        <div class="cphone">2165778201</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$416,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">23</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(21)">
-      <div class="pindot gold">22</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Melanie and Andrew Halvorson</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">80 Carriage Stone Dr, Chagrin Falls 44022</div>
-        <div class="cphone">7347177927</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$834,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">27</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $118 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(22)">
-      <div class="pindot gold">23</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Alex and Carly Hamerstone</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">492 Laurelbrook Dr, Chagrin Falls 44022</div>
-        <div class="cphone">2164036349 · (216) 272-0660</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$767,900</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">27</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(23)">
-      <div class="pindot ">24</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Marcie Harrison</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">4406656799</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(24)">
-      <div class="pindot green">25</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Lindsay and Ryan Heksch</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">145 E Orange Hill Cir, Orange 44022</div>
-        <div class="cphone">330-328-1595</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$480,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">21</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(25)">
-      <div class="pindot ">26</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Daniel Hoicowitz</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">850 Dipper Ln, Aurora 44202</div>
-        <div class="cphone">2169781511</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $90 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(26)">
-      <div class="pindot ">27</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Mark and Tara Howard</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">50 Glennridge Ct, Bentleyville 44022</div>
-        <div class="cphone">4407856510 · 4407246920</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">19</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(27)">
-      <div class="pindot gold">28</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Simi and Shneur Itzinger</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">506 Coy Ln, Chagrin Falls 44022</div>
-        <div class="cphone">3475432764</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$674,700</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">18</div>
-        </div>
-        
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(28)">
-      <div class="pindot ">29</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Michael and Laura Jaffe</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">32570 Stony Brook Ln, Solon 44139</div>
-        <div class="cphone">440-804-6218</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">21</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,080 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(29)">
-      <div class="pindot ">30</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Brian Johnson</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">8479221283</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(30)">
-      <div class="pindot ">31</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Dori Kaplansky</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">260 Falls Walk Way, Chagrin Falls 44022</div>
-        <div class="cphone">4405674795</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">18</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $54 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(31)">
-      <div class="pindot red">32</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Melissa Keenan</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">7491 Faraway Trl, Chagrin Falls 44023</div>
-        <div class="cphone">9084512377</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,435,400</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">40</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $72 · 3 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(32)">
-      <div class="pindot ">33</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Norma Kronenberg</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">4402474611</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $90 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(33)">
-      <div class="pindot red">34</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Ben and Jessica Kulick</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">17361 Owls Hollow Ln., Chagrin Falls 44023</div>
-        <div class="cphone">7168641474</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,103,700</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">38</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $650 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(34)">
-      <div class="pindot red">35</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Norman Kumins</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">45 Quail Ridge Dr, Bentleyville 44022</div>
-        <div class="cphone">630-222-0513</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,584,600</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">30</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $360 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(35)">
-      <div class="pindot ">36</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">David and Beverly Lavetter</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">6441 Woodhawk Dr, Mayfield Heights 44124</div>
-        <div class="cphone">440-446-1959</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(36)">
-      <div class="pindot red">37</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Madeline and Brent Lieberman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">32450 Meadowlark Way, Pepper Pike 44124</div>
-        <div class="cphone">2168553668 · 440-227-9297</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,190,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">30</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(37)">
-      <div class="pindot ">38</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">NANCY LUDWIG</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">105 Hamlet Hills Dr Apt 11, Chagrin Falls 44022</div>
-        <div class="cphone">2169708237</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $50 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(38)">
-      <div class="pindot ">39</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Mila Lukova</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">3987 Wiltshire Rd, Moreland Hills 44022</div>
-        <div class="cphone">4402797300</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $20 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(39)">
-      <div class="pindot red">40</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Howard and Missy Mandel</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">511 N Main St, Chagrin Falls 44022</div>
-        <div class="cphone">2164966182</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,354,900</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">49</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $5,000 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(40)">
-      <div class="pindot ">41</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Jerry Mandel</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16715 Brigadoon Dr, Chagrin Falls 44023</div>
-        <div class="cphone">2162354180</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(41)">
-      <div class="pindot red">42</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Randy Markey</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">40 Addison Ln, Moreland Hills 44022</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$2,706,000</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">45</div>
-        </div>
-        
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(42)">
-      <div class="pindot ">43</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">David and Melissa Markowitz</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">29975 Bolingbrook Rd, Pepper Pike 44124</div>
-        <div class="cphone">9174005813</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $216 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(43)">
-      <div class="pindot red">44</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Valerie Markowitz</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">36 W Orange St, Chagrin Falls 44022</div>
-        <div class="cphone">2165332897</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,514,600</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">32</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $500 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(44)">
-      <div class="pindot red">45</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Stacy Maxson</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">173 Orange Lake Dr, Orange 44022</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,254,100</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">40</div>
-        </div>
-        
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(45)">
-      <div class="pindot red">46</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Courtney and Seth Mendelsohn</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">72 Wychwood Dr, Moreland Hills 44022</div>
-        <div class="cphone">2167897292</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,262,600</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">29</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $18 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(46)">
-      <div class="pindot ">47</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Michelle and Clark Miller</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">18675 Auburn Glen Dr, Chagrin Falls 44022</div>
-        <div class="cphone">2164061246</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(47)">
-      <div class="pindot gold">48</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Alla and Mike Model</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">17139 Sunset Dr, Chagrin Falls 44023</div>
-        <div class="cphone">2169036929</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$605,900</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">24</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $100 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(48)">
-      <div class="pindot gold">49</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Melissa Morton</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">155 Hunting Trail, Chagrin Falls 44022</div>
-        <div class="cphone">8583442878</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$886,500</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">41</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $18 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(49)">
-      <div class="pindot gold">50</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Alyse and Joseph Muttillo</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24818 Wimbledon Rd, Beachwood 44122</div>
-        <div class="cphone">2167804444 · 2164699494</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$649,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">26</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(50)">
-      <div class="pindot red">51</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Rob and Tracy Myers</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">9 Deerfield Dr, Chagrin Falls 44022</div>
-        <div class="cphone">440-487-4444</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,191,400</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">53</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $2,800 · 2 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(51)">
-      <div class="pindot ">52</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Nicole Newman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">37250 Valley Forge Dr, Solon 44139</div>
-        <div class="cphone">2163334099</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(52)">
-      <div class="pindot ">53</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Klara Pogrebinsky</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">3791 East Blvd, Aurora 44202</div>
-        <div class="cphone">2169040698</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">21</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $360 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(53)">
-      <div class="pindot ">54</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Kate and Will Reiter</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">120 Edgewood Ct, Chagrin Falls 44022</div>
-        <div class="cphone">3176910878</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $90 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(54)">
-      <div class="pindot ">55</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Janine Rigano</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">16165 Wake Robin Dr, Newbury 44065</div>
-        <div class="cphone">2163190895</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">18</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(55)">
-      <div class="pindot ">56</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Janine Rigano</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">2163190895</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(56)">
-      <div class="pindot ">57</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Rob and Trish Risman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">309 Bentleyville Rd, Moreland Hills 44022</div>
-        <div class="cphone">2168326140 · 4407854291</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">25</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $2,500 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(57)">
-      <div class="pindot ">58</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Gary Ross</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">440-241-4053</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(58)">
-      <div class="pindot gold">59</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">WAYNE ROTHMAN</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">28899 Edgedale Rd, Pepper Pike 44124</div>
-        <div class="cphone">3303512300</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$569,100</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">39</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $900 · 6 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(59)">
-      <div class="pindot ">60</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Andrew and Mia Rutsky</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">89 E Cottage St, Chagrin Falls 44022</div>
-        <div class="cphone">2165025848</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $252 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(60)">
-      <div class="pindot red">61</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Brad and Heather Schlang</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">30 Winterberry Ln, Moreland Hills 44022</div>
-        <div class="cphone">(216) 956-3272</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,228,600</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">32</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $180 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(61)">
-      <div class="pindot ">62</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Sandy Seiger</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">5685D Emerald Ridge Parkway, Solon 44139</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">17</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $144 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(62)">
-      <div class="pindot ">63</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Donna Shafran</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">24497 Hawthorne Dr, Beachwood 44122</div>
-        <div class="cphone">216-389-1234</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">19</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $300 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(63)">
-      <div class="pindot green">64</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Jan and Ron Silverman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">18220 Rolling Brook Dr, Chagrin Falls 44023</div>
-        <div class="cphone">216-970-6668</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval green">$466,900</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">22</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $50 · 1 gift</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(64)">
-      <div class="pindot ">65</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">David Silverstein</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">2166500847</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(65)">
-      <div class="pindot ">66</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Ed and Julia Simms</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">37165 Landings Dr, Solon 44139</div>
-        <div class="cphone">2164960886 · 2166503338</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">19</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $540 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(66)">
-      <div class="pindot ">67</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Melvin and Linda Solomon</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">32682 Springside Lane, Solon 44139</div>
-        <div class="cphone">4403822615 · 4403824635</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">32</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $1,984 · 8 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(67)">
-      <div class="pindot ">68</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Lauren and Jeff Sonkin</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">293 N Cleveland Street, Chagrin Falls 44022</div>
-        <div class="cphone">2167989608</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">24</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $540 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(68)">
-      <div class="pindot gold">69</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Daniel and Maria Strom</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">90 Sterncrest Dr, Moreland Hills 44022</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$855,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">40</div>
-        </div>
-        
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(69)">
-      <div class="pindot ">70</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Edith and Walker Todd</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">1164 Sheerbrook Dr, Chagrin Falls 44022</div>
-        <div class="cphone">2162722901</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $54 · 2 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(70)">
-      <div class="pindot ">71</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Mike and Fran Weissman</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">7125 Bingham Ln #305, Chagrin Falls 44023</div>
-        <div class="cphone">216-401-0114</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $50 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(71)">
-      <div class="pindot gold">72</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Marc and Cindy Wolf</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">110 N Strawberry Ln, Moreland Hills 44022</div>
-        <div class="cphone">(216) 570-3691</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval gold">$552,800</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">31</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $86 · 3 gifts</div>
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(72)">
-      <div class="pindot red">73</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">David and Barbara Wolfort</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">70 Ridgecreek Trl, Moreland Hills 44022</div>
-        
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          <div class="cval red">$1,218,300</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--gold);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">41</div>
-        </div>
-        
-      </div>
-      <span class="ck">✓</span>
-    </div><div class="citem" onclick="selectHousehold(73)">
-      <div class="pindot ">74</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Vera Yudovina</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">4402894527</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">16</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $36 · 1 gift</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(74)">
-      <div class="pindot ">75</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">JOHN ZACHARIAH</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px"><em style="color:var(--txt3)">No address on file</em></div>
-        <div class="cphone">330.360.8888</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">33</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $750 · 8 gifts</div>
-      </div>
-      
-    </div><div class="citem" onclick="selectHousehold(75)">
-      <div class="pindot ">76</div>
-      <div style="flex:1;min-width:0">
-        <div class="cname">Melissa and Cullen Zwick</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">40 Heather Ct, Chagrin Falls 44022</div>
-        <div class="cphone">2163182803</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
-          
-          <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--red);background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">20</div>
-        </div>
-        <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">💝 $72 · 2 gifts</div>
-      </div>
-      
-    </div></div>
+      <div class="clist" id="clist"><div class="hint"><div class="hi">⏳</div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div></div>
     </div>
   </div>
@@ -1623,7 +641,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <button class="ct-preset" id="ctp-financial" onclick="setContactsPreset('financial')">Financial</button>
       <button class="ct-preset" id="ctp-outreach" onclick="setContactsPreset('outreach')">Outreach</button>
       <div class="spacer" style="flex:1"></div>
-      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off" oninput="_ctSearchDebounced()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:'DM Sans',sans-serif;font-size:.72rem;border-radius:6px;outline:none;width:160px">
+      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off"
+        oninput="_ctSearchDebounced()"
+        style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:'DM Sans',sans-serif;font-size:.72rem;border-radius:6px;outline:none;width:160px">
       <span id="ctCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3)"></span>
       <button class="btn btn-sec" onclick="exportContactsCSV()" style="font-size:.66rem;padding:4px 10px">⬇ Export CSV</button>
     </div>
@@ -1631,7 +651,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 
   <!-- DASHBOARD VIEW -->
-  <div class="dash-view active" id="dashView"><style type="text/css" gs-style-id="gs-id-0"></style>
+  <div class="dash-view" id="dashView">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
       <h2 style="font-family:'Lora',serif;font-size:1.1rem;color:var(--txt)">📊 Dashboard</h2>
       <div style="display:flex;gap:8px">
@@ -1641,426 +661,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button class="btn btn-sec" onclick="resetDashLayout()" style="font-size:.65rem;padding:4px 10px">↺ Reset Layout</button>
       </div>
     </div>
-    <div class="grid-stack gs-12 gs-id-0 grid-stack-animate" id="dashGrid" gs-current-row="20" style="height: 1200px;"><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="0" gs-w="12" gs-h="3" gs-id="panel-heatmap"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🔥 Activity Heatmap</h3>
-      <span onclick="showPanelHelp('panel-heatmap')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-heatmap"><div style="display:flex;flex-direction:column;gap:10px"><div>
-      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Last Week</div>
-      <div style="display:flex;gap:6px;align-items:flex-end"><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-05-31: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Sun</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-01: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Mon</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-02: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Tue</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-03: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Wed</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-04: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Thu</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-1" data-tip="2026-06-05: 1 interaction" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Fri</div>
-      </div></div></div><div>
-      <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">This Week</div>
-      <div style="display:flex;gap:6px;align-items:flex-end"><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-3" data-tip="2026-06-07: 2 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Sun</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-08: 0 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Mon</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-3" data-tip="2026-06-09: 4 interactions" style=""></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Tue</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-10: 0 interactions" style="box-shadow:0 0 0 2px var(--accent)"></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--accent);font-weight:700">Wed</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-11" style="opacity:.3"></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Thu</div>
-      </div><div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-        <div class="heat-cell heat-0" data-tip="2026-06-12" style="opacity:.3"></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--txt3);font-weight:400">Fri</div>
-      </div></div></div><div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-    <span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--txt3)">Less</span>
-    <div class="heat-cell heat-0" style="width:14px;height:14px"></div><div class="heat-cell heat-1" style="width:14px;height:14px"></div><div class="heat-cell heat-2" style="width:14px;height:14px"></div><div class="heat-cell heat-3" style="width:14px;height:14px"></div><div class="heat-cell heat-4" style="width:14px;height:14px"></div>
-    <span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--txt3)">More</span>
-  </div></div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="3" gs-w="7" gs-h="8" gs-id="panel-daily5"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>📞 Daily Five</h3>
-      <span onclick="showPanelHelp('panel-daily5')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-daily5"><div style="position:relative;margin-bottom:10px">
-    <input id="pinSearchInput" oninput="pinSearchFilter()" placeholder="📌 Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.72rem;outline:none">
-    <div id="pinSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--border2);border-radius:6px;margin-top:3px;z-index:50;max-height:220px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.25)"></div>
-  </div><div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;background:#f9731622;color:#f97316;border:1px solid #f9731644">DRIFTING</span>
-        <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">Melissa Keenan</span>
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">AGC 40</span>
-      </div>
-      <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">High-value relationship — no contact in 999 days</div>
-      <div style="display:flex;gap:5px;margin-bottom:8px">
-        <button class="btn btn-sec" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(31),150)" style="font-size:.62rem;padding:3px 8px">👁 View</button>
-        <button class="btn btn-sec" onclick="const w=document.getElementById('why-31');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.62rem;padding:3px 8px">ℹ Why?</button>
-      </div>
-      <div id="why-31" style="display:none;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.62rem;font-family:'DM Mono',monospace"><div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      ✓ AGC 40 ≥ 40 minimum<br>
-      ✓ Has giving history ($72)<br>
-      ✓ 999+ days since contact ≥ 90-day drift threshold</div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">AGC breakdown</span><span style="color:var(--txt2);text-align:right">A 13/35 · G 12/35 · C 15/30 = <b>40</b></span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Home value</span><span style="color:var(--txt2);text-align:right">$1,435,400</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Giving</span><span style="color:var(--txt2);text-align:right">$72 · 3 gifts · last 2025-12-10</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Last contact</span><span style="color:var(--txt2);text-align:right">none in last 90 days</span></div></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        
-          <button onclick="showOutcomeTray(31,'Connected','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Connected</button>
-          <button onclick="showOutcomeTray(31,'Left VM','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Left VM</button>
-          <button onclick="showOutcomeTray(31,'Sent Text','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Text</button>
-          <button onclick="showOutcomeTray(31,'Sent Email','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Email</button>
-          <button onclick="showOutcomeTray(31,'Quiet Hangup','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Quiet Hangup</button>
-        <button onclick="snoozeDaily(31,7)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 7d</button>
-        <button onclick="snoozeDaily(31,30)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 30d</button>
-        <button onclick="snoozeDaily(31,90)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 90d</button>
-      </div>
-      <div id="outcome-tray-31" style="display:none;margin-top:8px;padding:8px;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">
-        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:5px">Log note — <span id="outcome-label-31" style="font-weight:600;color:var(--accent)"></span>:</div>
-        <textarea id="outcome-note-31" placeholder="Brief note…" style="width:100%;min-height:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:6px;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:6px"></textarea>
-        <div style="display:flex;gap:6px">
-          <button onclick="saveOutcome(31)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">💾 Save</button>
-          <button onclick="document.getElementById('outcome-tray-31').style.display='none'" class="btn btn-sec" style="font-size:.62rem;padding:3px 8px">Cancel</button>
-        </div>
-      </div>
-    </div><div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;background:#6b728022;color:#6b7280;border:1px solid #6b728044">PROSPECT</span>
-        <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">Randy Markey</span>
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">AGC 45</span>
-      </div>
-      <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">High-capacity household ($2706k home) — never contacted</div>
-      <div style="display:flex;gap:5px;margin-bottom:8px">
-        <button class="btn btn-sec" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(41),150)" style="font-size:.62rem;padding:3px 8px">👁 View</button>
-        <button class="btn btn-sec" onclick="const w=document.getElementById('why-41');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.62rem;padding:3px 8px">ℹ Why?</button>
-      </div>
-      <div id="why-41" style="display:none;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.62rem;font-family:'DM Mono',monospace"><div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      ✓ Home value $2706k ≥ $500k threshold<br>
-      ✓ No donations on file<br>
-      ✓ Last contact 2026-05-29</div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">AGC breakdown</span><span style="color:var(--txt2);text-align:right">A 6/35 · G 10/35 · C 29/30 = <b>45</b></span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Home value</span><span style="color:var(--txt2);text-align:right">$2,706,000</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Giving</span><span style="color:var(--txt2);text-align:right">none on file</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Last contact</span><span style="color:var(--txt2);text-align:right">2026-05-29 (13d ago)</span></div></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        
-          <button onclick="showOutcomeTray(41,'Connected','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Connected</button>
-          <button onclick="showOutcomeTray(41,'Left VM','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Left VM</button>
-          <button onclick="showOutcomeTray(41,'Sent Text','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Text</button>
-          <button onclick="showOutcomeTray(41,'Sent Email','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Email</button>
-          <button onclick="showOutcomeTray(41,'Quiet Hangup','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Quiet Hangup</button>
-        <button onclick="snoozeDaily(41,7)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 7d</button>
-        <button onclick="snoozeDaily(41,30)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 30d</button>
-        <button onclick="snoozeDaily(41,90)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 90d</button>
-      </div>
-      <div id="outcome-tray-41" style="display:none;margin-top:8px;padding:8px;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">
-        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:5px">Log note — <span id="outcome-label-41" style="font-weight:600;color:var(--accent)"></span>:</div>
-        <textarea id="outcome-note-41" placeholder="Brief note…" style="width:100%;min-height:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:6px;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:6px"></textarea>
-        <div style="display:flex;gap:6px">
-          <button onclick="saveOutcome(41)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">💾 Save</button>
-          <button onclick="document.getElementById('outcome-tray-41').style.display='none'" class="btn btn-sec" style="font-size:.62rem;padding:3px 8px">Cancel</button>
-        </div>
-      </div>
-    </div><div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;background:#6b728022;color:#6b7280;border:1px solid #6b728044">PROSPECT</span>
-        <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">Stacy Maxson</span>
-        <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">AGC 40</span>
-      </div>
-      <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">High-capacity household ($1254k home) — never contacted</div>
-      <div style="display:flex;gap:5px;margin-bottom:8px">
-        <button class="btn btn-sec" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(44),150)" style="font-size:.62rem;padding:3px 8px">👁 View</button>
-        <button class="btn btn-sec" onclick="const w=document.getElementById('why-44');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.62rem;padding:3px 8px">ℹ Why?</button>
-      </div>
-      <div id="why-44" style="display:none;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.62rem;font-family:'DM Mono',monospace"><div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      ✓ Home value $1254k ≥ $500k threshold<br>
-      ✓ No donations on file<br>
-      ✓ No recent contact in window</div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">AGC breakdown</span><span style="color:var(--txt2);text-align:right">A 7/35 · G 10/35 · C 23/30 = <b>40</b></span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Home value</span><span style="color:var(--txt2);text-align:right">$1,254,100</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Giving</span><span style="color:var(--txt2);text-align:right">none on file</span></div><div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">Last contact</span><span style="color:var(--txt2);text-align:right">none in last 90 days</span></div></div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        
-          <button onclick="showOutcomeTray(44,'Connected','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Connected</button>
-          <button onclick="showOutcomeTray(44,'Left VM','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Left VM</button>
-          <button onclick="showOutcomeTray(44,'Sent Text','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Text</button>
-          <button onclick="showOutcomeTray(44,'Sent Email','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Sent Email</button>
-          <button onclick="showOutcomeTray(44,'Quiet Hangup','')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">Quiet Hangup</button>
-        <button onclick="snoozeDaily(44,7)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 7d</button>
-        <button onclick="snoozeDaily(44,30)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 30d</button>
-        <button onclick="snoozeDaily(44,90)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 90d</button>
-      </div>
-      <div id="outcome-tray-44" style="display:none;margin-top:8px;padding:8px;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">
-        <div style="font-size:.65rem;color:var(--txt2);margin-bottom:5px">Log note — <span id="outcome-label-44" style="font-weight:600;color:var(--accent)"></span>:</div>
-        <textarea id="outcome-note-44" placeholder="Brief note…" style="width:100%;min-height:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:6px;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:6px"></textarea>
-        <div style="display:flex;gap:6px">
-          <button onclick="saveOutcome(44)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">💾 Save</button>
-          <button onclick="document.getElementById('outcome-tray-44').style.display='none'" class="btn btn-sec" style="font-size:.62rem;padding:3px 8px">Cancel</button>
-        </div>
-      </div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="3" gs-w="5" gs-h="4" gs-id="panel-coldfloor"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🧊 Cold Floor</h3>
-      <span onclick="showPanelHelp('panel-coldfloor')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-coldfloor">
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(68),100)">Daniel and Maria Strom</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)">$855k home</div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
-        <button onclick="addToDaily(68,'2026-06-11')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);border-radius:4px;background:none;cursor:pointer">Today</button>
-        <button onclick="addToDaily(68,'2026-06-12')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;background:none;cursor:pointer">Tomorrow</button>
-      </div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="7" gs-w="5" gs-h="4" gs-id="panel-wins"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🏆 Wins of the Week</h3>
-      <span onclick="showPanelHelp('panel-wins')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-wins"><div class="win-row">
-      <div class="win-dot"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(33),100)">Ben and Jessica Kulick</div>
-        
-        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-11</div>
-      </div>
-      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
-    </div><div class="win-row">
-      <div class="win-dot"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(33),100)">Ben and Jessica Kulick</div>
-        
-        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-11</div>
-      </div>
-      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
-    </div><div class="win-row">
-      <div class="win-dot"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">Larry and Marilyn Blaustein</div>
-        
-        <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">2026-06-09</div>
-      </div>
-      <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="11" gs-w="6" gs-h="5" gs-id="panel-gifts"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>💝 Recent Gifts</h3>
-      <span onclick="showPanelHelp('panel-gifts')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-gifts">
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(50),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rob and Tracy Myers</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Asked to be a lead donor for kids programming, asked for 1800 specificaly, he gave it.</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-21</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(19),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex Geyer</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Course sponsorship</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,100</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-18</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(5),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Larry and Marilyn Blaustein</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">for kids programming 2027</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$1,800</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-14</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-11</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">shavuos kiddush sponsor</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$360</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-05-05</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(74),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">JOHN ZACHARIAH</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$100</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-29</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(66),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Melvin and Linda Solomon</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$36</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-28</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(71),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marc and Cindy Wolf</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$18</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-27</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(22),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alex and Carly Hamerstone</div>
-        <div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">donation at lag baomer signup</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$180</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-19</div>
-      </div>
-    </div>
-    <div class="gift-row" onclick="switchView('crm');setTimeout(()=&gt;selectHousehold(58),100)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">WAYNE ROTHMAN</div>
-        
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$150</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">2026-04-10</div>
-      </div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="6" gs-y="11" gs-w="6" gs-h="5" gs-id="panel-sri"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🎯 Solicitation Readiness</h3>
-      <span onclick="showPanelHelp('panel-sri')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-sri">
-    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(13),150)">Howard and Linda Dickey-White</div>
-          <div style="font-size:.6rem;color:var(--txt3)">Last gift: 2025-12-13 · Total: $2,500</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">65</div>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:65%;background:var(--gold);border-radius:2px;transition:width .4s"></div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="const w=document.getElementById('sri-why-13');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(13)" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
-      </div>
-      <div id="sri-why-13" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $2344k home ≥ $750k<br>+25 — giving gap: last gift 2025-12-13 (6 mo ago) — inside the 6–18 mo ask window</div>
-    </div>
-    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(31),150)">Melissa Keenan</div>
-          <div style="font-size:.6rem;color:var(--txt3)">Last gift: 2025-12-10 · Total: $72</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">65</div>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:65%;background:var(--gold);border-radius:2px;transition:width .4s"></div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="const w=document.getElementById('sri-why-31');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(31)" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
-      </div>
-      <div id="sri-why-31" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $1435k home ≥ $750k<br>+25 — giving gap: last gift 2025-12-10 (6 mo ago) — inside the 6–18 mo ask window</div>
-    </div>
-    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(39),150)">Howard and Missy Mandel</div>
-          <div style="font-size:.6rem;color:var(--txt3)">Last gift: 2025-12-11 · Total: $5,000</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">65</div>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:65%;background:var(--gold);border-radius:2px;transition:width .4s"></div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="const w=document.getElementById('sri-why-39');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(39)" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
-      </div>
-      <div id="sri-why-39" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $1355k home ≥ $750k<br>+25 — giving gap: last gift 2025-12-11 (6 mo ago) — inside the 6–18 mo ask window</div>
-    </div>
-    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(43),150)">Valerie Markowitz</div>
-          <div style="font-size:.6rem;color:var(--txt3)">Last gift: 2025-12-08 · Total: $500</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">65</div>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:65%;background:var(--gold);border-radius:2px;transition:width .4s"></div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="const w=document.getElementById('sri-why-43');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(43)" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
-      </div>
-      <div id="sri-why-43" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $1515k home ≥ $750k<br>+25 — giving gap: last gift 2025-12-08 (6 mo ago) — inside the 6–18 mo ask window</div>
-    </div>
-    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=&gt;openFullPanel(48),150)">Melissa Morton</div>
-          <div style="font-size:.6rem;color:var(--txt3)">Last gift: 2025-12-08 · Total: $18</div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">65</div>
-      </div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px">
-        <div style="height:100%;width:65%;background:var(--gold);border-radius:2px;transition:width .4s"></div>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="const w=document.getElementById('sri-why-48');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(48)" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
-      </div>
-      <div id="sri-why-48" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">+40 — capacity: $887k home ≥ $750k<br>+25 — giving gap: last gift 2025-12-08 (6 mo ago) — inside the 6–18 mo ask window</div>
-    </div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="0" gs-y="16" gs-w="7" gs-h="4" gs-id="panel-tracks"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🔁 Active Tracks</h3>
-      <span onclick="showPanelHelp('panel-tracks')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-tracks"><div class="hint"><div class="hi">🔁</div><p>No active outreach tracks — add contacts from Cold Floor or Daily Five</p></div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div><div class="grid-stack-item ui-resizable-autohide" gs-x="7" gs-y="16" gs-w="5" gs-h="4" gs-id="panel-insights"><div class="grid-stack-item-content gs-panel">
-    <div class="gs-panel-hdr">
-      <h3>🧠 Smart Insights</h3>
-      <span onclick="showPanelHelp('panel-insights')" title="What does this panel do?" style="margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--txt3)';this.style.borderColor='var(--border2)'">?</span>
-    </div>
-    <div class="gs-panel-body" id="body-panel-insights"><div style="font-size:.58rem;color:var(--txt3);margin-bottom:10px;font-family:'DM Mono',monospace">Last scan: 6/9/2026, 4:48:20 PM <button onclick="_smartInsightsCache=null;renderSmartInsights()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.58rem;margin-left:8px">↺ Re-scan</button></div><div style="display:flex;gap:6px;margin-bottom:10px">
-    <button onclick="document.getElementById('si-horizon').style.display='block';document.getElementById('si-gems').style.display='none';this.style.background='var(--accent)';this.style.color='#fff';this.nextSibling.style.background='none';this.nextSibling.style.color='var(--txt2)'" style="font-size:.62rem;padding:3px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer">📅 Horizon Flags</button>
-    <button onclick="document.getElementById('si-gems').style.display='block';document.getElementById('si-horizon').style.display='none';this.style.background='var(--accent)';this.style.color='#fff';this.previousSibling.style.background='none';this.previousSibling.style.color='var(--txt2)'" style="font-size:.62rem;padding:3px 10px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt2);cursor:pointer">💎 Profile Gems</button>
-  </div><div id="si-horizon"><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Larry and Marilyn Blaustein**: Celebrated 50th wedding anniversary in 2022; at 75, Larry may be approaching estate planning considerations or health transitions.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Dr. Alex Geyer**: Recently relocated from New York to Cleveland and purchased a home—new community member in active integration phase requiring timely outreach.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Simi and Shneur Itzinger**: Launched Chabad of Chagrin Falls in August 2022; still in early establishment phase where partnership or collaboration opportunities may be fluid.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">--</div></div><div id="si-gems" style="display:none"><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Ian Friedman**: $1.17M+ identified wealth as managing partner of a nationally-recognized firm; described as a "rising star in Cleveland Jewish philanthropy"—high-capacity donor in cultivation window.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Randy Markey**: Private equity co-founder with a $2.7M home; investment expertise could be leveraged for board recruitment or business mentorship programs.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Melissa Morton and Mark Kleid**: Mark trained in Tel Aviv with specialty pediatric oncology credentials; Israel connection and medical network could unlock peer introductions.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Daniel Strom**: CIO of Jewish Federation of Cleveland and national Jewish tech leader—strategic relationship for communal collaboration and data/tech initiatives.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**David Wolfort**: Former President of Olympic Steel, now serving in ongoing civic roles at approximately 72—estate planning conversations and legacy giving potential.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Dr. Howard Dickey-White**: 45+ years in healthcare leadership with current executive roles—potential for medical ethics programming sponsorship or professional network activation.</div><div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">**Dr. Alex Geyer**: Board-certified pulmonologist at Cleveland Clinic with physician spouse and $1.18M home purchase—dual-income professional household with high capacity signals.</div></div></div>
-  </div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-se" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 100; user-select: none;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 100; user-select: none;"></div></div></div>
+    <div class="grid-stack" id="dashGrid"></div>
   </div>
 </div>
 
@@ -2157,13 +758,18 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Email</label>
-      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="email" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="email"
+        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
     </div>
     <div style="margin-bottom:20px">
       <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')signIn()">
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none"
+        onkeydown="if(event.key==='Enter')signIn()">
     </div>
-    <button onclick="signIn()" id="loginBtn" style="width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s">
+    <button onclick="signIn()" id="loginBtn"
+      style="width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s">
       Sign In
     </button>
     <div id="loginError" style="display:none;margin-top:12px;color:var(--red);font-size:.75rem;text-align:center;font-family:'DM Sans',sans-serif"></div>
@@ -8527,14 +7133,14 @@ function _renderSmartInsightsResults(el,cache){
     </div>
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:6px">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🔍 Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow &amp; costly (~$0.30)</span></div>
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🔍 Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow & costly (~$0.30)</span></div>
       <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">The deepest look. Reads the <b>full detailed profile</b> of every household — AGC breakdown, gift history, AI research summary, suggested approach, business info — plus the relevant notes. Use for big cross-database thinking like "build me a major-gift prospect list with talking points for each." Asks you to confirm before running because of the cost.</p>
     </div>
 
     <p style="font-size:.72rem;color:var(--txt3);line-height:1.5;margin:14px 0 0">"Tokens" is roughly how much text the AI reads per question. More tokens = more thorough but slower and more expensive. When unsure, start with Standard.</p>
   </div>
 </div>
-<!-- DEEP SEARCH MODAL -->
+</div><!-- DEEP SEARCH MODAL -->
 <div class="modal-bg" id="deepSearchModal" style="display:none">
   <div style="background:var(--surf);border:1px solid var(--border2);border-radius:10px;width:840px;max-width:92vw;height:80vh;display:flex;flex-direction:column;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;flex-shrink:0">
@@ -8546,6 +7152,5 @@ function _renderSmartInsightsResults(el,cache){
   </div>
 </div>
 
-
-
-</body></html>
+</body>
+</html>
