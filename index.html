@@ -779,7 +779,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-10.5';
+const BUILD_STAMP='2026-06-10.6';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -867,6 +867,10 @@ async function showApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('ppanel').innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div>';
+  // Init Leaflet NOW while crmView is still visible and has real dimensions.
+  // If we wait until first switchView('crm') the container may be hidden (0×0)
+  // and Leaflet sets a garbage center that never recovers.
+  if(!map)initMap();
   await loadAll();
 }
 
@@ -5806,20 +5810,16 @@ function switchView(view){
     if(mapCtrl)mapCtrl.style.display='none';
     renderContacts();
   } else {
-    // Unhide FIRST — Leaflet must never initialize inside a hidden (0×0) container,
-    // or it computes a garbage center/zoom and pan/zoom math stays broken.
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
     if(strip)strip.style.display='flex';
     if(mapCtrl)mapCtrl.style.display='flex';
-    const firstMapInit=!map;
-    if(firstMapInit){initMap();households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});}
-    setTimeout(()=>{
-      if(window.map&&map.invalidateSize){
-        map.invalidateSize();
-        if(firstMapInit)fitMap(); // fit only after size is correct
-      }
-    },80);
+    // Map is pre-inited in showApp. Just tell Leaflet the container resized
+    // and re-fit bounds. Use two rAFs so the browser has painted the unhidden
+    // container before invalidateSize measures it.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(map){map.invalidateSize();fitMap();}
+    }));
   }
 }
 
