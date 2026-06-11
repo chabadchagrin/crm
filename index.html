@@ -462,7 +462,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- ACCOUNT section -->
     <div style="margin-top:auto;border-top:1px solid var(--border2);padding:12px 18px">
       <button class="sb-item" onclick="signOut()" style="color:var(--red);width:100%">🔒 Sign Out</button>
-      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 9:11 PM</div>
+      <div id="versionInfo" style="font-family: &quot;DM Mono&quot;, monospace; font-size: 0.6rem; color: var(--green); margin-top: 12px; padding: 0px 18px; text-align: left; line-height: 1.4;">🟢 Live · Jun 10, 2026, 9:19 PM</div>
     </div>
   </div>
 
@@ -546,9 +546,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem">🔄</button>
-    <div class="prog-wrap" id="geoProgress" style="display: none;">
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
-      <span class="prog-lbl" id="progLbl">✓ Done</span>
+    <div class="prog-wrap" id="geoProgress" style="display: flex;">
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width: 33%;"></div></div>
+      <span class="prog-lbl" id="progLbl">Geocoding 2/3…</span>
     </div>
     <div class="spacer"></div>
     <div id="mapControls" style="display:none;align-items:center;gap:8px">
@@ -2177,7 +2177,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-10.1';
+const BUILD_STAMP='2026-06-10.2';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -2419,7 +2419,8 @@ async function loadAll(){
     // Load AGC scores from DB (non-blocking, will overwrite local calc with DB values)
     loadAGCScores();
     loadAGCInteractionAggregates().then(()=>recolorAll());
-    // Tracks load is non-blocking, but the dashboard needs them — defer landing on dash until ready
+    // Await both UI prefs and tracks before switching to dash, so households are
+    // already in memory when initDashboard/renderAllPanels runs — no empty-flash.
     const tracksP=loadOutreachTracks();
     loadUIPrefs().then(async()=>{
       if(_uiPrefs.landing==='dash'){await tracksP;}
@@ -7553,16 +7554,11 @@ function _makePanelEl(p){
 }
 
 async function renderAllPanels(){
-  // On GitHub Pages Supabase fetches are slower — wait until households are loaded
-  if(!households.length){
-    let waited=0;
-    await new Promise(resolve=>{
-      const t=setInterval(()=>{
-        waited+=100;
-        if(households.length||waited>=10000){clearInterval(t);resolve();}
-      },100);
-    });
-  }
+  // Households are guaranteed loaded before this is called from initDashboard
+  // (loadAll completes → then switchView → then initDashboard).
+  // The only other callers (applyEngineSettings, resetEngineSettings, resetDashLayout)
+  // also run post-load. Safe to render immediately.
+  if(!households.length)return; // safety net — should never happen
   renderHeatmap();
   renderRecentGifts();
   renderDailyFive();
