@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>דעת</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'><path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/><path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/><path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/></svg>">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'&gt;&lt;path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/&gt;&lt;path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/&gt;&lt;path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/&gt;&lt;/svg&gt;">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Lora:wght@600;700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -362,9 +361,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <!-- Sidebar header -->
     <div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border2)">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="28" height="35" style="display:block;flex-shrink:0">
-        <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"/>
-        <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"/>
-        <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"/>
+        <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"></path>
+        <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"></path>
+        <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"></path>
       </svg>
       <span style="font-family:'Lora',serif;font-weight:700;font-size:1.2rem;color:var(--txt)">דַּעַת</span>
     </div>
@@ -502,7 +501,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
     <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
     <div id="valueTiers"></div><div id="givingTiers"></div>
-    <button id="prefetchBtn" disabled></button>
+    <button id="prefetchBtn" disabled=""></button>
   </div>
 
   <!-- RABBI CONTEXT MODAL -->
@@ -536,9 +535,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <header class="hdr">
     <button onclick="openSidebar()" style="background:none;border:none;cursor:pointer;padding:4px 8px;color:var(--txt2);font-size:1.2rem;flex-shrink:0;line-height:1" title="Menu">☰</button>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="20" height="26" style="display:block;flex-shrink:0">
-  <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"/>
-  <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"/>
-  <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"/>
+  <path fill="#b45309" d="M16 2C12 8 6 13 6 20a10 10 0 0 0 20 0C26 13 20 8 16 2Z"></path>
+  <path fill="#d97706" d="M16 8C13 13 9 16 9 20a7 7 0 0 0 14 0C23 16 19 13 16 8Z"></path>
+  <path fill="#dc2626" d="M16 16C14 19 13 21 13 23a3 3 0 0 0 6 0C19 21 18 19 16 16Z"></path>
 </svg>
     <span style="font-family:'Lora',serif;font-weight:700;font-size:1.1rem;color:var(--txt);flex-shrink:0">דַּעַת</span>
     <div class="toolbar-sep"></div>
@@ -572,11 +571,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <span class="total" id="totalLbl">Loading…</span>
     <div style="position:relative;flex-shrink:0" id="headerSearchWrap">
       <div style="display:flex;align-items:center;gap:5px">
-        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s"
-          oninput="_headerSearchDebounced();_showSearchPopout()"
-          onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}"
-          onfocus="_showSearchPopout()"
-          style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:6px;outline:none;width:240px">
+        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s" oninput="_headerSearchDebounced();_showSearchPopout()" onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}" onfocus="_showSearchPopout()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:.75rem;border-radius:6px;outline:none;width:240px">
         <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;font-size:.72rem;white-space:nowrap">🧠</button>
       </div>
       <!-- Search popout -->
@@ -646,9 +641,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <button class="ct-preset" id="ctp-financial" onclick="setContactsPreset('financial')">Financial</button>
       <button class="ct-preset" id="ctp-outreach" onclick="setContactsPreset('outreach')">Outreach</button>
       <div class="spacer" style="flex:1"></div>
-      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off"
-        oninput="_ctSearchDebounced()"
-        style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:'DM Sans',sans-serif;font-size:.72rem;border-radius:6px;outline:none;width:160px">
+      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off" oninput="_ctSearchDebounced()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:'DM Sans',sans-serif;font-size:.72rem;border-radius:6px;outline:none;width:160px">
       <span id="ctCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--txt3)"></span>
       <button class="btn btn-sec" onclick="exportContactsCSV()" style="font-size:.66rem;padding:4px 10px">⬇ Export CSV</button>
     </div>
@@ -763,18 +756,13 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Email</label>
-      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="email"
-        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none"
-        onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="email" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
     </div>
     <div style="margin-bottom:20px">
       <label style="display:block;font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
-        style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none"
-        onkeydown="if(event.key==='Enter')signIn()">
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')signIn()">
     </div>
-    <button onclick="signIn()" id="loginBtn"
-      style="width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s">
+    <button onclick="signIn()" id="loginBtn" style="width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s">
       Sign In
     </button>
     <div id="loginError" style="display:none;margin-top:12px;color:var(--red);font-size:.75rem;text-align:center;font-family:'DM Sans',sans-serif"></div>
@@ -784,7 +772,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-10.8';
+const BUILD_STAMP='2026-06-11.5';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -826,7 +814,7 @@ async function sb(path,opts={}){
   const mergedHeaders={...baseHeaders,...(opts.headers||{})};
   const finalOpts={...opts,headers:mergedHeaders};
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),12000);
+  const timer=setTimeout(()=>controller.abort(),opts.timeoutMs||20000);
   try{
     const res=await fetch(SB_URL+'/rest/v1/'+path,{...finalOpts,signal:controller.signal});
     clearTimeout(timer);
@@ -837,6 +825,79 @@ async function sb(path,opts={}){
     clearTimeout(timer);
     throw e;
   }
+}
+
+// ── PAGINATION — PostgREST silently caps responses at 1000 rows. sbAll pages
+// through until a short page arrives, so bulk loads are NEVER truncated.
+// Callers must include a deterministic order (e.g. order=date.desc,id.asc)
+// or pages can overlap/skip on tied sort values.
+async function sbAll(path,pageSize=1000){
+  const sep=path.includes('?')?'&':'?';
+  const rows=[];let offset=0;
+  while(true){
+    const batch=await sb(`${path}${sep}limit=${pageSize}&offset=${offset}`,{timeoutMs:30000})||[];
+    rows.push(...batch);
+    if(batch.length<pageSize)break;
+    offset+=pageSize;
+  }
+  return rows;
+}
+
+// ── LOCAL DATES — toISOString() is UTC: after 8pm in Ohio it returns TOMORROW's
+// date. These helpers always use the wall-clock local date.
+function localDateStr(d){const x=(d instanceof Date)?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
+function localToday(offsetDays=0){const d=new Date();if(offsetDays)d.setDate(d.getDate()+offsetDays);return localDateStr(d);}
+
+// ── HTML ESCAPE — chat bubbles previously injected raw text via innerHTML, so
+// pasted HTML (or a stray < in a note) corrupted the chat display.
+function _escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── ID-SAFE DISPATCH — rendered HTML used to bake array indices into onclick
+// handlers; if the households array re-sorted or reloaded between render and
+// click, the action fired on the WRONG household. byId() bakes the household
+// id instead and verifies at click time. Fast path (no drift) is identical to
+// the old direct call. On drift it resolves the correct household; if a stale
+// DOM key throws, it refreshes the affected views instead of misfiring.
+// PERF: O(1) id→index lookup. Self-healing — verifies the hit and rebuilds on drift.
+let _hIdxMap=new Map();
+function rebuildHIdxMap(){_hIdxMap=new Map(households.map((h,i)=>[h.id,i]));}
+function hIdx(hid){
+  const i=_hIdxMap.get(hid);
+  if(i!==undefined&&households[i]&&households[i].id===hid)return i;
+  const f=households.findIndex(x=>x.id===hid);
+  if(f>=0)rebuildHIdxMap();
+  return f;
+}
+function byId(fn,hid,renderIdx,...args){
+  const cur=households[renderIdx];
+  if(cur&&cur.id===hid){window[fn](renderIdx,...args);return;}
+  const fresh=hIdx(hid);
+  if(fresh<0){
+    console.warn('[DAAS] household '+hid+' no longer loaded — refreshing list');
+    try{renderList();}catch(e){}
+    return;
+  }
+  console.warn('[DAAS] index drift ('+renderIdx+'→'+fresh+') for '+fn+' — resolved by id');
+  try{window[fn](fresh,...args);}
+  catch(e){
+    console.warn('[DAAS] stale panel for '+fn+' — refreshing views',e);
+    try{renderList();}catch(_){}
+    try{
+      const dv=document.getElementById('dashView');
+      if(typeof renderAllPanels==='function'&&dv&&dv.style.display!=='none')renderAllPanels();
+    }catch(_){}
+  }
+}
+
+// ── SETTINGS UPSERT — replaces the old DELETE-then-POST pattern, which could
+// permanently lose a setting if the POST failed after the DELETE succeeded.
+// PATCH first; only POST if no row existed. Never deletes.
+async function sbSetSetting(key,value){
+  try{
+    const updated=await sb('app_settings?key=eq.'+encodeURIComponent(key),{method:'PATCH',body:JSON.stringify({value})});
+    if(updated&&updated.length)return;
+    await sb('app_settings',{method:'POST',body:JSON.stringify({key,value})});
+  }catch(e){console.warn('[DAAS] setting save failed for '+key,e);throw e;}
 }
 
 // ── AUTH FUNCTIONS ──
@@ -912,11 +973,11 @@ function _showSearchPopout(){
   if(!matches.length){popout.style.display='none';return;}
   list.innerHTML=matches.map((h,i)=>{
     const snippet=_popoutSnippet(h,q);
-    const idx=households.indexOf(h);
+    const idx=hIdx(h.id);
     return `<div class="spop-item" tabindex="0"
       style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px;outline:none"
-      onmousedown="event.preventDefault();_hideSearchPopout();switchView('crm');setTimeout(()=>openFullPanel(${idx}),120)"
-      onkeydown="if(event.key==='Enter'){_hideSearchPopout();switchView('crm');setTimeout(()=>openFullPanel(${idx}),120);}"
+      onmousedown="event.preventDefault();_hideSearchPopout();switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120)"
+      onkeydown="if(event.key==='Enter'){_hideSearchPopout();switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120);}"
       onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
       <div style="font-size:.8rem;font-weight:600;color:var(--txt)">${h.displayName}</div>
       ${snippet?`<div style="font-size:.68rem;color:var(--txt3);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">…${snippet}…</div>`:''}
@@ -963,9 +1024,9 @@ async function loadAll(){
   try{
     // Load households, contacts, donations separately
     const [hRows, allContacts, donations] = await Promise.all([
-      sb('households?select=*&order=created_at.asc'),
-      sb('contacts?select=*&order=created_at.asc'),
-      sb('donations?select=*&order=date.desc')
+      sbAll('households?select=*&order=created_at.asc,id.asc'),
+      sbAll('contacts?select=*&order=created_at.asc,id.asc'),
+      sbAll('donations?select=*&order=date.desc,id.asc')
     ]);
 
     // Build contact lookup by household_id
@@ -1019,7 +1080,14 @@ async function loadAll(){
     document.getElementById('totalLbl').textContent=`${households.length} households · ${households.reduce((a,h)=>a+h.members.length,0)} contacts`;
     document.getElementById('prefetchBtn').disabled=false;
     // Pre-populate AGC cache so renderList never hits _calcAGCLocal on keystrokes
-    households.forEach(h=>{if(!agcCache[h.id])agcCache[h.id]=_calcAGCLocal(h);});
+    // PERF: warm the AGC cache in background chunks — a synchronous loop over
+    // 1000 households froze the page for seconds on load. getAGCScore computes
+    // (and now caches) on demand for anything rendered before its chunk runs.
+    (function _agcWarm(list,i){
+      const end=Math.min(i+50,list.length);
+      for(let j=i;j<end;j++){const h=list[j];if(!agcCache[h.id])agcCache[h.id]=_calcAGCLocal(h);}
+      if(end<list.length)setTimeout(()=>_agcWarm(list,end),0);
+    })(households.slice(),0);
     // Load context from Supabase into localStorage cache
     loadGlobalContext();
     loadSearchContext();
@@ -1028,6 +1096,7 @@ async function loadAll(){
     loadAGCInteractionAggregates().then(()=>recolorAll());
 
     // Place known pins
+    rebuildHIdxMap();_givingCache={};
     households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
     fitMap();
     renderList();
@@ -1076,15 +1145,27 @@ function buildDisplayName(h){
 }
 
 // ── GIVING STATS ──
+// PERF: giving stats are now cached per household — previously recomputed
+// (including a full sort of every donation) on EVERY list render keystroke.
+let _givingCache={};
+function _invHH(h){ // call after any mutation that changes a household's derived data
+  if(h&&h.id)delete _givingCache[h.id];
+  if(h)delete h._blob;
+}
 function getGivingStats(h){
+  if(h&&h.id&&Object.prototype.hasOwnProperty.call(_givingCache,h.id))return _givingCache[h.id];
   const all=[];
   const seen=new Set();
   const unique=(h.members||[]).filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;});
   unique.forEach(m=>(m.donations||[]).forEach(d=>all.push(d)));
-  if(!all.length)return null;
-  all.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
-  return{total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
+  let result=null;
+  if(all.length){
+    all.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const total=all.reduce((s,d)=>s+parseFloat(d.amount||0),0);
+    result={total,count:all.length,largest:Math.max(...all.map(d=>parseFloat(d.amount||0))),lastDate:all[0]?.date||'',donations:all};
+  }
+  if(h&&h.id)_givingCache[h.id]=result;
+  return result;
 }
 
 // ── EMBEDDING BACKFILL ──
@@ -1103,14 +1184,14 @@ async function startEmbedBackfill(){
   // 1. Fetch ONLY interactions missing an embedding (server-side filter)
   let toEmbed=[];
   try{
-    const iRows=await sb('interactions?select=id,type,notes&embedding=is.null&order=date.desc')||[];
+    const iRows=await sbAll('interactions?select=id,type,notes&embedding=is.null&order=date.desc,id.asc')||[];
     toEmbed=iRows.filter(r=>r.notes&&r.notes.trim());
   }catch(e){statusEl.textContent='⚠ Failed to load interactions: '+e.message;btn.disabled=false;return;}
 
   // 2. Fetch ONLY households missing an embedding (server-side filter)
   let hhToEmbed=[];
   try{
-    const hhRows=await sb('households?select=id,joint_name,notes&embedding=is.null')||[];
+    const hhRows=await sbAll('households?select=id,joint_name,notes&embedding=is.null&order=id.asc')||[];
     hhToEmbed=hhRows.filter(h=>h.notes&&h.notes.trim());
   }catch(e){statusEl.textContent='⚠ Failed to load households: '+e.message;btn.disabled=false;return;}
 
@@ -1197,7 +1278,7 @@ async function fetchContactAge(contactId, firstName, lastName, householdIdx){
 async function loadAGCScores(){
   if(!households.length)return;
   try{
-    const rows=await sb('household_agc_scores?select=id,affinity_score,generosity_score,capacity_score,total_agc_score,affinity_detail,generosity_detail,capacity_detail');
+    const rows=await sbAll('household_agc_scores?select=id,affinity_score,generosity_score,capacity_score,total_agc_score,affinity_detail,generosity_detail,capacity_detail&order=id.asc');
     if(rows&&rows.length){
       rows.forEach(r=>{
         agcCache[r.id]={
@@ -1234,7 +1315,9 @@ async function refreshAGCScore(householdId){
 
 function getAGCScore(h){
   if(h&&h.id&&agcCache[h.id])return agcCache[h.id];
-  return _calcAGCLocal(h);
+  const s=_calcAGCLocal(h);
+  if(h&&h.id)agcCache[h.id]=s; // cache on-demand misses (server scores overwrite later)
+  return s;
 }
 
 // ── INTERACTION AGGREGATES for AGC scoring (loaded once at startup) ──
@@ -1242,8 +1325,8 @@ function getAGCScore(h){
 let _agcInterAgg={};
 async function loadAGCInteractionAggregates(){
   try{
-    const since=new Date(Date.now()-365*24*60*60*1000).toISOString().split('T')[0];
-    const rows=await sb('interactions?select=contact_id,type,date')||[];
+    const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
+    const rows=await sbAll('interactions?select=contact_id,type,date&order=id.asc')||[];
     const c2h={};households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
     _agcInterAgg={};
     rows.forEach(r=>{
@@ -1458,7 +1541,11 @@ function _nameMatch(h,q){
 
 // Header search: full text — names, members, address, donation notes, household notes, all profile fields, interactions
 const _PROFILE_KEYS=['summary','approach','capacity','businessInfo','boardMemberships','philanthropy990','pressmentions','affinityNotes','generosityNotes','capacityNotes','fedLevel'];
-function _searchMatch(h,q){
+// PERF: search text is precomputed per household and cached on the object —
+// previously this giant string (incl. JSON.stringify of the profile) was
+// rebuilt for every household on every search keystroke.
+function _searchBlob(h){
+  if(h._blob!==undefined)return h._blob;
   let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'')+' '+(h.notes||'');
   (h.members||[]).forEach(m=>{
     t+=' '+(m.first_name||'')+' '+(m.last_name||'')+' '+(m.email||'')+' '+(m.phone||'');
@@ -1467,7 +1554,11 @@ function _searchMatch(h,q){
   });
   const p=h.profile_data||{};
   _PROFILE_KEYS.forEach(k=>{const v=p[k];if(v)t+=' '+(typeof v==='string'?v:JSON.stringify(v));});
-  return t.toLowerCase().includes(q);
+  h._blob=t.toLowerCase();
+  return h._blob;
+}
+function _searchMatch(h,q){
+  return _searchBlob(h).includes(q);
 }
 
 // Structured filters only (no search) — the "filtered base set"
@@ -1546,13 +1637,13 @@ function renderList(){
   const list=window._sidebarFiltered||filtered;
   if(!list.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
   el.innerHTML=list.map(h=>{
-    const i=households.indexOf(h);const tier=getTier(i);
+    const i=hIdx(h.id);const tier=getTier(i);
     const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
     const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const scoreColor=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
-    return`<div class="citem${i===activeIdx?' active':''}" onclick="selectHousehold(${i})">
+    return`<div class="citem${i===activeIdx?' active':''}" onclick="byId('selectHousehold','${households[i].id}',${i})">
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="cname">${h.displayName}</div>
@@ -1578,16 +1669,37 @@ async function selectHousehold(i){
   if(h.property_data||h.noAddress){setProp('data',h);return;}
   setProp('loading',h);
   const result=await fetchProp(h);
+  // RACE GUARD: if the user clicked another household while this fetch was in
+  // flight, abandon the render (still safe to persist the data below).
+  if(activeIdx!==i){
+    if(!result.error){
+      const _prof=h._keepProfile||h.profile_data||(h.property_data&&h.property_data.profile)||null;
+      delete h._keepProfile;
+      h.home_value=result.homeValue||h.home_value;
+      h.property_data=_prof?{...result,profile:_prof}:result;
+      h.profile_data=_prof;
+      if(result.county&&result.county!=='unk')h.county=result.county;
+      const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
+      if(!h.lat&&result.lat&&result.lon){h.lat=result.lat;h.lon=result.lon;patchData.lat=h.lat;patchData.lon=h.lon;placePinAt(hIdx(h.id));}
+      sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify(patchData)}).catch(()=>{});
+      recolorAll();renderList();
+    }
+    return;
+  }
   if(!result.error){
     h.home_value=result.homeValue||h.home_value;
-    h.property_data=result;
+    // Preserve any built AI profile — refetching property data must NEVER destroy it
+    const _prof=h._keepProfile||h.profile_data||(h.property_data&&h.property_data.profile)||null;
+    delete h._keepProfile;
+    h.property_data=_prof?{...result,profile:_prof}:result;
+    h.profile_data=_prof;
     if(result.county&&result.county!=='unk')h.county=result.county;
-    const patchData={home_value:h.home_value,county:h.county,property_data:result};
+    const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
     // Save Zillow lat/lon if we don't have coordinates yet
     if(!h.lat&&result.lat&&result.lon){
       h.lat=result.lat;h.lon=result.lon;
       patchData.lat=h.lat;patchData.lon=h.lon;
-      placePinAt(households.indexOf(h));
+      placePinAt(hIdx(h.id));
     }
     await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify(patchData)});
     recolorAll();
@@ -1599,7 +1711,7 @@ async function selectHousehold(i){
 function setProp(mode,h,result){
   const el=document.getElementById('ppanel');
   if(mode==='hint'){el.innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div>';return;}
-  const idx=households.indexOf(h);
+  const idx=hIdx(h.id);
   const countyLabel=h.noAddress?'No Address':h.county==='gea'?'Geauga County':h.county==='cuy'?'Cuyahoga County':'County Unknown';
   const tagClass=h.noAddress?'unk':h.county==='gea'?'gea':h.county==='cuy'?'cuy':'unk';
   const giving=getGivingStats(h);
@@ -1608,8 +1720,8 @@ function setProp(mode,h,result){
   const scoreColor=liveScore>=70?'var(--green)':liveScore>=40?'var(--gold)':'var(--red)';
   const header=`<div class="pinner" style="padding-bottom:6px;position:relative">
     <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>
-    <button onclick="openFullPanel(${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view">⛶</button>
-    <button onclick="openPersonChat(${idx})" style="position:absolute;top:8px;right:46px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Chat about this person">💬</button>
+    <button onclick="byId('openFullPanel','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view">⛶</button>
+    <button onclick="byId('openPersonChat','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:46px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Chat about this person">💬</button>
     <div class="crm-name" style="padding-right:56px">${h.displayName}</div>
     <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
@@ -1623,12 +1735,12 @@ function setProp(mode,h,result){
     </div>
   </div>
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab-prop-${idx}" onclick="showTab(${idx},'prop')">🏠 Property</button>
-    <button class="tab-btn" id="tab-giving-${idx}" onclick="showTab(${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
-    <button class="tab-btn" id="tab-contacts-${idx}" onclick="showTab(${idx},'contacts')">👥 Contacts</button>
-    <button class="tab-btn" id="tab-profile-${idx}" onclick="showTab(${idx},'profile')">🔍 Profile</button>
-    <button class="tab-btn" id="tab-interactions-${idx}" onclick="showTab(${idx},'interactions');loadInteractionsTab(${idx})">🤝 Activity</button>
-    <button class="tab-btn" id="tab-notes-${idx}" onclick="showTab(${idx},'notes');loadNotesTab(${idx})">📝 Notes</button>
+    <button class="tab-btn active" id="tab-prop-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'prop')">🏠 Property</button>
+    <button class="tab-btn" id="tab-giving-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'giving')">💝 Giving${giving?' ('+giving.count+')':''}</button>
+    <button class="tab-btn" id="tab-contacts-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'contacts')">👥 Contacts</button>
+    <button class="tab-btn" id="tab-profile-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'profile')">🔍 Profile</button>
+    <button class="tab-btn" id="tab-interactions-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'interactions');byId('loadInteractionsTab','${households[idx].id}',${idx})">🤝 Activity</button>
+    <button class="tab-btn" id="tab-notes-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'notes');byId('loadNotesTab','${households[idx].id}',${idx})">📝 Notes</button>
   </div>`;
 
   if(mode==='loading'){el.innerHTML=header+'<div class="loading-row"><div class="spin"></div><span>Loading property data…</span></div>';return;}
@@ -1646,8 +1758,8 @@ function setProp(mode,h,result){
     ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:
     (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="font-size:.58rem;opacity:.6">(est.)</span></div>`:'')}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
-    <button onclick="deleteContact('${m.id}','${m.first_name} ${m.last_name}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
-    <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}','${m.dob||''}','${m.gender||''}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact">✏️</button>
+    <button onclick="deleteContactById('${m.id}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact">🗑</button>
+    <button onclick="openEditContactById('${m.id}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact">✏️</button>
   </div>`).join('');
 
   // Giving tab
@@ -1694,26 +1806,17 @@ function setProp(mode,h,result){
   // Property tab
   const cells=[
     h.home_value&&['Market Value','$'+Math.round(h.home_value).toLocaleString(),'grn'],
-    data.lastSalePrice&&['Last Sale Price',data.lastSalePrice,'big'],
-    data.lastSaleDate&&['Sale Date',data.lastSaleDate,''],
-    data.assessedValue&&['Assessed Value',data.assessedValue,''],
-    data.propertyType&&['Type',data.propertyType,''],
-    data.yearBuilt&&['Year Built',data.yearBuilt,''],
-    data.squareFeet&&['Sq Ft',data.squareFeet,''],
-    data.bedsBaths&&['Beds / Baths',data.bedsBaths,''],
-    data.lotSize&&['Lot Size',data.lotSize,''],
-    data.annualTax&&['Annual Tax',data.annualTax,''],
   ].filter(Boolean);
   const grid=h.noAddress
     ?'<div style="font-size:.8rem;color:var(--txt2);padding:8px 0">No address on file.</div>'
     :cells.length?`<div class="pgrid">${cells.map(([k,v,cls])=>`<div class="pcell"><div class="pkey">${k}</div><div class="pval ${cls}">${v}</div></div>`).join('')}</div>`
     :`<div style="font-size:.7rem;color:var(--txt3)">No records retrieved.</div>`;
   // Add re-geocode button after grid
-  const reGeoBtn=!h.noAddress?`<button onclick="reGeocode(${idx})" style="margin-top:8px;font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">📍 Re-geocode</button>`:'';
+  const reGeoBtn=!h.noAddress?`<button onclick="byId('reGeocode','${households[idx].id}',${idx})" style="margin-top:8px;font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">📍 Re-geocode</button>`:'';
 
   if(result&&result.error){
     el.innerHTML=header+`<div id="tabcontent-prop-${idx}" class="tab-content pinner">
-      <div class="errblk"><span>${result.message}</span><button class="retry-btn" onclick="retryLookup(${idx})">↺ Retry</button></div>
+      <div class="errblk"><span>${result.message}</span><button class="retry-btn" onclick="byId('retryLookup','${households[idx].id}',${idx})">↺ Retry</button></div>
     </div>
     <div id="tabcontent-giving-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${givingHtml}</div>
     <div id="tabcontent-contacts-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">${contactsHtml}</div>`;
@@ -1727,7 +1830,7 @@ function setProp(mode,h,result){
     : `<div style="text-align:center;padding:16px 0">
         <div style="font-size:.8rem;color:var(--txt2);margin-bottom:12px">No profile built yet.</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="buildProfile(${idx})" id="buildProfileBtn-${idx}" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500">🔍 Build Profile</button>
+          <button onclick="byId('buildProfile','${households[idx].id}',${idx})" id="buildProfileBtn-${idx}" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500">🔍 Build Profile</button>
           <button onclick="setProp('data',households[${idx}])" style="padding:8px 12px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.82rem" title="Refresh">🔄</button>
         </div>
       </div>`;
@@ -1740,14 +1843,14 @@ function setProp(mode,h,result){
     <div id="tabcontent-interactions-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Activity Log</div>
-        <button onclick="openLogInteraction(${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Log</button>
+        <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Log</button>
       </div>
       <div id="interactions-list-${idx}"><div style="font-size:.75rem;color:var(--txt3)">Loading…</div></div>
     </div>
     <div id="tabcontent-notes-${idx}" class="tab-content pinner" style="display:none;padding-top:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Private Notes</div>
-        <button onclick="openAddNote(${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add Note</button>
+        <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add Note</button>
       </div>
       <div id="notes-list-${idx}"><div style="font-size:.75rem;color:var(--txt3)">Loading…</div></div>
     </div>`;
@@ -1761,7 +1864,13 @@ function showTab(idx,tab){
     if(content)content.style.display=t===tab?'block':'none';
   });
 }
-async function retryLookup(i){households[i].property_data=null;households[i].home_value=null;selectHousehold(i);}
+async function retryLookup(i){
+  const h=households[i];
+  // Stash the AI profile so the refetch can re-attach it (was being destroyed here)
+  h._keepProfile=h.profile_data||(h.property_data&&h.property_data.profile)||null;
+  h.property_data=null;h.home_value=null;
+  selectHousehold(i);
+}
 
 // ── FETCH PROPERTY ──
 async function fetchProp(h){
@@ -1774,27 +1883,20 @@ async function fetchProp(h){
     });
     const d=await resp.json();
     if(!d.propertyDetails)return{error:true,message:'Address not found on Zillow.'};
-    const p=d.propertyDetails;const rf=p.resoFacts||{};
+    const p=d.propertyDetails;
     const retNum=(p.streetAddress||'').match(/^\d+/);const reqNum=(h.address||'').match(/^\d+/);
     if(retNum&&reqNum&&retNum[0]!==reqNum[0])return{error:true,message:`Address mismatch: Zillow returned ${p.streetAddress}`};
-    const sales=(p.priceHistory||[]).filter(e=>e.event&&e.event.toLowerCase().includes('sold'));
-    const lastSale=sales[0]||null;
     const homeValue=p.zestimate||p.lastSoldPrice||p.price||null;
+    // Trimmed on purpose: we only keep what the app actually uses (home value,
+    // coords, county). The old per-field Zillow detail bloated property_data
+    // and slowed every full load.
     return{
       lat:p.latitude||null,
       lon:p.longitude||null,
       county:(p.county||'').toLowerCase().includes('geauga')?'gea':'cuy',
       homeValue,
-      lastSalePrice:lastSale?'$'+lastSale.price.toLocaleString():null,
-      lastSaleDate:lastSale?new Date(lastSale.time).toLocaleDateString('en-US',{month:'long',year:'numeric'}):null,
-      assessedValue:rf.taxAssessedValue?'$'+Math.round(rf.taxAssessedValue).toLocaleString():null,
-      propertyType:rf.homeType||p.homeType||'Single Family',
-      yearBuilt:rf.yearBuilt?String(rf.yearBuilt):null,
-      squareFeet:p.livingArea?p.livingArea.toLocaleString():null,
-      bedsBaths:p.bedrooms&&p.bathrooms?`${p.bedrooms} / ${p.bathrooms}`:null,
-      lotSize:rf.lotSize||(p.lotAreaValue?`${p.lotAreaValue} ${p.lotAreaUnits||'acres'}`:null),
-      annualTax:rf.taxAnnualAmount?'$'+rf.taxAnnualAmount.toLocaleString():null,
-      source:'Zillow'
+      source:'Zillow',
+      fetchedAt:localToday()
     };
   }catch(e){return{error:true,message:'Lookup failed: '+e.message};}
 }
@@ -1927,7 +2029,8 @@ function placePinAt(i){
   const h=households[i];
   if(markers[i])map.removeLayer(markers[i]);
   const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
-  m.on('click',()=>selectHousehold(i));
+  const _hid=h.id;
+  m.on('click',()=>byId('selectHousehold',_hid,i));
   // Hover tooltip
   const g=getGivingStats(h);
   const agcT=getAGCScore(h);
@@ -1947,7 +2050,7 @@ function placePinAt(i){
 async function geocodeMissing(needsGeo){
   showProgress(true,`Geocoding ${needsGeo.length} addresses…`,0);
   for(let i=0;i<needsGeo.length;i++){
-    const h=needsGeo[i];const idx=households.indexOf(h);
+    const h=needsGeo[i];const idx=hIdx(h.id);
     document.getElementById('progLbl').textContent=`Geocoding ${i+1}/${needsGeo.length}…`;
     document.getElementById('progFill').style.width=`${Math.round((i/needsGeo.length)*100)}%`;
     const geo=await geocodeOne(h);
@@ -2002,13 +2105,16 @@ async function startPrefetch(){
     document.getElementById('pfText').textContent=`[${done+failed+1}/${unfetched.length}] ${h.displayName}`;
     const result=await fetchProp(h);
     if(!result.error){
-      h.home_value=result.homeValue;h.property_data=result;if(result.county)h.county=result.county;
-      const patchData={home_value:h.home_value,county:h.county,property_data:result};
+      const _prof=h.profile_data||(h.property_data&&h.property_data.profile)||null;
+      h.home_value=result.homeValue;
+      h.property_data=_prof?{...result,profile:_prof}:result;
+      if(result.county)h.county=result.county;
+      const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
     // Save Zillow lat/lon if we don't have coordinates yet
     if(!h.lat&&result.lat&&result.lon){
       h.lat=result.lat;h.lon=result.lon;
       patchData.lat=h.lat;patchData.lon=h.lon;
-      placePinAt(households.indexOf(h));
+      placePinAt(hIdx(h.id));
     }
     await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify(patchData)});
       recolorAll();done++;
@@ -2166,7 +2272,7 @@ async function confirmAddContact(){
     } else {
       // Create new household
       const jointName=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
-      const hhRes=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address:r.address,city:r.city,state:'OH',zip:r.zip,county:r.county,home_value:r.homeValue,property_data:r,date_added:new Date().toISOString().split('T')[0]})});
+      const hhRes=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address:r.address,city:r.city,state:'OH',zip:r.zip,county:r.county,home_value:r.homeValue,property_data:{lat:r.lat||null,lon:r.lon||null,county:r.county||null,homeValue:r.homeValue||null,source:r.source||'Zillow',fetchedAt:localToday()},date_added:localToday()})});
       const hh=(Array.isArray(hhRes)?hhRes[0]:hhRes)||{};
       householdId=hh.id;
       // Create spouse if provided (and no linked spouse)
@@ -2326,7 +2432,7 @@ async function importContacts(lines){
     if(!householdId){
       // Create new household
       const jointName=`${firstName} ${lastName}`;
-      const hhRes2=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address,city,state,zip,date_added:new Date().toISOString().split('T')[0]})});
+      const hhRes2=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address,city,state,zip,date_added:localToday()})});
       const hh=(Array.isArray(hhRes2)?hhRes2[0]:hhRes2)||{};
       householdId=hh.id;
     }
@@ -2417,7 +2523,7 @@ function showAddDonation(idx){
   const sel = document.getElementById('don_contact');
   sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${m.first_name} ${m.last_name}</option>`).join('');
   // Default date to today
-  document.getElementById('don_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('don_date').value = localToday();
   document.getElementById('don_amount').value = '';
   document.getElementById('don_notes').value = '';
   document.getElementById('don_status').style.display = 'none';
@@ -2436,14 +2542,36 @@ async function saveDonation(){
   try{
     if(editId){
       await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+      // Update local state (was missing entirely — edits showed stale until reload)
+      const hE=households[addDonHouseholdIdx];
+      (hE.members||[]).forEach(m=>{
+        if(!m.donations)return;
+        const d=m.donations.find(x=>x.id===editId);
+        if(!d)return;
+        if(m.id!==contactId){
+          // donation reassigned to a different household member
+          m.donations=m.donations.filter(x=>x.id!==editId);
+          const tgt=hE.members.find(x=>x.id===contactId);
+          if(tgt){
+            if(!tgt.donations)tgt.donations=[];
+            tgt.donations.unshift({...d,contact_id:contactId,amount,date,notes:notes||null});
+            tgt.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+          }
+        }else{
+          d.amount=amount;d.date=date;d.notes=notes||null;
+          m.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+        }
+      });
     }else{
-      await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
-      // Update local state for new donation
+      const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+      // Update local state for new donation — keep the DB row (with its id!) so
+      // edit/delete work immediately. Previously the id was discarded, leaving
+      // the new donation un-deletable and un-editable until a full reload.
       const hNew=households[addDonHouseholdIdx];
       const memberNew=hNew.members.find(m=>m.id===contactId);
       if(memberNew){
         if(!memberNew.donations)memberNew.donations=[];
-        memberNew.donations.unshift({contact_id:contactId,amount,date,notes});
+        memberNew.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,notes});
         memberNew.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
       }
     }
@@ -2455,6 +2583,7 @@ async function saveDonation(){
     renderList();
     // Refresh AGC score — donations affect generosity and affinity
     const h=households[addDonHouseholdIdx];
+    _invHH(h);
     refreshAGCScore(h.id).then(()=>recolorAll());
     // Refresh whichever view is open
     const fp=document.getElementById('fullPanel');
@@ -2511,10 +2640,10 @@ function buildProfileDisplay(p, idx, newInteractions, newDonations, containerId)
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Prospect Profile</div>
       <div style="display:flex;align-items:center;gap:8px">
         <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt3)">${lastUpdated?new Date(lastUpdated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</div>
-        <button onclick="editProfileInline(${idx}${containerId?`,'${containerId}'`:''})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
-        <button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>
-        <button onclick="(()=>{const el=document.getElementById(containerId||'tabcontent-profile-${idx}');if(el)el.innerHTML=buildProfileDisplay(households[${idx}].profile_data,${idx},undefined,undefined,containerId||'tabcontent-profile-${idx}');const fp=document.getElementById('fullPanel');if(fp&&fp.style.display!=='none')openFullPanel(${idx});})()" style="font-size:.62rem;padding:2px 8px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace" title="Refresh display">🔄</button>
-        <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">🔍 Full Rebuild</button>
+        <button onclick="byId('editProfileInline','${households[idx].id}',${idx}${containerId?`,'${containerId}'`:''})" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
+        <button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>
+        <button onclick="(()=>{const _i=hIdx('${households[idx].id}');if(_i<0)return;const el=document.getElementById(containerId||'tabcontent-profile-${idx}');if(el)el.innerHTML=buildProfileDisplay(households[_i].profile_data,_i,undefined,undefined,containerId||'tabcontent-profile-${idx}');const fp=document.getElementById('fullPanel');if(fp&&fp.style.display!=='none')openFullPanel(_i);})()" style="font-size:.62rem;padding:2px 8px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace" title="Refresh display">🔄</button>
+        <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">🔍 Full Rebuild</button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--surf2);border-radius:6px">
@@ -2577,8 +2706,8 @@ function editProfileInline(idx, containerId){
   html+='</div>';
   html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">';
   html+='<button onclick="saveProfileInline('+idx+',this)" style="font-size:.68rem;padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer">💾 Save</button>';
-  html+='<button onclick="rebuildProfileWithCorrection('+idx+')" style="font-size:.68rem;padding:5px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:5px;cursor:pointer">↻ Save &amp; rebuild with correction</button>';
-  html+='<button onclick="cancelProfileEdit('+idx+')" style="font-size:.68rem;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Cancel</button>';
+  html+='<button onclick="byId(&quot;rebuildProfileWithCorrection&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="font-size:.68rem;padding:5px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:5px;cursor:pointer">↻ Save &amp; rebuild with correction</button>';
+  html+='<button onclick="byId(&quot;cancelProfileEdit&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="font-size:.68rem;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:5px;cursor:pointer">Cancel</button>';
   html+='</div>';
   el.innerHTML=html;
 }
@@ -2615,6 +2744,7 @@ async function saveProfileInline(idx,btn){
   try{
     await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
     h.profile_data=p; h.property_data={...h.property_data,profile:p};
+    _invHH(h);
     _profEditRerender(idx,p);
     _profEditCtx=null;
   }catch(e){alert('Save failed: '+e.message);if(btn){btn.disabled=false;btn.textContent='💾 Save';}}
@@ -2631,6 +2761,7 @@ async function rebuildProfileWithCorrection(idx){
   try{
     await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
     h.profile_data=p; h.property_data={...h.property_data,profile:p};
+    _invHH(h);
   }catch(e){alert('Save failed: '+e.message);return;}
   _profEditCtx=null;
   // Now rebuild passing the combined hints (skips the prompt)
@@ -2640,7 +2771,7 @@ async function rebuildProfileWithCorrection(idx){
 async function buildProfileSoft(idx){
   if(!ANTHROPIC_KEY){
     const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
-    _keyNudge(tabContent||null,'Anthropic',`buildProfileSoft(${idx})`);
+    _keyNudge(tabContent||null,'Anthropic',`byId('buildProfileSoft','${households[idx].id}',${idx})`);
     return;
   }
   const h=households[idx];
@@ -2769,6 +2900,7 @@ Re-synthesize ONLY approach, summary, and estimated_children based on the above.
     updated.softBuiltAt=new Date().toISOString();
 
     h.profile_data=updated;
+    _invHH(h);
     h.property_data={...h.property_data,profile:updated};
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
     document.getElementById('fullPanelLoading')?.remove();
@@ -2780,7 +2912,7 @@ Re-synthesize ONLY approach, summary, and estimated_children based on the above.
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
     if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
-      <button onclick="buildProfileSoft(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+      <button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="margin-top:8px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     else alert('Quick Update failed:\n\n'+e.message);
   }
 }
@@ -2940,7 +3072,7 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
     const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
     if(tabContent&&!fpOpen){
       tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
-      <button onclick="buildProfile(${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
+      <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     }else{
       alert('Profile build failed:\n\n'+e.message);
     }
@@ -2964,8 +3096,8 @@ async function buildProfile(idx, hints=''){
           <div style="font-size:.7rem;color:var(--txt2);margin-bottom:6px">Optional: add research hints to steer the search</div>
           <input id="buildHintsInput-${idx}" placeholder='e.g. "She works at Cleveland Clinic, not her husband"' value="${(defaultHint||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border2);border-radius:5px;background:var(--bg);color:var(--txt);font-size:.74rem;font-family:inherit;margin-bottom:10px">
           <div style="display:flex;gap:7px;flex-wrap:wrap">
-            <button onclick="buildProfile(${idx},document.getElementById('buildHintsInput-${idx}').value||'__skip')" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">🔍 Build</button>
-            <button onclick="${fpOpen?'openFullPanel('+idx+')':'showTab('+idx+',\'profile\')'}" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;font-size:.75rem">Cancel</button>
+            <button onclick="byId('buildProfile','${households[idx].id}',${idx},document.getElementById('buildHintsInput-${idx}').value||'__skip')" style="padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">🔍 Build</button>
+            <button onclick="${fpOpen?'byId(&quot;openFullPanel&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')':'byId(&quot;showTab&quot;,&quot;'+households[idx].id+'&quot;,'+idx+',\'profile\')'}" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;font-size:.75rem">Cancel</button>
           </div>
         </div>`;
       // Focus the input
@@ -2978,7 +3110,7 @@ async function buildProfile(idx, hints=''){
     const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
     const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
     const targetEl=fpOpen?document.getElementById(`fullpanel-profile-${idx}`):tabContent;
-    _keyNudge(targetEl||null,'Anthropic',`buildProfile(${idx},'${hints.replace(/'/g,"\\'")}')`);
+    _keyNudge(targetEl||null,'Anthropic',`byId('buildProfile','${households[idx].id}',${idx},'${hints.replace(/'/g,"\\'")}')`);
     return;
   }
   const h=households[idx];
@@ -3005,7 +3137,7 @@ async function buildProfile(idx, hints=''){
 function openLogInteraction(idx){
   const h=households[idx];
   document.getElementById('li_household_idx').value=idx;
-  document.getElementById('li_date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('li_date').value=localToday();
   document.getElementById('li_notes').value='';
   document.getElementById('li_status').style.display='none';
   // Populate contact checkboxes — all checked by default
@@ -3034,11 +3166,13 @@ async function saveInteraction(){
     if(editId){
       // Edit mode — update existing record (first checked contact)
       await sb('interactions?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:checked[0],type,date,notes:notes||null})});
+      if(notes)embedAndStore(editId,type+': '+notes);
     }else{
       // Add mode — create one per checked contact
       for(const contactId of checked){
         const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null,created_at:new Date().toISOString()})});
-        }
+        if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+      }
     }
     // Reset modal to add mode
     document.getElementById('li_edit_id').value='';
@@ -3096,7 +3230,7 @@ async function deleteInteraction(id,idx,tabType){
 function openAddNote(idx){
   const h=households[idx];
   document.getElementById('note_household_idx').value=idx;
-  document.getElementById('note_date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('note_date').value=localToday();
   document.getElementById('note_text').value='';
   document.getElementById('note_status').style.display='none';
   // Populate contact checkboxes — all checked by default
@@ -3122,10 +3256,11 @@ async function saveNote(){
   const checked=[...document.querySelectorAll('#note_contacts input:checked')].map(cb=>cb.value);
   if(!checked.length){alert('Please select at least one person.');return;}
   status.style.display='block';status.textContent='Saving…';
-  const noteDate=date||new Date().toISOString().split('T')[0];
+  const noteDate=date||localToday();
   try{
     for(const contactId of checked){
       const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text,created_at:new Date().toISOString()})});
+      if(savedN&&savedN[0]&&text)embedAndStore(savedN[0].id,'Note: '+text);
     }
     document.getElementById('addNoteModal').style.display='none';
     refreshAGCScore(h.id).then(()=>recolorAll());
@@ -3233,10 +3368,10 @@ function openFullPanel(idx){
         ${profile?.approach?`<div style="font-size:.78rem;color:var(--txt2);font-style:italic;padding:8px 12px;background:var(--surf2);border-radius:6px;border-left:3px solid var(--accent)">"${profile.approach}"</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
-        <button onclick="openPersonChat(${idx})" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500">💬 Chat</button>
+        <button onclick="byId('openPersonChat','${households[idx].id}',${idx})" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500">💬 Chat</button>
         ${fpStale&&fpStale.suggestFull?`<div style="padding:4px 8px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.57rem;text-align:center">🔍 ${fpStale.monthsOld}mo old — Full Rebuild suggested</div>`:fpStale&&fpStale.suggestSoft?`<div style="padding:4px 8px;border-radius:20px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);font-family:'DM Mono',monospace;font-size:.57rem;text-align:center">↺ Quick Update suggested</div>`:''}
-        ${profile?`<button onclick="buildProfileSoft(${idx})" style="padding:8px 14px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">↺ Quick Update</button>`:''}
-        <button onclick="buildProfile(${idx})" style="padding:8px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">${profile?'🔍 Full Rebuild':'🔍 Build Profile'}</button>
+        ${profile?`<button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="padding:8px 14px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">↺ Quick Update</button>`:''}
+        <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="padding:8px 14px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">${profile?'🔍 Full Rebuild':'🔍 Build Profile'}</button>
         <button onclick="openEnrich('${households[idx].id}')" style="padding:8px 14px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem">📋 Enrich / Add Notes</button>
       </div>
     </div>
@@ -3246,9 +3381,9 @@ function openFullPanel(idx){
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">📋 Full Timeline</div>
         <div style="display:flex;gap:6px">
-          <button onclick="openAddNote(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer">📝 Note</button>
-          <button onclick="openLogInteraction(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer">🤝 Activity</button>
-          <button onclick="openAddDonation(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer">💝 Donation</button>
+          <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer">📝 Note</button>
+          <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer">🤝 Activity</button>
+          <button onclick="byId('openAddDonation','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer">💝 Donation</button>
         </div>
       </div>
       ${timelineHtml}
@@ -3259,10 +3394,10 @@ function openFullPanel(idx){
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${(fpStale?.suggestFull||fpStale?.suggestSoft)?'6':'12'}px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">🔍 AI Profile</div>
         <div style="display:flex;align-items:center;gap:6px">
-          ${profile?`<button onclick="editProfileInline(${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>`:''}
-          ${profile?`<button onclick="buildProfileSoft(${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>`:''}
-          <button onclick="openFullPanel(${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace" title="Refresh">🔄</button>
-          <button onclick="buildProfile(${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">${profile?'🔍 Full Rebuild':'🔍 Build'}</button>
+          ${profile?`<button onclick="byId('editProfileInline','${households[idx].id}',${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>`:''}
+          ${profile?`<button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">↺ Quick Update</button>`:''}
+          <button onclick="byId('openFullPanel','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace" title="Refresh">🔄</button>
+          <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">${profile?'🔍 Full Rebuild':'🔍 Build'}</button>
         </div>
       </div>
       ${fpStale?.suggestFull?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:var(--red);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:10px">🔍 Profile is ${fpStale.monthsOld} months old — Full Rebuild suggested</div>`:fpStale?.suggestSoft?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);font-family:'DM Mono',monospace;font-size:.58rem;margin-bottom:10px">↺ ${fpStale.newInteractions>0?fpStale.newInteractions+' new interaction'+(fpStale.newInteractions>1?'s':'')+(fpStale.newDonations>0?' + '+fpStale.newDonations+' donation'+(fpStale.newDonations>1?'s':''):''):fpStale.newDonations+' new donation'+(fpStale.newDonations>1?'s':'')} since last update — Quick Update suggested</div>`:''}
@@ -3287,7 +3422,7 @@ function openFullPanel(idx){
     <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">📋 Household Notes</div>
-        <button onclick="saveHouseholdNotes(${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
+        <button onclick="byId('saveHouseholdNotes','${households[idx].id}',${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
       </div>
       <textarea id="fullpanel-notes-${idx}" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
     </div>
@@ -3299,7 +3434,7 @@ function openFullPanel(idx){
         ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
-            <button onclick="openEditContact('${m.id}','${m.first_name}','${m.last_name}','${m.phone||''}','${m.email||''}','${m.civicrm_id||''}','${h.id}','${m.dob||''}','${m.gender||''}' )" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit">✏️</button>
+            <button onclick="openEditContactById('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit">✏️</button>
           </div>
           ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
           ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
@@ -3310,7 +3445,7 @@ function openFullPanel(idx){
       </div>
       <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px">🏠 Property</div>
-        ${[['Market Value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():null,'grn'],['Last Sale',data.lastSalePrice,''],['Sale Date',data.lastSaleDate,''],['Year Built',data.yearBuilt,''],['Sq Ft',data.squareFeet,''],['Beds/Baths',data.bedsBaths,''],['Lot',data.lotSize,''],['Tax',data.annualTax,'']].filter(([,v])=>v).map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.73rem"><span style="color:var(--txt3)">${k}</span><span style="font-weight:500;color:${c==='grn'?'var(--green)':'var(--txt)'}">${v}</span></div>`).join('')}
+        ${[['Market Value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():null,'grn']].filter(([,v])=>v).map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.73rem"><span style="color:var(--txt3)">${k}</span><span style="font-weight:500;color:${c==='grn'?'var(--green)':'var(--txt)'}">${v}</span></div>`).join('')}
       </div>
     </div>
 
@@ -3318,7 +3453,7 @@ function openFullPanel(idx){
     <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">👶 Family & Children</div>
-        <button onclick="editChildrenCard(${idx})" id="children-edit-btn-${idx}" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
+        <button onclick="byId('editChildrenCard','${households[idx].id}',${idx})" id="children-edit-btn-${idx}" style="font-size:.62rem;padding:2px 8px;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.25);color:var(--gold);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">✏️ Edit</button>
       </div>
       <div id="children-display-${idx}">
         ${(()=>{
@@ -3347,10 +3482,10 @@ function openFullPanel(idx){
               </div>`).join('');
           })()}
         </div>
-        <button onclick="addChildRow(${idx})" style="font-size:.72rem;padding:4px 10px;background:none;border:1px dashed var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;margin-top:4px;width:100%">+ Add Child</button>
+        <button onclick="byId('addChildRow','${households[idx].id}',${idx})" style="font-size:.72rem;padding:4px 10px;background:none;border:1px dashed var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer;margin-top:4px;width:100%">+ Add Child</button>
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="saveChildrenEdit(${idx})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:500">Save</button>
-          <button onclick="cancelChildrenEdit(${idx})" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.78rem">Cancel</button>
+          <button onclick="byId('saveChildrenEdit','${households[idx].id}',${idx})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:500">Save</button>
+          <button onclick="byId('cancelChildrenEdit','${households[idx].id}',${idx})" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.78rem">Cancel</button>
         </div>
       </div>
     </div>`;
@@ -3410,6 +3545,7 @@ async function saveChildrenEdit(idx){
   try{
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
     h.profile_data=updated;
+    _invHH(h);
     cancelChildrenEdit(idx);
     // Re-render display
     const currentYear=new Date().getFullYear();
@@ -3437,6 +3573,7 @@ async function saveHouseholdNotes(idx,btn){
     });
     if(!res.ok)throw new Error('HTTP '+res.status+': '+await res.text());
     h.notes=text;
+    _invHH(h);
     if(btn){btn.textContent='✓ Saved';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent='Save';btn.style.background='';},2000);}
   }catch(e){alert('Save failed: '+e.message);}
 }
@@ -3502,6 +3639,9 @@ async function deleteTimelineItem(id, type, idx){
   try{
     if(type==='donation'){
       await sb('donations?id=eq.'+id,{method:'DELETE'});
+      // Remove from in-memory state too (previously left stale until reload)
+      const _h=households[idx];
+      if(_h){(_h.members||[]).forEach(m=>{if(m.donations)m.donations=m.donations.filter(d=>d.id!==id);});_invHH(_h);refreshAGCScore(_h.id).then(()=>recolorAll()).catch(()=>{});}
     }else{
       await sb('interactions?id=eq.'+id,{method:'DELETE'});
     }
@@ -3542,6 +3682,23 @@ async function reGeocode(idx){
 // ── EDIT CONTACT ──
 let editLinkedHousehold=null;
 
+// ── ID-SAFE BUTTON WRAPPERS — inline onclick handlers used to embed raw names
+// ('${m.first_name}'), so any apostrophe (O'Brien) broke the attribute and the
+// button silently died. These wrappers embed only UUIDs and resolve the contact
+// at click time.
+function openEditContactById(contactId){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){openEditContact(m.id,m.first_name,m.last_name,m.phone||'',m.email||'',m.civicrm_id||'',h.id,m.dob||'',m.gender||'');return;}
+  }
+  alert('Contact not found — try reloading.');
+}
+function deleteContactById(contactId,hIdx){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){deleteContact(m.id,(m.first_name||'')+' '+(m.last_name||''),hIdx);return;}
+  }
+}
 function openEditContact(id,first,last,phone,email,crmid,householdId,dob,gender){
   document.getElementById('edit_contact_id').value=id;
   document.getElementById('edit_household_id').value=householdId;
@@ -3705,6 +3862,7 @@ async function saveDonationNote(donId, hIdx){
       const don=(m.donations||[]).find(d=>d.id===donId);
       if(don)don.notes=notes;
     });
+    _invHH(h);
     // Update display
     const display=document.getElementById(`don-note-display-${donId}`);
     if(display)display.innerHTML=notes||'<em style="color:var(--txt3)">No note — click ✏️ to add</em>';
@@ -3777,7 +3935,7 @@ async function runAISearch(){
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    results.innerHTML=txt.replace(/\n/g,'<br>');
+    results.innerHTML=_escHtml(txt).replace(/\n/g,'<br>');
   }catch(e){
     results.innerHTML='<span style="color:var(--red)">⚠ '+e.message+'</span>';
   }
@@ -3830,7 +3988,7 @@ async function embedAndStore(interactionId, text){
       // pgvector expects a JSON array string
       await fetch(SB_URL+'/rest/v1/interactions?id=eq.'+interactionId,{
         method:'PATCH',
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({embedding:vec})
       });
     }catch(e){console.warn('Embed store failed:',e.message);}
@@ -3914,7 +4072,7 @@ async function sendPersonChat(){
   const msgs=document.getElementById('personChatMessages');
 
   // Add user message
-  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><div style="background:var(--accent);color:#fff;padding:8px 12px;border-radius:12px 12px 2px 12px;font-size:.78rem;max-width:80%">${query}</div></div>`;
+  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><div style="background:var(--accent);color:#fff;padding:8px 12px;border-radius:12px 12px 2px 12px;font-size:.78rem;max-width:80%">${_escHtml(query)}</div></div>`;
   msgs.innerHTML+=`<div id="person-typing" style="display:flex;margin-bottom:10px"><div style="background:var(--surf2);padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:.78rem;color:var(--txt3)">Thinking…</div></div>`;
   msgs.scrollTop=msgs.scrollHeight;
 
@@ -3993,7 +4151,7 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
     const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     personChatHistory.push({role:'assistant',content:reply});
     document.getElementById('person-typing')?.remove();
-    msgs.innerHTML+=`<div style="display:flex;margin-bottom:10px"><div style="background:var(--surf2);padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:.78rem;color:var(--txt);line-height:1.6;max-width:85%">${reply.replace(/\n/g,'<br>')}</div></div>`;
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:10px"><div style="background:var(--surf2);padding:8px 12px;border-radius:12px 12px 12px 2px;font-size:.78rem;color:var(--txt);line-height:1.6;max-width:85%">${_escHtml(reply).replace(/\n/g,'<br>')}</div></div>`;
     msgs.scrollTop=msgs.scrollHeight;
   }catch(e){
     document.getElementById('person-typing')?.remove();
@@ -4007,13 +4165,26 @@ let currentSessionId=null;
 let sessionSaveTimer=null;
 
 // ── SEARCH MODE ──
+let _modeEstCache={t:0,vals:null};
 function updateModeHint(){
   const mode=document.getElementById('searchMode')?.value||'standard';
   const hint=document.getElementById('modeHint');
   if(!hint)return;
-  if(mode==='power') hint.textContent='~80-100k tokens ⚠';
-  else if(mode==='quick') hint.textContent='~10k tokens';
-  else hint.textContent='~35k tokens';
+  try{
+    // Estimate from the ACTUAL roster (cached 60s — builders are cheap now but not free)
+    if(!_modeEstCache.vals||Date.now()-_modeEstCache.t>60000){
+      _modeEstCache={t:Date.now(),vals:{
+        quick:_estTok(_rosterLines('quick').map(x=>x.line).join('\n'))+1000,
+        standard:_estTok(_rosterLines('lean').map(x=>x.line).join('\n'))+6000,
+        power:_estTok(_rosterLines('full').map(x=>x.line).join('\n'))+9000
+      }};
+    }
+    const v=_modeEstCache.vals;
+    const fmt=n=>n>=178000?'>178k (auto-fit) ⚖':'~'+Math.round(n/1000)+'k tokens';
+    if(mode==='power') hint.textContent=fmt(v.power)+' ⚠';
+    else if(mode==='quick') hint.textContent=fmt(v.quick);
+    else hint.textContent=fmt(v.standard);
+  }catch(e){hint.textContent=mode==='power'?'power ⚠':mode;}
 }
 
 // ── SESSION MANAGEMENT ──
@@ -4064,9 +4235,9 @@ async function loadSession(sessionId){
     msgs.innerHTML='';
     globalChatHistory.forEach(m=>{
       if(m.role==='user'){
-        msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${m.content}</div></div>`;
+        msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${_escHtml(m.content)}</div></div>`;
       }else{
-        msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${m.content.replace(/\n/g,'<br>')}</div></div>`;
+        msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${_escHtml(m.content).replace(/\n/g,'<br>')}</div></div>`;
       }
     });
     msgs.scrollTop=msgs.scrollHeight;
@@ -4119,9 +4290,8 @@ async function saveGlobalContext(){
   const ctx=document.getElementById('globalContext').value.trim();
   localStorage.setItem('ci_context',ctx); // cache locally too
   try{
-    // Save to Supabase settings table
-    await sb('app_settings?key=eq.rabbi_context',{method:'DELETE'});
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'rabbi_context',value:ctx})});
+    // Save to Supabase settings table (upsert — never deletes)
+    await sbSetSetting('rabbi_context',ctx);
   }catch(e){console.log('Settings save error:',e.message);}
   const saved=document.getElementById('contextSaved');
   saved.style.display='inline';
@@ -4152,8 +4322,7 @@ async function saveSearchContext(){
   const ctx=document.getElementById('searchContext').value.trim();
   localStorage.setItem('search_context',ctx);
   try{
-    await sb('app_settings?key=eq.search_context',{method:'DELETE'});
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'search_context',value:ctx})});
+    await sbSetSetting('search_context',ctx);
   }catch(e){console.log('Search context save error:',e.message);}
   const saved=document.getElementById('searchContextSaved');
   saved.style.display='inline';
@@ -4210,14 +4379,16 @@ async function sendGlobalAsk(){
   if(!query)return;
   const mode=document.getElementById('searchMode')?.value||'standard';
 
-  // Power search warning
+  // Power search warning — estimated from the ACTUAL current data, not a stale guess
   if(mode==='power'){
-    if(!confirm('Power Search uses ~80-100k tokens (~$0.30 first message; follow-ups within 5 min are ~90% cheaper via caching). Continue?'))return;
+    const _estIn=_estTok(_rosterLines('full').map(x=>x.line).join('\n'))+_estTok(globalChatHistory.map(m=>m.content).join(' '))+8000;
+    const _estCost=(Math.min(_estIn,170000)/1e6*3).toFixed(2);
+    if(!confirm('Power Search will send ~'+Math.round(Math.min(_estIn,178000)/1000)+'k tokens (~$'+_estCost+' first message; follow-ups within 5 min are ~90% cheaper via caching).'+(_estIn>170000?'\n\n⚖ Roster exceeds the context window — it will be auto-fit: full detail for top households by AGC, compact lines for the rest.':'')+' Continue?'))return;
   }
 
   input.value='';
   const msgs=document.getElementById('globalAskMessages');
-  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${query}</div></div>`;
+  msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${_escHtml(query)}</div></div>`;
   msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">${mode==='power'?'Running power search…':mode==='quick'?'Searching…':'Searching your contacts…'}</div></div>`;
   msgs.scrollTop=msgs.scrollHeight;
 
@@ -4226,31 +4397,29 @@ async function sendGlobalAsk(){
   let notesStr='';
   const rabbiCtx=localStorage.getItem('ci_context')||'';
 
+  let _fit=null;
   if(mode==='quick'){
     // Quick: lean roster only, no semantic search
-    rosterStr=households.map(h=>{
-      const g=getGivingStats(h);const agc=getAGCScore(h);
-      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
-      return h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none');
-    }).join('\n');
+    _fit=_fitRoster(_rosterLines('quick'),_rosterBudget(notesStr));
+    rosterStr=_fit.text;
   }else if(mode==='power'){
-    // Power: full roster with all profile data + semantic search (30 results) + recent interactions
+    // Power: full roster with all profile data + semantic search (30 results)
     const semRows=await semanticSearch(query,30).catch(()=>[]);
     const ctx=await buildGlobalContext(semRows);
-    // Add full profile detail to roster
-    const fullRoster=households.map(h=>{
-      const g=getGivingStats(h);const agc=getAGCScore(h);const p=h.profile_data||{};
-      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
-      return h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
-    }).join('\n');
-    rosterStr='FULL ROSTER:\n'+fullRoster;
     notesStr=ctx.relevantNotes||'';
+    _fit=_fitRoster(_rosterLines('full'),_rosterBudget(notesStr));
+    rosterStr='FULL ROSTER:\n'+_fit.text;
   }else{
     // Standard: lean roster + semantic search
     const semRows=await semanticSearch(query,30).catch(()=>[]);
     const ctx=await buildGlobalContext(semRows);
-    rosterStr='ROSTER:\n'+ctx.roster;
     notesStr=ctx.relevantNotes||'';
+    _fit=_fitRoster(_rosterLines('lean'),_rosterBudget(notesStr));
+    rosterStr='ROSTER:\n'+_fit.text;
+  }
+  if(_fit&&(_fit.compactN||_fit.omittedN)){
+    msgs.innerHTML+=`<div style="font-size:.65rem;color:var(--txt3);margin-bottom:8px;font-family:'DM Mono',monospace">⚖ Context auto-fit: full detail for top ${_fit.fullN} households by AGC, compact for ${_fit.compactN}${_fit.omittedN?', omitted '+_fit.omittedN:''}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
   }
 
   const currentLocalDate=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -4277,7 +4446,7 @@ async function sendGlobalAsk(){
     const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     globalChatHistory.push({role:'assistant',content:reply});
     document.getElementById('global-typing')?.remove();
-    msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${reply.replace(/\n/g,'<br>')}</div></div>`;
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${_escHtml(reply).replace(/\n/g,'<br>')}</div></div>`;
     msgs.scrollTop=msgs.scrollHeight;
     // Auto-save session after each exchange
     saveCurrentSession();
@@ -4287,30 +4456,75 @@ async function sendGlobalAsk(){
   }
 }
 
-async function buildGlobalContext(semanticRows=[]){
-  // LEAN ROSTER — one line per household to keep tokens low
-  // Semantic search handles deep context for relevant matches
-  const roster=households.map(h=>{
+// ── GLOBAL ASK TOKEN GUARDRAILS ──
+// At scale the full roster can exceed Claude's 200k context window (hard API
+// error) and the static "~35k tokens" hints become fiction. These helpers
+// (a) build roster lines at three detail levels from ONE shared source,
+// (b) estimate tokens from real data, and (c) auto-fit oversized rosters:
+// full detail for top households by AGC, compact lines for the rest.
+function _estTok(s){return Math.ceil((s||'').length/4);}
+function _rosterLines(detail){
+  return households.map(h=>{
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const p=h.profile_data||{};
-    const membersStr=(h.members||[]).map(m=>{
-      const age=m.dob?calcAge(m.dob):null;
-      const ageStr=age?' age '+age:(p.approximateAge?' ~age '+p.approximateAge:'');
-      return m.first_name+' '+m.last_name+ageStr+(m.gender?'/'+m.gender.charAt(0):'');
-    }).join(' & ');
-    const givingStr=g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none';
-    // Include one-line profile summary if built
-    const summaryStr=p.summary?'Profile: '+p.summary.substring(0,120)+'…':'';
-    const approachStr=p.approach?'Approach: '+p.approach.substring(0,80):'';
-    return h.displayName+' ['+membersStr+']'+
-      ' | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+')'+
-      ' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+
-      ' | Giving:'+givingStr+
-      (h.notes?' | Notes:'+h.notes.substring(0,80):'')+
-      (summaryStr?' | '+summaryStr:'')+
-      (approachStr?' | '+approachStr:'');
-  }).join('\n');
+    let line;
+    if(detail==='quick'){
+      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
+      line=h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none');
+    }else if(detail==='full'){
+      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
+      line=h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
+    }else{ // lean
+      const membersStr=(h.members||[]).map(m=>{
+        const age=m.dob?calcAge(m.dob):null;
+        const ageStr=age?' age '+age:(p.approximateAge?' ~age '+p.approximateAge:'');
+        return m.first_name+' '+m.last_name+ageStr+(m.gender?'/'+m.gender.charAt(0):'');
+      }).join(' & ');
+      const givingStr=g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none';
+      const summaryStr=p.summary?'Profile: '+p.summary.substring(0,120)+'…':'';
+      const approachStr=p.approach?'Approach: '+p.approach.substring(0,80):'';
+      line=h.displayName+' ['+membersStr+']'+
+        ' | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+')'+
+        ' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+
+        ' | Giving:'+givingStr+
+        (h.notes?' | Notes:'+h.notes.substring(0,80):'')+
+        (summaryStr?' | '+summaryStr:'')+
+        (approachStr?' | '+approachStr:'');
+    }
+    return{line,agc:agc.total,name:h.displayName};
+  });
+}
+function _rosterBudget(notesStr){
+  // 200k window minus: output reserve, system prompt, semantic notes, chat history, query overhead
+  const hist=_estTok(globalChatHistory.map(m=>m.content).join(' '));
+  return Math.max(20000,170000-_estTok(notesStr||'')-hist-4000);
+}
+function _fitRoster(lines,budgetTokens){
+  const totalTok=_estTok(lines.map(x=>x.line).join('\n'));
+  if(totalTok<=budgetTokens)return{text:lines.map(x=>x.line).join('\n'),fullN:lines.length,compactN:0,omittedN:0,tokens:totalTok};
+  // Over budget: rank by AGC, full lines for the top, compact for the rest
+  const ranked=[...lines].sort((a,b)=>b.agc-a.agc);
+  const out=[];let used=0;let fullN=0;
+  const fullBudget=Math.floor(budgetTokens*0.85);
+  let i=0;
+  for(;i<ranked.length;i++){
+    const t=_estTok(ranked[i].line)+1;
+    if(used+t>fullBudget)break;
+    out.push(ranked[i].line);used+=t;fullN++;
+  }
+  let compactN=0,omittedN=0;
+  for(;i<ranked.length;i++){
+    const c=ranked[i].name+' (AGC '+ranked[i].agc+')';
+    const t=_estTok(c)+1;
+    if(used+t>budgetTokens){omittedN=ranked.length-i;break;}
+    out.push(c);used+=t;compactN++;
+  }
+  return{text:out.join('\n'),fullN,compactN,omittedN,tokens:used};
+}
+async function buildGlobalContext(semanticRows=[]){
+  // LEAN ROSTER — one line per household, from the shared builder
+  const roster=_rosterLines('lean').map(x=>x.line).join('\n');
 
   // SEMANTIC NOTES — deep context only for query-relevant interactions
   // Populated by pgvector similarity search (or recency fallback)
@@ -4460,9 +4674,10 @@ async function deployToGitHub(){
     const src=_PRISTINE_SRC;
     if(!src||src.length<10000)throw new Error('Source snapshot missing — reload the page and deploy again.');
     const bytes=new TextEncoder().encode(src);
-    let binary='';
-    for(let i=0;i<bytes.length;i++){binary+=String.fromCharCode(bytes[i]);}
-    const encoded=btoa(binary);
+    // PERF: chunked conversion — the old char-by-char string concat was O(n²)
+    const _bparts=[];const _BCH=0x8000;
+    for(let i=0;i<bytes.length;i+=_BCH){_bparts.push(String.fromCharCode.apply(null,bytes.subarray(i,i+_BCH)));}
+    const encoded=btoa(_bparts.join(''));
     statusEl.textContent='🚀 Getting file SHA…';
     const infoResp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+PATH+'?ref='+BRANCH,{
       headers:{Authorization:'Bearer '+pat,'Accept':'application/vnd.github+json'}
@@ -4568,6 +4783,7 @@ function openCapture(){
 }
 function closeCapture(){
   _captureStopVoice();
+  captureContactClear();
   document.getElementById('captureOverlay').style.display='none';
   document.body.style.overflow='';
 }
@@ -4589,6 +4805,51 @@ function captureFilePicked(input){
   };
   reader.onerror=()=>alert('Could not read that file.');
   reader.readAsDataURL(f);
+}
+// ── Optional contact pre-selection — skips AI guesswork when the rabbi already
+// knows who the dump is about. If left empty (or the content involves other
+// people too), the AI matches against the roster as before.
+let _captureContact=null; // {householdId, contactId, name, householdName}
+function captureContactFilter(){
+  const q=(document.getElementById('capture-contact-input').value||'').trim().toLowerCase();
+  const dd=document.getElementById('capture-contact-results');
+  if(q.length<2){dd.style.display='none';dd.innerHTML='';return;}
+  const hits=[];
+  for(const h of households){
+    for(const m of (h.members||[])){
+      const full=((m.first_name||'')+' '+(m.last_name||'')).toLowerCase();
+      if(full.includes(q)||(h.displayName||'').toLowerCase().includes(q)){
+        hits.push({m,h});
+        if(hits.length>=8)break;
+      }
+    }
+    if(hits.length>=8)break;
+  }
+  if(!hits.length){dd.style.display='none';dd.innerHTML='';return;}
+  dd.innerHTML=hits.map(({m,h})=>`<div onclick="captureContactPick('${m.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+    <span style="font-weight:600">${(m.first_name||'')+' '+(m.last_name||'')}</span>
+    <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">${h.displayName||''}</span>
+  </div>`).join('');
+  dd.style.display='block';
+}
+function captureContactPick(contactId){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){
+      _captureContact={householdId:h.id,contactId:m.id,name:(m.first_name||'')+' '+(m.last_name||''),householdName:h.displayName||''};
+      document.getElementById('capture-contact-name').textContent=_captureContact.name+' · '+_captureContact.householdName;
+      document.getElementById('capture-contact-chip').style.display='flex';
+      document.getElementById('capture-contact-search').style.display='none';
+      document.getElementById('capture-contact-input').value='';
+      document.getElementById('capture-contact-results').style.display='none';
+      return;
+    }
+  }
+}
+function captureContactClear(){
+  _captureContact=null;
+  document.getElementById('capture-contact-chip').style.display='none';
+  document.getElementById('capture-contact-search').style.display='block';
 }
 function captureClearFile(){
   _captureFile=null;
@@ -4656,14 +4917,15 @@ async function captureAnalyze(btn){
   if(!ANTHROPIC_KEY){_keyNudge(document.getElementById('capture-results')||null,'Anthropic','captureAnalyze(document.getElementById(\'capture-analyze-btn\'))');return;}
   const results=document.getElementById('capture-results');
   const orig=btn.textContent; btn.disabled=true; btn.textContent='Analyzing…';
-  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">Reading and matching to a contact…</div>';
+  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">'+(_captureContact?('Reading — filing to '+_captureContact.name+'…'):'Reading and matching to a contact…')+'</div>';
 
-  const today=new Date().toISOString().split('T')[0];
+  const today=localToday();
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
     +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
     +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. When in doubt between interaction and household, prefer interaction. '
+    +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
     +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items. TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
 
   // Build user content (text + optional file)
@@ -4675,7 +4937,8 @@ async function captureAnalyze(btn){
       userContent.push({type:'image',source:{type:'base64',media_type:_captureFile.mediaType,data:_captureFile.base64}});
     }
   }
-  userContent.push({type:'text',text:'TODAY: '+today+'\n\nROSTER:\n'+roster+'\n\nDUMPED CONTENT:\n'+(text||'(see attached file)')});
+  const preSel=_captureContact?('PRE-SELECTED CONTACT: contact_id='+_captureContact.contactId+' | '+_captureContact.name+' | household: '+_captureContact.householdName+'\n\n'):'';
+  userContent.push({type:'text',text:'TODAY: '+today+'\n\n'+preSel+'ROSTER:\n'+roster+'\n\nDUMPED CONTENT:\n'+(text||'(see attached file)')});
 
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -4717,7 +4980,7 @@ function _captureRenderProposals(parsed){
   items.forEach((it,i)=>{
     const conf=it.match_confidence||'medium';
     const confColor=conf==='high'?'#16a34a':conf==='low'?'#dc2626':'#b45309';
-    const date=it.date||new Date().toISOString().split('T')[0];
+    const date=it.date||localToday();
 
     // ── CHILDREN card ──
     if(it.save_as==='children'){
@@ -4951,10 +5214,11 @@ async function captureSaveItem(i,btn){
   // Interaction mode
   const contactId=document.getElementById('cap-contact-'+i).value;
   const type=document.getElementById('cap-type-'+i).value;
-  const date=document.getElementById('cap-date-'+i).value||new Date().toISOString().split('T')[0];
+  const date=document.getElementById('cap-date-'+i).value||localToday();
   if(!contactId){alert('Pick a contact first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
   try{
-    await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:contactId,type,date,notes:text,created_at:new Date().toISOString()})});
+    const savedC=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:text,created_at:new Date().toISOString()})});
+    if(savedC&&savedC[0]&&text)embedAndStore(savedC[0].id,type+': '+text);
     const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
     if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
     const card=btn.closest('.capture-item');
@@ -5142,7 +5406,7 @@ async function renderEnrichCard(){
   html+='<button onclick="enrichDumpRecord(this)" id="enrich-dump-mic" title="Record voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center">🎙️</button>';
   html+='</div>';
   html+='<div id="enrich-dump-result" style="margin-top:10px"></div>';
-  html+='<button id="enrich-process-btn" onclick="enrichProcessDump('+idx+')" style="margin-top:10px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">✨ Process</button>';
+  html+='<button id="enrich-process-btn" onclick="byId(&quot;enrichProcessDump&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="margin-top:10px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">✨ Process</button>';
   html+='</div>';
 
   // ── Household notes (editable) ──
@@ -5198,12 +5462,12 @@ async function renderEnrichCard(){
   html+='<div id="enrich-profile-zone" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
   html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px">Profile</div>';
   html+='<div style="font-size:.76rem;color:var(--txt2);line-height:1.5;margin-bottom:10px">Save any notes above first — they feed into the research. Then build the profile.</div>';
-  html+='<button onclick="enrichBuildProfile('+idx+')" id="enrich-build-btn" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">🔍 Build Profile</button>';
+  html+='<button onclick="byId(&quot;enrichBuildProfile&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" id="enrich-build-btn" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">🔍 Build Profile</button>';
   html+='</div>';
 
   // ── Bottom nav ──
   html+='<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-top:6px">';
-  html+='<button onclick="enrichMarkDone('+idx+')" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.76rem">✓ Done (no profile)</button>';
+  html+='<button onclick="byId(&quot;enrichMarkDone&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.76rem">✓ Done (no profile)</button>';
   html+='<div style="display:flex;gap:8px">';
   html+='<button onclick="enrichSkipLater()" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.76rem">↪ Skip for later</button>';
   html+='<button onclick="enrichNext()" style="padding:8px 16px;background:var(--surf2);border:1px solid var(--border2);color:var(--txt);border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:500">Next →</button>';
@@ -5362,7 +5626,7 @@ async function enrichProcessDump(idx){
   const ta=document.getElementById('enrich-dump');
   const resultEl=document.getElementById('enrich-dump-result');
   if(!ta||!ta.value.trim()){alert('Nothing to process yet — type or dictate a brain-dump first.');return;}
-  if(!ANTHROPIC_KEY){_keyNudge(document.getElementById('enrich-dump-result')||null,'Anthropic',`enrichProcessDump(${idx})`);return;}
+  if(!ANTHROPIC_KEY){_keyNudge(document.getElementById('enrich-dump-result')||null,'Anthropic',`byId('enrichProcessDump','${households[idx].id}',${idx})`);return;}
   const h=households[idx];
   const members=h.members||[];
   const dumpText=ta.value.trim();
@@ -5382,7 +5646,7 @@ async function enrichProcessDump(idx){
 Rules:
 - "household" = timeless background facts about the family (where they moved from, family composition, personality, kosher/observance level, general relationship dynamics). NOT a dated event.
 - "note" = a specific observation or piece of info tied to a person, but not a datable event/meeting (e.g. he mentioned he's interested in X, she tends to write checks not her husband).
-- "interaction" = a specific dated or datable event (call, meeting, ran into them, email, pledge conversation, event attendance). If a date is implied (Sunday, last week, Yom Kippur) include it as best_date in YYYY-MM-DD format relative to today ${new Date().toISOString().split('T')[0]}; otherwise omit best_date.
+- "interaction" = a specific dated or datable event (call, meeting, ran into them, email, pledge conversation, event attendance). If a date is implied (Sunday, last week, Yom Kippur) include it as best_date in YYYY-MM-DD format relative to today ${localToday()}; otherwise omit best_date.
 - For "note" and "interaction", assign person_id from the members list by matching first names. If it's about both people or unclear, use the first member's id.
 - Clean up the text: fix grammar, remove filler words, keep all facts/names/numbers/dates.
 - If the whole dump is one coherent thing, return one chunk. Split only when genuinely separate.
@@ -5449,12 +5713,12 @@ function _enrichRenderDumpChunks(idx,chunks,members){
     // Date picker for interactions
     if(c.type==='interaction'){
       html+='<div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--txt3)">Date:</span>';
-      html+='<input type="date" id="dump-date-'+i+'" value="'+(c.best_date||new Date().toISOString().split('T')[0])+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
+      html+='<input type="date" id="dump-date-'+i+'" value="'+(c.best_date||localToday())+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
       html+='</div>';
     }
     html+='</div></div></div>';
   });
-  html+='<button id="enrich-save-all-btn" onclick="_enrichSaveAllChunks('+idx+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">💾 Save All</button>';
+  html+='<button id="enrich-save-all-btn" onclick="byId(&quot;_enrichSaveAllChunks&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500">💾 Save All</button>';
   html+='<button onclick="document.getElementById(\'enrich-dump-result\').innerHTML=\'\'" style="margin-top:4px;margin-left:8px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt3);border-radius:7px;cursor:pointer;font-size:.78rem">✕ Cancel</button>';
   html+='</div>';
   resultEl.innerHTML=html;
@@ -5468,7 +5732,7 @@ async function _enrichSaveAllChunks(idx){
   const count=chunks.length;
   const btn=document.getElementById('enrich-save-all-btn');
   if(btn){btn.disabled=true;btn.textContent='Saving…';}
-  const today=new Date().toISOString().split('T')[0];
+  const today=localToday();
   let saved=0,errors=0;
   for(let i=0;i<count;i++){
     const chk=document.getElementById('dump-chk-'+i);
@@ -5485,11 +5749,13 @@ async function _enrichSaveAllChunks(idx){
         // interaction
         const cid=personEl?personEl.value:(members[0]||{}).id;
         const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
-        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim(),created_at:new Date().toISOString()})});
+        const savedB=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim(),created_at:new Date().toISOString()})});
+        if(savedB&&savedB[0])embedAndStore(savedB[0].id,iType+': '+text.trim());
       }else if(personEl){
         // note (person-specific, no date picker)
         const cid=personEl.value||(members[0]||{}).id;
-        await sb('interactions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim(),created_at:new Date().toISOString()})});
+        const savedB2=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim(),created_at:new Date().toISOString()})});
+        if(savedB2&&savedB2[0])embedAndStore(savedB2[0].id,'Note: '+text.trim());
       }else{
         // household note — append to existing
         const existing=h.notes||'';
@@ -5587,7 +5853,7 @@ async function enrichBuildProfile(idx, hints){
   const p=h.profile_data||{};
   if(!p.summary&&!p.approach){
     if(zone)zone.innerHTML='<div style="color:var(--red);font-size:.76rem;padding:8px">Build returned no profile — household may have no contacts, or the AI response was empty. Try again.</div>'
-      +'<button onclick="enrichBuildProfile('+idx+')" style="margin-top:8px;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem">🔍 Try Again</button>';
+      +'<button onclick="byId(&quot;enrichBuildProfile&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="margin-top:8px;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem">🔍 Try Again</button>';
     return;
   }
   // Render review UI
@@ -5693,8 +5959,7 @@ async function loadEngineSettings(){
 
 async function saveEngineSettings(){
   try{
-    await sb('app_settings?key=eq.engine_settings',{method:'DELETE'});
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'engine_settings',value:JSON.stringify(ENGINE)}),headers:{'Content-Type':'application/json'}});
+    await sbSetSetting('engine_settings',JSON.stringify(ENGINE));
   }catch(e){console.warn('engine settings save failed',e);}
 }
 
@@ -5787,7 +6052,7 @@ async function resetEngineSettings(){
 // Bump this whenever DASH_DEFAULT_LAYOUT panels are added/removed/renamed.
 // Saved layouts with a different version are ignored on load (prevents the
 // "doubled panels" bug where stale saved coords clash with new defaults).
-const DASH_LAYOUT_VERSION=3;
+const DASH_LAYOUT_VERSION=4;
 const DASH_DEFAULT_LAYOUT=[
   {id:'panel-heatmap',    x:0, y:0,  w:12, h:3,  title:'🔥 Activity Heatmap',           fn:'renderHeatmap'},
   {id:'panel-daily5',     x:0, y:3,  w:7,  h:8,  title:'📞 Daily Five',                 fn:'renderDailyFive'},
@@ -5795,8 +6060,7 @@ const DASH_DEFAULT_LAYOUT=[
   {id:'panel-wins',       x:7, y:7,  w:5,  h:4,  title:'🏆 Wins of the Week',           fn:'renderWins'},
   {id:'panel-gifts',      x:0, y:11, w:6,  h:5,  title:'💝 Recent Gifts',               fn:'renderRecentGifts'},
   {id:'panel-sri',        x:6, y:11, w:6,  h:5,  title:'🎯 Solicitation Readiness',     fn:'renderSRI'},
-  {id:'panel-tracks',     x:0, y:16, w:8,  h:4,  title:'🔁 Active Tracks',              fn:'renderActiveTracks'},
-  {id:'panel-insights',   x:8, y:16, w:4,  h:4,  title:'🧠 Smart Insights',             fn:'renderSmartInsights'},
+  {id:'panel-tracks',     x:0, y:16, w:12, h:4,  title:'🔁 Active Tracks',              fn:'renderActiveTracks'},
 ];
 
 function switchView(view){
@@ -5834,6 +6098,7 @@ function switchView(view){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       if(!map){
         initMap();
+        rebuildHIdxMap();_givingCache={};
         households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
         fitMap();
       } else {
@@ -5902,8 +6167,8 @@ function renderContacts(){
   const arrow=k=>_ctState.sortKey===k?(_ctState.sortDir==='desc'?' ▾':' ▴'):'';
   tbl.innerHTML='<tr>'+cols.map(k=>`<th onclick="sortContacts('${k}')">${CT_COLS[k].label}${arrow(k)}</th>`).join('')+'</tr>'
     +rows.map(h=>{
-      const idx=households.indexOf(h);
-      return `<tr class="ct-row" onclick="switchView('crm');setTimeout(()=>openFullPanel(${idx}),120)">`+cols.map(k=>`<td>${CT_COLS[k].html(h)}</td>`).join('')+'</tr>';
+      const idx=hIdx(h.id);
+      return `<tr class="ct-row" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120)">`+cols.map(k=>`<td>${CT_COLS[k].html(h)}</td>`).join('')+'</tr>';
     }).join('');
 }
 
@@ -5922,7 +6187,7 @@ function exportContactsCSV(){
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='daas_contacts_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download='daas_contacts_'+localToday()+'.csv';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -5946,7 +6211,7 @@ async function exportBackup(){
     const blob=new Blob([JSON.stringify(dump,null,1)],{type:'application/json'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='daas_backup_'+new Date().toISOString().split('T')[0]+'.json';
+    a.download='daas_backup_'+localToday()+'.json';
     a.click();
     URL.revokeObjectURL(a.href);
     const total=Object.values(dump.tables).reduce((n,r)=>n+r.length,0);
@@ -5970,8 +6235,7 @@ async function saveUIPrefs(){
   _uiPrefs.contactsPreset=_ctState.preset;
   _uiPrefs.colorBy=document.getElementById('colorBy')?.value||'value';
   try{
-    await sb('app_settings?key=eq.ui_prefs',{method:'DELETE'});
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'ui_prefs',value:JSON.stringify(_uiPrefs)}),headers:{'Content-Type':'application/json'}});
+    await sbSetSetting('ui_prefs',JSON.stringify(_uiPrefs));
   }catch(e){}
 }
 
@@ -6005,12 +6269,6 @@ async function initDashboard(){
       }
     }
   }catch(e){console.warn('[DAAS] layout load failed',e);}
-  // Load cached smart insights
-  try{
-    const siRows=await sb('app_settings?key=eq.smart_insights_cache&limit=1');
-    if(siRows&&siRows.length&&siRows[0].value)_smartInsightsCache=JSON.parse(siRows[0].value);
-  }catch(e){}
-
   // Init gridstack — idempotent: if a grid somehow already exists (double-init race,
   // stale build re-entry), tear it down so widgets never stack twice.
   if(_dashGrid){
@@ -6061,7 +6319,7 @@ async function openAGCCompare(){
   if(!Object.keys(_agcInterAgg).length)await loadAGCInteractionAggregates();
   const rows=households.map(h=>{
     const o=_calcAGCLegacy(h),n=_calcAGCLocal(h);
-    return{h,idx:households.indexOf(h),o,n,delta:n.total-o.total};
+    return{h,idx:hIdx(h.id),o,n,delta:n.total-o.total};
   });
   if(_agcCmpSort==='delta')rows.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
   else rows.sort((a,b)=>b.n.total-a.n.total);
@@ -6154,8 +6412,7 @@ const PANEL_HELP={
   'panel-wins':{t:'🏆 Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
   'panel-gifts':{t:'💝 Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
   'panel-sri':{t:'🎯 Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
-  'panel-tracks':{t:'🔁 Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
-  'panel-insights':{t:'🧠 Smart Insights',d:()=>`An AI scan across your profiles and notes looking for things you might have missed: upcoming life events (b'nei mitzvah, anniversaries), capacity signals buried in notes, relationship shifts. Results are cached — it only spends tokens when you hit Scan. Treat it as a tip sheet, not gospel: verify before acting.`}
+  'panel-tracks':{t:'🔁 Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`}
 };
 
 function showPanelHelp(panelId){
@@ -6201,7 +6458,6 @@ async function renderAllPanels(){
   renderRecentGifts();
   renderDailyFive();
   renderColdFloor();
-  renderSmartInsights();
   await renderSRI();
   await renderWins();
   await renderActiveTracks();
@@ -6218,10 +6474,8 @@ async function saveDashLayout(){
       fn:DASH_DEFAULT_LAYOUT.find(d=>d.id===n.id)?.fn||''
     }));
   try{
-    // Delete then insert to avoid upsert constraint issues
-    await sb('app_settings?key=eq.dashboard_layout',{method:'DELETE'});
     const wrapped={version:DASH_LAYOUT_VERSION,panels:items};
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'dashboard_layout',value:JSON.stringify(wrapped)}),headers:{'Content-Type':'application/json'}});
+    await sbSetSetting('dashboard_layout',JSON.stringify(wrapped));
   }catch(e){console.warn('saveDashLayout failed',e);}
 }
 
@@ -6241,9 +6495,9 @@ async function renderHeatmap(){
   const el=document.getElementById('body-panel-heatmap');
   if(!el)return;
   // Fetch last 14 days of interactions
-  const since=new Date(Date.now()-14*24*60*60*1000).toISOString().split('T')[0];
+  const since=localDateStr(new Date(Date.now()-14*24*60*60*1000));
   let rows=[];
-  try{rows=await sb(`interactions?date=gte.${since}&select=date`)||[];}catch(e){}
+  try{rows=await sbAll(`interactions?date=gte.${since}&select=date&order=id.asc`)||[];}catch(e){}
 
   // Count by date
   const counts={};
@@ -6275,7 +6529,7 @@ async function renderHeatmap(){
       date.setDate(weekStart.getDate()+d);
       const dow=date.getDay();
       if(dow===6)continue; // skip Saturday
-      const dateStr=date.toISOString().split('T')[0];
+      const dateStr=localDateStr(date);
       const count=counts[dateStr]||0;
       const isFuture=date>today;
       const isSunday=dow===0;
@@ -6287,7 +6541,7 @@ async function renderHeatmap(){
         else if(count>=threshold*.3)intensity=2;
         else intensity=1;
       }
-      const isToday=dateStr===today.toISOString().split('T')[0];
+      const isToday=dateStr===localDateStr(today);
       const tip=isFuture?dateStr:`${dateStr}: ${count} interaction${count!==1?'s':''}`;
       html+=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
         <div class="heat-cell heat-${isFuture?'0':intensity}" data-tip="${tip}" style="${isToday?'box-shadow:0 0 0 2px var(--accent)':''}${isFuture?'opacity:.3':''}"></div>
@@ -6314,7 +6568,7 @@ function renderRecentGifts(){
   households.forEach(h=>{
     (h.members||[]).forEach(m=>{
       (m.donations||[]).forEach(d=>{
-        allDonations.push({...d,displayName:h.displayName,householdIdx:households.indexOf(h)});
+        allDonations.push({...d,displayName:h.displayName,householdIdx:hIdx(h.id)});
       });
     });
   });
@@ -6343,7 +6597,7 @@ async function renderWins(){
   const now2=new Date();now2.setHours(0,0,0,0);
   const dayOfWeek=now2.getDay();
   const thisSunday=new Date(now2);thisSunday.setDate(now2.getDate()-dayOfWeek);
-  const sinceStr=thisSunday.toISOString().split('T')[0];
+  const sinceStr=localDateStr(thisSunday);
   try{
     rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Phone%20call,type.eq.Meeting%20in%20person,type.eq.Email%20%2F%20Text,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance,type.eq.Kids%20program)&date=gte.${sinceStr}&order=date.desc&limit=10`)||[];
   }catch(e){el.innerHTML='<div class="hint"><div class="hi">⚠️</div><p>Could not load wins</p></div>';return;}
@@ -6351,7 +6605,7 @@ async function renderWins(){
 
   // Enrich with household name
   const contactMap={};
-  households.forEach(h=>(h.members||[]).forEach(m=>{contactMap[m.id]={displayName:h.displayName,idx:households.indexOf(h)};}));
+  households.forEach(h=>(h.members||[]).forEach(m=>{contactMap[m.id]={displayName:h.displayName,idx:hIdx(h.id)};}));
 
   el.innerHTML=rows.map(r=>{
     const info=contactMap[r.contact_id]||{displayName:'Unknown',idx:-1};
@@ -6456,8 +6710,7 @@ let _dailyPins=[];
 
 async function _saveDailyPins(){
   try{
-    await sb('app_settings?key=eq.daily_pins',{method:'DELETE'});
-    await sb('app_settings',{method:'POST',body:JSON.stringify({key:'daily_pins',value:JSON.stringify(_dailyPins)}),headers:{'Content-Type':'application/json'}});
+    await sbSetSetting('daily_pins',JSON.stringify(_dailyPins));
   }catch(e){console.warn('pin save failed',e);}
 }
 
@@ -6508,12 +6761,12 @@ function renderDailyFive(){
 async function _computeDailyQueue(){
   const today=new Date();today.setHours(0,0,0,0);
   const now=Date.now();
-  const todayStr=today.toISOString().split('T')[0];
-  const cutoff90=new Date(now-ENGINE.driftDays*24*60*60*1000).toISOString().split('T')[0];
+  const todayStr=localDateStr(today);
+  const cutoff90=localDateStr(new Date(now-ENGINE.driftDays*24*60*60*1000));
 
   // Fetch most recent interaction date per contact in last 90 days
   let recentRows=[];
-  try{recentRows=await sb(`interactions?date=gte.${cutoff90}&select=contact_id,date&order=date.desc`)||[];}catch(e){}
+  try{recentRows=await sbAll(`interactions?date=gte.${cutoff90}&select=contact_id,date&order=date.desc,id.asc`)||[];}catch(e){}
 
   // Map contact_id → most recent date
   const lastInteraction={};
@@ -6540,7 +6793,7 @@ async function _computeDailyQueue(){
     if(snoozed)continue;
     const lastContact=hhLastContact[h.id];
     const daysSince=lastContact?Math.floor((now-new Date(lastContact))/(1000*60*60*24)):999;
-    if(daysSince>=ENGINE.driftDays)keepWarm.push({h,agc,daysSince,idx:households.indexOf(h)});
+    if(daysSince>=ENGINE.driftDays)keepWarm.push({h,agc,daysSince,idx:hIdx(h.id)});
   }
   keepWarm.sort((a,b)=>b.agc.total-a.agc.total);
 
@@ -6554,7 +6807,7 @@ async function _computeDailyQueue(){
     if((h.home_value||0)<ENGINE.icebreakerHomeValue)continue;
     const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
     if(snoozed)continue;
-    icebreakers.push({h,idx:households.indexOf(h)});
+    icebreakers.push({h,idx:hIdx(h.id)});
   }
   icebreakers.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
 
@@ -6565,7 +6818,7 @@ async function _computeDailyQueue(){
   // Pinned households always lead the queue
   _dailyPins.forEach(id=>{
     const h=households.find(hh=>hh.id===id);
-    if(h)cards.push({type:'pinned',item:{h,idx:households.indexOf(h)}});
+    if(h)cards.push({type:'pinned',item:{h,idx:hIdx(h.id)}});
   });
   keepWarm.slice(0,2).forEach(item=>cards.push({type:'keepwarm',item}));
   icebreakers.slice(0,2).forEach(item=>cards.push({type:'icebreaker',item}));
@@ -6573,7 +6826,7 @@ async function _computeDailyQueue(){
     const t=activeTracks.find(tt=>!_dailyPins.includes(tt.household_id))||null;
     if(t){
       const h=households.find(hh=>hh.id===t.household_id);
-      if(h)cards.push({type:'activetrack',item:{h,t,idx:households.indexOf(h)}});
+      if(h)cards.push({type:'activetrack',item:{h,t,idx:hIdx(h.id)}});
     }
   }
 
@@ -6658,24 +6911,24 @@ async function _buildDailyFive(el){
       </div>
       <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">${whyNow}</div>
       <div style="display:flex;gap:5px;margin-bottom:8px">
-        <button class="btn btn-sec" onclick="switchView('crm');setTimeout(()=>openFullPanel(${idx}),150)" style="font-size:.62rem;padding:3px 8px">👁 View</button>
+        <button class="btn btn-sec" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),150)" style="font-size:.62rem;padding:3px 8px">👁 View</button>
         <button class="btn btn-sec" onclick="const w=document.getElementById('why-${idx}');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.62rem;padding:3px 8px">ℹ Why?</button>
       </div>
       <div id="why-${idx}" style="display:none;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.62rem;font-family:'DM Mono',monospace">${_whyHTML(card)}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap">
         ${['Connected','Left VM','Sent Text','Sent Email','Quiet Hangup'].map(o=>`
-          <button onclick="showOutcomeTray(${idx},'${o}','${trackId||''}')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">${o}</button>`).join('')}
+          <button onclick="byId('showOutcomeTray','${households[idx].id}',${idx},'${o}','${trackId||''}')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">${o}</button>`).join('')}
         ${type==='pinned'
           ?`<button onclick="unpinHousehold('${h.id}')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">✕ Unpin</button>`
-          :`<button onclick="snoozeDaily(${idx},7)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 7d</button>
-        <button onclick="snoozeDaily(${idx},30)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 30d</button>
-        <button onclick="snoozeDaily(${idx},90)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 90d</button>`}
+          :`<button onclick="byId('snoozeDaily','${households[idx].id}',${idx},7)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 7d</button>
+        <button onclick="byId('snoozeDaily','${households[idx].id}',${idx},30)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 30d</button>
+        <button onclick="byId('snoozeDaily','${households[idx].id}',${idx},90)" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer">⏭ 90d</button>`}
       </div>
       <div id="outcome-tray-${idx}" style="display:none;margin-top:8px;padding:8px;background:var(--surf2);border-radius:6px;border:1px solid var(--border)">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:5px">Log note — <span id="outcome-label-${idx}" style="font-weight:600;color:var(--accent)"></span>:</div>
         <textarea id="outcome-note-${idx}" placeholder="Brief note…" style="width:100%;min-height:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:6px;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:6px"></textarea>
         <div style="display:flex;gap:6px">
-          <button onclick="saveOutcome(${idx})" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">💾 Save</button>
+          <button onclick="byId('saveOutcome','${households[idx].id}',${idx})" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">💾 Save</button>
           <button onclick="document.getElementById('outcome-tray-${idx}').style.display='none'" class="btn btn-sec" style="font-size:.62rem;padding:3px 8px">Cancel</button>
         </div>
       </div>
@@ -6696,12 +6949,13 @@ async function saveOutcome(idx){
   const {outcome,trackId}=_pendingOutcome[idx]||{};
   if(!outcome)return;
   const note=document.getElementById(`outcome-note-${idx}`).value.trim();
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=localToday();
   // Log interaction
   const contactId=(h.members&&h.members[0])?h.members[0].id:null;
   if(contactId){
     try{
-      await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+      const savedO=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null}),headers:{'Content-Type':'application/json'}});
+      if(savedO&&savedO[0]&&note)embedAndStore(savedO[0].id,outcome+': '+note);
     }catch(e){console.warn('Outcome save failed',e);}
   }
   // Logging an outcome clears the pin — the job is done
@@ -6736,7 +6990,7 @@ async function saveOutcome(idx){
 }
 async function snoozeDaily(idx,days=7){
   const h=households[idx];if(!h)return;
-  const snoozeUntil=new Date(Date.now()+days*24*60*60*1000).toISOString().split('T')[0];
+  const snoozeUntil=localToday(days);
   // Check if track exists
   let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
   if(track){
@@ -6759,12 +7013,12 @@ function _addBusinessDays(fromDate,days){
     const dow=d.getDay();
     if(dow!==0&&dow!==6)added++; // skip Sun(0) and Sat(6)
   }
-  return d.toISOString().split('T')[0];
+  return localDateStr(d);
 }
 // Track cadence now lives in ENGINE.trackCadence (editable in Engine Settings)
 
 async function handleTrackOutcome(trackId,householdId,outcome){
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=localToday();
   if(outcome==='Connected'){
     await sb(`outreach_tracks?id=eq.${trackId}`,{method:'PATCH',body:JSON.stringify({status:'closed_connected',updated_at:new Date().toISOString()}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
     outreachTracks=outreachTracks.map(t=>t.id===trackId?{...t,status:'closed_connected'}:t);
@@ -6778,7 +7032,7 @@ async function handleTrackOutcome(trackId,householdId,outcome){
   let patch={attempts:newAttempts,next_due:nextDue,step:Math.min((track.step||1)+1,ENGINE.trackMaxAttempts)};
   if(newAttempts>=ENGINE.trackMaxAttempts){
     patch.status='closed_unresponsive';
-    patch.snooze_until=new Date(Date.now()+ENGINE.trackSnoozeDays*24*60*60*1000).toISOString().split('T')[0];
+    patch.snooze_until=localToday(ENGINE.trackSnoozeDays);
     patch.next_due=null;
   }
   await sb(`outreach_tracks?id=eq.${trackId}`,{method:'PATCH',body:JSON.stringify(patch),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
@@ -6794,12 +7048,12 @@ async function loadOutreachTracks(){
 async function renderColdFloor(){
   const el=document.getElementById('body-panel-coldfloor');
   if(!el||!households.length){if(el)el.innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';return;}
-  const snoozedIds=new Set(outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until&&t.snooze_until>new Date().toISOString().split('T')[0]).map(t=>t.household_id));
+  const snoozedIds=new Set(outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until&&t.snooze_until>localToday()).map(t=>t.household_id));
   const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
   // Truly cold = zero interactions EVER on any household member (not just zero donations)
   let contactedIds=new Set();
   try{
-    const rows=await sb('interactions?select=contact_id')||[];
+    const rows=await sbAll('interactions?select=contact_id&order=id.asc')||[];
     contactedIds=new Set(rows.map(r=>r.contact_id));
   }catch(e){console.warn('cold floor interaction check failed',e);}
   const coldFloor=[];
@@ -6810,24 +7064,24 @@ async function renderColdFloor(){
     if(gs&&gs.total>0)continue;
     if((h.home_value||0)<ENGINE.coldFloorHomeValue)continue;
     if((h.members||[]).some(m=>contactedIds.has(m.id)))continue; // has been contacted — not cold
-    coldFloor.push({h,idx:households.indexOf(h)});
+    coldFloor.push({h,idx:hIdx(h.id)});
   }
   coldFloor.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
   if(!coldFloor.length){
     el.innerHTML='<div class="hint"><div class="hi">🎉</div><p>No cold floor contacts — everyone\'s been touched!</p></div>';
     return;
   }
-  const todayStr=new Date().toISOString().split('T')[0];
-  const tomorrowStr=new Date(Date.now()+24*60*60*1000).toISOString().split('T')[0];
+  const todayStr=localToday();
+  const tomorrowStr=localToday(1);
   el.innerHTML=coldFloor.slice(0,6).map(({h,idx})=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>selectHousehold(${idx}),100)">${h.displayName}</div>
+        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${households[idx].id}',${idx}),100)">${h.displayName}</div>
         <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)">${h.home_value?'$'+Math.round(h.home_value/1000)+'k home':''}</div>
       </div>
       <div style="display:flex;gap:4px;flex-shrink:0">
-        <button onclick="addToDaily(${idx},'${todayStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);border-radius:4px;background:none;cursor:pointer">Today</button>
-        <button onclick="addToDaily(${idx},'${tomorrowStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;background:none;cursor:pointer">Tomorrow</button>
+        <button onclick="byId('addToDaily','${households[idx].id}',${idx},'${todayStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);border-radius:4px;background:none;cursor:pointer">Today</button>
+        <button onclick="byId('addToDaily','${households[idx].id}',${idx},'${tomorrowStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;background:none;cursor:pointer">Tomorrow</button>
       </div>
     </div>`).join('');
   if(coldFloor.length>6)el.innerHTML+=`<div style="font-size:.62rem;color:var(--txt3);text-align:center;padding:6px">+${coldFloor.length-6} more cold floor contacts</div>`;
@@ -6852,10 +7106,10 @@ async function renderSRI(){
   const el=document.getElementById('body-panel-sri');
   if(!el||!households.length){if(el)el.innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';return;}
   const now=Date.now();
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=localToday();
   // Fetch recent connected interactions for engagement check
   let connectedRows=[];
-  try{connectedRows=await sb(`interactions?type=eq.Connected&date=gte.${new Date(now-ENGINE.sriEngagementDays*24*60*60*1000).toISOString().split('T')[0]}&select=contact_id`)||[];}catch(e){}
+  try{connectedRows=await sbAll(`interactions?type=eq.Connected&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&select=contact_id&order=id.asc`)||[];}catch(e){}
   const connectedContactIds=new Set(connectedRows.map(r=>r.contact_id));
 
   // Build contact→household map
@@ -6899,7 +7153,7 @@ async function renderSRI(){
         reasons.push(`+25 — giving gap: last gift ${gs.lastDate} (${Math.round(monthsSinceLast)} mo ago) — inside the ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} mo ask window`);
       }
     }
-    if(score>0)scores.push({h,score,idx:households.indexOf(h),gs,reasons});
+    if(score>0)scores.push({h,score,idx:hIdx(h.id),gs,reasons});
   }
   scores.sort((a,b)=>b.score-a.score);
   const top5=scores.slice(0,5);
@@ -6911,7 +7165,7 @@ async function renderSRI(){
     <div style="padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>openFullPanel(${idx}),150)">${h.displayName}</div>
+          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),150)">${h.displayName}</div>
           <div style="font-size:.6rem;color:var(--txt3)">Last gift: ${gs?gs.lastDate||'never':'never'} · Total: ${gs?'$'+gs.total.toLocaleString():'$0'}</div>
         </div>
         <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">${score}</div>
@@ -6921,7 +7175,7 @@ async function renderSRI(){
       </div>
       <div style="display:flex;gap:4px">
         <button onclick="const w=document.getElementById('sri-why-${idx}');w.style.display=w.style.display==='none'?'block':'none'" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">ℹ Why?</button>
-        <button onclick="snoozeSRI(${idx})" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
+        <button onclick="byId('snoozeSRI','${households[idx].id}',${idx})" style="font-size:.58rem;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt3);cursor:pointer">⏸ Snooze Ask 60d</button>
       </div>
       <div id="sri-why-${idx}" style="display:none;margin-top:6px;padding:7px 9px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--txt2);line-height:1.6">${(reasons||[]).join('<br>')}</div>
     </div>`).join('');
@@ -6929,7 +7183,7 @@ async function renderSRI(){
 
 async function snoozeSRI(idx){
   const h=households[idx];if(!h)return;
-  const snoozeUntil=new Date(Date.now()+60*24*60*60*1000).toISOString().split('T')[0];
+  const snoozeUntil=localToday(60);
   const existing=outreachTracks.find(t=>t.household_id===h.id);
   if(existing){
     await sb(`outreach_tracks?id=eq.${existing.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
@@ -6949,8 +7203,8 @@ async function renderActiveTracks(){
     el.innerHTML='<div class="hint"><div class="hi">🔁</div><p>No active outreach tracks — add contacts from Cold Floor or Daily Five</p></div>';
     return;
   }
-  const todayStr=new Date().toISOString().split('T')[0];
-  const hhMap={};households.forEach(h=>{hhMap[h.id]={h,idx:households.indexOf(h)};});
+  const todayStr=localToday();
+  const hhMap={};households.forEach(h=>{hhMap[h.id]={h,idx:hIdx(h.id)};});
 
   // Fetch last interaction for each tracked household
   const lastInteractionMap={};
@@ -7007,89 +7261,6 @@ async function deleteTrack(trackId){
   }catch(e){alert('Delete failed: '+e.message);}
 }
 
-// ── SMART INSIGHTS ──
-function renderSmartInsights(){
-  const el=document.getElementById('body-panel-insights');
-  if(!el)return;
-  // Check for cached results
-  const cached=_smartInsightsCache;
-  if(cached){
-    _renderSmartInsightsResults(el,cached);
-    return;
-  }
-  el.innerHTML=`<div style="text-align:center;padding:20px 10px">
-    <div style="font-size:.75rem;color:var(--txt2);margin-bottom:14px;line-height:1.5">Scans all notes and profiles for hidden flags, upcoming events, and capacity signals.</div>
-    <button onclick="runSmartInsights()" class="btn btn-pri" style="font-size:.72rem;padding:6px 16px">✨ Scan Now</button>
-    <div style="font-size:.58rem;color:var(--txt3);margin-top:8px">Results cached until next scan</div>
-  </div>`;
-}
-
-let _smartInsightsCache=null;
-
-async function runSmartInsights(){
-  const el=document.getElementById('body-panel-insights');
-  if(!el)return;
-  el.innerHTML='<div class="hint"><div class="hi"><div class="spin" style="width:20px;height:20px;border-width:3px"></div></div><p style="margin-top:8px;font-size:.72rem">Scanning notes and profiles…</p></div>';
-
-  // Build context from all households
-  const snippets=[];
-  households.forEach(h=>{
-    const p=h.profile_data||{};
-    const texts=[p.summary,p.approach,p.businessInfo,p.boardMemberships,p.affinityNotes].filter(Boolean).join(' ');
-    if(texts)snippets.push(`${h.displayName}: ${texts.substring(0,300)}`);
-  });
-
-  const prompt=`You are analyzing a rabbi's donor database. Review these contact summaries and identify:
-1. HORIZON FLAGS: Any mentions of upcoming events, life transitions, surgeries, moves, retirements, b'nei mitzvah, weddings, anniversaries, or time-sensitive situations. Format as bullet points.
-2. PROFILE GEMS: Hidden capacity signals, notable board memberships, business connections, or relationship opportunities worth acting on. Format as bullet points.
-
-Keep each bullet to one sentence. Focus on actionable insights only.
-
-Contact summaries:
-${snippets.slice(0,40).join('\n')}`;
-
-  try{
-    const AKEY=localStorage.getItem('crm_ant_key')||'';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
-    const text=data.content?.[0]?.text||'No insights returned.';
-    _smartInsightsCache={text,ts:new Date().toLocaleString()};
-    // Save to app_settings
-    try{
-      await sb('app_settings?key=eq.smart_insights_cache',{method:'DELETE'});
-      await sb('app_settings',{method:'POST',body:JSON.stringify({key:'smart_insights_cache',value:JSON.stringify(_smartInsightsCache)}),headers:{'Content-Type':'application/json'}});
-    }catch(e){}
-    _renderSmartInsightsResults(el,_smartInsightsCache);
-  }catch(e){
-    el.innerHTML=`<div style="color:var(--red);font-size:.72rem;padding:12px">Scan failed: ${e.message}</div>`;
-  }
-}
-
-function _renderSmartInsightsResults(el,cache){
-  const lines=cache.text.split('\n').filter(l=>l.trim());
-  let html=`<div style="font-size:.58rem;color:var(--txt3);margin-bottom:10px;font-family:'DM Mono',monospace">Last scan: ${cache.ts} <button onclick="_smartInsightsCache=null;renderSmartInsights()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.58rem;margin-left:8px">↺ Re-scan</button></div>`;
-  // Split into tabs
-  let inSection='';
-  let horizonLines=[],gemLines=[];
-  lines.forEach(l=>{
-    if(l.match(/horizon/i))inSection='horizon';
-    else if(l.match(/gem|profile/i))inSection='gems';
-    else if(inSection==='horizon')horizonLines.push(l);
-    else if(inSection==='gems')gemLines.push(l);
-  });
-  html+=`<div style="display:flex;gap:6px;margin-bottom:10px">
-    <button onclick="document.getElementById('si-horizon').style.display='block';document.getElementById('si-gems').style.display='none';this.style.background='var(--accent)';this.style.color='#fff';this.nextSibling.style.background='none';this.nextSibling.style.color='var(--txt2)'" style="font-size:.62rem;padding:3px 10px;border:1px solid var(--border2);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer">📅 Horizon Flags</button>
-    <button onclick="document.getElementById('si-gems').style.display='block';document.getElementById('si-horizon').style.display='none';this.style.background='var(--accent)';this.style.color='#fff';this.previousSibling.style.background='none';this.previousSibling.style.color='var(--txt2)'" style="font-size:.62rem;padding:3px 10px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--txt2);cursor:pointer">💎 Profile Gems</button>
-  </div>`;
-  html+=`<div id="si-horizon">${horizonLines.length?horizonLines.map(l=>`<div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">${l.replace(/^[-•*]\s*/,'')}</div>`).join(''):'<div style="font-size:.7rem;color:var(--txt3);padding:8px 0">No horizon flags found.</div>'}</div>`;
-  html+=`<div id="si-gems" style="display:none">${gemLines.length?gemLines.map(l=>`<div style="font-size:.7rem;color:var(--txt2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.45">${l.replace(/^[-•*]\s*/,'')}</div>`).join(''):'<div style="font-size:.7rem;color:var(--txt3);padding:8px 0">No profile gems found.</div>'}</div>`;
-  el.innerHTML=html;
-}
-
 </script>
 <!-- QUICK CAPTURE OVERLAY -->
 <div id="captureOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
@@ -7115,6 +7286,17 @@ function _renderSmartInsightsResults(el,cache){
         </label>
         <span style="flex:1"></span>
         <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">Analyze →</button>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Pin to contact <span style="text-transform:none;letter-spacing:0">(optional — skip and it'll figure it out)</span></div>
+        <div id="capture-contact-chip" style="display:none;align-items:center;gap:8px">
+          <span id="capture-contact-name" style="font-size:.8rem;font-weight:600;color:var(--accent);background:rgba(37,99,235,.08);padding:4px 10px;border-radius:14px"></span>
+          <button onclick="captureContactClear()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.72rem">✕ clear</button>
+        </div>
+        <div id="capture-contact-search" style="position:relative">
+          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit">
+          <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
+        </div>
       </div>
     </div>
 
@@ -7157,14 +7339,14 @@ function _renderSmartInsightsResults(el,cache){
     </div>
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:6px">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🔍 Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow & costly (~$0.30)</span></div>
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">🔍 Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow &amp; costly (~$0.30)</span></div>
       <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">The deepest look. Reads the <b>full detailed profile</b> of every household — AGC breakdown, gift history, AI research summary, suggested approach, business info — plus the relevant notes. Use for big cross-database thinking like "build me a major-gift prospect list with talking points for each." Asks you to confirm before running because of the cost.</p>
     </div>
 
     <p style="font-size:.72rem;color:var(--txt3);line-height:1.5;margin:14px 0 0">"Tokens" is roughly how much text the AI reads per question. More tokens = more thorough but slower and more expensive. When unsure, start with Standard.</p>
   </div>
 </div>
-</div><!-- DEEP SEARCH MODAL -->
+<!-- DEEP SEARCH MODAL -->
 <div class="modal-bg" id="deepSearchModal" style="display:none">
   <div style="background:var(--surf);border:1px solid var(--border2);border-radius:10px;width:840px;max-width:92vw;height:80vh;display:flex;flex-direction:column;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;flex-shrink:0">
@@ -7176,5 +7358,6 @@ function _renderSmartInsightsResults(el,cache){
   </div>
 </div>
 
-</body>
-</html>
+
+
+</body></html>
