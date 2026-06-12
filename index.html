@@ -772,7 +772,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-11.5';
+const BUILD_STAMP='2026-06-11.8';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -3637,15 +3637,32 @@ async function deleteTimelineItem(id, type, idx){
   const label=type==='donation'?'donation':type==='note'?'note':'interaction';
   if(!confirm(`Delete this ${label}?`))return;
   try{
+    const _h=households[idx];
     if(type==='donation'){
       await sb('donations?id=eq.'+id,{method:'DELETE'});
       // Remove from in-memory state too (previously left stale until reload)
-      const _h=households[idx];
-      if(_h){(_h.members||[]).forEach(m=>{if(m.donations)m.donations=m.donations.filter(d=>d.id!==id);});_invHH(_h);refreshAGCScore(_h.id).then(()=>recolorAll()).catch(()=>{});}
+      if(_h){
+        (_h.members||[]).forEach(m=>{if(m.donations)m.donations=m.donations.filter(d=>d.id!==id);});
+        _invHH(_h);
+        refreshAGCScore(_h.id).then(()=>recolorAll()).catch(()=>{});
+      }
     }else{
       await sb('interactions?id=eq.'+id,{method:'DELETE'});
+      if(_h)_invHH(_h);
     }
-    openFullPanel(idx); // refresh
+    // Refresh whichever view is actually open — full panel OR sidebar.
+    // (Previously always called openFullPanel, so a delete from the sidebar
+    //  left the sidebar showing stale data until a manual page refresh.)
+    const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
+    if(fpOpen){
+      openFullPanel(idx);
+    }else if(_h){
+      renderList();
+      setProp('data',_h);
+      // setProp builds its tab element IDs from hIdx(_h.id); use that SAME index
+      // for showTab or the IDs won't match and the tab stays hidden.
+      showTab(hIdx(_h.id), type==='donation'?'giving':'profile');
+    }
   }catch(e){alert('Delete failed: '+e.message);}
 }
 
@@ -3870,14 +3887,18 @@ async function saveDonationNote(donId, hIdx){
   }catch(e){alert('Save failed: '+e.message);}
 }
 
-async function deleteDonation(donationId, hIdx){
+async function deleteDonation(donationId, hIndex){
   if(!confirm('Delete this donation?'))return;
   try{
     await sb('donations?id=eq.'+donationId,{method:'DELETE'});
-    const h=households[hIdx];
+    const h=households[hIndex];
     h.members.forEach(m=>{m.donations=(m.donations||[]).filter(d=>d.id!==donationId);});
+    _invHH(h); // clear cached giving total so the recompute is fresh
+    refreshAGCScore(h.id).then(()=>recolorAll()).catch(()=>{});
     renderList();
-    setProp('data',h);showTab(hIdx,'giving');
+    setProp('data',h);
+    // setProp builds tab IDs from hIdx(h.id) — use that SAME index for showTab
+    showTab(hIdx(h.id),'giving');
   }catch(e){alert('Delete failed: '+e.message);}
 }
 
