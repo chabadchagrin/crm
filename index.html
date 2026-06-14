@@ -5,8 +5,6 @@
 <title>דעת</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'&gt;&lt;path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/&gt;&lt;path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/&gt;&lt;path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/&gt;&lt;/svg&gt;">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -772,10 +770,9 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-12.3';
+const BUILD_STAMP='2026-06-12.4';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -973,23 +970,10 @@ let map;
 function initMap(){
   map=L.map('map').setView([41.45,-81.3],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
-  // PERF >1000: cluster markers so the map stays smooth with thousands of pins.
-  // Falls back to plain markers if the cluster library didn't load.
-  if(window.L&&L.markerClusterGroup){
-    clusterGroup=L.markerClusterGroup({
-      maxClusterRadius:50,
-      spiderfyOnMaxZoom:true,
-      showCoverageOnHover:false,
-      chunkedLoading:true,
-      disableClusteringAtZoom:16
-    });
-    map.addLayer(clusterGroup);
-  }
 }
 
 // ── STATE ──
 let households=[],filtered=[],markers=[],activeIdx=-1;
-let clusterGroup=null;
 let agcCache={}; // household.id -> {total,affinity,generosity,capacity,detail}
 
 // ── PERF UTILS ──
@@ -1056,7 +1040,7 @@ function triggerSearchAllModal(){
 
 // ── LOAD ALL ──
 async function loadAll(){
-  households=[];filtered=[];if(clusterGroup)clusterGroup.clearLayers();markers.forEach(m=>m&&map&&map.removeLayer(m));markers=[];activeIdx=-1;
+  households=[];filtered=[];markers.forEach(m=>m&&map&&map.removeLayer(m));markers=[];activeIdx=-1;
   setProp('hint');
   document.getElementById('clist').innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';
 
@@ -1651,22 +1635,7 @@ function applyFilter(){
   filtered=_filterBase();
   // Sidebar search narrows the map sidebar list further (names only); doesn't change pins or contacts table
   window._sidebarFiltered=sidebarQ?filtered.filter(h=>_nameMatch(h,sidebarQ)):null;
-  // Reflect the filter on the map. With clustering, add/remove from the group so
-  // cluster badges count only matching households; without it, dim via opacity.
-  if(clusterGroup){
-    const want=new Set(filtered);
-    const toAdd=[],toRemove=[];
-    households.forEach((h,i)=>{
-      const mk=markers[i];if(!mk)return;
-      const inGroup=clusterGroup.hasLayer(mk);
-      if(want.has(h)&&!inGroup)toAdd.push(mk);
-      else if(!want.has(h)&&inGroup)toRemove.push(mk);
-    });
-    if(toRemove.length)clusterGroup.removeLayers(toRemove);
-    if(toAdd.length)clusterGroup.addLayers(toAdd);
-  }else{
-    households.forEach((h,i)=>{if(markers[i])markers[i]&&map&&markers[i].setOpacity(filtered.includes(h)?1:0.12);});
-  }
+  households.forEach((h,i)=>{if(markers[i])markers[i]&&map&&markers[i].setOpacity(filtered.includes(h)?1:0.12);});
   let anyActive=false;
   document.querySelectorAll('.fs-inp').forEach(el=>{
     const on=!!el.value;anyActive=anyActive||on;
@@ -1749,14 +1718,7 @@ function _listGrow(){
 async function selectHousehold(i){
   if(activeIdx!==-1&&markers[activeIdx])markers[activeIdx].setIcon(pinIcon(activeIdx,false,getTier(activeIdx)));
   activeIdx=i;const h=households[i];
-  if(markers[i]){
-    markers[i].setIcon(pinIcon(i,true,getTier(i)));
-    // With clustering, zoom in past the cluster threshold so the pin is visible.
-    if(clusterGroup&&clusterGroup.zoomToShowLayer){
-      try{clusterGroup.zoomToShowLayer(markers[i],()=>{if(map)map.setView([h.lat,h.lon],Math.max(map.getZoom(),16),{animate:true});});}
-      catch(e){if(map)map.setView([h.lat,h.lon],16,{animate:true});}
-    }else if(map){map.setView([h.lat,h.lon],15,{animate:true});}
-  }
+  if(markers[i]){markers[i].setIcon(pinIcon(i,true,getTier(i)));if(map)map.setView([h.lat,h.lon],15,{animate:true});}
   renderList();
   if(h.property_data||h.noAddress){setProp('data',h);return;}
   setProp('loading',h);
@@ -2120,9 +2082,8 @@ async function importVoterFile(lines){
 function placePinAt(i){
   if(!map)return;
   const h=households[i];
-  if(markers[i]){if(clusterGroup)clusterGroup.removeLayer(markers[i]);else map.removeLayer(markers[i]);}
-  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))});
-  if(clusterGroup)clusterGroup.addLayer(m);else m.addTo(map);
+  if(markers[i])map.removeLayer(markers[i]);
+  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
   const _hid=h.id;
   m.on('click',()=>byId('selectHousehold',_hid,i));
   // Hover tooltip
