@@ -5,6 +5,8 @@
 <title>דעת</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'&gt;&lt;path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/&gt;&lt;path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23b45309' stroke-width='1.5'/&gt;&lt;path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23dc2626'/&gt;&lt;/svg&gt;">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css">
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -595,14 +597,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <!-- Filter Panel -->
   <!-- FILTER STRIP — always visible on Map + Contacts, hidden on Dashboard. All conditions AND together. -->
   <div id="filterStrip" style="display:flex;background:var(--surf2);border-bottom:1px solid var(--border);padding:7px 14px;flex-wrap:wrap;gap:10px;align-items:flex-end;flex-shrink:0">
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift After</div><input type="date" class="tier-input fs-inp" id="filterDateFrom" style="width:130px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift Before</div><input type="date" class="tier-input fs-inp" id="filterDateTo" style="width:130px" oninput="applyFilter()"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="applyFilter()" title="Households with no logged contact in at least this many days (includes never-contacted)"></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="applyFilter()"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="applyFilter()"></div></div>
-    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="applyFilter()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift After</div><input type="date" class="tier-input fs-inp" id="filterDateFrom" style="width:130px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Last Gift Before</div><input type="date" class="tier-input fs-inp" id="filterDateTo" style="width:130px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)"></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()"></div></div>
+    <div><div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()"></div>
     <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px;font-size:.68rem;padding:4px 9px">✕ Clear</button>
     <span id="filterCount" style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
   </div>
@@ -770,9 +772,10 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-11.8';
+const BUILD_STAMP='2026-06-12.3';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -831,6 +834,17 @@ async function sb(path,opts={}){
 // through until a short page arrives, so bulk loads are NEVER truncated.
 // Callers must include a deterministic order (e.g. order=date.desc,id.asc)
 // or pages can overlap/skip on tied sort values.
+// Chunked IN() — splits a big id list into batches so the URL never overflows
+// (~100 ids/req) and pagination within each batch is handled by sbAll.
+async function sbInChunks(buildPath,ids,chunk=100){
+  const out=[];
+  for(let i=0;i<ids.length;i+=chunk){
+    const slice=ids.slice(i,i+chunk);
+    const rows=await sbAll(buildPath(slice.join(',')));
+    out.push(...rows);
+  }
+  return out;
+}
 async function sbAll(path,pageSize=1000){
   const sep=path.includes('?')?'&':'?';
   const rows=[];let offset=0;
@@ -861,6 +875,18 @@ function _escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&l
 // PERF: O(1) id→index lookup. Self-healing — verifies the hit and rebuilds on drift.
 let _hIdxMap=new Map();
 function rebuildHIdxMap(){_hIdxMap=new Map(households.map((h,i)=>[h.id,i]));}
+// Resolve the household index that owns a given donation or interaction id.
+// Lets record-keyed handlers self-correct if their render-time idx drifted.
+function hIdxByRecord(recId,kind){
+  for(let i=0;i<households.length;i++){
+    const ms=households[i].members||[];
+    for(const m of ms){
+      const arr=kind==='donation'?(m.donations||[]):(m.interactions||[]);
+      if(arr.some(x=>x.id===recId))return i;
+    }
+  }
+  return -1;
+}
 function hIdx(hid){
   const i=_hIdxMap.get(hid);
   if(i!==undefined&&households[i]&&households[i].id===hid)return i;
@@ -947,10 +973,23 @@ let map;
 function initMap(){
   map=L.map('map').setView([41.45,-81.3],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+  // PERF >1000: cluster markers so the map stays smooth with thousands of pins.
+  // Falls back to plain markers if the cluster library didn't load.
+  if(window.L&&L.markerClusterGroup){
+    clusterGroup=L.markerClusterGroup({
+      maxClusterRadius:50,
+      spiderfyOnMaxZoom:true,
+      showCoverageOnHover:false,
+      chunkedLoading:true,
+      disableClusteringAtZoom:16
+    });
+    map.addLayer(clusterGroup);
+  }
 }
 
 // ── STATE ──
 let households=[],filtered=[],markers=[],activeIdx=-1;
+let clusterGroup=null;
 let agcCache={}; // household.id -> {total,affinity,generosity,capacity,detail}
 
 // ── PERF UTILS ──
@@ -979,7 +1018,7 @@ function _showSearchPopout(){
       onmousedown="event.preventDefault();_hideSearchPopout();switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120)"
       onkeydown="if(event.key==='Enter'){_hideSearchPopout();switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120);}"
       onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
-      <div style="font-size:.8rem;font-weight:600;color:var(--txt)">${h.displayName}</div>
+      <div style="font-size:.8rem;font-weight:600;color:var(--txt)">${_escHtml(h.displayName)}</div>
       ${snippet?`<div style="font-size:.68rem;color:var(--txt3);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">…${snippet}…</div>`:''}
     </div>`;
   }).join('');
@@ -1017,7 +1056,7 @@ function triggerSearchAllModal(){
 
 // ── LOAD ALL ──
 async function loadAll(){
-  households=[];filtered=[];markers.forEach(m=>m&&map&&map.removeLayer(m));markers=[];activeIdx=-1;
+  households=[];filtered=[];if(clusterGroup)clusterGroup.clearLayers();markers.forEach(m=>m&&map&&map.removeLayer(m));markers=[];activeIdx=-1;
   setProp('hint');
   document.getElementById('clist').innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';
 
@@ -1612,7 +1651,22 @@ function applyFilter(){
   filtered=_filterBase();
   // Sidebar search narrows the map sidebar list further (names only); doesn't change pins or contacts table
   window._sidebarFiltered=sidebarQ?filtered.filter(h=>_nameMatch(h,sidebarQ)):null;
-  households.forEach((h,i)=>{if(markers[i])markers[i]&&map&&markers[i].setOpacity(filtered.includes(h)?1:0.12);});
+  // Reflect the filter on the map. With clustering, add/remove from the group so
+  // cluster badges count only matching households; without it, dim via opacity.
+  if(clusterGroup){
+    const want=new Set(filtered);
+    const toAdd=[],toRemove=[];
+    households.forEach((h,i)=>{
+      const mk=markers[i];if(!mk)return;
+      const inGroup=clusterGroup.hasLayer(mk);
+      if(want.has(h)&&!inGroup)toAdd.push(mk);
+      else if(!want.has(h)&&inGroup)toRemove.push(mk);
+    });
+    if(toRemove.length)clusterGroup.removeLayers(toRemove);
+    if(toAdd.length)clusterGroup.addLayers(toAdd);
+  }else{
+    households.forEach((h,i)=>{if(markers[i])markers[i]&&map&&markers[i].setOpacity(filtered.includes(h)?1:0.12);});
+  }
   let anyActive=false;
   document.querySelectorAll('.fs-inp').forEach(el=>{
     const on=!!el.value;anyActive=anyActive||on;
@@ -1632,23 +1686,23 @@ function clearFilter(){
 function mobileSrch(){const v=document.getElementById('srch-mobile').value;document.getElementById('srch').value=v;applyFilter();}
 
 // ── RENDER LIST ──
-function renderList(){
-  const el=document.getElementById('clist');
-  const list=window._sidebarFiltered||filtered;
-  if(!list.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
-  el.innerHTML=list.map(h=>{
-    const i=hIdx(h.id);const tier=getTier(i);
-    const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
-    const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
-    const g=getGivingStats(h);
-    const agc=getAGCScore(h);
-    const scoreColor=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
-    return`<div class="citem${i===activeIdx?' active':''}" onclick="byId('selectHousehold','${households[i].id}',${i})">
+// PERF >1000: render in incremental chunks on scroll instead of building the
+// entire list into innerHTML at once (which was multi-MB at 3000+ rows and
+// janked every keystroke). All rows remain reachable by scrolling.
+const _LIST_CHUNK=120;
+function _renderListRow(h){
+  const i=hIdx(h.id);const tier=getTier(i);
+  const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
+  const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
+  const g=getGivingStats(h);
+  const agc=getAGCScore(h);
+  const scoreColor=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
+  return`<div class="citem${i===activeIdx?' active':''}" onclick="byId('selectHousehold','${households[i].id}',${i})">
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
-        <div class="cname">${h.displayName}</div>
-        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+' '+(h.zip||'')}</div>
-        ${phones?`<div class="cphone">${phones}</div>`:''}
+        <div class="cname">${_escHtml(h.displayName)}</div>
+        <div class="caddr" style="font-size:.65rem;color:var(--txt2);margin-top:2px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':_escHtml((h.address||'')+', '+(h.city||'')+' '+(h.zip||''))}</div>
+        ${phones?`<div class="cphone">${_escHtml(phones)}</div>`:''}
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           ${valStr?`<div class="cval ${tier}">${valStr}</div>`:''}
           ${agc.total>0?`<div style="font-family:'DM Mono',monospace;font-size:.58rem;color:${scoreColor};background:rgba(0,0,0,.04);padding:1px 5px;border-radius:3px" title="Prospect Score">${agc.total}</div>`:''}
@@ -1657,14 +1711,52 @@ function renderList(){
       </div>
       ${h.home_value?'<span class="ck">✓</span>':''}
     </div>`;
-  }).join('');
+}
+let _listScrollBound=false;
+function renderList(){
+  const el=document.getElementById('clist');
+  const list=window._sidebarFiltered||filtered;
+  if(!list.length){el.innerHTML='<div class="hint"><div class="hi">🔍</div><p>No matches</p></div>';return;}
+  el._fullList=list;
+  el._shown=Math.min(_LIST_CHUNK,list.length);
+  el.innerHTML=list.slice(0,el._shown).map(_renderListRow).join('')+_listMoreMarker(el._shown,list.length);
+  if(!_listScrollBound){
+    el.addEventListener('scroll',()=>{
+      if(!el._fullList)return;
+      if(el._shown>=el._fullList.length)return;
+      if(el.scrollTop+el.clientHeight>=el.scrollHeight-300)_listGrow();
+    });
+    _listScrollBound=true;
+  }
+}
+function _listMoreMarker(shown,total){
+  if(shown>=total)return'';
+  return`<div id="listMore" style="text-align:center;padding:10px;font-size:.62rem;color:var(--txt3);font-family:'DM Mono',monospace">Showing ${shown} of ${total} · scroll for more</div>`;
+}
+function _listGrow(){
+  const el=document.getElementById('clist');
+  if(!el||!el._fullList)return;
+  const list=el._fullList;
+  const next=Math.min(el._shown+_LIST_CHUNK,list.length);
+  const frag=list.slice(el._shown,next).map(_renderListRow).join('');
+  const marker=document.getElementById('listMore');
+  if(marker)marker.remove();
+  el.insertAdjacentHTML('beforeend',frag+_listMoreMarker(next,list.length));
+  el._shown=next;
 }
 
 // ── SELECT ──
 async function selectHousehold(i){
   if(activeIdx!==-1&&markers[activeIdx])markers[activeIdx].setIcon(pinIcon(activeIdx,false,getTier(activeIdx)));
   activeIdx=i;const h=households[i];
-  if(markers[i]){markers[i].setIcon(pinIcon(i,true,getTier(i)));if(map)map.setView([h.lat,h.lon],15,{animate:true});}
+  if(markers[i]){
+    markers[i].setIcon(pinIcon(i,true,getTier(i)));
+    // With clustering, zoom in past the cluster threshold so the pin is visible.
+    if(clusterGroup&&clusterGroup.zoomToShowLayer){
+      try{clusterGroup.zoomToShowLayer(markers[i],()=>{if(map)map.setView([h.lat,h.lon],Math.max(map.getZoom(),16),{animate:true});});}
+      catch(e){if(map)map.setView([h.lat,h.lon],16,{animate:true});}
+    }else if(map){map.setView([h.lat,h.lon],15,{animate:true});}
+  }
   renderList();
   if(h.property_data||h.noAddress){setProp('data',h);return;}
   setProp('loading',h);
@@ -1676,7 +1768,7 @@ async function selectHousehold(i){
       const _prof=h._keepProfile||h.profile_data||(h.property_data&&h.property_data.profile)||null;
       delete h._keepProfile;
       h.home_value=result.homeValue||h.home_value;
-      h.property_data=_prof?{...result,profile:_prof}:result;
+      h.property_data=_prof?{...(h.property_data||{}),...result,profile:_prof}:{...(h.property_data||{}),...result};
       h.profile_data=_prof;
       if(result.county&&result.county!=='unk')h.county=result.county;
       const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
@@ -1691,7 +1783,7 @@ async function selectHousehold(i){
     // Preserve any built AI profile — refetching property data must NEVER destroy it
     const _prof=h._keepProfile||h.profile_data||(h.property_data&&h.property_data.profile)||null;
     delete h._keepProfile;
-    h.property_data=_prof?{...result,profile:_prof}:result;
+    h.property_data=_prof?{...(h.property_data||{}),...result,profile:_prof}:{...(h.property_data||{}),...result};
     h.profile_data=_prof;
     if(result.county&&result.county!=='unk')h.county=result.county;
     const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
@@ -1708,6 +1800,7 @@ async function selectHousehold(i){
 }
 
 // ── PROP PANEL ──
+function _refreshSidebar(idx){const h=households[idx];if(h)setProp('data',h);}
 function setProp(mode,h,result){
   const el=document.getElementById('ppanel');
   if(mode==='hint'){el.innerHTML='<div class="hint"><div class="hi">🏠</div><p>Select a contact to view details</p></div>';return;}
@@ -1722,7 +1815,7 @@ function setProp(mode,h,result){
     <button onclick="setProp('hint')" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--txt3);padding:2px 6px;border-radius:4px">✕</button>
     <button onclick="byId('openFullPanel','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view">⛶</button>
     <button onclick="byId('openPersonChat','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:46px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Chat about this person">💬</button>
-    <div class="crm-name" style="padding-right:56px">${h.displayName}</div>
+    <div class="crm-name" style="padding-right:56px">${_escHtml(h.displayName)}</div>
     <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
       <span class="ctag ${tagClass}">${countyLabel}</span>
@@ -1769,7 +1862,7 @@ function setProp(mode,h,result){
     const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-family:'DM Mono',monospace;font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Giving Summary</div>
-      <button onclick="showAddDonation('${idx}')" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
+      <button onclick="byId('showAddDonation','${households[idx].id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
     </div>
     <div class="pgrid" style="margin-bottom:12px">
       <div class="pcell"><div class="pkey">Total Given</div><div class="pval big">${fa(giving.total)}</div></div>
@@ -1787,7 +1880,7 @@ function setProp(mode,h,result){
           <button onclick="deleteDonation('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Delete">🗑</button>
         </div>
       </div>
-      <div id="don-note-display-${d.id}" style="font-size:.67rem;color:var(--txt3);margin-top:2px">${d.notes||'<em style="color:var(--txt3)">No note — click ✏️ to add</em>'}</div>
+      <div id="don-note-display-${d.id}" style="font-size:.67rem;color:var(--txt3);margin-top:2px">${d.notes?_escHtml(d.notes):'<em style="color:var(--txt3)">No note — click ✏️ to add</em>'}</div>
       <div id="don-note-edit-${d.id}" style="display:none;margin-top:4px">
         <input type="text" value="${(d.notes||'').replace(/"/g,'&quot;')}" id="don-note-input-${d.id}" style="width:100%;background:var(--surf2);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;font-size:.72rem;color:var(--txt);outline:none">
         <div style="display:flex;gap:6px;margin-top:4px">
@@ -1799,7 +1892,7 @@ function setProp(mode,h,result){
   }else{
     givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-size:.78rem;color:var(--txt3)">No donation history on file.</div>
-      <button onclick="showAddDonation('${idx}')" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
+      <button onclick="byId('showAddDonation','${households[idx].id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace">＋ Add</button>
     </div>`;
   }
 
@@ -1831,7 +1924,7 @@ function setProp(mode,h,result){
         <div style="font-size:.8rem;color:var(--txt2);margin-bottom:12px">No profile built yet.</div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button onclick="byId('buildProfile','${households[idx].id}',${idx})" id="buildProfileBtn-${idx}" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500">🔍 Build Profile</button>
-          <button onclick="setProp('data',households[${idx}])" style="padding:8px 12px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.82rem" title="Refresh">🔄</button>
+          <button onclick="byId('_refreshSidebar','${households[idx].id}',${idx})" style="padding:8px 12px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);color:var(--txt3);border-radius:6px;cursor:pointer;font-size:.82rem" title="Refresh">🔄</button>
         </div>
       </div>`;
 
@@ -2027,8 +2120,9 @@ async function importVoterFile(lines){
 function placePinAt(i){
   if(!map)return;
   const h=households[i];
-  if(markers[i])map.removeLayer(markers[i]);
-  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))}).addTo(map);
+  if(markers[i]){if(clusterGroup)clusterGroup.removeLayer(markers[i]);else map.removeLayer(markers[i]);}
+  const m=L.marker([h.lat,h.lon],{icon:pinIcon(i,false,getTier(i))});
+  if(clusterGroup)clusterGroup.addLayer(m);else m.addTo(map);
   const _hid=h.id;
   m.on('click',()=>byId('selectHousehold',_hid,i));
   // Hover tooltip
@@ -2038,7 +2132,7 @@ function placePinAt(i){
   const givStr=g?'💝 $'+Math.round(g.total).toLocaleString()+' · '+g.count+' gift'+(g.count!==1?'s':''):'';
   const scoreColor=agcT.total>=70?'#16a34a':agcT.total>=40?'#b45309':'#dc2626';
   const tooltip=`<div style="font-family:'DM Sans',sans-serif;min-width:180px">
-    <div style="font-weight:600;font-size:.82rem;margin-bottom:3px">${h.displayName}</div>
+    <div style="font-weight:600;font-size:.82rem;margin-bottom:3px">${_escHtml(h.displayName)}</div>
     <div style="font-size:.7rem;color:#666;margin-bottom:4px">${h.address||''}, ${h.city||''}</div>
     ${valStr?`<div style="font-size:.7rem;color:#16a34a">${valStr}</div>`:''}
     ${givStr?`<div style="font-size:.7rem;color:#b45309">${givStr}</div>`:''}
@@ -2102,12 +2196,12 @@ async function startPrefetch(){
   for(const h of households){
     if(!prefetching)break;
     if(h.home_value||!h.address)continue;
-    document.getElementById('pfText').textContent=`[${done+failed+1}/${unfetched.length}] ${h.displayName}`;
+    document.getElementById('pfText').textContent=`[${done+failed+1}/${unfetched.length}] ${_escHtml(h.displayName)}`;
     const result=await fetchProp(h);
     if(!result.error){
       const _prof=h.profile_data||(h.property_data&&h.property_data.profile)||null;
       h.home_value=result.homeValue;
-      h.property_data=_prof?{...result,profile:_prof}:result;
+      h.property_data=_prof?{...(h.property_data||{}),...result,profile:_prof}:{...(h.property_data||{}),...result};
       if(result.county)h.county=result.county;
       const patchData={home_value:h.home_value,county:h.county,property_data:h.property_data};
     // Save Zillow lat/lon if we don't have coordinates yet
@@ -2171,7 +2265,7 @@ function searchSpouse(){
   res.style.display='block';
   res.innerHTML=matches.map(h=>`
     <div onclick="selectSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
-      <div style="font-weight:500">${h.displayName}</div>
+      <div style="font-weight:500">${_escHtml(h.displayName)}</div>
       <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
     </div>`).join('');
 }
@@ -2187,7 +2281,7 @@ function selectSpouse(householdId){
   document.getElementById('ac_spouse_results').style.display='none';
   document.getElementById('ac_spouse_search').value='';
   document.getElementById('ac_spouse_selected').style.display='block';
-  document.getElementById('ac_spouse_selected').textContent=`✓ Linked to ${h.displayName} — address auto-filled`;
+  document.getElementById('ac_spouse_selected').textContent=`✓ Linked to ${_escHtml(h.displayName)} — address auto-filled`;
   // Highlight city button if matches
   document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{
     if(b.textContent.includes(h.city||'')&&b.textContent.includes(h.zip||'')){
@@ -2471,7 +2565,7 @@ async function importDonations(lines){
   // Step 1: resolve all CRM IDs to contact IDs in one batch fetch
   const crmIds=[...new Set(rows.map(r=>(r[0]||'').toString().trim()).filter(Boolean))];
   status.textContent=`Resolving ${crmIds.length} contact IDs…`;
-  const contactRows=await sb(`contacts?civicrm_id=in.(${crmIds.join(',')})&select=id,civicrm_id`)||[];
+  const contactRows=await sbInChunks(ids=>`contacts?civicrm_id=in.(${ids})&select=id,civicrm_id&order=id.asc`,crmIds)||[];
   const crmToContact={};
   contactRows.forEach(c=>{crmToContact[c.civicrm_id]=c.id;});
 
@@ -2480,7 +2574,7 @@ async function importDonations(lines){
   let existingDonations=[];
   if(contactIds.length){
     status.textContent='Checking for duplicates…';
-    existingDonations=await sb(`donations?contact_id=in.(${contactIds.join(',')})&select=contact_id,amount,date`)||[];
+    existingDonations=await sbInChunks(ids=>`donations?contact_id=in.(${ids})&select=contact_id,amount,date&order=id.asc`,contactIds)||[];
   }
   const dupKey=(cid,amt,dt)=>`${cid}|${amt}|${dt}`;
   const dupSet=new Set(existingDonations.map(d=>dupKey(d.contact_id,d.amount,d.date)));
@@ -2521,7 +2615,7 @@ function showAddDonation(idx){
   document.getElementById('add_don_name').textContent = h.displayName;
   // Populate contact selector
   const sel = document.getElementById('don_contact');
-  sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${m.first_name} ${m.last_name}</option>`).join('');
+  sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${_escHtml(m.first_name+' '+m.last_name)}</option>`).join('');
   // Default date to today
   document.getElementById('don_date').value = localToday();
   document.getElementById('don_amount').value = '';
@@ -2779,7 +2873,7 @@ async function buildProfileSoft(idx){
   if(!existingProfile){alert('No existing profile to update. Run a Full Build first.');return;}
 
   const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
-  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Quick Update for ${h.displayName}…</span></div>`;
+  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Quick Update for ${_escHtml(h.displayName)}…</span></div>`;
   document.getElementById('fullPanelLoading')?.remove();
   const fp=document.getElementById('fullPanel');
   if(fp&&fp.style.display!=='none'){
@@ -2933,7 +3027,7 @@ async function _buildProfilePhase2(idx, researchHints, tabContent, interactions)
   const searchCtx=localStorage.getItem('search_context')||'';
 
   // Phase 2 loading state
-  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Researching ${h.displayName}… deep research may take 30-90 seconds</span></div>`;
+  if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Researching ${_escHtml(h.displayName)}… deep research may take 30-90 seconds</span></div>`;
   document.getElementById('fullPanelLoading')?.remove();
   const fp=document.getElementById('fullPanel');
   if(fp&&fp.style.display!=='none'){
@@ -3092,7 +3186,7 @@ async function buildProfile(idx, hints=''){
     if(targetEl){
       targetEl.innerHTML=`
         <div style="border:1px solid var(--border2);border-radius:8px;padding:14px;background:var(--surf2)">
-          <div style="font-size:.78rem;font-weight:600;color:var(--txt);margin-bottom:8px">${existingProfile?'↺ Rebuild profile for '+h0.displayName:'🔍 Build profile for '+h0.displayName}</div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--txt);margin-bottom:8px">${existingProfile?'↺ Rebuild profile for '+_escHtml(h0.displayName):'🔍 Build profile for '+_escHtml(h0.displayName)}</div>
           <div style="font-size:.7rem;color:var(--txt2);margin-bottom:6px">Optional: add research hints to steer the search</div>
           <input id="buildHintsInput-${idx}" placeholder='e.g. "She works at Cleveland Clinic, not her husband"' value="${(defaultHint||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border2);border-radius:5px;background:var(--bg);color:var(--txt);font-size:.74rem;font-family:inherit;margin-bottom:10px">
           <div style="display:flex;gap:7px;flex-wrap:wrap">
@@ -3211,7 +3305,7 @@ async function loadInteractionsTab(idx){
           <div style="font-size:.75rem;font-weight:500;color:var(--txt)">${r.type}</div>
           <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap;margin-left:8px">${fd(r.date)}</div>
         </div>
-        ${r.notes?`<div style="font-size:.7rem;color:var(--txt2);margin-top:3px;line-height:1.5">${r.notes}</div>`:''}
+        ${r.notes?`<div style="font-size:.7rem;color:var(--txt2);margin-top:3px;line-height:1.5">${_escHtml(r.notes)}</div>`:''}
         ${memberName?`<div style="font-size:.6rem;color:var(--txt3);margin-top:2px">with ${memberName}</div>`:''}
         <button onclick="deleteInteraction('${r.id}',${idx})" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;margin-top:2px;padding:0">🗑 delete</button>
       </div>`;
@@ -3221,7 +3315,9 @@ async function loadInteractionsTab(idx){
 
 async function deleteInteraction(id,idx,tabType){
   if(!confirm('Delete this entry?'))return;
+  {const _fix=hIdxByRecord(id,'interaction');if(_fix>=0)idx=_fix;}
   await sb(`interactions?id=eq.${id}`,{method:'DELETE'});
+  {const _h=households[idx];if(_h)_invHH(_h);}
   if(tabType==='note')loadNotesTab(idx);
   else loadInteractionsTab(idx);
 }
@@ -3286,7 +3382,7 @@ async function loadNotesTab(idx){
         <div style="font-size:.68rem;color:var(--txt3)">${fd(r.date)}</div>
         <button onclick="deleteInteraction('${r.id}',${idx},'note')" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;padding:0">🗑</button>
       </div>
-      <div style="font-size:.78rem;color:var(--txt2);line-height:1.55">${r.notes}</div>
+      <div style="font-size:.78rem;color:var(--txt2);line-height:1.55">${_escHtml(r.notes)}</div>
     </div>`).join('');
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
 }
@@ -3357,7 +3453,7 @@ function openFullPanel(idx){
         </div>
       </div>
       <div style="flex:1">
-        <div style="font-family:'Lora',serif;font-size:1.3rem;font-weight:700;margin-bottom:4px">${h.displayName}</div>
+        <div style="font-family:'Lora',serif;font-size:1.3rem;font-weight:700;margin-bottom:4px">${_escHtml(h.displayName)}</div>
         <div style="font-size:.8rem;color:var(--txt2);margin-bottom:8px">${h.address||''}, ${h.city||''}, OH ${h.zip||''}</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
           ${h.home_value?`<div><div style="font-size:.58rem;font-family:'DM Mono',monospace;text-transform:uppercase;color:var(--txt3)">Home Value</div><div style="font-size:.95rem;font-weight:700;color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</div></div>`:''}
@@ -3584,6 +3680,7 @@ function openAddDonation(idx){
 
 // Edit a note or interaction inline
 async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
+  {const _fix=hIdxByRecord(id,type==='donation'?'donation':'interaction');if(_fix>=0)idx=_fix;}
   // Load full record from DB then open appropriate modal
   if(type==='donation'){
     try{
@@ -3598,7 +3695,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       addDonHouseholdIdx=idx;
       // Populate fields
       const sel=document.getElementById('don_contact');
-      sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${m.first_name} ${m.last_name}</option>`).join('');
+      sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${_escHtml(m.first_name+' '+m.last_name)}</option>`).join('');
       document.getElementById('don_amount').value=d.amount||'';
       document.getElementById('don_date').value=d.date||'';
       document.getElementById('don_notes').value=d.notes||'';
@@ -3637,6 +3734,8 @@ async function deleteTimelineItem(id, type, idx){
   const label=type==='donation'?'donation':type==='note'?'note':'interaction';
   if(!confirm(`Delete this ${label}?`))return;
   try{
+    const _fix=hIdxByRecord(id,type==='donation'?'donation':'interaction');
+    if(_fix>=0)idx=_fix;
     const _h=households[idx];
     if(type==='donation'){
       await sb('donations?id=eq.'+id,{method:'DELETE'});
@@ -3749,7 +3848,7 @@ function searchEditSpouse(){
   res.style.display='block';
   res.innerHTML=matches.map(h=>`
     <div onclick="selectEditSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
-      <div style="font-weight:500">${h.displayName}</div>
+      <div style="font-weight:500">${_escHtml(h.displayName)}</div>
       <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
     </div>`).join('');
 }
@@ -3838,14 +3937,17 @@ async function saveContactEdit(){
 }
 
 // ── DELETE ──
-async function deleteContact(contactId, name, hIdx){
+async function deleteContact(contactId, name, hIndex){
   if(!confirm(`Delete ${name}?
 
 If this is the only contact in the household, the household and all its property data will also be deleted.`))return;
   try{
+    // Self-correct the index from the contact id in case it drifted
+    const _f=households.findIndex(hh=>(hh.members||[]).some(m=>m.id===contactId));
+    if(_f>=0)hIndex=_f;
     await sb('contacts?id=eq.'+contactId,{method:'DELETE'});
     // Check if household still has contacts
-    const h=households[hIdx];
+    const h=households[hIndex];
     const remaining=(h.members||[]).filter(m=>m.id!==contactId);
     if(remaining.length===0){
       await sb('households?id=eq.'+h.id,{method:'DELETE'});
@@ -3868,13 +3970,14 @@ function cancelDonationNote(donId){
   document.getElementById(`don-note-edit-${donId}`).style.display='none';
 }
 
-async function saveDonationNote(donId, hIdx){
+async function saveDonationNote(donId, hIndex){
+  {const _fix=hIdxByRecord(donId,'donation');if(_fix>=0)hIndex=_fix;}
   const input=document.getElementById(`don-note-input-${donId}`);
   const notes=input?.value?.trim()||'';
   try{
     await sb(`donations?id=eq.${donId}`,{method:'PATCH',body:JSON.stringify({notes:notes||null})});
     // Update local state
-    const h=households[hIdx];
+    const h=households[hIndex];
     h.members.forEach(m=>{
       const don=(m.donations||[]).find(d=>d.id===donId);
       if(don)don.notes=notes;
@@ -3890,6 +3993,9 @@ async function saveDonationNote(donId, hIdx){
 async function deleteDonation(donationId, hIndex){
   if(!confirm('Delete this donation?'))return;
   try{
+    // Self-correct: trust the donation id over a possibly-drifted index
+    const _fix=hIdxByRecord(donationId,'donation');
+    if(_fix>=0)hIndex=_fix;
     await sb('donations?id=eq.'+donationId,{method:'DELETE'});
     const h=households[hIndex];
     h.members.forEach(m=>{m.donations=(m.donations||[]).filter(d=>d.id!==donationId);});
@@ -4068,7 +4174,7 @@ function openPersonChat(idx){
   personChatHistory=[];
   const h=households[idx];
   document.getElementById('personChatName').textContent=h.displayName;
-  document.getElementById('personChatMessages').innerHTML=`<div style="text-align:center;padding:20px;color:var(--txt3);font-size:.78rem">Ask anything about ${h.displayName}…</div>`;
+  document.getElementById('personChatMessages').innerHTML=`<div style="text-align:center;padding:20px;color:var(--txt3);font-size:.78rem">Ask anything about ${_escHtml(h.displayName)}…</div>`;
   document.getElementById('personChatInput').value='';
   document.getElementById('personChatPanel').style.display='flex';
   document.getElementById('personChatInput').focus();
@@ -4117,7 +4223,7 @@ async function sendPersonChat(){
 
   // Get DB AGC scores (authoritative)
   const dbDetail=agcCache[h.id]?.detail||{};
-  const context=`CONTACT: ${h.displayName}
+  const context=`CONTACT: ${_escHtml(h.displayName)}
 ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
 HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''}${m.dob?' · DOB: '+formatDOB(m.dob)+' · Age '+calcAge(m.dob):''})`).join(', ')}
 PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
@@ -5225,7 +5331,7 @@ async function captureSaveItem(i,btn){
       const existing=(h&&h.notes)?h.notes.trim():'';
       const combined=existing?(existing+'\n\n['+stamp+'] '+text):('['+stamp+'] '+text);
       await sb('households?id=eq.'+hid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
-      if(h)h.notes=combined;
+      if(h){h.notes=combined;_invHH(h);}
       const card=btn.closest('.capture-item');
       if(card)card.innerHTML='<div style="font-size:.82rem;color:#16a34a;padding:4px">✓ Saved to '+_enrichEsc(h?h.displayName:'household')+' notes</div>';
     }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
@@ -5782,7 +5888,7 @@ async function _enrichSaveAllChunks(idx){
         const existing=h.notes||'';
         const combined=existing?(existing+'\n\n'+text.trim()):text.trim();
         await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
-        h.notes=combined;
+        h.notes=combined;_invHH(h);
       }
       saved++;
     }catch(e){errors++;console.error('Chunk '+i+' failed:',e);}
@@ -5820,7 +5926,7 @@ async function enrichSaveHouseholdNotes(idx,btn){
   const orig=btn.textContent; btn.disabled=true;
   try{
     await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:text})});
-    h.notes=text;
+    h.notes=text;_invHH(h);
     btn.textContent='✓ Saved'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1600);
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
 }
@@ -5833,6 +5939,7 @@ async function enrichSaveInteraction(id,btn){
   const orig=btn.textContent; btn.disabled=true;
   try{
     await sb('interactions?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:ta.value})});
+    if(ta.value&&ta.value.trim())embedAndStore(id,ta.value.trim()); // re-embed edited note (backfill only catches null embeddings)
     btn.textContent='✓'; setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},1400);
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;}
 }
@@ -6179,6 +6286,13 @@ function _ctSorted(){
   });
 }
 
+// PERF >1000: incremental row rendering on scroll (same approach as the sidebar).
+const _CT_CHUNK=100;
+let _ctScrollBound=false;
+function _ctRowHtml(h,cols){
+  const idx=hIdx(h.id);
+  return `<tr class="ct-row" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120)">`+cols.map(k=>`<td>${CT_COLS[k].html(h)}</td>`).join('')+'</tr>';
+}
 function renderContacts(){
   const tbl=document.getElementById('ctTable');if(!tbl)return;
   const cols=CT_PRESETS[_ctState.preset];
@@ -6186,11 +6300,32 @@ function renderContacts(){
   document.getElementById('ctCount').textContent=`${rows.length} household${rows.length!==1?'s':''}`;
   if(!rows.length){tbl.innerHTML='<tr><td style="padding:30px;text-align:center;color:var(--txt3)">No households match — <span style="color:var(--accent);cursor:pointer;text-decoration:underline" onclick="clearFilter()">clear filters</span></td></tr>';return;}
   const arrow=k=>_ctState.sortKey===k?(_ctState.sortDir==='desc'?' ▾':' ▴'):'';
-  tbl.innerHTML='<tr>'+cols.map(k=>`<th onclick="sortContacts('${k}')">${CT_COLS[k].label}${arrow(k)}</th>`).join('')+'</tr>'
-    +rows.map(h=>{
-      const idx=hIdx(h.id);
-      return `<tr class="ct-row" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),120)">`+cols.map(k=>`<td>${CT_COLS[k].html(h)}</td>`).join('')+'</tr>';
-    }).join('');
+  const head='<tr>'+cols.map(k=>`<th onclick="sortContacts('${k}')">${CT_COLS[k].label}${arrow(k)}</th>`).join('')+'</tr>';
+  const shown=Math.min(_CT_CHUNK,rows.length);
+  tbl._ctRows=rows;tbl._ctCols=cols;tbl._ctShown=shown;tbl._ctHead=head;
+  tbl.innerHTML=head+rows.slice(0,shown).map(h=>_ctRowHtml(h,cols)).join('')+_ctMoreRow(shown,rows.length,cols.length);
+  const wrap=tbl.closest('.ct-wrap');
+  if(wrap&&!_ctScrollBound){
+    wrap.addEventListener('scroll',()=>{
+      const t=document.getElementById('ctTable');if(!t||!t._ctRows)return;
+      if(t._ctShown>=t._ctRows.length)return;
+      if(wrap.scrollTop+wrap.clientHeight>=wrap.scrollHeight-300)_ctGrow();
+    });
+    _ctScrollBound=true;
+  }
+}
+function _ctMoreRow(shown,total,colspan){
+  if(shown>=total)return'';
+  return`<tr id="ctMore"><td colspan="${colspan}" style="text-align:center;padding:10px;font-size:.62rem;color:var(--txt3);font-family:'DM Mono',monospace">Showing ${shown} of ${total} · scroll for more</td></tr>`;
+}
+function _ctGrow(){
+  const tbl=document.getElementById('ctTable');if(!tbl||!tbl._ctRows)return;
+  const rows=tbl._ctRows,cols=tbl._ctCols;
+  const next=Math.min(tbl._ctShown+_CT_CHUNK,rows.length);
+  const frag=rows.slice(tbl._ctShown,next).map(h=>_ctRowHtml(h,cols)).join('');
+  const more=document.getElementById('ctMore');if(more)more.remove();
+  tbl.insertAdjacentHTML('beforeend',frag+_ctMoreRow(next,rows.length,cols.length));
+  tbl._ctShown=next;
 }
 
 function exportContactsCSV(){
@@ -6366,7 +6501,7 @@ async function openAGCCompare(){
         <th style="text-align:right;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:'DM Mono',monospace">TOTAL</th>
       </tr>
       ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:5px 8px;font-size:.74rem;color:var(--txt);cursor:pointer;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="document.getElementById('agcCompareBg').remove();switchView('crm');setTimeout(()=>openFullPanel(${r.idx}),150)">${r.h.displayName}</td>
+        <td style="padding:5px 8px;font-size:.74rem;color:var(--txt);cursor:pointer;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="document.getElementById('agcCompareBg').remove();switchView('crm');setTimeout(()=>byId('openFullPanel','${r.h.id}',${r.idx}),150)">${_escHtml(r.h.displayName)}</td>
         ${cell(r.o.affinity,r.n.affinity)}${cell(r.o.generosity,r.n.generosity)}${cell(r.o.capacity,r.n.capacity)}${cell(r.o.total,r.n.total)}
       </tr>`).join('')}
     </table>
@@ -6397,7 +6532,7 @@ async function openCallSheet(){
     return `<div style="border:1px solid #ccc;border-radius:8px;padding:12px 14px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
         <span style="font-size:.62rem;font-weight:700;color:#555">${i+1}. ${BADGE[card.type]||''}</span>
-        <span style="font-size:.92rem;font-weight:700;color:#000">${h.displayName}</span>
+        <span style="font-size:.92rem;font-weight:700;color:#000">${_escHtml(h.displayName)}</span>
         <span style="font-size:.62rem;color:#777;margin-left:auto">Prospect ${agc.total} · ${h.home_value?'$'+Math.round(h.home_value/1000)+'k home':''}</span>
       </div>
       <div style="font-size:.7rem;color:#333;margin-bottom:2px">☎ ${phones}${emails?' · ✉ '+emails:''}</div>
@@ -6599,8 +6734,8 @@ function renderRecentGifts(){
   el.innerHTML=top.map(d=>`
     <div class="gift-row" onclick="switchView('crm');setTimeout(()=>selectHousehold(${d.householdIdx}),100)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.displayName}</div>
-        ${d.notes?`<div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.notes}</div>`:''}
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(d.displayName)}</div>
+        ${d.notes?`<div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(d.notes)}</div>`:''}
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--green);font-weight:600">$${parseFloat(d.amount||0).toLocaleString()}</div>
@@ -6633,8 +6768,8 @@ async function renderWins(){
     return `<div class="win-row">
       <div class="win-dot"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=>selectHousehold(${info.idx}),100)">${info.displayName}</div>
-        ${r.notes?`<div style="font-size:.62rem;color:var(--txt2);margin-top:2px;line-height:1.4">${r.notes.substring(0,80)}${r.notes.length>80?'…':''}</div>`:''}
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${info.h?info.h.id:(households[info.idx]||{}).id}',${info.idx}),100)">${_escHtml(info.displayName)}</div>
+        ${r.notes?`<div style="font-size:.62rem;color:var(--txt2);margin-top:2px;line-height:1.4">${_escHtml(r.notes.substring(0,80))}${r.notes.length>80?'…':''}</div>`:''}
         <div style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3);margin-top:3px">${r.date||'—'}</div>
       </div>
       <div style="font-size:.75rem;color:var(--green);flex-shrink:0">✓</div>
@@ -6696,7 +6831,7 @@ async function triggerDeepSearchModal(){
   container.innerHTML=matches.map(m=>`
     <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--bg)'" onclick="navigateToHouseholdFromSearch('${m.id}','${m.type}')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <strong style="font-size:.85rem;color:var(--accent)">${m.displayName}</strong>
+        <strong style="font-size:.85rem;color:var(--accent)">${_escHtml(m.displayName)}</strong>
         <span style="font-family:'DM Mono',monospace;font-size:.6rem;background:var(--border);padding:2px 6px;border-radius:4px;color:var(--txt2)">${m.date} · ${m.type}</span>
       </div>
       <div style="font-size:.76rem;color:var(--txt2);line-height:1.45;font-style:italic;background:var(--surf);padding:6px 10px;border-radius:5px;border-left:3px solid var(--border2)">…${m.snippet}…</div>
@@ -6764,7 +6899,7 @@ function pinSearchFilter(){
   dd.innerHTML=matches.map(h=>{
     const agc=getAGCScore(h);
     return `<div onclick="pinHousehold('${h.id}')" style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='none'">
-      <span style="font-size:.74rem;color:var(--txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.displayName}</span>
+      <span style="font-size:.74rem;color:var(--txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(h.displayName)}</span>
       <span style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--txt3)">Prospect ${agc.total}</span>
       <span style="font-size:.62rem;color:var(--accent)">📌 Pin</span>
     </div>`;
@@ -6927,7 +7062,7 @@ async function _buildDailyFive(el){
     return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-family:'DM Mono',monospace;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44">${badge}</span>
-        <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">${h.displayName}</span>
+        <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">${_escHtml(h.displayName)}</span>
         <span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--txt3)">AGC ${agcScore.total}</span>
       </div>
       <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">${whyNow}</div>
@@ -7061,7 +7196,7 @@ async function handleTrackOutcome(trackId,householdId,outcome){
 }
 
 async function loadOutreachTracks(){
-  try{outreachTracks=await sb('outreach_tracks?select=*')||[];}
+  try{outreachTracks=await sbAll('outreach_tracks?select=*&order=id.asc')||[];}
   catch(e){console.warn('outreach_tracks load failed',e);}
 }
 
@@ -7097,7 +7232,7 @@ async function renderColdFloor(){
   el.innerHTML=coldFloor.slice(0,6).map(({h,idx})=>`
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${households[idx].id}',${idx}),100)">${h.displayName}</div>
+        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${households[idx].id}',${idx}),100)">${_escHtml(h.displayName)}</div>
         <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--txt3)">${h.home_value?'$'+Math.round(h.home_value/1000)+'k home':''}</div>
       </div>
       <div style="display:flex;gap:4px;flex-shrink:0">
@@ -7186,7 +7321,7 @@ async function renderSRI(){
     <div style="padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),150)">${h.displayName}</div>
+          <div style="font-size:.78rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${households[idx].id}',${idx}),150)">${_escHtml(h.displayName)}</div>
           <div style="font-size:.6rem;color:var(--txt3)">Last gift: ${gs?gs.lastDate||'never':'never'} · Total: ${gs?'$'+gs.total.toLocaleString():'$0'}</div>
         </div>
         <div style="font-family:'DM Mono',monospace;font-size:.9rem;font-weight:700;color:var(--accent);flex-shrink:0">${score}</div>
@@ -7255,15 +7390,15 @@ async function renderActiveTracks(){
       const isOverdue=t.next_due&&t.next_due<todayStr;
       const daysOverdue=isOverdue?Math.floor((Date.now()-new Date(t.next_due))/(1000*60*60*24)):0;
       const last=lastInteractionMap[t.household_id];
-      const lastStr=last?`<span style="color:var(--txt)">${last.type}</span> <span style="color:var(--txt3)">${last.date}</span>${last.notes?`<br><span style="color:var(--txt2);font-size:.62rem">${last.notes.substring(0,50)}${last.notes.length>50?'…':''}</span>`:''}`:'-';
+      const lastStr=last?`<span style="color:var(--txt)">${last.type}</span> <span style="color:var(--txt3)">${last.date}</span>${last.notes?`<br><span style="color:var(--txt2);font-size:.62rem">${_escHtml(last.notes.substring(0,50))}${last.notes.length>50?'…':''}</span>`:''}`:'-';
       return`<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:6px 8px;cursor:pointer;color:var(--accent)" onclick="switchView('crm');setTimeout(()=>openFullPanel(${info.idx}),150)">${info.h.displayName}</td>
+        <td style="padding:6px 8px;cursor:pointer;color:var(--accent)" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${info.h.id}',${info.idx}),150)">${_escHtml(info.h.displayName)}</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">${t.step||1}/3</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace">${t.attempts||0}</td>
         <td style="padding:6px 8px;font-size:.65rem;line-height:1.4">${lastStr}</td>
         <td style="padding:6px 8px;text-align:center;font-family:'DM Mono',monospace;color:${isOverdue?'var(--red)':'var(--txt2)'}">${t.next_due||'—'}${isOverdue?`<br><span style="font-size:.55rem">${daysOverdue}d late</span>`:''}</td>
         <td style="padding:6px 8px;text-align:center;white-space:nowrap">
-          <button onclick="switchView('crm');setTimeout(()=>openFullPanel(${info.idx}),150)" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:none;cursor:pointer;color:var(--txt2)">Open</button>
+          <button onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${info.h.id}',${info.idx}),150)" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;background:none;cursor:pointer;color:var(--txt2)">Open</button>
           <button onclick="deleteTrack('${t.id}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--red);border-radius:3px;background:none;cursor:pointer;color:var(--red);margin-left:3px">✕</button>
         </td>
       </tr>`;
