@@ -232,7 +232,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <h2>✅ Confirm Add Contact</h2>
     <div id="confirm_content" style="margin-bottom:16px"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" onclick="confirmAddContact()">Add to Database</button>
+      <button class="btn btn-pri" onclick="_guardClick(this,confirmAddContact)">Add to Database</button>
       <button class="btn btn-sec" onclick="document.getElementById('confirmAddModal').style.display='none';document.getElementById('addContactModal').style.display='flex'">← Back</button>
       <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
     </div>
@@ -267,7 +267,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
     <div id="li_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" id="li_save_btn" onclick="saveInteraction()">Log Interaction</button>
+      <button class="btn btn-pri" id="li_save_btn" onclick="_guardClick(this,saveInteraction)">Log Interaction</button>
       <button class="btn btn-sec" onclick="document.getElementById('logInteractionModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -324,7 +324,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
     <div id="edit_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns" style="margin-top:16px">
-      <button class="btn btn-pri" onclick="saveContactEdit()">Save Changes</button>
+      <button class="btn btn-pri" onclick="_guardClick(this,saveContactEdit)">Save Changes</button>
       <button class="btn btn-sec" onclick="document.getElementById('editContactModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -679,7 +679,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <input type="text" id="don_notes" placeholder="Annual gala, etc.">
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" id="don_save_btn" onclick="saveDonation()">Save Donation</button>
+      <button class="btn btn-pri" id="don_save_btn" onclick="_guardClick(this,saveDonation)">Save Donation</button>
       <button class="btn btn-sec" onclick="document.getElementById('addDonationModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -772,7 +772,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-06-12.4';
+const BUILD_STAMP='2026-06-12.8';
 console.log('DAAS build '+BUILD_STAMP);
 
 // ── SUPABASE AUTH ──
@@ -862,6 +862,8 @@ function localToday(offsetDays=0){const d=new Date();if(offsetDays)d.setDate(d.g
 // ── HTML ESCAPE — chat bubbles previously injected raw text via innerHTML, so
 // pasted HTML (or a stray < in a note) corrupted the chat display.
 function _escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Escape a value for safe embedding inside a single-quoted JS string in an inline handler.
+function _escJs(s){return String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3c').replace(/"/g,'&quot;').replace(/\r?\n/g,' ');}
 
 // ── ID-SAFE DISPATCH — rendered HTML used to bake array indices into onclick
 // handlers; if the households array re-sorted or reloaded between render and
@@ -874,7 +876,21 @@ let _hIdxMap=new Map();
 function rebuildHIdxMap(){_hIdxMap=new Map(households.map((h,i)=>[h.id,i]));}
 // Resolve the household index that owns a given donation or interaction id.
 // Lets record-keyed handlers self-correct if their render-time idx drifted.
+// Maps an interaction id -> household id. Interactions are loaded lazily per
+// tab (not attached to members at load), so this map is how interaction-keyed
+// handlers self-correct against list-index drift. Populated whenever a tab or
+// panel fetches interaction rows.
+const _interToHH={};
+function _indexInteractions(rows,h){
+  if(!h||!rows)return;
+  rows.forEach(r=>{if(r&&r.id)_interToHH[r.id]=h.id;});
+}
 function hIdxByRecord(recId,kind){
+  if(kind==='interaction'){
+    const hid=_interToHH[recId];
+    if(hid){const i=hIdx(hid);if(i>=0)return i;}
+    // fall through to scan in case interactions were attached in memory
+  }
   for(let i=0;i<households.length;i++){
     const ms=households[i].members||[];
     for(const m of ms){
@@ -977,6 +993,17 @@ let households=[],filtered=[],markers=[],activeIdx=-1;
 let agcCache={}; // household.id -> {total,affinity,generosity,capacity,detail}
 
 // ── PERF UTILS ──
+// Double-submit guard — disables the clicked button while its async handler runs,
+// preventing duplicate records from a double-click or slow network. Re-enables
+// even if the handler throws. Usage: onclick="_guardClick(this,saveDonation)"
+async function _guardClick(btn,fn){
+  if(!btn||btn.disabled)return;
+  const label=btn.textContent;
+  btn.disabled=true;
+  try{await fn();}
+  catch(e){console.warn('[DAAS] handler error',e);}
+  finally{if(btn){btn.disabled=false;btn.textContent=label;}}
+}
 function _debounce(fn,ms){
   let t;
   return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};
@@ -1041,6 +1068,7 @@ function triggerSearchAllModal(){
 // ── LOAD ALL ──
 async function loadAll(){
   households=[];filtered=[];markers.forEach(m=>m&&map&&map.removeLayer(m));markers=[];activeIdx=-1;
+    for(const k in _interToHH)delete _interToHH[k];
   setProp('hint');
   document.getElementById('clist').innerHTML='<div class="hint"><div class="hi">⏳</div><p>Loading…</p></div>';
 
@@ -1151,7 +1179,7 @@ async function loadAll(){
     switchView(_uiPrefs.landing||'dash');
 
   }catch(e){
-    document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${e.message}</p></div>`;
+    document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi">⚠️</div><p>${_escHtml(e.message)}</p></div>`;
     console.error('[DAAS] loadAll failed',e);
     switchView('crm');
   }
@@ -1319,12 +1347,14 @@ async function loadAGCScores(){
 
 async function refreshAGCScore(householdId){
   try{
-    const rows=await fetch(SB_URL+'/rest/v1/rpc/calculate_agc',{
+    const _resp=await fetch(SB_URL+'/rest/v1/rpc/calculate_agc',{
       method:'POST',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
       body:JSON.stringify({household_id:householdId})
-    }).then(r=>r.json());
-    if(rows){
+    });
+    if(!_resp.ok)return; // transient RPC failure — leave the existing score untouched rather than zeroing it
+    const rows=await _resp.json();
+    if(rows&&typeof rows.total_agc_score!=='undefined'){
       agcCache[householdId]={
         total:rows.total_agc_score||0,
         affinity:rows.affinity_score||0,
@@ -1361,7 +1391,9 @@ async function loadAGCInteractionAggregates(){
   }catch(e){console.warn('AGC interaction aggregates failed',e);}
 }
 
-// ── NEW AGC SCORER (v2) — strict pillar independence: each signal feeds exactly one pillar ──
+// AGC v2 pillars are scored independently with their own weightings. Note that
+  // a large maxGift is intentionally evidence for BOTH Generosity (propensity) and
+  // Capacity (wealth signal); a few signals legitimately inform more than one pillar.
 // AFFINITY 35 = relationship strength (interactions, participation, loyalty)
 // GENEROSITY 35 = charitable propensity (RFM on Chabad giving + external evidence)
 // CAPACITY 30 = wealth signals only (home, business, demonstrated gift size, age)
@@ -1807,9 +1839,9 @@ function setProp(mode,h,result){
   const seenIds=new Set();
   const uniqueMembers=(h.members||[]).filter(m=>{if(seenIds.has(m.id))return false;seenIds.add(m.id);return true;});
   const contactsHtml=uniqueMembers.map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border);position:relative">
-    <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${m.first_name} ${m.last_name}</div>
+    <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${_escHtml((m.first_name||"")+" "+(m.last_name||""))}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
-    ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
+    ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${encodeURIComponent(m.email)}" style="color:var(--accent);text-decoration:none">✉ ${_escHtml(m.email)}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
     ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:
     (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="font-size:.58rem;opacity:.6">(est.)</span></div>`:'')}
     <div style="font-family:DM Mono,monospace;font-size:.58rem;color:var(--txt3);margin-top:2px">CivicCRM ID: ${m.civicrm_id||'—'}</div>
@@ -2409,7 +2441,7 @@ function processFile(file){
   }
   const reader=new FileReader();
   reader.onload=async e=>{
-    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    const lines=e.target.result.split(/\r?\n/).filter(l=>l.trim());
     const status=document.getElementById('imp_status');
     status.style.display='block';status.textContent='Processing…';
     try{
@@ -2425,7 +2457,10 @@ function processFile(file){
 function parseCSVLine(line){
   const result=[];let current='';let inQuotes=false;
   for(let i=0;i<line.length;i++){
-    if(line[i]==='"'){inQuotes=!inQuotes;}
+    if(line[i]==='"'){
+      if(inQuotes&&line[i+1]==='"'){current+='"';i++;} // escaped "" inside a quoted field
+      else inQuotes=!inQuotes;
+    }
     else if(line[i]===','&&!inQuotes){result.push(current.trim());current='';}
     else{current+=line[i];}
   }
@@ -2564,7 +2599,7 @@ async function importDonations(lines){
     added+=chunk.length;
   }
 
-  status.innerHTML=`✅ Done! ${added} added, ${skipped} duplicates skipped${notFound?` · <span style="color:var(--red)">${notFound} not found: ${notFoundIds.join(', ')}</span>`:''}.`;
+  status.innerHTML=`✅ Done! ${added} added, ${skipped} duplicates skipped${notFound?` · <span style="color:var(--red)">${notFound} not found: ${_escHtml(notFoundIds.join(', '))}</span>`:''}.`;
   loadAll();
 }
 
@@ -2856,6 +2891,7 @@ async function buildProfileSoft(idx){
     const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
     if(memberIds){
       const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=30`);
+      _indexInteractions(iRows,h);
       interactions=iRows||[];
     }
   }catch(e){}
@@ -2966,7 +3002,7 @@ Re-synthesize ONLY approach, summary, and estimated_children based on the above.
     if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
-    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
+    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${_escHtml(e.message)}</div>
       <button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="margin-top:8px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     else alert('Quick Update failed:\n\n'+e.message);
   }
@@ -3001,7 +3037,7 @@ async function _buildProfilePhase2(idx, researchHints, tabContent, interactions)
 
   try{
     const _pbPayload={
-        model:'claude-fable-5',
+        model:'claude-sonnet-4-6',
         max_tokens:4000,
         tools:[{type:'web_search_20250305',name:'web_search',max_uses:8}],
         system:`You are a prospect research assistant for a Chabad rabbi in Chagrin Falls, Ohio. Your job is to ENRICH a contact profile using public web research — not to recalculate scores. The AGC scores below are authoritative pre-calculated database scores. Accept them as facts.
@@ -3064,26 +3100,18 @@ ACTIVITY LOG (${meaningful_activity.length} interactions with notes):
 ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}`+(researchHints?' IMPORTANT RESEARCH HINTS FROM RABBI: '+researchHints:'')}]
       };
 
-    // Try Fable 5 first (strongest research model). If it refuses (safety classifier)
-    // or errors on the model itself, automatically fall back to Sonnet 4.6.
-    let d=null;
-    for(const _pbModel of ['claude-fable-5','claude-sonnet-4-6']){
-      _pbPayload.model=_pbModel;
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key':ANTHROPIC_KEY,
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
-        body:JSON.stringify(_pbPayload)
-      });
-      d=await resp.json();
-      if(_pbModel==='claude-fable-5'&&d&&d.stop_reason==='refusal'){console.warn('Fable 5 declined this build — retrying with Sonnet 4.6');continue;}
-      if(_pbModel==='claude-fable-5'&&d&&d.error){console.warn('Fable 5 error — retrying with Sonnet 4.6:',d.error.message||'');continue;}
-      break;
-    }
+    _pbPayload.model='claude-sonnet-4-6';
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':ANTHROPIC_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify(_pbPayload)
+    });
+    const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const stripped=txt.replace(/```json/g,'').replace(/```/g,'').trim();
@@ -3126,7 +3154,7 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
     document.getElementById('fullPanelLoading')?.remove();
     const fpOpen=document.getElementById('fullPanel')&&document.getElementById('fullPanel').style.display!=='none';
     if(tabContent&&!fpOpen){
-      tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>
+      tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${_escHtml(e.message)}</div>
       <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="margin-top:8px;padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     }else{
       alert('Profile build failed:\n\n'+e.message);
@@ -3180,6 +3208,7 @@ async function buildProfile(idx, hints=''){
     if(memberIds){
       const iRows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=100`);
       interactions=iRows||[];
+      _indexInteractions(interactions,h);
     }
   }catch(e){}
 
@@ -3200,7 +3229,7 @@ function openLogInteraction(idx){
   document.getElementById('li_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
       <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
-      ${m.first_name} ${m.last_name}
+      ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
     </label>`
   ).join('');
   document.getElementById('logInteractionModal').style.display='flex';
@@ -3226,7 +3255,7 @@ async function saveInteraction(){
       // Add mode — create one per checked contact
       for(const contactId of checked){
         const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null,created_at:new Date().toISOString()})});
-        if(savedI&&savedI[0]&&notes)embedAndStore(savedI[0].id,type+': '+notes);
+        if(savedI&&savedI[0]){if(notes)embedAndStore(savedI[0].id,type+': '+notes);const _h=households[idx];if(_h)_interToHH[savedI[0].id]=_h.id;}
       }
     }
     // Reset modal to add mode
@@ -3234,7 +3263,7 @@ async function saveInteraction(){
     document.getElementById('li_modal_title').textContent='📝 Log Interaction';
     document.getElementById('li_save_btn').textContent='Log Interaction';
     document.getElementById('logInteractionModal').style.display='none';
-    const hI=households[idx];if(hI)refreshAGCScore(hI.id).then(()=>recolorAll());
+    const hI=households[idx];if(hI){_invHH(hI);refreshAGCScore(hI.id).then(()=>recolorAll());}
     // Auto-graduate any open track if Connected
     if(type==='Connected'&&hI){
       const openTrack=outreachTracks.find(t=>t.household_id===hI.id&&t.status==='active');
@@ -3256,6 +3285,7 @@ async function loadInteractionsTab(idx){
     const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
     if(!memberIds){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No contacts.</div>';return;}
     const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=50`);
+    _indexInteractions(rows,h);
     if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No activity logged yet. Click ＋ Log to add.</div>';return;}
     const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
     el.innerHTML=rows.map(r=>{
@@ -3271,7 +3301,7 @@ async function loadInteractionsTab(idx){
         <button onclick="deleteInteraction('${r.id}',${idx})" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;margin-top:2px;padding:0">🗑 delete</button>
       </div>`;
     }).join('');
-  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${_escHtml(e.message)}</div>`;}
 }
 
 async function deleteInteraction(id,idx,tabType){
@@ -3295,7 +3325,7 @@ function openAddNote(idx){
   document.getElementById('note_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
       <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
-      ${m.first_name} ${m.last_name}
+      ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
     </label>`
   ).join('');
   document.getElementById('addNoteModal').style.display='flex';
@@ -3317,13 +3347,13 @@ async function saveNote(){
   try{
     for(const contactId of checked){
       const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text,created_at:new Date().toISOString()})});
-      if(savedN&&savedN[0]&&text)embedAndStore(savedN[0].id,'Note: '+text);
+      if(savedN&&savedN[0]){if(text)embedAndStore(savedN[0].id,'Note: '+text);_interToHH[savedN[0].id]=h.id;}
     }
     document.getElementById('addNoteModal').style.display='none';
     refreshAGCScore(h.id).then(()=>recolorAll());
     const fpN=document.getElementById('fullPanel');
     if(fpN&&fpN.style.display!=='none')openFullPanel(idx);
-    else{showTab(idx,'notes');loadNotesTab(idx);}
+    else{if(h)_invHH(h);showTab(idx,'notes');loadNotesTab(idx);}
   }catch(e){status.textContent='⚠ '+e.message;}
 }
 
@@ -3336,6 +3366,7 @@ async function loadNotesTab(idx){
     const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
     if(!memberIds){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No contacts.</div>';return;}
     const rows=await sb(`interactions?contact_id=in.(${memberIds})&type=eq.Note&order=date.desc&limit=50`);
+    _indexInteractions(rows,h);
     if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No notes yet. Click ＋ Add Note to start.</div>';return;}
     const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
     el.innerHTML=rows.map(r=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
@@ -3345,7 +3376,7 @@ async function loadNotesTab(idx){
       </div>
       <div style="font-size:.78rem;color:var(--txt2);line-height:1.55">${_escHtml(r.notes)}</div>
     </div>`).join('');
-  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${e.message}</div>`;}
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${_escHtml(e.message)}</div>`;}
 }
 
 // ── FULL PANEL ──
@@ -3490,11 +3521,11 @@ function openFullPanel(idx){
         <div style="font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px">👥 People</div>
         ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-weight:600;font-size:.82rem">${m.first_name} ${m.last_name} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${m.gender||''}</span></div>
+            <div style="font-weight:600;font-size:.82rem">${_escHtml((m.first_name||"")+" "+(m.last_name||""))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
             <button onclick="openEditContactById('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit">✏️</button>
           </div>
           ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none">📞 ${m.phone}</a></div>`:''}
-          ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${m.email}" style="color:var(--accent);text-decoration:none">✉ ${m.email}</a></div>`:''}
+          ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${encodeURIComponent(m.email)}" style="color:var(--accent);text-decoration:none">✉ ${_escHtml(m.email)}</a></div>`:''}
           ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">🎂 ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:
           (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated)</span></div>`:'')}
           <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">ID: ${m.civicrm_id||'—'}</div>
@@ -3555,7 +3586,7 @@ function openFullPanel(idx){
   // Load interactions async then render
   if(memberIds){
     sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=100`)
-      .then(rows=>renderFull(rows||[]))
+      .then(rows=>{_indexInteractions(rows,h);renderFull(rows||[]);})
       .catch(()=>renderFull([]));
   } else {
     renderFull([]);
@@ -3683,7 +3714,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       document.getElementById('li_contacts').innerHTML=members.map(m=>
         `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
           <input type="checkbox" value="${m.id}"${m.id===r.contact_id?' checked':''} style="accent-color:var(--accent)">
-          ${m.first_name} ${m.last_name}
+          ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
         </label>`
       ).join('');
       document.getElementById('logInteractionModal').style.display='flex';
@@ -4025,7 +4056,7 @@ async function runAISearch(){
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     results.innerHTML=_escHtml(txt).replace(/\n/g,'<br>');
   }catch(e){
-    results.innerHTML='<span style="color:var(--red)">⚠ '+e.message+'</span>';
+    results.innerHTML='<span style="color:var(--red)">⚠ '+_escHtml(e.message)+'</span>';
   }
 }
 
@@ -4243,7 +4274,7 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
     msgs.scrollTop=msgs.scrollHeight;
   }catch(e){
     document.getElementById('person-typing')?.remove();
-    msgs.innerHTML+=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${e.message}</div>`;
+    msgs.innerHTML+=`<div style="color:var(--red);font-size:.75rem;padding:8px">⚠ ${_escHtml(e.message)}</div>`;
   }
 }
 
@@ -4540,7 +4571,7 @@ async function sendGlobalAsk(){
     saveCurrentSession();
   }catch(e){
     document.getElementById('global-typing')?.remove();
-    msgs.innerHTML+=`<div style="color:var(--red);font-size:.78rem;padding:8px">⚠ ${e.message}</div>`;
+    msgs.innerHTML+=`<div style="color:var(--red);font-size:.78rem;padding:8px">⚠ ${_escHtml(e.message)}</div>`;
   }
 }
 
@@ -6206,8 +6237,8 @@ const CT_PRESETS={
 };
 const CT_COLS={
   name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${h.displayName||''}</div><div class="ct-sub">${h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''))}</div>`},
-  email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${m.first_name}: ${m.email}</div>`).join('')||'<span class="ct-sub">—</span>'},
-  phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${m.first_name}: ${m.phone}</div>`).join('')||'<span class="ct-sub">—</span>'},
+  email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.email)}</div>`).join('')||'<span class="ct-sub">—</span>'},
+  phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.phone)}</div>`).join('')||'<span class="ct-sub">—</span>'},
   agc:{label:'Prospect',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--gold)':'var(--red)';return `<span style="font-family:'DM Mono',monospace;font-weight:700;color:${c}">${t}</span>`;}},
   homeValue:{label:'Home Value',val:h=>h.home_value||0,html:h=>h.home_value?'$'+Math.round(h.home_value).toLocaleString():'<span class="ct-sub">—</span>'},
   lastContact:{label:'Last Contact',val:h=>(_agcInterAgg[h.id]||{}).lastContact||'',html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc||'<span class="ct-sub">never</span>';}},
@@ -6425,7 +6456,7 @@ async function initDashboard(){
   }catch(e){
     console.error('[DAAS] renderAllPanels failed',e);
     const dg=document.getElementById('dashGrid');
-    if(dg)dg.innerHTML=`<div style="padding:20px;color:var(--red);font-size:.8rem">Dashboard render error: ${e.message}</div>`;
+    if(dg)dg.innerHTML=`<div style="padding:20px;color:var(--red);font-size:.8rem">Dashboard render error: ${_escHtml(e.message)}</div>`;
   }
 }
 
@@ -6482,8 +6513,8 @@ async function openCallSheet(){
     const agc=getAGCScore(h);
     const gs=getGivingStats(h);
     const p=h.profile_data||{};
-    const phones=(h.members||[]).map(m=>m.phone?`${m.first_name}: ${m.phone}`:null).filter(Boolean).join(' · ')||'no phone on file';
-    const emails=(h.members||[]).map(m=>m.email).filter(Boolean).join(' · ');
+    const phones=_escHtml((h.members||[]).map(m=>m.phone?`${m.first_name}: ${m.phone}`:null).filter(Boolean).join(' · ')||'no phone on file');
+    const emails=_escHtml((h.members||[]).map(m=>m.email).filter(Boolean).join(' · '));
     let why='';
     if(card.type==='keepwarm')why=`No contact in ${card.daysSince!==null?card.daysSince:'90+'} days — strong relationship drifting`;
     else if(card.type==='icebreaker')why=`$${Math.round((h.home_value||0)/1000)}k home, never contacted — cold open`;
@@ -6786,16 +6817,16 @@ async function triggerDeepSearchModal(){
   }catch(e){console.warn('Deep search interactions query failed',e);}
   document.getElementById('deepSearchQueryDisplay').textContent=`${matches.length} result${matches.length!==1?'s':''} for "${queryTerm}" across ${households.length} households`;
   if(!matches.length){
-    container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);font-size:.8rem">No matches found in notes or activity logs for "<strong>${queryTerm}</strong>".</div>`;
+    container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--txt3);font-size:.8rem">No matches found in notes or activity logs for "<strong>${_escHtml(queryTerm)}</strong>".</div>`;
     return;
   }
   container.innerHTML=matches.map(m=>`
-    <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--bg)'" onclick="navigateToHouseholdFromSearch('${m.id}','${m.type}')">
+    <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--bg)'" onclick="navigateToHouseholdFromSearch('${_escJs(m.id)}','${_escJs(m.type)}')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <strong style="font-size:.85rem;color:var(--accent)">${_escHtml(m.displayName)}</strong>
-        <span style="font-family:'DM Mono',monospace;font-size:.6rem;background:var(--border);padding:2px 6px;border-radius:4px;color:var(--txt2)">${m.date} · ${m.type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:.6rem;background:var(--border);padding:2px 6px;border-radius:4px;color:var(--txt2)">${_escHtml(m.date)} · ${_escHtml(m.type)}</span>
       </div>
-      <div style="font-size:.76rem;color:var(--txt2);line-height:1.45;font-style:italic;background:var(--surf);padding:6px 10px;border-radius:5px;border-left:3px solid var(--border2)">…${m.snippet}…</div>
+      <div style="font-size:.76rem;color:var(--txt2);line-height:1.45;font-style:italic;background:var(--surf);padding:6px 10px;border-radius:5px;border-left:3px solid var(--border2)">…${_escHtml(m.snippet)}…</div>
       <div style="font-size:.6rem;color:var(--accent);margin-top:5px">→ Click to open full contact page</div>
     </div>`).join('');
 }
