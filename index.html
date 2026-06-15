@@ -448,6 +448,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg> Generate Embeddings</button>
     <div id="embedBackfillStatus" style="padding:4px 18px 8px;font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);display:none"></div>
 
+    <button class="sb-item" id="canvassSyncBtn" onclick="closeSidebar();runCanvassSync()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg> Sync from CRM</button>
+    <div id="canvassSyncStatus" style="padding:4px 18px 8px;font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);display:none"></div>
+
     <!-- MAP section -->
     <div style="padding:14px 18px 6px;font-family:var(--font-ui);font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Map</div>
     <button class="sb-item" id="sbPrefetchBtn" onclick="closeSidebar();startPrefetch()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"></path></svg> Pre-fetch All Property Data</button>
@@ -1027,6 +1030,74 @@ async function sbSetSetting(key,value){
   }catch(e){console.warn('[DAAS] setting save failed for '+key,e);throw e;}
 }
 
+// ── CANVASS SYNC ──────────────────────────────────────────────────────────
+// Invokes the `canvass-sync` Edge Function (one-way Canvass→DAAS pull). The
+// function holds the Canvass API key server-side; we just trigger it and show
+// the summary. Delta by default; the function decides full vs. incremental
+// from its own last-sync watermark.
+function _canvassFmt(iso){
+  if(!iso)return'never';
+  try{
+    const d=new Date(iso);const now=new Date();
+    const mins=Math.round((now-d)/60000);
+    if(mins<1)return'just now';
+    if(mins<60)return mins+' min ago';
+    const hrs=Math.round(mins/60);
+    if(hrs<24)return hrs+(hrs===1?' hour ago':' hours ago');
+    return d.toLocaleDateString([], {month:'short',day:'numeric'})+' at '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  }catch(e){return iso;}
+}
+// Show the last-sync time under the button on load (and after a sync).
+async function refreshCanvassStatus(){
+  const el=document.getElementById('canvassSyncStatus');
+  if(!el)return;
+  try{
+    const rows=await sb('app_settings?key=eq.last_canvass_sync&select=value');
+    const last=(rows&&rows.length)?rows[0].value:null;
+    el.textContent='Last synced: '+_canvassFmt(last);
+    el.style.display='block';
+  }catch(e){/* leave hidden on error */}
+}
+async function runCanvassSync(){
+  const btn=document.getElementById('canvassSyncBtn');
+  const el=document.getElementById('canvassSyncStatus');
+  if(el){el.style.display='block';el.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0;animation:spin 1s linear infinite" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/></svg> Syncing from CRM…';}
+  if(btn)btn.disabled=true;
+  try{
+    const res=await fetch(SB_URL+'/functions/v1/canvass-sync',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
+      body:JSON.stringify({})  // delta sync (function uses its own watermark)
+    });
+    const out=await res.json();
+    if(out&&out.ok===false){
+      throw new Error(out.fatal||'Sync failed');
+    }
+    // Build a short human summary. Delta runs usually report small numbers.
+    const hh=out.households_upserted||0, c=out.contacts_upserted||0;
+    const d=out.donations_upserted||0, ev=out.events_upserted||0;
+    const parts=[];
+    if(hh)parts.push(hh+' household'+(hh===1?'':'s'));
+    if(c)parts.push(c+' contact'+(c===1?'':'s'));
+    if(d)parts.push(d+' donation'+(d===1?'':'s'));
+    if(ev)parts.push(ev+' event'+(ev===1?'':'s'));
+    const summary=parts.length?('Synced '+parts.join(', ')+'.'):'Already up to date.';
+    if(el)el.textContent=summary+' Reloading…';
+    // Pull the freshly-synced data into the app.
+    try{await loadAll();}catch(e){console.warn('[DAAS] reload after sync failed',e);}
+    if(el){
+      // After reload, show the new last-synced time.
+      setTimeout(refreshCanvassStatus,1500);
+      el.textContent=summary;
+    }
+  }catch(e){
+    console.error('[DAAS] Canvass sync error',e);
+    if(el)el.textContent='Sync failed: '+(e.message||e);
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+
 // ── AUTH FUNCTIONS ──
 async function signIn(){
   const email=document.getElementById('loginEmail').value.trim();
@@ -1061,6 +1132,7 @@ async function showApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('ppanel').innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg></div><p>Select a contact to view details</p></div>';
   await loadAll();
+  try{refreshCanvassStatus();}catch(e){}
 }
 
 // Refresh token on session change
