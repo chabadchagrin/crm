@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DAAS">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
 <title>דעת</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'&gt;&lt;path d='M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z' fill='none' stroke='%230f766e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/&gt;&lt;path d='M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z' fill='none' stroke='%23a16207' stroke-width='1.5'/&gt;&lt;path d='M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z' fill='%23b91c1c'/&gt;&lt;/svg&gt;">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -129,6 +135,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .crm-tooltip::before{display:none}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @media(max-width:768px){
+  /* Hide desktop chrome */
   .legend{display:none}.toolbar{display:none}
   .main{flex-direction:column}#map{display:none}
   .sidebar{width:100%;height:100%;border-left:none}
@@ -137,7 +144,162 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   .mobile-bar input{flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:var(--font-ui);font-size:.85rem;border-radius:6px;outline:none}
   .mobile-add-btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:.8rem;cursor:pointer;white-space:nowrap}
   .modal{width:95vw;padding:20px}.modal-btns{flex-direction:column}.modal-btns .btn{width:100%;padding:12px}
+
+  /* ===== DAAS MOBILE SHELL ===== */
+  /* Hide the entire desktop app body; mobile shell takes over */
+  #app > .hdr, #app > .dash-nav, #app .crm-view, #app .dash-view, #app .contacts-view{display:none!important}
+  #mobileShell{display:flex!important}
+
+  /* Make existing overlays full-screen edge-to-edge on mobile */
+  #captureOverlay, #enrichOverlay{padding:0!important}
+  #captureOverlay > div, #enrichOverlay > div{max-width:none!important;width:100vw!important;max-height:none!important;height:100dvh!important;border-radius:0!important;margin:0!important}
+  #globalAskPanel{inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important}
+
+  /* ===== DETAIL / FULL PROFILE — mobile readability ===== */
+  #fullPanel{padding-bottom:env(safe-area-inset-bottom)}
+  #fullPanel > div:first-child{padding:max(10px,env(safe-area-inset-top)) 14px 10px!important}
+  #fullPanelName{font-size:1rem!important}
+  /* Collapse the two-column shell to a single readable column */
+  #fullPanelContent{grid-template-columns:1fr!important;max-width:none!important;padding:14px 14px calc(28px + env(safe-area-inset-bottom))!important;gap:14px!important}
+  /* Any inner two-column grids stack */
+  #fullPanelContent [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  /* Giving rows: date / amount / fund / action — let them wrap instead of crushing */
+  #fullPanelContent [style*="grid-template-columns:1fr 80px 1fr auto"]{grid-template-columns:1fr auto!important;row-gap:2px!important}
+  /* Kill fixed-width children that overflow */
+  #fullPanelContent [style*="width:160px"]{width:100%!important}
+  /* Detail tab bar scrolls horizontally instead of overflowing */
+  #fullPanel .tab-bar, #ppanel .tab-bar{display:flex!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  #fullPanel .tab-bar::-webkit-scrollbar, #ppanel .tab-bar::-webkit-scrollbar{display:none}
+  #fullPanel .tab-btn, #ppanel .tab-btn{white-space:nowrap;flex-shrink:0}
+  .pinner, .tab-content{padding-left:0!important;padding-right:0!important}
+  /* The detail panel inside #ppanel (selectHousehold path) — full width, comfortable */
+  #ppanel{padding:0 4px!important}
+  #ppanel [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  /* Make the close/back button a comfortable tap target */
+  #fullPanel button[onclick*="closeFullPanel"]{padding:9px 14px!important;font-size:.78rem!important}
+  /* Person-chat (context chat) — full-screen its inner card on mobile */
+  #personChatPanel{align-items:stretch!important;justify-content:stretch!important;backdrop-filter:none!important}
+  #personChatPanel > div{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;border-radius:0!important;padding-bottom:env(safe-area-inset-bottom)}
 }
+/* ===== MOBILE SHELL (defined outside media query, shown only via #app rule above) ===== */
+#mobileShell{display:none;flex-direction:column;height:100dvh;width:100vw;background:var(--bg);overflow:hidden}
+.m-topbar{display:flex;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--sh-sm);z-index:5}
+.m-topbar .logo{font-family:var(--font-display);font-size:1.15rem;font-weight:600;display:flex;align-items:center;gap:7px}
+.m-topbar .m-spacer{flex:1}
+.m-iconbtn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--surf);border:1px solid var(--border2);border-radius:9px;color:var(--txt2);cursor:pointer}
+.m-iconbtn .ic{width:19px;height:19px}
+.m-body{flex:1;overflow:hidden;position:relative}
+.m-tab{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;flex-direction:column}
+.m-tab.active{display:flex}
+.m-tab-inner{padding:16px 16px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+
+/* Bottom nav */
+.m-bottomnav{display:flex;flex-shrink:0;background:var(--surf);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 8px rgba(28,25,23,.05);z-index:6}
+.m-navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;background:none;border:none;color:var(--txt3);cursor:pointer;font-family:var(--font-ui);font-size:.6rem;font-weight:500;letter-spacing:.01em;padding:6px 2px;transition:color .15s}
+.m-navbtn .ic{width:22px;height:22px}
+.m-navbtn.active{color:var(--accent)}
+
+/* Section headers in mobile tabs */
+.m-section-h{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--txt);margin:2px 0 0;display:flex;align-items:center;gap:8px}
+.m-section-h .ic{width:18px;height:18px;color:var(--accent)}
+.m-sub{font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);line-height:1.4}
+
+/* Generic mobile card */
+.m-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh-sm);overflow:hidden}
+.m-card-pad{padding:15px}
+
+/* Dashboard: Build Profiles action card */
+.m-action-card{display:flex;align-items:center;gap:13px;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:15px;box-shadow:var(--sh-sm);cursor:pointer;width:100%;text-align:left;font-family:var(--font-ui)}
+.m-action-card:active{background:var(--surf2)}
+.m-action-ic{width:42px;height:42px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)}
+.m-action-ic .ic{width:21px;height:21px}
+.m-action-txt b{display:block;font-size:.9rem;font-weight:600;color:var(--txt)}
+.m-action-txt span{display:block;font-size:.72rem;color:var(--txt2);margin-top:2px}
+.m-action-card .m-chev{margin-left:auto;color:var(--txt3)}
+.m-action-card .m-chev .ic{width:18px;height:18px}
+
+/* Daily Five mobile cards */
+.m-d5-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-md);padding:17px;display:flex;flex-direction:column;gap:11px}
+.m-d5-top{display:flex;align-items:flex-start;gap:10px}
+.m-d5-name{font-family:var(--font-display);font-size:1.1rem;font-weight:600;color:var(--txt);line-height:1.2}
+.m-d5-meta{font-size:.72rem;color:var(--txt2);margin-top:3px}
+.m-d5-badge{margin-left:auto;flex-shrink:0;font-family:var(--font-ui);font-size:.62rem;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.m-d5-reason{font-size:.8rem;color:var(--txt2);line-height:1.5;background:var(--surf2);border-radius:8px;padding:10px 12px}
+.m-d5-call{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:13px;font-family:var(--font-ui);font-size:.92rem;font-weight:600;text-decoration:none;cursor:pointer}
+.m-d5-call .ic{width:18px;height:18px}
+.m-d5-call:active{background:var(--accent-d)}
+.m-d5-outcomes{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.m-out-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 6px;border-radius:9px;border:1px solid var(--border2);background:var(--surf);color:var(--txt2);font-family:var(--font-ui);font-size:.76rem;font-weight:500;cursor:pointer}
+.m-out-btn .ic{width:15px;height:15px}
+.m-out-btn:active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.m-d5-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+.m-d5-nav button{flex:1;padding:10px;border-radius:9px;border:1px solid var(--border2);background:var(--surf);color:var(--txt2);font-family:var(--font-ui);font-size:.78rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.m-d5-nav button:disabled{opacity:.35}
+.m-d5-nav .ic{width:15px;height:15px}
+.m-d5-pos{font-size:.7rem;color:var(--txt3);text-align:center;font-family:var(--font-mono)}
+
+/* Outcome note drawer */
+.m-drawer-bg{position:fixed;inset:0;background:rgba(28,25,23,.4);z-index:1200;display:none;align-items:flex-end}
+.m-drawer-bg.open{display:flex}
+.m-drawer{background:var(--surf);width:100%;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--sh-lg);max-height:80dvh;overflow-y:auto;animation:mDrawerUp .22s ease}
+@keyframes mDrawerUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.m-drawer-h{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:4px}
+.m-drawer textarea{width:100%;min-height:90px;border:1px solid var(--border2);border-radius:9px;padding:11px;font-family:var(--font-ui);font-size:.88rem;color:var(--txt);background:var(--bg);outline:none;resize:vertical;margin-top:10px}
+.m-drawer textarea:focus{border-color:var(--accent)}
+
+/* Contacts roster (mobile) */
+.m-search{display:flex;align-items:center;gap:9px;padding:10px 14px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+.m-search input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:10px 12px;font-family:var(--font-ui);font-size:.9rem;color:var(--txt);outline:none}
+.m-search input:focus{border-color:var(--accent)}
+.m-roster-wrap{flex:1;display:flex;overflow:hidden;position:relative}
+.m-roster{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.m-alpha-head{position:sticky;top:0;background:var(--surf2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px 16px;font-family:var(--font-ui);font-size:.7rem;font-weight:700;color:var(--accent);letter-spacing:.05em;z-index:1}
+.m-rost-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--surf)}
+.m-rost-row:active{background:var(--surf2)}
+.m-rost-av{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:.9rem;flex-shrink:0}
+.m-rost-name{font-family:var(--font-ui);font-size:.9rem;font-weight:600;color:var(--txt);line-height:1.2}
+.m-rost-sub{font-size:.72rem;color:var(--txt2);margin-top:2px}
+.m-rost-score{margin-left:auto;font-family:var(--font-ui);font-weight:700;font-size:.82rem;flex-shrink:0}
+.m-azrail{width:22px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;padding:4px 0}
+.m-azrail span{font-family:var(--font-ui);font-size:.6rem;font-weight:600;color:var(--accent);line-height:1;padding:1px 0;cursor:pointer;user-select:none}
+
+/* Contact bottom sheet */
+.m-sheet-bg{position:fixed;inset:0;background:rgba(28,25,23,.4);z-index:1100;display:none;align-items:flex-end}
+.m-sheet-bg.open{display:flex}
+.m-sheet{background:var(--surf);width:100%;border-radius:18px 18px 0 0;box-shadow:var(--sh-lg);max-height:88dvh;overflow-y:auto;animation:mDrawerUp .22s ease;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.m-sheet-grab{width:38px;height:4px;border-radius:3px;background:var(--border2);margin:9px auto 4px}
+.m-sheet-head{padding:6px 18px 14px;border-bottom:1px solid var(--border)}
+.m-sheet-name{font-family:var(--font-display);font-size:1.25rem;font-weight:600;color:var(--txt)}
+.m-sheet-addr{font-size:.78rem;color:var(--txt2);margin-top:4px;display:flex;align-items:center;gap:5px}
+.m-sheet-addr .ic{width:14px;height:14px;flex-shrink:0}
+.m-actionrow{display:flex;gap:10px;padding:15px 18px;justify-content:space-around}
+.m-actionrow a, .m-actionrow button{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;text-decoration:none;font-family:var(--font-ui);font-size:.66rem;font-weight:500;color:var(--txt2);flex:1}
+.m-actionrow .m-actdisc{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.m-actionrow .m-actdisc .ic{width:20px;height:20px}
+.m-actionrow a:active .m-actdisc, .m-actionrow button:active .m-actdisc{background:var(--accent);color:#fff}
+.m-sheet-tools{display:flex;flex-direction:column;gap:8px;padding:6px 18px 4px;border-top:1px solid var(--border)}
+.m-tool-btn{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--surf);color:var(--txt);font-family:var(--font-ui);font-size:.86rem;font-weight:500;cursor:pointer;text-align:left}
+.m-tool-btn .ic{width:18px;height:18px;color:var(--accent);flex-shrink:0}
+.m-tool-btn:active{background:var(--surf2)}
+.m-tool-btn.m-tool-pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.m-tool-btn.m-tool-pri .ic{color:#fff}
+
+/* Mobile map */
+#mMap{position:absolute;inset:0}
+.m-map-tray{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:var(--surf);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-lg);padding:14px 16px;z-index:500;display:none}
+.m-map-tray.open{display:block}
+.m-map-tray .mt-name{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--txt)}
+.m-map-tray .mt-sub{font-size:.74rem;color:var(--txt2);margin-top:3px}
+.m-map-tray .mt-acts{display:flex;gap:9px;margin-top:12px}
+.m-map-tray .mt-acts a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:9px;font-family:var(--font-ui);font-size:.8rem;font-weight:600;text-decoration:none}
+.m-map-tray .mt-acts .mt-go{background:var(--accent);color:#fff}
+.m-map-tray .mt-acts .mt-open{background:var(--surf);border:1px solid var(--border2);color:var(--txt2)}
+.m-map-tray .mt-acts .ic{width:15px;height:15px}
+.m-map-loc{position:absolute;right:14px;bottom:calc(150px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--border2);box-shadow:var(--sh-md);display:flex;align-items:center;justify-content:center;color:var(--accent);z-index:500;cursor:pointer}
+.m-map-loc .ic{width:21px;height:21px}
+.m-livedot{width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,.4),0 1px 4px rgba(0,0,0,.3)}
+
+.m-empty{text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.84rem;padding:40px 20px;line-height:1.6}
 @media(min-width:769px){.mobile-bar{display:none}}
 
 /* ── DASHBOARD ── */
@@ -1149,6 +1311,7 @@ async function showApp(){
   document.getElementById('ppanel').innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg></div><p>Select a contact to view details</p></div>';
   await loadAll();
   try{refreshCanvassStatus();}catch(e){}
+  try{ if(typeof mBoot==='function') mBoot(); }catch(e){}
 }
 
 // Refresh token on session change
@@ -4169,22 +4332,35 @@ async function saveContactEdit(){
     await loadAll();
     document.getElementById('editContactModal').style.display='none';
     // If the address changed and re-geocoding was requested, relocate the pin now
-    // (after reload so we operate on the fresh household object).
+    // (after reload so we operate on the fresh household object). When Zillow
+    // returns, persist the home value and property data too — not just coords —
+    // so editing an address refreshes the property like a normal lookup does.
     if(_pendingRegeocodeId){
       const _id=_pendingRegeocodeId;_pendingRegeocodeId=null;
       const _h=households.find(x=>x.id===_id);
       if(_h&&_h.address){
         try{
-          let _ll=null;
           const _pr=await fetchProp(_h);
-          if(_pr&&!_pr.error&&_pr.lat&&_pr.lon)_ll={lat:_pr.lat,lon:_pr.lon};
-          if(!_ll)_ll=await geocodeOne(_h);
-          if(_ll){
-            _h.lat=_ll.lat;_h.lon=_ll.lon;
-            await sb('households?id=eq.'+_h.id,{method:'PATCH',body:JSON.stringify({lat:_ll.lat,lon:_ll.lon})});
-            const _ni=hIdx(_h.id);if(_ni>=0)placePinAt(_ni);
-            recolorAll();
+          if(_pr&&!_pr.error){
+            // Zillow hit — store everything, preserving any existing AI profile.
+            const _prof=_h.profile_data||(_h.property_data&&_h.property_data.profile)||null;
+            if(_pr.homeValue)_h.home_value=_pr.homeValue;
+            if(_pr.county&&_pr.county!=='unk')_h.county=_pr.county;
+            _h.property_data=_prof?{...(_h.property_data||{}),..._pr,profile:_prof}:{...(_h.property_data||{}),..._pr};
+            const _patch={home_value:_h.home_value,county:_h.county,property_data:_h.property_data};
+            if(_pr.lat&&_pr.lon){_h.lat=_pr.lat;_h.lon=_pr.lon;_patch.lat=_pr.lat;_patch.lon=_pr.lon;}
+            await sb('households?id=eq.'+_h.id,{method:'PATCH',body:JSON.stringify(_patch)});
+          }else{
+            // Zillow missed — fall back to Nominatim for coordinates only.
+            const _ll=await geocodeOne(_h);
+            if(_ll){
+              _h.lat=_ll.lat;_h.lon=_ll.lon;
+              await sb('households?id=eq.'+_h.id,{method:'PATCH',body:JSON.stringify({lat:_ll.lat,lon:_ll.lon})});
+            }
           }
+          const _ni=hIdx(_h.id);
+          if(_ni>=0){placePinAt(_ni);setProp('data',_h);}
+          recolorAll();
         }catch(_ge){console.warn('Re-geocode after address edit failed:',_ge.message);}
       }
     }
@@ -7882,6 +8058,452 @@ async function deleteTrack(trackId){
     <div id="deepSearchResultsList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px"></div>
   </div>
 </div>
+
+<!-- ===================== DAAS MOBILE SHELL ===================== -->
+<div id="mobileShell">
+  <div class="m-topbar">
+    <div class="logo"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0"><path d="M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z" fill="none" stroke="#a16207" stroke-width="1.5"></path><path d="M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z" fill="#b91c1c"></path></svg> דעת</div>
+    <div class="m-spacer"></div>
+    <button class="m-iconbtn" onclick="mSync(this)" title="Sync from CRM"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"></path></svg></button>
+  </div>
+
+  <div class="m-body">
+    <!-- DASHBOARD TAB -->
+    <div class="m-tab active" id="mtab-dash" data-tab="dash">
+      <div class="m-tab-inner">
+        <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"></path></svg> Daily Five</div>
+        <div class="m-sub">Who to reach out to today.</div>
+        <div id="mD5host"></div>
+        <button class="m-action-card" onclick="openEnrich()">
+          <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span>
+          <span class="m-action-txt"><b>Build Missing Profiles</b><span id="mEnrichCount">Build research dossiers, top prospects first</span></span>
+          <span class="m-chev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CAPTURE TAB (delegates to desktop openCapture overlay) -->
+    <div class="m-tab" id="mtab-capture" data-tab="capture">
+      <div class="m-tab-inner">
+        <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Quick Capture</div>
+        <div class="m-sub">Dump a note, voice memo, or screenshot from the field. AI files it to the right contact.</div>
+        <button class="m-action-card" onclick="openCapture()">
+          <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg></span>
+          <span class="m-action-txt"><b>New Capture</b><span>Text, voice, PDF, or image</span></span>
+          <span class="m-chev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTACTS TAB -->
+    <div class="m-tab" id="mtab-contacts" data-tab="contacts">
+      <div class="m-search">
+        <input id="mRosterSearch" type="text" placeholder="Search contacts…" oninput="mRenderRoster()" autocomplete="off">
+      </div>
+      <div class="m-roster-wrap">
+        <div class="m-roster" id="mRoster"></div>
+        <div class="m-azrail" id="mAzRail"></div>
+      </div>
+    </div>
+
+    <!-- CHAT TAB (delegates to desktop globalAskPanel) -->
+    <div class="m-tab" id="mtab-chat" data-tab="chat">
+      <div class="m-tab-inner">
+        <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg> Ask DAAS</div>
+        <div class="m-sub">Ask anything about your whole donor base — lapsed givers, who to cultivate, by neighborhood.</div>
+        <button class="m-action-card" onclick="openGlobalAsk()">
+          <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg></span>
+          <span class="m-action-txt"><b>Open Chat</b><span>Quick · Standard · Power modes</span></span>
+          <span class="m-chev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div class="m-tab" id="mtab-map" data-tab="map">
+      <div id="mMap"></div>
+      <button class="m-map-loc" onclick="mLocate()" title="My location"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button>
+      <div class="m-map-tray" id="mMapTray"></div>
+    </div>
+  </div>
+
+  <nav class="m-bottomnav">
+    <button class="m-navbtn active" data-nav="dash" onclick="mNav('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"></path></svg>Today</button>
+    <button class="m-navbtn" data-nav="capture" onclick="mNav('capture')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>Capture</button>
+    <button class="m-navbtn" data-nav="contacts" onclick="mNav('contacts')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Contacts</button>
+    <button class="m-navbtn" data-nav="chat" onclick="mNav('chat')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg>Ask</button>
+    <button class="m-navbtn" data-nav="map" onclick="mNav('map')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3ZM9 3v15M15 6v15"></path></svg>Map</button>
+  </nav>
+</div>
+
+<!-- Outcome note drawer -->
+<div class="m-drawer-bg" id="mOutcomeDrawer">
+  <div class="m-drawer">
+    <div class="m-drawer-h" id="mOutH">Log outcome</div>
+    <div class="m-sub" id="mOutSub"></div>
+    <textarea id="mOutNote" placeholder="Add a quick note (optional)…"></textarea>
+    <div style="display:flex;gap:9px;margin-top:8px">
+      <button class="m-tool-btn" style="justify-content:center;flex:0 0 auto;width:52px" onclick="mOutcomeVoice(this)" id="mOutVoiceBtn" title="Dictate"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"></path></svg></button>
+      <button class="m-tool-btn m-tool-pri" style="justify-content:center;flex:1" onclick="mSaveOutcome(this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Save &amp; Next</button>
+    </div>
+    <button class="m-tool-btn" style="justify-content:center;margin-top:8px;border:none" onclick="mCloseOutcome()">Cancel</button>
+  </div>
+</div>
+
+<!-- Contact bottom sheet -->
+<div class="m-sheet-bg" id="mContactSheet" onclick="if(event.target===this)mCloseSheet()">
+  <div class="m-sheet" id="mSheetInner"></div>
+</div>
+<!-- ===================== END DAAS MOBILE SHELL ===================== -->
+
+
+<script>
+/* ===================== DAAS MOBILE LAYER ===================== */
+const MOBILE_MQ = window.matchMedia('(max-width:768px)');
+let _mActiveTab='dash';
+let _mLeaflet=null, _mMapObj=null, _mPins=[], _mLiveMarker=null, _mWatchId=null, _mMapBuilt=false;
+let _mD5Cards=[], _mD5Pos=0, _mOutcomeCtx=null;
+let _mRosterIndex=[];
+
+function isMobile(){ return MOBILE_MQ.matches; }
+
+/* ---- Tab navigation ---- */
+function mNav(tab){
+  _mActiveTab=tab;
+  document.querySelectorAll('#mobileShell .m-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.m-navbtn').forEach(b=>b.classList.toggle('active', b.dataset.nav===tab));
+  if(tab==='dash') mRenderD5();
+  else if(tab==='contacts') mRenderRoster();
+  else if(tab==='map') mInitMap();
+}
+
+/* ---- Boot: called from showApp after data loads ---- */
+function mBoot(){
+  if(!isMobile()) return;
+  document.body.style.overflow='hidden';
+  mRenderD5();
+  // enrich count hint
+  try{
+    const n=(typeof buildEnrichQueue==='function')?buildEnrichQueue().length:0;
+    const el=document.getElementById('mEnrichCount');
+    if(el) el.textContent = n? (n+' household'+(n>1?'s':'')+' need a profile — top prospects first') : 'All profiles built';
+  }catch(e){}
+  // Share-target intake: if launched via Android share sheet (?text=/?title=/?url=), drop into Quick Capture
+  try{
+    const p=new URLSearchParams(location.search);
+    const shared=[p.get('title'),p.get('text'),p.get('url')].filter(Boolean).join('\n').trim();
+    if(shared){
+      mNav('capture');
+      openCapture();
+      setTimeout(()=>{ const ta=document.getElementById('capture-text'); if(ta){ ta.value=shared; ta.focus(); } },120);
+      // clean the URL so a refresh doesn't re-trigger
+      history.replaceState(null,'',location.pathname);
+    }
+  }catch(e){}
+}
+
+/* ---- CRM sync from topbar ---- */
+async function mSync(btn){
+  if(typeof runCanvassSync!=='function'){return;}
+  const orig=btn.innerHTML;
+  btn.innerHTML='<div class="spin" style="width:16px;height:16px;border-width:2px"></div>';
+  btn.disabled=true;
+  try{ await runCanvassSync(); }catch(e){}
+  btn.innerHTML=orig; btn.disabled=false;
+  if(_mActiveTab==='dash') mRenderD5();
+  if(_mActiveTab==='contacts') mRenderRoster();
+}
+
+/* ===================== DAILY FIVE (mobile) ===================== */
+async function mRenderD5(){
+  const host=document.getElementById('mD5host');
+  if(!host) return;
+  if(!households.length){ host.innerHTML='<div class="m-empty">Loading contacts…</div>'; return; }
+  host.innerHTML='<div class="m-card m-card-pad" style="text-align:center;color:var(--txt3)"><div class="spin" style="width:22px;height:22px;border-width:3px;margin:6px auto"></div><div style="margin-top:8px;font-size:.8rem">Building your call list…</div></div>';
+  try{
+    _mD5Cards = await _computeDailyQueue();
+  }catch(e){ host.innerHTML='<div class="m-empty">Couldn\u2019t build the list. Pull to retry.</div>'; return; }
+  _mD5Pos=0;
+  if(!_mD5Cards.length){ host.innerHTML='<div class="m-card m-card-pad"><div class="m-empty">You\u2019re all caught up. No outreach flagged for today.</div></div>'; return; }
+  mShowD5Card();
+}
+
+function _mD5CallTarget(h){
+  const m=(h.members||[]).find(x=>x.phone);
+  return m?{name:m.first_name||'',phone:m.phone,id:m.id}:null;
+}
+function _mD5EmailTarget(h){
+  const m=(h.members||[]).find(x=>x.email);
+  return m?{email:m.email,id:m.id}:null;
+}
+
+function mShowD5Card(){
+  const host=document.getElementById('mD5host');
+  const card=_mD5Cards[_mD5Pos];
+  if(!card){ mRenderD5(); return; }
+  const h=card.item.h;
+  const agc=getAGCScore(h);
+  const label={keepwarm:'Keep Warm',icebreaker:'Icebreaker',activetrack:'Active Track',pinned:'Pinned'}[card.type]||'';
+  const call=_mD5CallTarget(h);
+  const reason=(typeof _whyHTML==='function')?_whyHTML(card):'';
+  const sub=h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''));
+  host.innerHTML=`
+    <div class="m-d5-card">
+      <div class="m-d5-top">
+        <div>
+          <div class="m-d5-name">${_escHtml(h.displayName||'Household')}</div>
+          <div class="m-d5-meta">${_escHtml(sub)} · Prospect ${agc.total}</div>
+        </div>
+        <div class="m-d5-badge">${label}</div>
+      </div>
+      <div class="m-d5-reason">${reason}</div>
+      ${call?`<a class="m-d5-call" href="tel:${_escHtml(call.phone)}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg> Call ${_escHtml(call.name||'')}</a>`:`<div class="m-d5-reason" style="text-align:center">No phone on file</div>`}
+      <div class="m-d5-outcomes">
+        <button class="m-out-btn" onclick="mOutcome('Connected')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Connected</button>
+        <button class="m-out-btn" onclick="mOutcome('Left VM')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0ZM15.5 2a6.5 6.5 0 0 1 0 13M2 15h16M2 21h16"/></svg> Left VM</button>
+        <button class="m-out-btn" onclick="mOutcome('Sent Text')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Sent Text</button>
+        <button class="m-out-btn" onclick="mOutcome('Sent Email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg> Sent Email</button>
+        <button class="m-out-btn" style="grid-column:span 2" onclick="mOutcome('No Answer')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 8.63 19M2 2l20 20M9.13 9.13A15.66 15.66 0 0 1 8.06 6.7 2 2 0 0 1 10 4.11"/></svg> No Answer / Hung Up</button>
+      </div>
+      <div class="m-d5-nav">
+        <button onclick="mD5Prev()" ${_mD5Pos===0?'disabled':''}><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Prev</button>
+        <button onclick="mOpenContactFromD5('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg> Profile</button>
+        <button onclick="mD5Next()" ${_mD5Pos>=_mD5Cards.length-1?'disabled':''}>Next <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <div class="m-d5-pos">${_mD5Pos+1} of ${_mD5Cards.length}</div>
+    </div>`;
+}
+function mD5Next(){ if(_mD5Pos<_mD5Cards.length-1){_mD5Pos++;mShowD5Card();} }
+function mD5Prev(){ if(_mD5Pos>0){_mD5Pos--;mShowD5Card();} }
+function mOpenContactFromD5(hid){ const h=households.find(x=>x.id===hid); if(h) mOpenSheet(h); }
+
+/* ---- Outcome drawer ---- */
+function mOutcome(outcome){
+  const card=_mD5Cards[_mD5Pos];
+  if(!card) return;
+  const h=card.item.h;
+  const call=_mD5CallTarget(h)||_mD5EmailTarget(h)||((h.members||[])[0]?{id:h.members[0].id}:null);
+  if(!call){ alert('No contact on file to log against.'); return; }
+  _mOutcomeCtx={outcome, contactId:call.id, household:h};
+  document.getElementById('mOutH').textContent=outcome+' · '+(h.displayName||'Household');
+  document.getElementById('mOutSub').textContent='Logs an interaction'+(card.type==='activetrack'?' and advances the track.':'.');
+  document.getElementById('mOutNote').value='';
+  document.getElementById('mOutcomeDrawer').classList.add('open');
+}
+function mCloseOutcome(){ _mOutcomeStopVoice(); document.getElementById('mOutcomeDrawer').classList.remove('open'); _mOutcomeCtx=null; }
+
+async function mSaveOutcome(btn){
+  if(!_mOutcomeCtx) return;
+  const note=document.getElementById('mOutNote').value.trim();
+  const {outcome, contactId}=_mOutcomeCtx;
+  btn.disabled=true; btn.innerHTML='<div class="spin" style="width:15px;height:15px;border-width:2px"></div> Saving…';
+  const todayStr=(typeof localDateStr==='function')?localDateStr(new Date()):new Date().toISOString().slice(0,10);
+  try{
+    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null,created_at:new Date().toISOString()}),headers:{'Content-Type':'application/json'}});
+    // refresh local interaction data so AGC/Daily reflect it
+    if(typeof loadAll==='function'){ /* light touch: just advance */ }
+  }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; return; }
+  mCloseOutcome();
+  // remove this card from the queue and advance
+  _mD5Cards.splice(_mD5Pos,1);
+  if(_mD5Pos>=_mD5Cards.length) _mD5Pos=Math.max(0,_mD5Cards.length-1);
+  if(_mD5Cards.length===0){ document.getElementById('mD5host').innerHTML='<div class="m-card m-card-pad"><div class="m-empty">All done for today. Nice work.</div></div>'; }
+  else mShowD5Card();
+}
+
+/* ---- Outcome voice dictation (mirrors enrich voice pattern) ---- */
+let _mOutRec=null,_mOutStream=null,_mOutChunks=[];
+function mOutcomeVoice(btn){
+  if(_mOutRec && _mOutRec.state==='recording'){ _mOutcomeStopVoice(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){ alert('Audio recording isn\u2019t supported here. Use your keyboard mic into the note box.'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _mOutStream=stream; _mOutChunks=[];
+    let mime=''; if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm'; else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _mOutRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _mOutRec.ondataavailable=e=>{ if(e.data&&e.data.size>0)_mOutChunks.push(e.data); };
+    _mOutRec.onstop=()=>_mOutProcess();
+    _mOutRec.start();
+    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
+    btn.style.background='var(--red)'; btn.style.color='#fff';
+  }).catch(()=>alert('Microphone permission denied. Allow mic access and retry.'));
+}
+function _mOutcomeStopVoice(){
+  if(_mOutRec && _mOutRec.state==='recording'){ try{_mOutRec.stop();}catch(e){} }
+  if(_mOutStream){ try{_mOutStream.getTracks().forEach(t=>t.stop());}catch(e){} _mOutStream=null; }
+  const b=document.getElementById('mOutVoiceBtn');
+  if(b){ b.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>'; b.style.background=''; b.style.color=''; }
+}
+async function _mOutProcess(){
+  if(_mOutStream){ try{_mOutStream.getTracks().forEach(t=>t.stop());}catch(e){} _mOutStream=null; }
+  if(!_mOutChunks.length) return;
+  if(!OPENAI_KEY){ alert('Add your OpenAI key on desktop to use voice transcription.'); return; }
+  const ta=document.getElementById('mOutNote');
+  const blob=new Blob(_mOutChunks,{type:_mOutChunks[0].type||'audio/webm'});
+  const prev=ta.value; ta.value=(prev?prev+' ':'')+'⏳ transcribing…';
+  try{
+    const fd=new FormData();
+    const ext=(blob.type.indexOf('mp4')>=0)?'mp4':'webm';
+    fd.append('file',blob,'note.'+ext); fd.append('model','whisper-1');
+    const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+OPENAI_KEY},body:fd});
+    const j=await tr.json();
+    ta.value=(prev?prev+' ':'')+(j.text||'').trim();
+  }catch(e){ ta.value=prev; alert('Transcription failed.'); }
+}
+
+/* ===================== CONTACTS ROSTER (mobile) ===================== */
+function _mLastName(h){
+  const m=(h.members||[])[0];
+  const ln=(m&&m.last_name)?m.last_name:(h.displayName||'');
+  return (ln||'').trim();
+}
+function mRenderRoster(){
+  const host=document.getElementById('mRoster');
+  if(!host) return;
+  const q=(document.getElementById('mRosterSearch').value||'').toLowerCase().trim();
+  let list=households.slice();
+  if(q){
+    list=list.filter(h=>{
+      let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'');
+      (h.members||[]).forEach(m=>{t+=' '+(m.first_name||'')+' '+(m.last_name||'')+' '+(m.phone||'')+' '+(m.email||'');});
+      return t.toLowerCase().includes(q);
+    });
+  }
+  list.sort((a,b)=>_mLastName(a).localeCompare(_mLastName(b),undefined,{sensitivity:'base'}));
+  if(!list.length){ host.innerHTML='<div class="m-empty">No matches.</div>'; document.getElementById('mAzRail').innerHTML=''; return; }
+  let html=''; let curLetter=''; const letters=new Set();
+  list.forEach(h=>{
+    const ln=_mLastName(h)||'#';
+    const L=(ln[0]||'#').toUpperCase();
+    const letter=/[A-Z]/.test(L)?L:'#';
+    if(letter!==curLetter){ curLetter=letter; letters.add(letter); html+=`<div class="m-alpha-head" id="mAlpha-${letter}">${letter}</div>`; }
+    const agc=getAGCScore(h).total;
+    const c=agc>=70?'var(--green)':agc>=40?'var(--gold)':'var(--red)';
+    const initials=(_mLastName(h)[0]||(h.displayName||'?')[0]||'?').toUpperCase();
+    const sub=h.noAddress?'No address':((h.city||h.address||'').toString());
+    html+=`<div class="m-rost-row" onclick="mOpenSheetById('${h.id}')">
+      <div class="m-rost-av">${_escHtml(initials)}</div>
+      <div style="min-width:0;flex:1"><div class="m-rost-name">${_escHtml(h.displayName||'Household')}</div><div class="m-rost-sub">${_escHtml(sub)}</div></div>
+      <div class="m-rost-score" style="color:${c}">${agc}</div>
+    </div>`;
+  });
+  host.innerHTML=html;
+  // alpha rail
+  const allL='ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
+  document.getElementById('mAzRail').innerHTML=allL.map(L=>`<span onclick="mJumpAlpha('${L}')" style="${letters.has(L)?'':'opacity:.25'}">${L}</span>`).join('');
+}
+function mJumpAlpha(L){ const el=document.getElementById('mAlpha-'+L); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+function mOpenSheetById(hid){ const h=households.find(x=>x.id===hid); if(h) mOpenSheet(h); }
+
+/* ===================== CONTACT BOTTOM SHEET ===================== */
+function mOpenSheet(h){
+  const inner=document.getElementById('mSheetInner');
+  const call=_mD5CallTarget(h);
+  const email=_mD5EmailTarget(h);
+  const addr=h.noAddress?'':((h.address||'')+(h.city?', '+h.city:''));
+  const navQ=encodeURIComponent((h.address||'')+' '+(h.city||''));
+  const gs=(typeof getGivingStats==='function')?getGivingStats(h):null;
+  const agc=getAGCScore(h);
+  inner.innerHTML=`
+    <div class="m-sheet-grab"></div>
+    <div class="m-sheet-head">
+      <div class="m-sheet-name">${_escHtml(h.displayName||'Household')}</div>
+      ${addr?`<div class="m-sheet-addr"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${_escHtml(addr)}</div>`:'<div class="m-sheet-addr">No address on file</div>'}
+      <div class="m-sheet-addr" style="margin-top:6px">Prospect ${agc.total}${gs&&gs.total?' · $'+Math.round(gs.total).toLocaleString()+' given':''}</div>
+    </div>
+    <div class="m-actionrow">
+      ${call?`<a href="tel:${_escHtml(call.phone)}"><span class="m-actdisc"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></span>Call</a>`:''}
+      ${call?`<a href="sms:${_escHtml(call.phone)}"><span class="m-actdisc"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></span>Text</a>`:''}
+      ${email?`<a href="mailto:${_escHtml(email.email)}"><span class="m-actdisc"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>Email</a>`:''}
+      ${addr?`<a href="geo:0,0?q=${navQ}"><span class="m-actdisc"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2l-9 19-2-8-8-2Z"/></svg></span>Navigate</a>`:''}
+    </div>
+    <div class="m-sheet-tools">
+      <button class="m-tool-btn m-tool-pri" onclick="mSheetOpenProfile('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Open Full Profile</button>
+      <button class="m-tool-btn" onclick="mSheetEnrich('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg> Build / Enrich Profile</button>
+      <button class="m-tool-btn" onclick="mSheetNotes('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg> Add Notes</button>
+      <button class="m-tool-btn" onclick="mSheetChat('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Context Chat</button>
+    </div>`;
+  document.getElementById('mContactSheet').classList.add('open');
+}
+function mCloseSheet(){ document.getElementById('mContactSheet').classList.remove('open'); }
+
+/* Sheet tool actions — bridge to desktop detail panel via real APIs.
+   openFullPanel(idx) takes an index; showTab(idx,tab) switches detail tabs;
+   openPersonChat(idx) is the per-contact context chat. */
+function _mIdx(hid){ return households.findIndex(h=>h.id===hid); }
+function mSheetOpenProfile(hid){
+  mCloseSheet();
+  const idx=_mIdx(hid); if(idx<0) return;
+  try{ openFullPanel(idx); }catch(e){ try{ selectHousehold(idx); }catch(_){} }
+}
+function mSheetEnrich(hid){ mCloseSheet(); try{ openEnrich(hid); }catch(e){ const idx=_mIdx(hid); if(idx>=0){ try{selectHousehold(idx);}catch(_){} } } }
+function mSheetNotes(hid){
+  mCloseSheet();
+  const idx=_mIdx(hid); if(idx<0) return;
+  try{ openFullPanel(idx); }catch(e){}
+  setTimeout(()=>{ try{ showTab(idx,'notes'); }catch(_){} }, 90);
+}
+function mSheetChat(hid){
+  mCloseSheet();
+  const idx=_mIdx(hid); if(idx<0) return;
+  try{ openPersonChat(idx); }catch(e){ try{ openFullPanel(idx); }catch(_){} }
+}
+
+/* ===================== MAP (mobile) ===================== */
+function mInitMap(){
+  if(_mMapBuilt){ setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); },80); return; }
+  if(typeof L==='undefined'){ return; }
+  _mMapObj=L.map('mMap',{zoomControl:true,attributionControl:false}).setView([41.43,-81.39],12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_mMapObj);
+  // plot household pins
+  households.forEach(h=>{
+    if(!h.lat||!h.lon) return;
+    const agc=getAGCScore(h).total;
+    const col=agc>=70?'#15803d':agc>=40?'#a16207':'#b91c1c';
+    const mk=L.circleMarker([h.lat,h.lon],{radius:7,fillColor:col,color:'#fff',weight:2,fillOpacity:.9});
+    mk.on('click',()=>mMapTray(h));
+    mk.addTo(_mMapObj);
+    _mPins.push(mk);
+  });
+  _mMapBuilt=true;
+  setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); mLocate(); },120);
+}
+function mMapTray(h){
+  const tray=document.getElementById('mMapTray');
+  const call=_mD5CallTarget(h);
+  const navQ=encodeURIComponent((h.address||'')+' '+(h.city||''));
+  tray.innerHTML=`
+    <div class="mt-name">${_escHtml(h.displayName||'Household')}</div>
+    <div class="mt-sub">${_escHtml(h.noAddress?'No address':((h.address||'')+(h.city?', '+h.city:'')))} · Prospect ${getAGCScore(h).total}</div>
+    <div class="mt-acts">
+      <a class="mt-go" href="geo:0,0?q=${navQ}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2l-9 19-2-8-8-2Z"/></svg> Navigate</a>
+      <a class="mt-open" href="javascript:void(0)" onclick="document.getElementById('mMapTray').classList.remove('open');mOpenSheetById('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg> Open</a>
+    </div>`;
+  tray.classList.add('open');
+}
+function mLocate(){
+  if(!navigator.geolocation||!_mMapObj) return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const{latitude,longitude}=pos.coords;
+    _mMapObj.setView([latitude,longitude],14);
+    _mUpdateLive(latitude,longitude);
+    if(_mWatchId==null){
+      _mWatchId=navigator.geolocation.watchPosition(p=>_mUpdateLive(p.coords.latitude,p.coords.longitude),()=>{},{enableHighAccuracy:true,maximumAge:10000});
+    }
+  },()=>{},{enableHighAccuracy:true});
+}
+function _mUpdateLive(lat,lon){
+  if(!_mMapObj) return;
+  const icon=L.divIcon({className:'',html:'<div class="m-livedot"></div>',iconSize:[16,16],iconAnchor:[8,8]});
+  if(_mLiveMarker) _mLiveMarker.setLatLng([lat,lon]);
+  else _mLiveMarker=L.marker([lat,lon],{icon}).addTo(_mMapObj);
+}
+
+/* ===================== ESC / cleanup ===================== */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); document.getElementById('mMapTray')?.classList.remove('open'); }});
+/* close sheet on grab swipe-ish (tap grab) */
+document.getElementById('mContactSheet')?.addEventListener('click',e=>{});
+/* ===================== END DAAS MOBILE LAYER ===================== */
+</script>
 
 
 
