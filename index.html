@@ -146,8 +146,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   .modal{width:95vw;padding:20px}.modal-btns{flex-direction:column}.modal-btns .btn{width:100%;padding:12px}
 
   /* ===== DAAS MOBILE SHELL ===== */
-  /* Hide the entire desktop app body; mobile shell takes over */
-  #app > .hdr, #app > .dash-nav, #app .crm-view, #app .dash-view, #app .contacts-view{display:none!important}
+  /* Hide the entire desktop app on mobile. Every overlay the shell needs
+     (fullPanel, captureOverlay, enrichOverlay, globalAskPanel, personChatPanel)
+     lives OUTSIDE #app, so they still open and work from the mobile shell. */
+  #app{display:none!important}
   #mobileShell{display:flex!important}
 
   /* Make existing overlays full-screen edge-to-edge on mobile */
@@ -8181,7 +8183,7 @@ function mNav(tab){
 function mBoot(){
   if(!isMobile()) return;
   document.body.style.overflow='hidden';
-  mRenderD5();
+  try{ mRenderD5(); }catch(e){ console.error('mRenderD5',e); }
   // enrich count hint
   try{
     const n=(typeof buildEnrichQueue==='function')?buildEnrichQueue().length:0;
