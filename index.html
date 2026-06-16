@@ -153,8 +153,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   #mobileShell{display:flex!important}
 
   /* Make existing overlays full-screen edge-to-edge on mobile */
+  /* Capture & Enrich overlays are already position:fixed inset:0 — no child sizing needed */
   #captureOverlay, #enrichOverlay{padding:0!important}
-  #captureOverlay > div, #enrichOverlay > div{max-width:none!important;width:100vw!important;max-height:none!important;height:100dvh!important;border-radius:0!important;margin:0!important}
   #globalAskPanel{inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important}
 
   /* ===== DETAIL / FULL PROFILE — mobile readability ===== */
@@ -177,11 +177,45 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   /* The detail panel inside #ppanel (selectHousehold path) — full width, comfortable */
   #ppanel{padding:0 4px!important}
   #ppanel [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  /* Profile header card (score | info | actions) — stack vertically on mobile */
+  #fullPanelContent [style*="grid-column:span 2"][style*="display:flex"]{flex-direction:column!important;gap:14px!important;padding:16px!important}
+  /* Action button column goes full-width row of buttons */
+  #fullPanelContent [style*="grid-column:span 2"] [style*="flex-direction:column"][style*="flex-shrink:0"]{flex-direction:row!important;flex-wrap:wrap!important;width:100%!important}
+  #fullPanelContent [style*="grid-column:span 2"] [style*="flex-direction:column"][style*="flex-shrink:0"] > button{flex:1 1 45%!important;justify-content:center!important;padding:11px 8px!important;font-size:.8rem!important}
+  /* Score number a touch smaller so it doesn't dominate */
+  #fullPanelContent [style*="font-size:3.5rem"]{font-size:2.6rem!important}
   /* Make the close/back button a comfortable tap target */
   #fullPanel button[onclick*="closeFullPanel"]{padding:9px 14px!important;font-size:.78rem!important}
   /* Person-chat (context chat) — full-screen its inner card on mobile */
   #personChatPanel{align-items:stretch!important;justify-content:stretch!important;backdrop-filter:none!important}
   #personChatPanel > div{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;border-radius:0!important;padding-bottom:env(safe-area-inset-bottom)}
+
+  /* ===== OVERLAY REFLOW — Chat (Research) full-screen mobile ===== */
+  #globalAskPanel .chat-shell{position:relative}
+  /* Rail becomes a slide-over drawer, hidden by default */
+  #globalAskPanel .chat-rail{position:absolute;top:0;left:0;bottom:0;width:82vw;max-width:320px;z-index:30;transform:translateX(-100%);transition:transform .22s ease;box-shadow:var(--sh-lg)}
+  #globalAskPanel .chat-rail.m-open{transform:translateX(0)}
+  #globalAskPanel .chat-main{width:100%}
+  #globalAskPanel .chat-msgs{padding:16px 14px}
+  #globalAskPanel .chat-composer{padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+  #globalAskPanel .chat-composer-inner{max-width:none;gap:8px}
+  #globalAskPanel .chat-input{font-size:16px;min-width:0}
+  /* Backdrop when rail open */
+  #mChatRailBackdrop{position:absolute;inset:0;background:rgba(28,25,23,.4);z-index:25;display:none}
+  #mChatRailBackdrop.m-open{display:block}
+
+  /* ===== OVERLAY REFLOW — Capture full-screen mobile ===== */
+  #captureOverlay [style*="max-width:680px"]{max-width:none!important;padding:14px 14px calc(90px + env(safe-area-inset-bottom))!important}
+  #captureOverlay #capture-text{font-size:16px!important;min-height:120px!important}
+  #captureOverlay textarea, #captureOverlay input[type="text"]{font-size:16px!important}
+
+  /* ===== OVERLAY REFLOW — Enrich (Build Profiles) full-screen mobile ===== */
+  #enrichOverlay [style*="max-width"]{max-width:none!important}
+  #enrichOverlay #enrichBody, #enrichOverlay .enrich-card{padding:14px!important}
+  #enrichOverlay [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  #enrichOverlay textarea, #enrichOverlay input[type="text"]{font-size:16px!important;width:100%!important}
+  /* Enrich header jump-to dropdown shouldn't overflow */
+  #enrichOverlay select{max-width:42vw!important}
 }
 /* ===== MOBILE SHELL (defined outside media query, shown only via #app rule above) ===== */
 #mobileShell{display:none;flex-direction:column;height:100dvh;width:100vw;background:var(--bg);overflow:hidden}
@@ -8174,9 +8208,55 @@ function mNav(tab){
   _mActiveTab=tab;
   document.querySelectorAll('#mobileShell .m-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
   document.querySelectorAll('.m-navbtn').forEach(b=>b.classList.toggle('active', b.dataset.nav===tab));
+  // If switching AWAY from chat/capture, close their overlays so they don't linger
+  if(tab!=='chat'){ try{ const g=document.getElementById('globalAskPanel'); if(g&&g.style.display!=='none'){ if(typeof closeGlobalAsk==='function')closeGlobalAsk(); else g.style.display='none'; } }catch(e){} }
+  if(tab!=='capture'){ try{ const c=document.getElementById('captureOverlay'); if(c&&c.style.display!=='none'){ if(typeof closeCapture==='function')closeCapture(); else c.style.display='none'; } }catch(e){} }
   if(tab==='dash') mRenderD5();
   else if(tab==='contacts') mRenderRoster();
   else if(tab==='map') mInitMap();
+  else if(tab==='capture'){ try{ openCapture(); _mWireCaptureClose(); }catch(e){} }
+  else if(tab==='chat'){ try{ openGlobalAsk(); _mWireChatRail(); }catch(e){} }
+}
+
+/* When the desktop overlay's own Close/X is tapped on mobile, fall back to Dashboard tab */
+function _mWireCaptureClose(){
+  setTimeout(()=>{
+    document.querySelectorAll('#captureOverlay [onclick*="closeCapture"]').forEach(b=>{
+      if(!b._mWired){ b._mWired=1; b.addEventListener('click',()=>{ setTimeout(()=>mNav('dash'),10); }); }
+    });
+  },120);
+}
+/* Chat rail: turn the header menu button into a rail toggle on mobile + add backdrop */
+function _mWireChatRail(){
+  setTimeout(()=>{
+    const shell=document.querySelector('#globalAskPanel .chat-shell');
+    if(shell && !document.getElementById('mChatRailBackdrop')){
+      const bd=document.createElement('div'); bd.id='mChatRailBackdrop';
+      bd.addEventListener('click',mToggleChatRail); shell.appendChild(bd);
+    }
+    // Repurpose the desktop "menu/sidebar" button inside chat header to toggle rail
+    document.querySelectorAll('#globalAskPanel [onclick*="openSidebar"]').forEach(b=>{
+      if(!b._mWired){ b._mWired=1; b.addEventListener('click',e=>{ if(isMobile()){ e.preventDefault(); e.stopPropagation(); mToggleChatRail(); } },true); }
+    });
+    // Close/back button → return to dashboard tab
+    document.querySelectorAll('#globalAskPanel [onclick*="closeGlobalAsk"]').forEach(b=>{
+      if(!b._mClose){ b._mClose=1; b.addEventListener('click',()=>setTimeout(()=>mNav('dash'),10)); }
+    });
+    // Tapping a session in the rail should close the rail
+    const rl=document.getElementById('chatRailList');
+    if(rl && !rl._mWired){ rl._mWired=1; rl.addEventListener('click',()=>{ if(isMobile()) setTimeout(mCloseChatRail,50); }); }
+  },150);
+}
+function mToggleChatRail(){
+  const rail=document.querySelector('#globalAskPanel .chat-rail');
+  const bd=document.getElementById('mChatRailBackdrop');
+  if(rail){ rail.classList.toggle('m-open'); if(bd) bd.classList.toggle('m-open', rail.classList.contains('m-open')); }
+}
+function mCloseChatRail(){
+  const rail=document.querySelector('#globalAskPanel .chat-rail');
+  const bd=document.getElementById('mChatRailBackdrop');
+  if(rail) rail.classList.remove('m-open');
+  if(bd) bd.classList.remove('m-open');
 }
 
 /* ---- Boot: called from showApp after data loads ---- */
@@ -8370,7 +8450,15 @@ function mRenderRoster(){
       return t.toLowerCase().includes(q);
     });
   }
-  list.sort((a,b)=>_mLastName(a).localeCompare(_mLastName(b),undefined,{sensitivity:'base'}));
+  list.sort((a,b)=>{
+    const an=_mLastName(a), bn=_mLastName(b);
+    // Push blank/no-name households to the bottom
+    const aEmpty=!an || !/[a-z]/i.test(an[0]||'');
+    const bEmpty=!bn || !/[a-z]/i.test(bn[0]||'');
+    if(aEmpty&&!bEmpty) return 1;
+    if(bEmpty&&!aEmpty) return -1;
+    return an.localeCompare(bn,undefined,{sensitivity:'base'});
+  });
   if(!list.length){ host.innerHTML='<div class="m-empty">No matches.</div>'; document.getElementById('mAzRail').innerHTML=''; return; }
   let html=''; let curLetter=''; const letters=new Set();
   list.forEach(h=>{
