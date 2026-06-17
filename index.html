@@ -948,7 +948,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
       <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14v4M12 9v9M17 5v13"></path></svg> Dashboard</h2>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-sec" onclick="openAGCCompare()" style="font-size:.65rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h4"></path></svg> AGC Compare</button>
         <button class="btn btn-sec" onclick="openCallSheet()" style="font-size:.65rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6Z"></path></svg> Call Sheet</button>
         <button class="btn btn-sec" onclick="openEngineSettings()" style="font-size:.65rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg> Engine</button>
         <button class="btn btn-sec" onclick="resetDashLayout()" style="font-size:.65rem;padding:4px 10px">↺ Reset Layout</button>
@@ -1876,46 +1875,6 @@ function _calcAGCLocal(h){
   return{total:Math.min(100,affinity+generosity+capacity),affinity,generosity,capacity};
 }
 
-// ── LEGACY AGC SCORER (v1) — kept only for the before/after comparison view ──
-function _calcAGCLegacy(h){
-  const g=getGivingStats(h);
-  const p=h.profile_data||{};
-  const notes=(h.notes||'').toLowerCase();
-  const jewishBoards=p.boardMemberships&&p.boardMemberships.toLowerCase().includes('jewish');
-
-  // ── AFFINITY (35): closeness to Chabad ──
-  let affinity=0;
-  if(g&&g.total>0)affinity+=15;                                                   // gives to Chabad at all
-  if(g&&g.count>=5)affinity+=5;else if(g&&g.count>=3)affinity+=3;else if(g&&g.count>=1)affinity+=1; // loyalty/frequency
-  if(notes.includes('warm')||notes.includes('close')||notes.includes('friend')||notes.includes('connected'))affinity+=5;
-  if(p.fedLevel)affinity+=5;                                                       // active in Jewish community
-  if(jewishBoards)affinity+=5;
-  affinity=Math.min(35,affinity);
-
-  // ── GENEROSITY (35): charitable nature — Chabad giving AND/OR external philanthropy ──
-  // Path A: evidence from giving to Chabad (a gift to us is real evidence of generosity)
-  let genChabad=0;
-  if(g&&g.lastDate){const mo=(Date.now()-new Date(g.lastDate))/(1000*60*60*24*30);if(mo<=12)genChabad+=8;else if(mo<=24)genChabad+=5;else if(mo<=36)genChabad+=3;else genChabad+=2;}
-  if(g&&g.total>=10000)genChabad+=10;else if(g&&g.total>=5000)genChabad+=8;else if(g&&g.total>=1800)genChabad+=6;else if(g&&g.total>=500)genChabad+=4;else if(g&&g.total>=100)genChabad+=3;else if(g&&g.total>0)genChabad+=2;
-  if(g&&g.count>=5)genChabad+=4;else if(g&&g.count>=3)genChabad+=3;else if(g&&g.count>=2)genChabad+=2;else if(g&&g.count>=1)genChabad+=1;
-  // Path B: evidence of external philanthropy (generous in general — can max on its own)
-  let genExternal=0;
-  if(p.philanthropy990)genExternal+=18;   // documented external giving (990s, named gifts)
-  if(p.fedLevel)genExternal+=9;            // Federation giving level = real external charitable giving
-  if(jewishBoards)genExternal+=8;          // board involvement implies giving
-  // Either path can carry the score; sum then cap at 35
-  let generosity=Math.min(35,genChabad+genExternal);
-
-  // ── CAPACITY (30): ability to give ──
-  let capacity=0;
-  const val=h.home_value||0;
-  if(val>=2000000)capacity+=20;else if(val>=1000000)capacity+=16;else if(val>=750000)capacity+=12;else if(val>=500000)capacity+=9;else if(val>=300000)capacity+=5;else if(val>0)capacity+=2;
-  if(p.businessInfo)capacity+=5;
-  if(g&&g.total>=5000)capacity+=5;
-  capacity=Math.min(30,capacity);
-
-  return{total:Math.min(100,affinity+generosity+capacity),affinity,generosity,capacity};
-}
 function getProspectScore(h){
   return getAGCScore(h).total;
 }
@@ -5358,40 +5317,22 @@ let _PRISTINE_SRC='';
 async function loadLatestVersionInfo(){
   const el=document.getElementById('versionInfo');
   if(!el)return;
-  const pat=localStorage.getItem('crm_gh_pat');
-  if(!pat){el.textContent='Latest Update: Token missing in Settings';return;}
   try{
-    const resp=await fetch('https://api.github.com/repos/chabadchagrin/crm/deployments?environment=github-pages&per_page=1',{
-      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
+    // Public repo — read the latest commit to index.html with NO auth header.
+    // (The Deployments API is permission-gated and 401s with a Contents-only
+    //  PAT; the commits endpoint is publicly readable and works local + live.)
+    const resp=await fetch('https://api.github.com/repos/chabadchagrin/crm/commits?path=index.html&per_page=1',{
+      headers:{'Accept':'application/vnd.github+json'}
     });
     if(!resp.ok){el.textContent='Deploy status: Unable to fetch ('+resp.status+')';return;}
-    const deps=await resp.json();
-    if(!deps||!deps[0]){el.textContent='Deploy status: No deployments found';return;}
-    const depId=deps[0].id;
-    // Get latest status for this deployment
-    const sResp=await fetch('https://api.github.com/repos/chabadchagrin/crm/deployments/'+depId+'/statuses?per_page=1',{
-      headers:{'Authorization':'Bearer '+pat,'Accept':'application/vnd.github+json'}
-    });
-    if(!sResp.ok){el.textContent='Deploy status: Unable to fetch statuses';return;}
-    const statuses=await sResp.json();
-    const state=statuses&&statuses[0]&&statuses[0].state;
-    const updatedAt=statuses&&statuses[0]&&statuses[0].updated_at;
-    if(state==='success'){
-      const formatted=updatedAt?new Date(updatedAt).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'unknown time';
-      el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);vertical-align:middle;margin-right:5px"></span> Live · '+formatted;
-      el.style.color='var(--green)';
-      if(_deployPollTimer){clearInterval(_deployPollTimer);_deployPollTimer=null;}
-    }else if(state==='in_progress'||state==='pending'||state==='queued'){
-      el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d4a017;vertical-align:middle;margin-right:5px"></span> Deploying…';
-      el.style.color='var(--gold)';
-    }else if(state==='failure'||state==='error'){
-      el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);vertical-align:middle;margin-right:5px"></span> Deploy failed';
-      el.style.color='var(--red)';
-      if(_deployPollTimer){clearInterval(_deployPollTimer);_deployPollTimer=null;}
-    }else{
-      el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--grey);vertical-align:middle;margin-right:5px"></span> Status: '+(state||'unknown');
-      el.style.color='var(--txt3)';
-    }
+    const commits=await resp.json();
+    const c=commits&&commits[0];
+    if(!c){el.textContent='Deploy status: No commits found';return;}
+    const when=c.commit&&c.commit.committer&&c.commit.committer.date;
+    const formatted=when?new Date(when).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'unknown time';
+    el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);vertical-align:middle;margin-right:5px"></span> Live · '+formatted;
+    el.style.color='var(--green)';
+    if(_deployPollTimer){clearInterval(_deployPollTimer);_deployPollTimer=null;}
   }catch(e){
     el.textContent='Deploy status: Error';
     el.style.color='var(--txt3)';
@@ -7095,47 +7036,6 @@ async function initDashboard(){
     const dg=document.getElementById('dashGrid');
     if(dg)dg.innerHTML=`<div style="padding:20px;color:var(--red);font-size:.8rem">Dashboard render error: ${_escHtml(e.message)}</div>`;
   }
-}
-
-// ── AGC COMPARE — old scorer vs new scorer, side by side, for calibration on known households ──
-let _agcCmpSort='delta';
-async function openAGCCompare(){
-  document.getElementById('agcCompareBg')?.remove();
-  if(!Object.keys(_agcInterAgg).length)await loadAGCInteractionAggregates();
-  const rows=households.map(h=>{
-    const o=_calcAGCLegacy(h),n=_calcAGCLocal(h);
-    return{h,idx:hIdx(h.id),o,n,delta:n.total-o.total};
-  });
-  if(_agcCmpSort==='delta')rows.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
-  else rows.sort((a,b)=>b.n.total-a.n.total);
-  const cell=(o,n)=>{const d=n-o;const c=d>0?'var(--green)':d<0?'var(--red)':'var(--txt3)';
-    return `<td style="padding:5px 8px;text-align:right;font-family:var(--font-ui);font-size:.66rem;white-space:nowrap"><span style="color:var(--txt3)">${o}</span> → <span style="color:var(--txt)">${n}</span> <span style="color:${c}">${d>0?'+':''}${d!==0?d:'·'}</span></td>`;};
-  const bg=document.createElement('div');
-  bg.id='agcCompareBg';
-  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto';
-  bg.onclick=e=>{if(e.target===bg)bg.remove();};
-  bg.innerHTML=`<div style="background:var(--surf);border:1px solid var(--border);border-radius:12px;width:760px;max-width:97vw;padding:20px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <h2 style="font-family:var(--font-display);font-size:1rem;color:var(--txt);flex:1"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h4"/></svg> AGC: Old vs New</h2>
-      <button onclick="_agcCmpSort=_agcCmpSort==='delta'?'new':'delta';openAGCCompare()" class="btn btn-sec" style="font-size:.62rem;padding:3px 9px">Sort: ${_agcCmpSort==='delta'?'biggest change':'new score'}</button>
-      <button onclick="document.getElementById('agcCompareBg').remove()" style="background:none;border:none;color:var(--txt3);font-size:1.1rem;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div style="font-size:.64rem;color:var(--txt3);margin-bottom:12px;line-height:1.5">Calibration check: for each big mover, ask "which ranking matches reality?" Click a name to open the household. New scores use interactions, participation, and loyalty data the old system ignored — households you talk to but who haven't given will rise; pure-transaction profiles may dip.</div>
-    <table style="width:100%;border-collapse:collapse">
-      <tr style="border-bottom:1px solid var(--border2)">
-        <th style="text-align:left;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">HOUSEHOLD</th>
-        <th style="text-align:right;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">AFFINITY</th>
-        <th style="text-align:right;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">GENEROSITY</th>
-        <th style="text-align:right;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">CAPACITY</th>
-        <th style="text-align:right;padding:5px 8px;font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">TOTAL</th>
-      </tr>
-      ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:5px 8px;font-size:.74rem;color:var(--txt);cursor:pointer;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="document.getElementById('agcCompareBg').remove();switchView('crm');setTimeout(()=>byId('openFullPanel','${r.h.id}',${r.idx}),150)">${_escHtml(r.h.displayName)}</td>
-        ${cell(r.o.affinity,r.n.affinity)}${cell(r.o.generosity,r.n.generosity)}${cell(r.o.capacity,r.n.capacity)}${cell(r.o.total,r.n.total)}
-      </tr>`).join('')}
-    </table>
-  </div>`;
-  document.body.appendChild(bg);
 }
 
 // ── CALL SHEET — printable version of today's queue (pure client-side, zero tokens) ──
