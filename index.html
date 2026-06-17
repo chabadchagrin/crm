@@ -212,6 +212,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   #mChatRailBackdrop.m-open{display:block}
 
   /* ===== OVERLAY REFLOW — Capture full-screen mobile ===== */
+  /* Keep the 5-tab bottom nav visible while Capture is open: stop the overlay above it */
+  #captureOverlay{bottom:calc(56px + env(safe-area-inset-bottom))!important;z-index:5!important}
+  .m-bottomnav{z-index:20!important}
   /* Hide the desktop sidebar hamburger (doesn't work on mobile); keep file/mic/analyze controls */
   #captureOverlay [onclick*="openSidebar"], #enrichOverlay [onclick*="openSidebar"]{display:none!important}
   #captureOverlay [style*="max-width:680px"]{max-width:none!important;padding:14px 14px calc(90px + env(safe-area-inset-bottom))!important}
