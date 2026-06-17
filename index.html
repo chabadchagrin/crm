@@ -191,6 +191,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   #personChatPanel > div{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;border-radius:0!important;padding-bottom:env(safe-area-inset-bottom)}
 
   /* ===== OVERLAY REFLOW — Chat (Research) full-screen mobile ===== */
+  /* Pin the top bar so it never scrolls away; messages scroll inside .chat-msgs only */
+  #chatTopBar{flex-shrink:0!important;position:sticky;top:0;z-index:40}
+  #chatContextBtn{display:none!important}
+  #globalAskPanel .chat-shell{flex:1;min-height:0}
+  #globalAskPanel .chat-main{min-height:0}
+  #globalAskPanel .chat-head{flex-shrink:0!important;position:sticky;top:0;z-index:20}
+  #globalAskPanel .chat-msgs{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
   #globalAskPanel .chat-shell{position:relative}
   /* Rail becomes a slide-over drawer, hidden by default */
   #globalAskPanel .chat-rail{position:absolute;top:0;left:0;bottom:0;width:82vw;max-width:320px;z-index:30;transform:translateX(-100%);transition:transform .22s ease;box-shadow:var(--sh-lg)}
@@ -205,6 +212,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   #mChatRailBackdrop.m-open{display:block}
 
   /* ===== OVERLAY REFLOW — Capture full-screen mobile ===== */
+  /* Hide the desktop sidebar hamburger (doesn't work on mobile); keep file/mic/analyze controls */
+  #captureOverlay [onclick*="openSidebar"], #enrichOverlay [onclick*="openSidebar"]{display:none!important}
   #captureOverlay [style*="max-width:680px"]{max-width:none!important;padding:14px 14px calc(90px + env(safe-area-inset-bottom))!important}
   #captureOverlay #capture-text{font-size:16px!important;min-height:120px!important}
   #captureOverlay textarea, #captureOverlay input[type="text"]{font-size:16px!important}
@@ -982,11 +991,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- GLOBAL ASK PANEL (Claude-app layout) -->
 <div id="globalAskPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8500;flex-direction:column">
   <!-- top bar -->
-  <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:var(--sh-sm)">
+  <div id="chatTopBar" style="background:var(--surf);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:var(--sh-sm)">
     <button onclick="closeGlobalAsk()" class="btn btn-sec" style="padding:6px 12px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg> Back</button>
     <div class="logo" style="font-size:1.1rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg> Research</div>
     <div class="spacer" style="flex:1"></div>
-    <button onclick="openSearchContext()" class="btn btn-sec" style="padding:6px 11px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"></path></svg> Context</button>
+    <button id="chatContextBtn" onclick="openSearchContext()" class="btn btn-sec" style="padding:6px 11px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"></path></svg> Context</button>
   </div>
   <!-- two-column shell -->
   <div class="chat-shell">
