@@ -3514,16 +3514,35 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
       };
 
     _pbPayload.model='claude-sonnet-4-6';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':ANTHROPIC_KEY,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify(_pbPayload)
-    });
+    const _pbCtrl=new AbortController();
+    const _pbTimer=setTimeout(()=>_pbCtrl.abort(), 120000);
+    let resp;
+    try{
+      resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':ANTHROPIC_KEY,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify(_pbPayload),
+        signal:_pbCtrl.signal
+      });
+    }catch(fe){
+      clearTimeout(_pbTimer);
+      if(fe.name==='AbortError') throw new Error('The research took too long and timed out. This can happen on a weak mobile connection — try again on Wi-Fi, or rebuild.');
+      throw new Error('Network error reaching Anthropic. Check your connection and rebuild.');
+    }
+    clearTimeout(_pbTimer);
+    if(!resp.ok){
+      let detail='';
+      try{ const ej=await resp.json(); detail=ej?.error?.message||''; }catch(_){}
+      if(resp.status===401) throw new Error('API key rejected (401). Re-check your Anthropic key on desktop.');
+      if(resp.status===429) throw new Error('Rate limited (429). Wait a moment and rebuild.');
+      if(resp.status>=500) throw new Error('Anthropic server error ('+resp.status+'). Try rebuilding in a minute.');
+      throw new Error('Request failed ('+resp.status+')'+(detail?': '+detail:''));
+    }
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
@@ -5456,6 +5475,8 @@ function saveAPIKeys(){
 window.addEventListener('DOMContentLoaded',async()=>{
   // Capture the page source BEFORE any JS mutates the DOM — used by Deploy to GitHub.
   _PRISTINE_SRC='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  // Register service worker (enables Android share target). Safe no-op on unsupported browsers.
+  try{ if(typeof _mRegisterSW==='function') _mRegisterSW(); }catch(e){}
   // Check for existing persistent session
   const{data:{session}}=await _sb.auth.getSession();
   if(session){
@@ -8226,26 +8247,41 @@ function _mWireCaptureClose(){
     });
   },120);
 }
-/* Chat rail: turn the header menu button into a rail toggle on mobile + add backdrop */
+/* Chat rail: inject a dedicated history-toggle button on mobile + backdrop */
 function _mWireChatRail(){
   setTimeout(()=>{
+    if(!isMobile()) return;
     const shell=document.querySelector('#globalAskPanel .chat-shell');
     if(shell && !document.getElementById('mChatRailBackdrop')){
       const bd=document.createElement('div'); bd.id='mChatRailBackdrop';
-      bd.addEventListener('click',mToggleChatRail); shell.appendChild(bd);
+      bd.addEventListener('click',mCloseChatRail); shell.appendChild(bd);
     }
-    // Repurpose the desktop "menu/sidebar" button inside chat header to toggle rail
-    document.querySelectorAll('#globalAskPanel [onclick*="openSidebar"]').forEach(b=>{
-      if(!b._mWired){ b._mWired=1; b.addEventListener('click',e=>{ if(isMobile()){ e.preventDefault(); e.stopPropagation(); mToggleChatRail(); } },true); }
-    });
+    // Inject a history button into the chat header (left side) if not present
+    const head=document.querySelector('#globalAskPanel .chat-head');
+    if(head && !document.getElementById('mChatHistBtn')){
+      const btn=document.createElement('button');
+      btn.id='mChatHistBtn';
+      btn.type='button';
+      btn.title='Chat history';
+      btn.style.cssText='background:var(--surf);border:1px solid var(--border2);border-radius:8px;padding:7px 9px;cursor:pointer;color:var(--txt2);display:flex;align-items:center;flex-shrink:0;margin-right:8px';
+      btn.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.7 9.7 0 0 0-6.7 2.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>';
+      btn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); mToggleChatRail(); });
+      head.insertBefore(btn, head.firstChild);
+    }
     // Close/back button → return to dashboard tab
     document.querySelectorAll('#globalAskPanel [onclick*="closeGlobalAsk"]').forEach(b=>{
       if(!b._mClose){ b._mClose=1; b.addEventListener('click',()=>setTimeout(()=>mNav('dash'),10)); }
     });
-    // Tapping a session in the rail should close the rail
+    // Tapping a session in the rail closes the drawer
     const rl=document.getElementById('chatRailList');
-    if(rl && !rl._mWired){ rl._mWired=1; rl.addEventListener('click',()=>{ if(isMobile()) setTimeout(mCloseChatRail,50); }); }
-  },150);
+    if(rl && !rl._mWired){ rl._mWired=1; rl.addEventListener('click',()=>{ if(isMobile()) setTimeout(mCloseChatRail,60); }); }
+    // New-chat button also closes drawer
+    document.querySelectorAll('#globalAskPanel [onclick*="newChatSession"]').forEach(b=>{
+      if(!b._mNew){ b._mNew=1; b.addEventListener('click',()=>{ if(isMobile()) setTimeout(mCloseChatRail,60); }); }
+    });
+    // Make sure the rail content is freshly rendered
+    try{ if(typeof renderChatSidebar==='function') renderChatSidebar(); }catch(e){}
+  },180);
 }
 function mToggleChatRail(){
   const rail=document.querySelector('#globalAskPanel .chat-rail');
@@ -8270,18 +8306,56 @@ function mBoot(){
     const el=document.getElementById('mEnrichCount');
     if(el) el.textContent = n? (n+' household'+(n>1?'s':'')+' need a profile — top prospects first') : 'All profiles built';
   }catch(e){}
-  // Share-target intake: if launched via Android share sheet (?text=/?title=/?url=), drop into Quick Capture
+  // Share-target intake: SW redirects here with ?shared=1 after stashing payload
   try{
     const p=new URLSearchParams(location.search);
-    const shared=[p.get('title'),p.get('text'),p.get('url')].filter(Boolean).join('\n').trim();
-    if(shared){
-      mNav('capture');
-      openCapture();
-      setTimeout(()=>{ const ta=document.getElementById('capture-text'); if(ta){ ta.value=shared; ta.focus(); } },120);
-      // clean the URL so a refresh doesn't re-trigger
+    if(p.get('shared')==='1'){
       history.replaceState(null,'',location.pathname);
+      mNav('capture');
+      _mIngestSharedPayload();
+    } else {
+      // Legacy GET fallback (text/url shared directly)
+      const shared=[p.get('title'),p.get('text'),p.get('url')].filter(Boolean).join('\n').trim();
+      if(shared){
+        mNav('capture');
+        setTimeout(()=>{ const ta=document.getElementById('capture-text'); if(ta){ ta.value=shared; ta.focus(); } },200);
+        history.replaceState(null,'',location.pathname);
+      }
     }
   }catch(e){}
+}
+
+/* Pull text + image stashed by the service worker share handler, drop into Quick Capture */
+async function _mIngestSharedPayload(){
+  try{
+    const cache=await caches.open('daas-share-v1');
+    // text
+    let text='';
+    try{ const tr=await cache.match('shared-text'); if(tr) text=(await tr.text()||'').trim(); }catch(e){}
+    setTimeout(()=>{ const ta=document.getElementById('capture-text'); if(ta&&text){ ta.value=text; } },250);
+    // image → feed into the capture file input so existing analyze flow handles OCR
+    try{
+      const ir=await cache.match('shared-image');
+      if(ir){
+        const blob=await ir.blob();
+        const file=new File([blob], 'shared.png', {type:blob.type||'image/png'});
+        const dt=new DataTransfer(); dt.items.add(file);
+        setTimeout(()=>{
+          const fi=document.getElementById('capture-file');
+          if(fi){ fi.files=dt.files; fi.dispatchEvent(new Event('change',{bubbles:true})); }
+        },300);
+        await cache.delete('shared-image');
+      }
+    }catch(e){}
+    await cache.delete('shared-text');
+  }catch(e){}
+}
+
+/* Register the service worker (needed for the Android share target) */
+function _mRegisterSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
 }
 
 /* ---- CRM sync from topbar ---- */
