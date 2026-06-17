@@ -7540,11 +7540,11 @@ async function _computeDailyQueue(){
   const today=new Date();today.setHours(0,0,0,0);
   const now=Date.now();
   const todayStr=localDateStr(today);
-  const cutoff90=localDateStr(new Date(now-ENGINE.driftDays*24*60*60*1000));
 
-  // Fetch most recent interaction date per contact in last 90 days
+  // Fetch most recent interaction date per contact (full history, no date floor)
+  // so daysSince reflects the TRUE last contact, not a 90-day-window sentinel.
   let recentRows=[];
-  try{recentRows=await sbAll(`interactions?date=gte.${cutoff90}&select=contact_id,date&order=date.desc,id.asc`)||[];}catch(e){}
+  try{recentRows=await sbAll(`interactions?select=contact_id,date&order=date.desc,id.asc`)||[];}catch(e){}
 
   // Map contact_id → most recent date
   const lastInteraction={};
