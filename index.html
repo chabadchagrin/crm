@@ -1477,6 +1477,35 @@ function triggerSearchAllModal(){
 }
 
 // ── LOAD ALL ──
+// ── CLOCK-SKEW GUARD ──────────────────────────────────────────────────────
+// A device clock running ahead of Supabase's server makes a freshly-minted JWT
+// look future-dated; PostgREST then returns PGRST303 "JWT issued at future" on
+// the FIRST data call. A second or two later the clocks agree and it works —
+// which is why a manual refresh "fixes" it. This probes cheaply up front and,
+// on that specific error, waits + refreshes the session, then retries. It never
+// throws: a genuine failure just falls through so the real load reports it.
+function _isJwtFutureErr(e){
+  const m=(e&&e.message)||String(e||'');
+  return m.includes('PGRST303')||m.includes('JWT issued at future');
+}
+async function _awaitClockSkewClear(maxTries=4){
+  for(let i=0;i<maxTries;i++){
+    try{
+      await sb('households?select=id&limit=1',{timeoutMs:8000});
+      return; // token accepted — clocks agree, proceed with the real load
+    }catch(e){
+      if(!_isJwtFutureErr(e))return; // unrelated error — let the real load surface it
+      // Future-dated JWT: wait, refresh the session so iat is re-minted, retry.
+      await new Promise(r=>setTimeout(r,1200));
+      try{
+        const{data}=await _sb.auth.refreshSession();
+        if(data&&data.session)_authToken=data.session.access_token;
+      }catch(_){}
+    }
+  }
+  // Exhausted retries — fall through; the bulk load will retry/report as usual.
+}
+
 async function loadAll(){
   households=[];filtered=[];markers.forEach(m=>m&&_removeMarker(m));markers=[];activeIdx=-1;
   if(clusterGroup)clusterGroup.clearLayers();
@@ -1485,6 +1514,13 @@ async function loadAll(){
   document.getElementById('clist').innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"/></svg></div><p>Loading…</p></div>';
 
   try{
+    // CLOCK-SKEW GUARD: if the device clock is slightly ahead of Supabase's auth
+    // server, the freshly-issued JWT's "issued at" (iat) reads as the future and
+    // Supabase rejects the first call with PGRST303 "JWT issued at future".
+    // Probe once cheaply and, if we hit that, wait briefly and let the session
+    // refresh before doing the real bulk load — instead of bailing to a blank Map.
+    await _awaitClockSkewClear();
+
     // Load households, contacts, donations separately
     const [hRows, allContacts, donations] = await Promise.all([
       sbAll('households?select=*&order=created_at.asc,id.asc'),
@@ -1593,7 +1629,7 @@ async function loadAll(){
   }catch(e){
     document.getElementById('clist').innerHTML=`<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>${_escHtml(e.message)}</p></div>`;
     console.error('[DAAS] loadAll failed',e);
-    switchView('crm');
+    switchView(_uiPrefs.landing||'dash');
   }
 }
 
@@ -6973,6 +7009,10 @@ async function initDashboard(){
     const pinRows=await sb('app_settings?key=eq.daily_pins&limit=1');
     if(pinRows&&pinRows.length&&pinRows[0].value)_dailyPins=JSON.parse(pinRows[0].value)||[];
   }catch(e){console.warn('[DAAS] daily_pins load failed',e);}
+  try{
+    const setRows=await sb('app_settings?key=eq.daily_set&limit=1');
+    if(setRows&&setRows.length&&setRows[0].value)_dailySet=JSON.parse(setRows[0].value)||null;
+  }catch(e){console.warn('[DAAS] daily_set load failed',e);}
   // Load saved layout — but only use it if it has ALL current panels
   let layout=DASH_DEFAULT_LAYOUT;
   try{
@@ -7056,6 +7096,7 @@ async function openCallSheet(){
     if(card.type==='keepwarm')why=`No contact in ${card.daysSince!==null?card.daysSince:'90+'} days — strong relationship drifting`;
     else if(card.type==='icebreaker')why=`$${Math.round((h.home_value||0)/1000)}k home, never contacted — cold open`;
     else if(card.type==='activetrack')why=`Follow-up due — step ${card.item.t.step}, attempt ${card.item.t.attempts+1}`;
+    else if(card.type==='carryover')why='Carried over from a previous day — still open';
     else why='Pinned by you';
     const talk=p.approach?p.approach.substring(0,220)+(p.approach.length>220?'…':''):'';
     return `<div style="border:1px solid #ccc;border-radius:8px;padding:12px 14px;margin-bottom:10px;page-break-inside:avoid">
@@ -7393,6 +7434,28 @@ function navigateToHouseholdFromSearch(householdId,type){
 // Pinned households — manual additions that always appear at the top of the queue
 let _dailyPins=[];
 
+// Frozen daily set: {date:'YYYY-MM-DD', ids:[hhId,...], done:[hhId,...]}
+// ids = today's auto-picked 5 (excludes pins). Frozen for the day — no backfill.
+// Cards leave (and never return today) when their id lands in `done` (outcome logged or snoozed).
+// On a new day, leftovers (ids not in done) carry over first, then we top up to 5.
+let _dailySet=null;
+const DAILY_TARGET=5;
+
+async function _saveDailySet(){
+  try{
+    await sbSetSetting('daily_set',JSON.stringify(_dailySet));
+  }catch(e){console.warn('daily_set save failed',e);}
+}
+
+// Mark a household as handled for today so it leaves the queue and won't carry over.
+async function _markDailyDone(hhId){
+  if(!_dailySet)return;
+  if(_dailySet.ids.includes(hhId)&&!_dailySet.done.includes(hhId)){
+    _dailySet.done.push(hhId);
+    await _saveDailySet();
+  }
+}
+
 async function _saveDailyPins(){
   try{
     await sbSetSetting('daily_pins',JSON.stringify(_dailyPins));
@@ -7499,21 +7562,73 @@ async function _computeDailyQueue(){
   // ── Active Track ──
   const activeTracks=outreachTracks.filter(t=>t.status==='active'&&t.next_due&&t.next_due<=todayStr);
 
+  // ── Build candidate pool (ordered by priority) + an id→card lookup so we can
+  //    reconstruct any frozen id back into a real card with its type/why data. ──
+  const pool=[];
+  keepWarm.forEach(item=>pool.push({type:'keepwarm',item}));
+  icebreakers.forEach(item=>pool.push({type:'icebreaker',item}));
+  activeTracks.forEach(t=>{
+    if(_dailyPins.includes(t.household_id))return;
+    const h=households.find(hh=>hh.id===t.household_id);
+    if(h)pool.push({type:'activetrack',item:{h,t,idx:hIdx(h.id)}});
+  });
+  const poolById={};
+  pool.forEach(c=>{if(!poolById[c.item.h.id])poolById[c.item.h.id]=c;});
+
+  // ── Resolve today's FROZEN set. Frozen for the day, no backfill. ──
+  // New day → carry over yesterday's un-done ids first, then top up to DAILY_TARGET.
+  let setChanged=false;
+  if(!_dailySet||_dailySet.date!==todayStr){
+    const carry=(_dailySet&&Array.isArray(_dailySet.ids))
+      ? _dailySet.ids.filter(id=>!(_dailySet.done||[]).includes(id))
+      : [];
+    // Only carry forward households that still exist
+    const carried=carry.filter(id=>households.some(h=>h.id===id));
+    _dailySet={date:todayStr,ids:carried.slice(),done:[]};
+    // Top up to DAILY_TARGET from the pool, skipping ones already carried/pinned
+    for(const c of pool){
+      if(_dailySet.ids.length>=DAILY_TARGET)break;
+      const hid=c.item.h.id;
+      if(_dailySet.ids.includes(hid))continue;
+      if(_dailyPins.includes(hid))continue;
+      _dailySet.ids.push(hid);
+    }
+    setChanged=true;
+  } else {
+    // Same day: if a slot opened earlier via carryover edge cases and the set is
+    // under target with NOTHING done yet (e.g. first build of a fresh install), top up.
+    if(_dailySet.ids.length<DAILY_TARGET&&(_dailySet.done||[]).length===0){
+      for(const c of pool){
+        if(_dailySet.ids.length>=DAILY_TARGET)break;
+        const hid=c.item.h.id;
+        if(_dailySet.ids.includes(hid))continue;
+        if(_dailyPins.includes(hid))continue;
+        _dailySet.ids.push(hid);
+        setChanged=true;
+      }
+    }
+  }
+  if(setChanged)await _saveDailySet();
+
   const cards=[];
-  // Pinned households always lead the queue
+  // Pinned households always lead the queue (separate layer — a 6th+, never a slot)
   _dailyPins.forEach(id=>{
     const h=households.find(hh=>hh.id===id);
     if(h)cards.push({type:'pinned',item:{h,idx:hIdx(h.id)}});
   });
-  keepWarm.slice(0,2).forEach(item=>cards.push({type:'keepwarm',item}));
-  icebreakers.slice(0,2).forEach(item=>cards.push({type:'icebreaker',item}));
-  if(activeTracks.length){
-    const t=activeTracks.find(tt=>!_dailyPins.includes(tt.household_id))||null;
-    if(t){
-      const h=households.find(hh=>hh.id===t.household_id);
-      if(h)cards.push({type:'activetrack',item:{h,t,idx:hIdx(h.id)}});
+  // Today's frozen 5, minus anything already handled. No replacement on done.
+  _dailySet.ids.forEach(id=>{
+    if((_dailySet.done||[]).includes(id))return; // handled — gone for the day, no backfill
+    if(_dailyPins.includes(id))return; // promoted to pinned layer; don't double-show
+    let card=poolById[id];
+    if(!card){
+      // Frozen id no longer qualifies for any bucket (e.g. recently contacted) —
+      // still show it as a carryover so the day's set stays stable.
+      const h=households.find(hh=>hh.id===id);
+      if(h)card={type:'carryover',item:{h,idx:hIdx(h.id)}};
     }
-  }
+    if(card)cards.push(card);
+  });
 
   // Annotate each card with last-contact info for Why breakdowns + call sheet
   cards.forEach(c=>{
@@ -7583,6 +7698,9 @@ async function _buildDailyFive(el){
     } else if(type==='icebreaker'){
       badge='PROSPECT';badgeColor='#6b7280';
       whyNow=`High-capacity household ($${((h.home_value||0)/1000).toFixed(0)}k home) — never contacted`;
+    } else if(type==='carryover'){
+      badge='CARRIED OVER';badgeColor='#a16207';
+      whyNow=`Held over from a previous day — still on your list until you log an outcome`;
     } else {
       badge='FOLLOW-UP';badgeColor='#0f766e';
       whyNow=`Active outreach — step ${item.t.step}, attempt ${item.t.attempts+1}`;
@@ -7645,6 +7763,8 @@ async function saveOutcome(idx){
   }
   // Logging an outcome clears the pin — the job is done
   if(_dailyPins.includes(h.id)){_dailyPins=_dailyPins.filter(id=>id!==h.id);await _saveDailyPins();}
+  // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
+  await _markDailyDone(h.id);
   if(outcome==='Connected'){
     // Graduate any existing track, no new track needed
     const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
@@ -7676,6 +7796,8 @@ async function saveOutcome(idx){
 async function snoozeDaily(idx,days=7){
   const h=households[idx];if(!h)return;
   const snoozeUntil=localToday(days);
+  // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
+  await _markDailyDone(h.id);
   // Check if track exists
   let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
   if(track){
@@ -8386,7 +8508,17 @@ async function mSaveOutcome(btn){
     // refresh local interaction data so AGC/Daily reflect it
     if(typeof loadAll==='function'){ /* light touch: just advance */ }
   }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; return; }
+  // Capture before mCloseOutcome() nulls the context
+  const _doneHid=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
   mCloseOutcome();
+  // Mirror desktop: clear any pin and mark handled in today's frozen set
+  // (leaves the queue, no backfill, no carryover to tomorrow)
+  try{
+    if(_doneHid){
+      if(_dailyPins.includes(_doneHid)){_dailyPins=_dailyPins.filter(id=>id!==_doneHid);await _saveDailyPins();}
+      await _markDailyDone(_doneHid);
+    }
+  }catch(e){console.warn('[DAAS] mobile daily done mark failed',e);}
   // remove this card from the queue and advance
   _mD5Cards.splice(_mD5Pos,1);
   if(_mD5Pos>=_mD5Cards.length) _mD5Pos=Math.max(0,_mD5Cards.length-1);
