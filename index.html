@@ -7741,6 +7741,7 @@ async function _buildDailyFive(el){
 
 // Store pending outcome state
 const _pendingOutcome={};
+const _outcomeSaving=new Set();
 function showOutcomeTray(idx,outcome,trackId){
   _pendingOutcome[idx]={outcome,trackId};
   document.getElementById(`outcome-label-${idx}`).textContent=outcome;
@@ -7751,6 +7752,13 @@ async function saveOutcome(idx){
   const h=households[idx];if(!h)return;
   const {outcome,trackId}=_pendingOutcome[idx]||{};
   if(!outcome)return;
+  // Double-submit guard: a slow POST + second tap (or a re-render re-firing)
+  // was writing the interaction twice. Lock per household until this completes.
+  if(_outcomeSaving.has(h.id))return;
+  _outcomeSaving.add(h.id);
+  const _saveBtn=document.querySelector(`#outcome-tray-${idx} .btn-pri`);
+  if(_saveBtn)_saveBtn.disabled=true;
+  try{
   const note=document.getElementById(`outcome-note-${idx}`).value.trim();
   const todayStr=localToday();
   // Log interaction
@@ -7792,6 +7800,10 @@ async function saveOutcome(idx){
   renderDailyFive();
   await renderActiveTracks();
   await renderWins();
+  }finally{
+    _outcomeSaving.delete(h.id);
+    if(_saveBtn)_saveBtn.disabled=false;
+  }
 }
 async function snoozeDaily(idx,days=7){
   const h=households[idx];if(!h)return;
@@ -8499,6 +8511,9 @@ function mCloseOutcome(){ _mOutcomeStopVoice(); document.getElementById('mOutcom
 
 async function mSaveOutcome(btn){
   if(!_mOutcomeCtx) return;
+  const _hid=(_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
+  if(_hid&&_outcomeSaving.has(_hid))return; // already saving this household
+  if(_hid)_outcomeSaving.add(_hid);
   const note=document.getElementById('mOutNote').value.trim();
   const {outcome, contactId}=_mOutcomeCtx;
   btn.disabled=true; btn.innerHTML='<div class="spin" style="width:15px;height:15px;border-width:2px"></div> Saving…';
@@ -8507,7 +8522,7 @@ async function mSaveOutcome(btn){
     await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null,created_at:new Date().toISOString()}),headers:{'Content-Type':'application/json'}});
     // refresh local interaction data so AGC/Daily reflect it
     if(typeof loadAll==='function'){ /* light touch: just advance */ }
-  }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; return; }
+  }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
   // Capture before mCloseOutcome() nulls the context
   const _doneHid=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
   mCloseOutcome();
@@ -8520,6 +8535,7 @@ async function mSaveOutcome(btn){
     }
   }catch(e){console.warn('[DAAS] mobile daily done mark failed',e);}
   // remove this card from the queue and advance
+  if(_hid)_outcomeSaving.delete(_hid);
   _mD5Cards.splice(_mD5Pos,1);
   if(_mD5Pos>=_mD5Cards.length) _mD5Pos=Math.max(0,_mD5Cards.length-1);
   if(_mD5Cards.length===0){ document.getElementById('mD5host').innerHTML='<div class="m-card m-card-pad"><div class="m-empty">All done for today. Nice work.</div></div>'; }
