@@ -1184,6 +1184,20 @@ async function sbAll(path,pageSize=1000){
 // date. These helpers always use the wall-clock local date.
 function localDateStr(d){const x=(d instanceof Date)?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
 function localToday(offsetDays=0){const d=new Date();if(offsetDays)d.setDate(d.getDate()+offsetDays);return localDateStr(d);}
+// ── DATE-ONLY PARSE — new Date('2026-06-24') parses as UTC midnight, which
+// then DISPLAYS a day earlier in Eastern time (the "off by one" on donation/
+// interaction dates). _localDate() parses a bare YYYY-MM-DD as LOCAL midnight
+// so the displayed day matches the stored day. Full timestamps (with a 'T' or
+// time part) are passed through unchanged so they keep their real time.
+function _localDate(d){
+  if(typeof d==='string'){
+    const m=d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  }
+  return new Date(d);
+}
+// Shared formatter for date-only fields (donations, interactions, notes).
+function _fmtDate(d){try{return _localDate(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
 
 // ── HTML ESCAPE — chat bubbles previously injected raw text via innerHTML, so
 // pasted HTML (or a stray < in a note) corrupted the chat display.
@@ -2288,7 +2302,7 @@ function setProp(mode,h,result){
   // Giving tab
   let givingHtml='';
   if(giving){
-    const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+    const fd=_fmtDate;
     const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     givingHtml=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="font-family:var(--font-ui);font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)">Giving Summary</div>
@@ -3749,7 +3763,7 @@ async function loadInteractionsTab(idx){
     const rows=await sb(`interactions?contact_id=in.(${memberIds})&order=date.desc&limit=50`);
     _indexInteractions(rows,h);
     if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No activity logged yet. Click ＋ Log to add.</div>';return;}
-    const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+    const fd=_fmtDate;
     el.innerHTML=rows.map(r=>{
       const member=(h.members||[]).find(m=>m.id===r.contact_id);
       const memberName=member?member.first_name:'';
@@ -3831,7 +3845,7 @@ async function loadNotesTab(idx){
     const rows=await sb(`interactions?contact_id=in.(${memberIds})&type=eq.Note&order=date.desc&limit=50`);
     _indexInteractions(rows,h);
     if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No notes yet. Click ＋ Add Note to start.</div>';return;}
-    const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+    const fd=_fmtDate;
     el.innerHTML=rows.map(r=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
         <div style="font-size:.68rem;color:var(--txt3)">${fd(r.date)}</div>
@@ -3851,7 +3865,7 @@ function openFullPanel(idx){
   const scoreColor=score>=70?'var(--green)':score>=40?'var(--gold)':'var(--red)';
   const data=h.property_data||{};
   const profile=h.profile_data||null;
-  const fd=d=>{try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
+  const fd=_fmtDate;
   const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 
   document.getElementById('fullPanelName').textContent=h.displayName;
@@ -3871,8 +3885,8 @@ function openFullPanel(idx){
     
     // Build unified timeline: notes + activities + donations
     const timeline=[];
-    interactions.forEach(i=>timeline.push({date:i.date,sort:new Date(i.date),type:i.type==='Note'?'note':'activity',label:i.type,text:i.notes||'',id:i.id}));
-    if(g)g.donations.forEach(d=>timeline.push({date:d.date,sort:new Date(d.date),type:'donation',label:'Donation',amount:d.amount,text:d.notes||'',id:d.id}));
+    interactions.forEach(i=>timeline.push({date:i.date,sort:_localDate(i.date),type:i.type==='Note'?'note':'activity',label:i.type,text:i.notes||'',id:i.id}));
+    if(g)g.donations.forEach(d=>timeline.push({date:d.date,sort:_localDate(d.date),type:'donation',label:'Donation',amount:d.amount,text:d.notes||'',id:d.id}));
     timeline.sort((a,b)=>b.sort-a.sort);
 
     const timelineHtml=timeline.length?timeline.map(t=>{
@@ -6106,7 +6120,7 @@ async function enrichMarkDone(idx){
 }
 
 function _enrichEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function _enrichFmtDate(d){try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+function _enrichFmtDate(d){return _fmtDate(d);}
 
 async function renderEnrichCard(){
   _enrichUpdateCounter();
