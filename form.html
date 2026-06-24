@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donation Form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf9f7;--surf:#ffffff;--surf2:#f4f2ee;--border:#e9e5de;--border2:#d8d2c8;
+  --accent:#0f766e;--accent-d:#0c5e57;--accent-soft:rgba(15,118,110,.08);
+  --gold:#a16207;--green:#15803d;--red:#b91c1c;
+  --grey:#a8a29e;--txt:#1c1917;--txt2:#57534e;--txt3:#a8a29e;
+  --font-ui:'Inter',system-ui,sans-serif;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font-ui);background:transparent;color:var(--txt);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  line-height:1.5;
+}
+/* Outer wrap keeps the form from spanning full iframe width on desktop while
+   staying fluid on mobile. Background is transparent so the host page shows. */
+.wrap{max-width:480px;margin:0 auto;padding:4px}
+
+.form-card{
+  background:var(--surf);border:1px solid var(--border);border-radius:14px;
+  padding:26px 24px;
+}
+
+/* ── Optional title / description (shown only when the form config says so) ── */
+.f-title{
+  font-family:var(--font-display);font-weight:600;font-size:1.45rem;
+  letter-spacing:-.01em;margin:0 0 4px;color:var(--txt);
+}
+.f-desc{font-size:.9rem;color:var(--txt2);margin:0 0 20px}
+.has-head{margin-top:18px}
+
+/* ── Amount selection ── */
+.amt-label{
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--txt3);font-weight:600;margin:0 0 9px;
+}
+.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:11px}
+.preset{
+  background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;
+  padding:13px 10px;cursor:pointer;text-align:center;font-family:var(--font-ui);
+  transition:border-color .14s,background .14s,box-shadow .14s;color:var(--txt);
+}
+.preset:hover{border-color:var(--border2)}
+.preset.sel{
+  border-color:var(--accent);background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent);
+}
+.preset-amt{
+  font-family:var(--font-mono);font-size:1.15rem;font-weight:500;
+  display:block;font-variant-numeric:tabular-nums;
+}
+.preset-lbl{font-size:.72rem;color:var(--txt2);display:block;margin-top:2px}
+
+.custom-row{position:relative;margin-bottom:22px}
+.custom-row .dollar{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  color:var(--txt3);font-family:var(--font-mono);font-size:.95rem;pointer-events:none;
+}
+.custom-amt{
+  width:100%;padding:12px 13px 12px 26px;border:1.5px solid var(--border);
+  border-radius:9px;font-family:var(--font-mono);font-size:1rem;color:var(--txt);
+  background:var(--surf);outline:none;font-variant-numeric:tabular-nums;
+  transition:border-color .14s;
+}
+.custom-amt:focus{border-color:var(--accent)}
+.custom-amt.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+
+/* ── Standard fields ── */
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:.72rem;font-weight:600;color:var(--txt2);
+  margin-bottom:5px;letter-spacing:.01em;
+}
+.field label .req{color:var(--red);margin-left:2px}
+.field input{
+  width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:var(--font-ui);font-size:.92rem;color:var(--txt);background:var(--surf);
+  outline:none;transition:border-color .14s;
+}
+.field input:focus{border-color:var(--accent)}
+.field input.err{border-color:var(--red)}
+.field-err{color:var(--red);font-size:.7rem;margin-top:4px;display:none}
+.field-err.show{display:block}
+
+/* ── Submit ── */
+.submit-btn{
+  width:100%;margin-top:8px;padding:14px;background:var(--accent);color:#fff;
+  border:none;border-radius:10px;font-family:var(--font-ui);font-size:.95rem;
+  font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.01em;
+}
+.submit-btn:hover{background:var(--accent-d)}
+.submit-btn:disabled{opacity:.55;cursor:not-allowed}
+
+.secure-note{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:.68rem;color:var(--txt3);margin-top:13px;
+}
+.secure-note svg{width:12px;height:12px}
+
+/* ── Loading / error states ── */
+.state{
+  text-align:center;padding:40px 20px;color:var(--txt2);font-size:.9rem;
+}
+.state .spin{
+  width:22px;height:22px;border:2.5px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.state.error{color:var(--red)}
+
+@media (max-width:380px){
+  .form-card{padding:22px 17px}
+  .presets{gap:7px}
+}
+@media (prefers-reduced-motion:reduce){
+  .state .spin{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="root">
+    <div class="state">
+      <div class="spin"></div>
+      Loading form…
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// DAAS · form.html · Stage 2 (render only — no payment yet)
+// Public, anonymous surface. Reads ONE active form by slug and
+// renders it. Holds NO secrets and can read NO donor data —
+// the anon key + RLS only expose the `forms` table's active rows.
+// ============================================================
+const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
+const _sb=supabase.createClient(SB_URL,SB_KEY);
+
+const root=document.getElementById('root');
+let selectedAmount=null; // dollars (number) or null
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showError(msg){
+  root.innerHTML='<div class="state error">'+esc(msg)+'</div>';
+}
+
+// stripe_config + schema come back from Supabase as JSON *strings* — parse safely.
+function parseMaybe(v,fallback){
+  if(v==null)return fallback;
+  if(typeof v==='object')return v;
+  try{return JSON.parse(v);}catch(e){return fallback;}
+}
+
+async function init(){
+  const params=new URLSearchParams(location.search);
+  const slug=params.get('slug');
+  if(!slug){showError('No form specified.');return;}
+
+  let rows;
+  try{
+    const res=await fetch(SB_URL+'/rest/v1/forms?select=*&slug=eq.'+encodeURIComponent(slug)+'&active=eq.true',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    if(!res.ok)throw new Error('Could not load form.');
+    rows=await res.json();
+  }catch(e){
+    showError('We couldn’t load this form. Please refresh and try again.');
+    return;
+  }
+  if(!rows||!rows.length){showError('This form isn’t available.');return;}
+
+  render(rows[0]);
+}
+
+function render(form){
+  const schema=parseMaybe(form.schema,{fields:[]});
+  const cfg=parseMaybe(form.stripe_config,{presets:[],allow_custom:true});
+  const fields=schema.fields||[];
+  const presets=cfg.presets||[];
+  const allowCustom=cfg.allow_custom!==false;
+
+  let html='<div class="form-card">';
+
+  // Optional title / description
+  if(form.show_title&&form.title){
+    html+='<h1 class="f-title">'+esc(form.title)+'</h1>';
+  }
+  if(form.show_description&&form.description){
+    html+='<p class="f-desc">'+esc(form.description)+'</p>';
+  }
+
+  // ── Amount section ──
+  html+='<div class="'+((form.show_title||form.show_description)?'has-head':'')+'">';
+  html+='<p class="amt-label">Choose an amount</p>';
+  html+='<div class="presets">';
+  presets.forEach((p,i)=>{
+    const amt=Number(p.amount)||0;
+    html+='<button type="button" class="preset" data-amt="'+amt+'" onclick="pickPreset(this,'+amt+')">'
+      +'<span class="preset-amt">$'+amt.toLocaleString()+'</span>'
+      +(p.label?'<span class="preset-lbl">'+esc(p.label)+'</span>':'')
+      +'</button>';
+  });
+  html+='</div>';
+
+  if(allowCustom){
+    html+='<div class="custom-row">'
+      +'<span class="dollar">$</span>'
+      +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" '
+      +'placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off">'
+      +'</div>';
+  }
+
+  // ── Standard / custom fields ──
+  fields.forEach(f=>{
+    const type=f.type==='email'?'email':(f.type==='tel'?'tel':'text');
+    html+='<div class="field">'
+      +'<label for="f_'+esc(f.key)+'">'+esc(f.label)
+      +(f.required?'<span class="req">*</span>':'')+'</label>'
+      +'<input type="'+type+'" id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" '
+      +'data-required="'+(f.required?'1':'0')+'" '
+      +'autocomplete="'+autoFor(f.key,type)+'">'
+      +'<div class="field-err" id="err_'+esc(f.key)+'"></div>'
+      +'</div>';
+  });
+
+  // ── Submit (no payment yet — Stage 2 just validates and confirms) ──
+  html+='<button type="button" class="submit-btn" id="submitBtn" onclick="onSubmit()">Donate</button>';
+  html+='<div class="secure-note">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+    +'Secure payment'
+    +'</div>';
+
+  html+='</div>';
+  root.innerHTML=html;
+}
+
+function autoFor(key,type){
+  if(key==='first_name')return'given-name';
+  if(key==='last_name')return'family-name';
+  if(type==='email')return'email';
+  if(type==='tel')return'tel';
+  return'off';
+}
+
+// ── Amount selection logic ──
+function pickPreset(btn,amt){
+  selectedAmount=amt;
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const ci=document.getElementById('customAmt');
+  if(ci){ci.value='';ci.classList.remove('sel');}
+}
+function pickCustom(input){
+  // strip to a clean decimal
+  let v=input.value.replace(/[^0-9.]/g,'');
+  const parts=v.split('.');
+  if(parts.length>2)v=parts[0]+'.'+parts.slice(1).join('');
+  input.value=v;
+  const n=parseFloat(v);
+  if(!isNaN(n)&&n>0){
+    selectedAmount=n;
+    document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
+    input.classList.add('sel');
+  }else{
+    selectedAmount=null;
+    input.classList.remove('sel');
+  }
+}
+
+// ── Validation (Stage 2: confirm everything is captured correctly) ──
+function onSubmit(){
+  let ok=true;
+
+  // Amount
+  if(!selectedAmount||selectedAmount<=0){
+    ok=false;
+    flashAmount();
+  }
+
+  // Required fields
+  const data={};
+  document.querySelectorAll('[data-key]').forEach(inp=>{
+    const key=inp.dataset.key;
+    const val=inp.value.trim();
+    data[key]=val;
+    const errEl=document.getElementById('err_'+key);
+    inp.classList.remove('err');if(errEl)errEl.classList.remove('show');
+
+    if(inp.dataset.required==='1'&&!val){
+      ok=false;inp.classList.add('err');
+      if(errEl){errEl.textContent='Required';errEl.classList.add('show');}
+    }else if(inp.type==='email'&&val&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)){
+      ok=false;inp.classList.add('err');
+      if(errEl){errEl.textContent='Enter a valid email';errEl.classList.add('show');}
+    }
+  });
+
+  if(!ok)return;
+
+  // ── Stage 2 stops here. Stage 3 will hand (amount + data) to Stripe. ──
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;
+  btn.textContent='✓ Captured — $'+selectedAmount.toLocaleString();
+  console.log('[form] ready to charge',{amount:selectedAmount,fields:data});
+  setTimeout(()=>{btn.disabled=false;btn.textContent='Donate';},2200);
+}
+
+function flashAmount(){
+  const lbl=document.querySelector('.amt-label');
+  if(lbl){lbl.style.color='var(--red)';setTimeout(()=>lbl.style.color='',1400);}
+}
+
+init();
+</script>
+</body>
+</html>
