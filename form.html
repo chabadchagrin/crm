@@ -239,7 +239,7 @@ async function onPay(){
     if(sub.error){showMsg('err',sub.error.message||'Please check your payment details.');resetBtn();return;}
     const res=await fetch(FORM_SUBMIT_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({slug:currentForm.slug,amount:selectedAmount,fields:data})
     });
     const out=await res.json();
