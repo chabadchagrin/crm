@@ -530,12 +530,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     </div>
     <label>Type</label>
     <select id="li_type" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+      <option>Connected</option>
       <option>Meeting in person</option>
       <option>Phone call</option>
+      <option>Left VM</option>
       <option>Shabbat attendance</option>
       <option>Class / Program</option>
       <option>Event attendance</option>
-      <option>Kids program</option>
       <option>Email / Text</option>
       <option>Other</option>
       <option>Note</option>
@@ -1198,6 +1199,50 @@ function _localDate(d){
 }
 // Shared formatter for date-only fields (donations, interactions, notes).
 function _fmtDate(d){try{return _localDate(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+// ── CANONICAL INTERACTION TYPES ────────────────────────────────────────────
+// One source of truth for how each type behaves. Used by the aggregator, Wins,
+// SRI engagement, track-closing, and the Daily Five outcome logic.
+//   REACH_TYPES  = you actually reached them (live or in person): counts as a
+//                  "win", adds to warmth (connected12), and CLOSES a follow-up track.
+//   All non-Note types reset "last contact" (kill the red "never contacted").
+//   Note         = standing info only; counts for nothing.
+const REACH_TYPES=['Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance'];
+function _isReach(type){return REACH_TYPES.includes(type);}      // win + closes track + warmth
+function _isTouch(type){return type!=='Note';}                   // resets last contact
+
+// One icon per interaction type, same stroke style, used app-wide (Recent Activity
+// feed, household timeline, anywhere a type is shown). Returns inner SVG paths only;
+// callers wrap in <svg>. Falls back to a generic dot for unknown/legacy labels.
+const _TYPE_ICON_PATHS={
+  'Connected':         '<path d="M8 12h8M8 12l3-3M8 12l3 3"/><path d="M3 5a2 2 0 0 1 2-2h2l1.5 4-2 1a11 11 0 0 0 5 5l1-2 4 1.5V18a2 2 0 0 1-2 2A16 16 0 0 1 3 5Z"/>',
+  'Phone call':        '<path d="M5 3a2 2 0 0 0-2 2 16 16 0 0 0 16 16 2 2 0 0 0 2-2v-2.5l-4-1.5-1 2a11 11 0 0 1-5-5l2-1L7 3Z"/>',
+  'Email / Text':      '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>',
+  'Meeting in person': '<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6M18 20a5 5 0 0 0-3-4.6"/>',
+  'Left VM':           '<circle cx="6" cy="14" r="3"/><circle cx="18" cy="14" r="3"/><path d="M6 11V9a6 6 0 0 1 12 0v2M3 14v3M21 14v3"/>',
+  'Shabbat attendance':'<path d="M12 2v6M12 8c-3 0-5 2-5 5a5 5 0 0 0 10 0c0-3-2-5-5-5ZM6 21h12"/>',
+  'Class / Program':   '<path d="M22 9 12 5 2 9l10 4 10-4ZM6 11v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/>',
+  'Event attendance':  '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/>',
+  'Other':             '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.5 1.5c0 1.7-2 2-2 3M12 17h.01"/>',
+  'Note':              '<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/>'
+};
+const _TYPE_ICON_FALLBACK='<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>';
+// Map a few legacy/aliased labels onto canonical icons so old rows look right too.
+const _TYPE_ALIAS={'Call':'Phone call','Meeting':'Meeting in person','Conversation':'Meeting in person','Email':'Email / Text','Sent Email':'Email / Text','Sent Text':'Email / Text','Event':'Event attendance','Kids program':'Class / Program','Quiet Hangup':'Left VM'};
+function _typeIconSvg(type,sizeEm){
+  const key=_TYPE_ALIAS[type]||type;
+  const paths=_TYPE_ICON_PATHS[key]||_TYPE_ICON_FALLBACK;
+  const s=sizeEm||'1em';
+  return `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+}
+
+
+// Human-friendly home value: $2.55M above a million, $850k below. Avoids "$2550k".
+function _fmtHomeVal(v){
+  const n=Number(v)||0;
+  if(n<=0)return '';
+  if(n>=1000000){const m=n/1000000;return '$'+(m>=10?Math.round(m):m.toFixed(2).replace(/\.?0+$/,''))+'M';}
+  return '$'+Math.round(n/1000)+'k';
+}
 
 // ── HTML ESCAPE — chat bubbles previously injected raw text via innerHTML, so
 // pasted HTML (or a stray < in a note) corrupted the chat display.
@@ -1850,6 +1895,20 @@ function getAGCScore(h){
 // ── INTERACTION AGGREGATES for AGC scoring (loaded once at startup) ──
 // hhId -> { lastContact: 'YYYY-MM-DD' of last non-Note interaction, connected12: count of 'Connected' in trailing 365d }
 let _agcInterAgg={};
+// Patch the in-memory aggregate for ONE household after an interaction is logged,
+// so the contact card's "Last Contact" / "Days Since" and Affinity recency update
+// immediately — without waiting for a full page reload to rebuild _agcInterAgg.
+// Resolves the household from contact_id. type 'Note' is excluded from last-contact.
+function _bumpAGCAgg(contactId,type,date){
+  if(!contactId||!date)return;
+  const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
+  if(!h)return;
+  const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0});
+  if(_isTouch(type)&&(!a.lastContact||date>a.lastContact))a.lastContact=date;
+  const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
+  if(_isReach(type)&&date>=since)a.connected12++;
+}
+
 async function loadAGCInteractionAggregates(){
   try{
     const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
@@ -1859,8 +1918,8 @@ async function loadAGCInteractionAggregates(){
     rows.forEach(r=>{
       const hh=c2h[r.contact_id];if(!hh||!r.date)return;
       const a=_agcInterAgg[hh]||(_agcInterAgg[hh]={lastContact:null,connected12:0});
-      if(r.type!=='Note'&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
-      if(r.type==='Connected'&&r.date>=since)a.connected12++;
+      if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
+      if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
   }catch(e){console.warn('AGC interaction aggregates failed',e);}
 }
@@ -3731,6 +3790,7 @@ async function saveInteraction(){
       // Add mode — create one per checked contact
       for(const contactId of checked){
         const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null,created_at:new Date().toISOString()})});
+        _bumpAGCAgg(contactId,type,date);
         if(savedI&&savedI[0]){if(notes)embedAndStore(savedI[0].id,type+': '+notes);const _h=households[idx];if(_h)_interToHH[savedI[0].id]=_h.id;}
       }
     }
@@ -3741,7 +3801,7 @@ async function saveInteraction(){
     document.getElementById('logInteractionModal').style.display='none';
     const hI=households[idx];if(hI){_invHH(hI);refreshAGCScore(hI.id).then(()=>recolorAll());}
     // Auto-graduate any open track if Connected
-    if(type==='Connected'&&hI){
+    if(_isReach(type)&&hI){
       const openTrack=outreachTracks.find(t=>t.household_id===hI.id&&t.status==='active');
       if(openTrack)await handleTrackOutcome(openTrack.id,hI.id,'Connected');
     }
@@ -3891,7 +3951,7 @@ function openFullPanel(idx){
 
     const timelineHtml=timeline.length?timeline.map(t=>{
       const color=t.type==='note'?'var(--accent)':t.type==='donation'?'var(--gold)':'var(--green)';
-      const icon=t.type==='note'?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg>':t.type==='donation'?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg>':'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg>';
+      const icon=t.type==='note'?_typeIconSvg('Note'):t.type==='donation'?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg>':_typeIconSvg(t.label);
       return `<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:.65rem;margin-top:2px">${icon}</div>
         <div style="flex:1">
@@ -5696,8 +5756,9 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children","type":"<Note|Call|Meeting|Email|Conversation|Event>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
     +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. When in doubt between interaction and household, prefer interaction. '
+    +'Choosing the interaction type: an email or text message = \"Email / Text\"; an outbound phone call where you reached them or any in-person live conversation = \"Connected\"; an attempted call that went to voicemail or unanswered = \"Left VM\"; a scheduled or in-person sit-down meeting = \"Meeting in person\"; Shabbat/service attendance = \"Shabbat attendance\"; a class or learning program = \"Class / Program\"; an event or program they came to = \"Event attendance\"; a class, kids program, or youth program they attended = \"Class / Program\"; only use \"Note\" for standing background facts that are NOT a touch, and prefer \"save_as\":\"household\" for those. Use exactly one of these type strings verbatim. '
     +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
     +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items. TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
 
@@ -5826,7 +5887,7 @@ function _captureRenderProposals(parsed){
     html+='<div style="display:flex;gap:8px;margin-bottom:9px">';
     html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Type</div>';
     html+='<select id="cap-type-'+i+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit">';
-    ['Note','Call','Meeting','Email','Conversation','Event'].forEach(t=>{html+='<option'+(t===(it.type||'Note')?' selected':'')+'>'+t+'</option>';});
+    ['Email / Text','Phone call','Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance','Left VM','Other','Note'].forEach(t=>{html+='<option'+(t===(it.type||'Note')?' selected':'')+'>'+t+'</option>';});
     html+='</select></div>';
     html+='<div style="flex:1"><div style="font-size:.64rem;color:var(--txt3);margin-bottom:3px">Date</div>';
     html+='<input type="date" id="cap-date-'+i+'" value="'+date+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
@@ -5991,6 +6052,7 @@ async function captureSaveItem(i,btn){
   if(!contactId){alert('Pick a contact first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
   try{
     const savedC=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:text,created_at:new Date().toISOString()})});
+    _bumpAGCAgg(contactId,type,date);
     if(savedC&&savedC[0]&&text)embedAndStore(savedC[0].id,type+': '+text);
     const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
     if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
@@ -6523,6 +6585,7 @@ async function _enrichSaveAllChunks(idx){
         const cid=personEl?personEl.value:(members[0]||{}).id;
         const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
         const savedB=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim(),created_at:new Date().toISOString()})});
+        _bumpAGCAgg(cid,iType,dateEl.value||today);
         if(savedB&&savedB[0])embedAndStore(savedB[0].id,iType+': '+text.trim());
       }else if(personEl){
         // note (person-specific, no date picker)
@@ -6828,9 +6891,10 @@ async function resetEngineSettings(){
 // Bump this whenever DASH_DEFAULT_LAYOUT panels are added/removed/renamed.
 // Saved layouts with a different version are ignored on load (prevents the
 // "doubled panels" bug where stale saved coords clash with new defaults).
-const DASH_LAYOUT_VERSION=4;
+const DASH_LAYOUT_VERSION=5;
 const DASH_DEFAULT_LAYOUT=[
   {id:'panel-heatmap',    x:0, y:0,  w:12, h:3,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',           fn:'renderHeatmap'},
+  {id:'panel-activity',   x:0, y:20, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',            fn:'renderRecentActivity'},
   {id:'panel-daily5',     x:0, y:3,  w:7,  h:8,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',                 fn:'renderDailyFive'},
   {id:'panel-coldfloor',  x:7, y:3,  w:5,  h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor',                 fn:'renderColdFloor'},
   {id:'panel-wins',       x:7, y:7,  w:5,  h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',           fn:'renderWins'},
@@ -7137,7 +7201,7 @@ async function openCallSheet(){
     const emails=_escHtml((h.members||[]).map(m=>m.email).filter(Boolean).join(' · '));
     let why='';
     if(card.type==='keepwarm')why=`No contact in ${card.daysSince!==null?card.daysSince:'90+'} days — strong relationship drifting`;
-    else if(card.type==='icebreaker')why=`$${Math.round((h.home_value||0)/1000)}k home, never contacted — cold open`;
+    else if(card.type==='icebreaker')why=`${_fmtHomeVal(h.home_value)} home, never contacted — cold open`;
     else if(card.type==='activetrack')why=`Follow-up due — step ${card.item.t.step}, attempt ${card.item.t.attempts+1}`;
     else if(card.type==='carryover')why='Carried over from a previous day — still open';
     else why='Pinned by you';
@@ -7146,7 +7210,7 @@ async function openCallSheet(){
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
         <span style="font-size:.62rem;font-weight:700;color:#555">${i+1}. ${BADGE[card.type]||''}</span>
         <span style="font-size:.92rem;font-weight:700;color:#000">${_escHtml(h.displayName)}</span>
-        <span style="font-size:.62rem;color:#777;margin-left:auto">Prospect ${agc.total} · ${h.home_value?'$'+Math.round(h.home_value/1000)+'k home':''}</span>
+        <span style="font-size:.62rem;color:#777;margin-left:auto">Prospect ${agc.total} · ${h.home_value?_fmtHomeVal(h.home_value)+' home':''}</span>
       </div>
       <div style="font-size:.7rem;color:#333;margin-bottom:2px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> ${phones}${emails?' · <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> '+emails:''}</div>
       <div style="font-size:.66rem;color:#555;margin-bottom:2px">${h.address||''}${h.city?', '+h.city:''}</div>
@@ -7175,10 +7239,11 @@ async function openCallSheet(){
 
 // ── PANEL HELP — the ? icon in each panel header ──
 const PANEL_HELP={
-  'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many interactions you logged each day over the last two weeks. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} interactions; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
+  'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many touches you logged each day over the last two weeks — calls, texts, meetings, attendance, etc. Standing-info notes don't count. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} touches; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
   'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically from three buckets:<br><br><b>DRIFTING</b> — strong relationships (AGC ${ENGINE.keepWarmMinAGC}+, has giving history) with no contact in ${ENGINE.driftDays}+ days.<br><b>PROSPECT</b> — households with $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ homes you've never contacted.<br><b>FOLLOW-UP</b> — an outreach track that's due today.<br><br>You're in charge: use the search bar to <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top of the list (pin clears when you log an outcome), or snooze a suggestion for 7/30/90 days. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
   'panel-coldfloor':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor',d:()=>`High-potential households sitting completely untouched: home worth $${Math.round(ENGINE.coldFloorHomeValue/1000)}k+, zero donations AND zero logged interactions — ever. Anyone you've met, called, or already queued in a track won't appear here. Sorted by home value. Use "Today" or "Tomorrow" to drop them into your call queue. The goal: no high-capacity family should sit on the books with no story.`},
   'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
+  'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
   'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
   'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`}
@@ -7229,6 +7294,7 @@ async function renderAllPanels(){
   renderColdFloor();
   await renderSRI();
   await renderWins();
+  await renderRecentActivity();
   await renderActiveTracks();
 }
 
@@ -7266,7 +7332,7 @@ async function renderHeatmap(){
   // Fetch last 14 days of interactions
   const since=localDateStr(new Date(Date.now()-14*24*60*60*1000));
   let rows=[];
-  try{rows=await sbAll(`interactions?date=gte.${since}&select=date&order=id.asc`)||[];}catch(e){}
+  try{rows=await sbAll(`interactions?date=gte.${since}&type=neq.Note&select=date&order=id.asc`)||[];}catch(e){}
 
   // Count by date
   const counts={};
@@ -7368,7 +7434,7 @@ async function renderWins(){
   const thisSunday=new Date(now2);thisSunday.setDate(now2.getDate()-dayOfWeek);
   const sinceStr=localDateStr(thisSunday);
   try{
-    rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Phone%20call,type.eq.Meeting%20in%20person,type.eq.Email%20%2F%20Text,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance,type.eq.Kids%20program)&date=gte.${sinceStr}&order=date.desc&limit=10`)||[];
+    rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${sinceStr}&order=date.desc&limit=10`)||[];
   }catch(e){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>Could not load wins</p></div>';return;}
   if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg></div><p>No connected calls logged yet — go make some!</p></div>';return;}
 
@@ -7393,6 +7459,43 @@ function toggleModeHelp(){
   const m=document.getElementById('modeHelpModal');
   m.style.display = m.style.display==='flex' ? 'none' : 'flex';
 }
+
+// ── RECENT ACTIVITY ──
+// A rolling feed of every logged touch (everything EXCEPT standing-info Notes),
+// newest first, across all households. Lets the rabbi scroll back through who he
+// recently texted / emailed / met / called. Click a row to open the household.
+async function renderRecentActivity(){
+  const el=document.getElementById('body-panel-activity');
+  if(!el)return;
+  let rows=[];
+  try{
+    // Everything that represents a touch — exclude only the standing-info "Note" type.
+    rows=await sb(`interactions?type=neq.Note&order=date.desc,created_at.desc,id.desc&limit=40`)||[];
+  }catch(e){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>Could not load recent activity</p></div>';return;}
+  if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><p>No interactions logged yet — log a call, text, or visit to see it here.</p></div>';return;}
+
+  // Map contact_id -> household for naming + click-through
+  const contactMap={};
+  households.forEach(h=>(h.members||[]).forEach(m=>{contactMap[m.id]={displayName:h.displayName,idx:hIdx(h.id),hid:h.id,member:(m.first_name||'')};}));
+
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:0">'+rows.map(r=>{
+    const info=contactMap[r.contact_id]||{displayName:'Unknown contact',idx:-1,hid:'',member:''};
+    const click=info.idx>=0?`switchView('crm');setTimeout(()=>byId('selectHousehold','${info.hid}',${info.idx}),100)`:'';
+    const iconColor=_isReach(r.type)?'var(--green)':'var(--txt3)';
+    return `<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 2px;border-bottom:1px solid var(--border)${click?';cursor:pointer':''}"${click?` onclick="${click}"`:''}>
+      <div style="flex-shrink:0;color:${iconColor};margin-top:1px">${_typeIconSvg(r.type,'1.05em')}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:7px;flex-wrap:wrap">
+          <span style="font-size:.78rem;font-weight:500;color:var(--txt)">${_escHtml(info.displayName)}</span>
+          <span style="font-family:var(--font-ui);font-size:.56rem;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3)">${_escHtml(r.type||'')}</span>
+        </div>
+        ${r.notes?`<div style="font-size:.66rem;color:var(--txt2);margin-top:2px;line-height:1.45">${_escHtml(r.notes.substring(0,120))}${r.notes.length>120?'…':''}</div>`:''}
+      </div>
+      <div style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);flex-shrink:0;white-space:nowrap;margin-top:1px">${_fmtDate(r.date)||'—'}</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 
 // ── DEEP NOTE SEARCH MODAL ──
 async function triggerDeepSearchModal(){
@@ -7730,6 +7833,7 @@ async function _computeDailyQueue(){
     if(activeTrackHHIds.has(h.id))continue;
     const gs=getGivingStats(h);
     if(gs&&gs.total>0)continue;
+    if(hhLastContact[h.id])continue; // has a logged interaction — not a cold prospect
     if((h.home_value||0)<ENGINE.icebreakerHomeValue)continue;
     const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
     if(snoozed)continue;
@@ -7831,7 +7935,7 @@ function _whyHTML(card){
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.daysSince!==null?card.daysSince:'999+'} days since contact ≥ ${ENGINE.driftDays}-day drift threshold</div>`;
   }else if(card.type==='icebreaker'){
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value $${Math.round((h.home_value||0)/1000)}k ≥ $${Math.round(ENGINE.icebreakerHomeValue/1000)}k threshold<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value ${_fmtHomeVal(h.home_value)} ≥ ${_fmtHomeVal(ENGINE.icebreakerHomeValue)} threshold<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> No donations on file<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.lastContact?'Last contact '+card.lastContact:'No recent contact in window'}</div>`;
   }else if(card.type==='activetrack'){
@@ -7875,7 +7979,7 @@ async function _buildDailyFive(el){
       whyNow=`High-value relationship — no contact in ${item.daysSince} days`;
     } else if(type==='icebreaker'){
       badge='PROSPECT';badgeColor='#6b7280';
-      whyNow=`High-capacity household ($${((h.home_value||0)/1000).toFixed(0)}k home) — never contacted`;
+      whyNow=`High-capacity household (${_fmtHomeVal(h.home_value)} home) — never contacted`;
     } else if(type==='carryover'){
       badge='CARRIED OVER';badgeColor='#a16207';
       whyNow=`Held over from a previous day — still on your list until you log an outcome`;
@@ -7897,7 +8001,7 @@ async function _buildDailyFive(el){
       </div>
       <div id="why-${idx}" style="display:none;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px;font-size:.62rem;font-family:var(--font-ui)">${_whyHTML(card)}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap">
-        ${['Connected','Left VM','Sent Text','Sent Email','Quiet Hangup'].map(o=>`
+        ${['Connected','Phone call','Email / Text','Left VM','Meeting in person'].map(o=>`
           <button onclick="byId('showOutcomeTray','${households[idx].id}',${idx},'${o}','${trackId||''}')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background='var(--surf)'">${o}</button>`).join('')}
         ${type==='pinned'
           ?`<button onclick="unpinHousehold('${h.id}')" style="font-size:.6rem;padding:3px 7px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt3);cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Unpin</button>`
@@ -7944,6 +8048,7 @@ async function saveOutcome(idx){
   if(contactId){
     try{
       const savedO=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null}),headers:{'Content-Type':'application/json'}});
+      _bumpAGCAgg(contactId,outcome,todayStr);
       if(savedO&&savedO[0]&&note)embedAndStore(savedO[0].id,outcome+': '+note);
     }catch(e){console.warn('Outcome save failed',e);}
   }
@@ -7951,7 +8056,7 @@ async function saveOutcome(idx){
   if(_dailyPins.includes(h.id)){_dailyPins=_dailyPins.filter(id=>id!==h.id);await _saveDailyPins();}
   // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
   await _markDailyDone(h.id);
-  if(outcome==='Connected'){
+  if(_isReach(outcome)){
     // Graduate any existing track, no new track needed
     const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
     if(existing)await handleTrackOutcome(existing.id,h.id,'Connected');
@@ -8074,7 +8179,7 @@ async function renderColdFloor(){
     <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${households[idx].id}',${idx}),100)">${_escHtml(h.displayName)}</div>
-        <div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${h.home_value?'$'+Math.round(h.home_value/1000)+'k home':''}</div>
+        <div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${h.home_value?_fmtHomeVal(h.home_value)+' home':''}</div>
       </div>
       <div style="display:flex;gap:4px;flex-shrink:0">
         <button onclick="byId('addToDaily','${households[idx].id}',${idx},'${todayStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);border-radius:4px;background:none;cursor:pointer">Today</button>
@@ -8106,7 +8211,7 @@ async function renderSRI(){
   const todayStr=localToday();
   // Fetch recent connected interactions for engagement check
   let connectedRows=[];
-  try{connectedRows=await sbAll(`interactions?type=eq.Connected&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&select=contact_id&order=id.asc`)||[];}catch(e){}
+  try{connectedRows=await sbAll(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&select=contact_id&order=id.asc`)||[];}catch(e){}
   const connectedContactIds=new Set(connectedRows.map(r=>r.contact_id));
 
   // Build contact→household map
@@ -8133,7 +8238,7 @@ async function renderSRI(){
     if((h.home_value||0)>=ENGINE.sriCapacityValue||p.capacity){
       score+=40;
       reasons.push((h.home_value||0)>=ENGINE.sriCapacityValue
-        ?`+40 — capacity: $${Math.round(h.home_value/1000)}k home ≥ $${Math.round(ENGINE.sriCapacityValue/1000)}k`
+        ?`+40 — capacity: ${_fmtHomeVal(h.home_value)} home ≥ ${_fmtHomeVal(ENGINE.sriCapacityValue)}`
         :`+40 — capacity: profile flagged "${p.capacity}"`);
     }
     // Engagement: connected logs in trailing window
@@ -8698,6 +8803,7 @@ async function mSaveOutcome(btn){
   const todayStr=(typeof localDateStr==='function')?localDateStr(new Date()):new Date().toISOString().slice(0,10);
   try{
     await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null,created_at:new Date().toISOString()}),headers:{'Content-Type':'application/json'}});
+    _bumpAGCAgg(contactId,outcome,todayStr);
     // refresh local interaction data so AGC/Daily reflect it
     if(typeof loadAll==='function'){ /* light touch: just advance */ }
   }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
