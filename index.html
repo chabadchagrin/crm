@@ -395,6 +395,16 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .fs-inp.fs-active{border-color:var(--accent);background:var(--surf)}
 .contacts-view{display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg)}
 .contacts-view.active{display:flex}
+.events-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.events-view.active{display:block}
+.ev-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,transform .15s}
+.ev-card:hover{border-color:var(--accent)}
+.ev-card .ev-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
+.ev-card .ev-meta{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:3px}
+.ev-pill{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:.6rem;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--surf2);color:var(--txt2)}
+.ev-reg-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ev-back{font-family:var(--font-ui);font-size:.7rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:12px;background:none;border:none;padding:4px 0}
+.reg-result:hover{background:var(--surf2)}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
 .ct-wrap{flex:1;overflow:auto;padding:18px 24px}
 .ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -553,6 +563,72 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   </div>
 </div>
 
+<!-- EVENT EDITOR MODAL -->
+<div class="modal-bg" id="eventEditorModal" style="display:none">
+  <div class="modal" style="width:480px">
+    <h2 id="ev_modal_title"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> New Event</h2>
+    <label>Event name *</label>
+    <input type="text" id="ev_name" placeholder="e.g. Chanukah Dinner 2026" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+    <label>Date</label>
+    <input type="date" id="ev_date" style="margin-bottom:12px">
+    <label>Location</label>
+    <input type="text" id="ev_location" placeholder="100 N. Main St" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+    <label>Campaign tag</label>
+    <input type="text" id="ev_campaign" placeholder="optional — for reporting" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+    <label>Description</label>
+    <textarea id="ev_desc" placeholder="Internal notes about this event…" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt2);margin-bottom:12px"><input type="checkbox" id="ev_active" checked="" style="width:auto"> Active</label>
+    <div id="ev_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="_guardClick(this,saveEvent)">Save Event</button>
+      <button class="btn btn-sec" onclick="closeEventEditor()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD REGISTRATION MODAL -->
+<div class="modal-bg" id="addRegistrationModal" style="display:none">
+  <div class="modal" style="width:460px">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg> Add Registration</h2>
+    <label>Contact</label>
+    <input type="text" id="reg_search" placeholder="Search by name or email…" autocomplete="off" oninput="_regSearch()" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none">
+    <div id="reg_results" style="display:none;background:var(--surf);border:1px solid var(--border2);border-radius:6px;margin-top:4px;max-height:230px;overflow-y:auto"></div>
+    <div id="reg_selected" style="display:none;padding:8px 10px;background:var(--surf2);border-radius:5px;margin-top:8px;font-size:.76rem;color:var(--txt2)"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <div style="flex:1"><label># Attendees</label><input type="number" id="reg_count" value="1" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label>Tier label</label><input type="text" id="reg_tier_label" placeholder="e.g. Couple" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label>Amount paid</label><input type="number" id="reg_tier_amount" placeholder="0" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+    </div>
+    <div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-top:6px">Manual entry records the amount for tracking only — no card is charged. Leave amount blank for a free RSVP.</div>
+    <label style="margin-top:12px">Notes</label>
+    <textarea id="reg_notes" placeholder="Dietary, kids' ages, anything to remember…" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <div id="reg_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="_guardClick(this,saveRegistration)">Add Registration</button>
+      <button class="btn btn-sec" onclick="closeAddRegistration()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT REGISTRATION MODAL -->
+<div class="modal-bg" id="editRegistrationModal" style="display:none">
+  <div class="modal" style="width:440px">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Registration</h2>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label># Attendees</label><input type="number" id="ereg_count" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label>Tier label</label><input type="text" id="ereg_tier_label" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label>Amount</label><input type="number" id="ereg_tier_amount" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+    </div>
+    <label style="margin-top:12px">Notes</label>
+    <textarea id="ereg_notes" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <div id="ereg_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="_guardClick(this,saveEditRegistration)">Save Changes</button>
+      <button class="btn btn-sec" onclick="closeEditRegistration()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD NOTE MODAL -->
 <div class="modal-bg" id="addNoteModal" style="display:none">
   <div class="modal" style="width:460px">
@@ -665,6 +741,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" onclick="closeSidebar();switchView('dash')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14v4M12 9v9M17 5v13"></path></svg> Dashboard</button>
     <button class="sb-item" onclick="closeSidebar();switchView('crm')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 6 2 6-2v15l-6 2-6-2-6 2V5Zm0 0v15M15 6v15"></path></svg> Map</button>
     <button class="sb-item" onclick="closeSidebar();switchView('contacts')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Contacts</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('events')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <button class="sb-item" onclick="showHiddenView()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg> Hidden Contacts</button>
 
     <!-- DATA-- DATA section -->
@@ -841,6 +918,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="dash-nav-btn" id="navCRM" onclick="switchView('crm')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 6 2 6-2v15l-6 2-6-2-6 2V5Zm0 0v15M15 6v15"></path></svg> Map</button>
     <button class="dash-nav-btn" id="navContacts" onclick="switchView('contacts')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Contacts</button>
     <button class="dash-nav-btn" id="navDash" onclick="switchView('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14v4M12 9v9M17 5v13"></path></svg> Dashboard</button>
+    <button class="dash-nav-btn" id="navEvents" onclick="switchView('events')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg></button>
@@ -956,6 +1034,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       </div>
     </div>
     <div class="grid-stack" id="dashGrid"></div>
+  </div>
+
+  <!-- EVENTS VIEW -->
+  <div class="events-view" id="eventsView">
+    <div id="eventsViewInner"></div>
   </div>
 </div>
 
@@ -1583,12 +1666,22 @@ async function loadAll(){
     // refresh before doing the real bulk load — instead of bailing to a blank Map.
     await _awaitClockSkewClear();
 
-    // Load households, contacts, donations separately
-    const [hRows, allContacts, donations] = await Promise.all([
+    // Load households, contacts, donations, registrations separately
+    const [hRows, allContacts, donationsRaw, registrations] = await Promise.all([
       sbAll('households?select=*&order=created_at.asc,id.asc'),
       sbAll('contacts?select=*&order=created_at.asc,id.asc'),
-      sbAll('donations?select=*&order=date.desc,id.asc')
+      sbAll('donations?select=*&order=date.desc,id.asc'),
+      sbAll('registrations?select=*&order=reg_date.desc,id.asc')
     ]);
+
+    // Split the donations ledger by financial_type. Event fees are stored in the
+    // donations table for Stripe reconciliation, but they must NEVER count as
+    // giving: they are excluded here so donMap / giving stats / AGC Generosity /
+    // the Donations view all stay donation-only with zero changes to that math.
+    // Event money is reached via the registration (reg.donation_id), not here.
+    const donations=(donationsRaw||[]).filter(d=>(d.financial_type||'donation')!=='event_fee');
+    const eventFeesById={};
+    (donationsRaw||[]).forEach(d=>{if((d.financial_type||'donation')==='event_fee')eventFeesById[d.id]=d;});
 
     // Build contact lookup by household_id
     const contactsByHousehold={};
@@ -1604,6 +1697,18 @@ async function loadAll(){
       donMap[d.contact_id].push(d);
     });
 
+    // Build registration lookup by contact_id (parallel to donMap). Each
+    // registration carries its fee folded in via _fee (the linked event_fee
+    // donation row, if any) so the timeline can show "Event · paid $X" as one
+    // combined entry without re-querying.
+    const regMap={};
+    (registrations||[]).forEach(r=>{
+      r._fee=r.donation_id?(eventFeesById[r.donation_id]||null):null;
+      if(!r.contact_id)return;
+      if(!regMap[r.contact_id])regMap[r.contact_id]=[];
+      regMap[r.contact_id].push(r);
+    });
+
     households=(hRows||[]).map(h=>{
       // Force dedup contacts by id
       const seen=new Set();
@@ -1614,7 +1719,7 @@ async function loadAll(){
       return{
         ...h,
         contacts,
-        members:contacts.map(c=>({...c,donations:donMap[c.id]||[]})),
+        members:contacts.map(c=>({...c,donations:donMap[c.id]||[],registrations:regMap[c.id]||[]})),
         displayName:buildDisplayName({...h,contacts}),
         noAddress:!h.address,
       profile_data:h.property_data?.profile||null,
@@ -1662,6 +1767,9 @@ async function loadAll(){
     // Load AGC scores from DB (non-blocking, will overwrite local calc with DB values)
     loadAGCScores();
     loadAGCInteractionAggregates().then(()=>recolorAll());
+    // Preload events so contact-page registrations show real event names even
+    // before the Events view is opened.
+    _loadEvents().catch(()=>{});
 
     // Place known pins
     rebuildHIdxMap();_givingCache={};
@@ -1734,6 +1842,20 @@ function getGivingStats(h){
   }
   if(h&&h.id)_givingCache[h.id]=result;
   return result;
+}
+
+// ── EVENT REGISTRATIONS (per household) ──
+// Parallel to getGivingStats but for event signups. Kept SEPARATE from giving
+// stats on purpose: registrations never touch donation totals / AGC Generosity.
+// Returns a flat, de-duped, date-desc array of this household's registrations
+// (each carries _fee folded in). Used by the timeline + the Events view.
+function getHHRegistrations(h){
+  const all=[];
+  const seen=new Set();
+  const uniq=(h.members||[]).filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;});
+  uniq.forEach(m=>(m.registrations||[]).forEach(r=>all.push(r)));
+  all.sort((a,b)=>new Date(b.reg_date||b.created_at)-new Date(a.reg_date||a.created_at));
+  return all;
 }
 
 // ── EMBEDDING BACKFILL ──
@@ -1913,7 +2035,11 @@ async function loadAGCInteractionAggregates(){
   try{
     const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
     const rows=await sbAll('interactions?select=contact_id,type,date&order=id.asc')||[];
-    const c2h={};households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
+    // Map contacts->household across BOTH visible and hidden households so nothing
+    // is silently dropped from the aggregate.
+    const c2h={};
+    households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
+    (hiddenHouseholds||[]).forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
     _agcInterAgg={};
     rows.forEach(r=>{
       const hh=c2h[r.contact_id];if(!hh||!r.date)return;
@@ -1921,6 +2047,14 @@ async function loadAGCInteractionAggregates(){
       if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
+    // Event registrations count as contact too — an event signup/attendance is a
+    // reach (updates last-contact AND warmth), exactly like a logged interaction.
+    households.forEach(h=>(h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{
+      const d=r.reg_date;if(!d)return;
+      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0});
+      if(!a.lastContact||d>a.lastContact)a.lastContact=d;
+      if(d>=since)a.connected12++;
+    })));
   }catch(e){console.warn('AGC interaction aggregates failed',e);}
 }
 
@@ -2398,6 +2532,7 @@ function setProp(mode,h,result){
       <button onclick="byId('showAddDonation','${households[idx].id}',${idx})" style="font-size:.65rem;padding:3px 9px;background:rgba(15,118,110,.1);border:1px solid rgba(15,118,110,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">＋ Add</button>
     </div>`;
   }
+
 
   // Property tab
   const cells=[
@@ -4117,6 +4252,36 @@ function openFullPanel(idx){
           <button onclick="byId('cancelChildrenEdit','${households[idx].id}',${idx})" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.78rem">Cancel</button>
         </div>
       </div>
+    </div>
+
+    <!-- Event Registrations -->
+    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px;margin-top:16px">
+      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Event Registrations${(()=>{const n=getHHRegistrations(h).length;return n?' ('+n+')':'';})()}</div>
+      ${(()=>{
+        const regs=getHHRegistrations(h);
+        if(!regs.length)return '<div style="font-size:.76rem;color:var(--txt3);font-style:italic">No event registrations yet.</div>';
+        const evName=rid=>{const ev=(_events||[]).find(e=>e.id===rid);return ev?ev.name:'Event';};
+        return regs.map(r=>{
+          const who=(()=>{const m=(h.members||[]).find(x=>x.id===r.contact_id);return m?_escHtml((m.first_name||'')+' '+(m.last_name||'')).trim():'';})();
+          const fee=r._fee?parseFloat(r._fee.amount||0):(parseFloat(r.tier_amount||0)||0);
+          const cnt=parseInt(r.attendee_count)||1;
+          const tier=r.tier_label?' · '+_escHtml(r.tier_label):'';
+          return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:.8rem;font-weight:600;color:var(--txt);cursor:pointer" onclick="_openEventFromContact('${r.event_id}')">${_escHtml(evName(r.event_id))}</div>
+                <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3)">${who?who+' · ':''}${cnt} attendee${cnt===1?'':'s'}${tier} · ${_fmtDate(r.reg_date)||''}</div>
+                ${r.notes?`<div style="font-size:.68rem;color:var(--txt2);margin-top:2px;font-style:italic">${_escHtml(r.notes)}</div>`:''}
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                ${fee>0?`<div style="font-size:.76rem;color:var(--gold);font-weight:600">$${fee.toLocaleString()}</div>`:'<div style="font-size:.62rem;color:var(--txt3)">free</div>'}
+                <button onclick="openEditRegistration('${r.id}','${h.id}',${idx})" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+                <button onclick="deleteRegistration('${r.id}','${h.id}',${idx})" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      })()}
     </div>`;
 
     document.getElementById('fullPanelContent').innerHTML=html;
@@ -6212,7 +6377,7 @@ async function renderEnrichCard(){
     const memberIds=members.map(m=>'"'+m.id+'"').join(',');
     if(memberIds){
       interactions=await sb('interactions?contact_id=in.('+memberIds+')&order=date.desc&limit=100')||[];
-      donations=await sb('donations?contact_id=in.('+memberIds+')&order=date.desc&limit=100')||[];
+      donations=await sb('donations?contact_id=in.('+memberIds+')&financial_type=eq.donation&order=date.desc&limit=100')||[];
     }
   }catch(e){}
 
@@ -6903,19 +7068,408 @@ const DASH_DEFAULT_LAYOUT=[
   {id:'panel-tracks',     x:0, y:16, w:12, h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',              fn:'renderActiveTracks'},
 ];
 
+// ════════════════════════════════════════════════════════════════════════
+// EVENTS SECTION — internal cockpit for events + registrations.
+// Reads/writes the `events` and `registrations` tables. Manual entry today;
+// the public form pipeline will write registrations here later. Event fees
+// live in donations (financial_type='event_fee') and are reached via
+// registration.donation_id — never counted as giving.
+// ════════════════════════════════════════════════════════════════════════
+let _events=[];            // loaded events
+let _eventsLoaded=false;
+let _openEventId=null;     // currently-open event detail, or null = list
+
+async function _loadEvents(force){
+  if(_eventsLoaded&&!force)return;
+  _events=await sbAll('events?select=*&order=event_date.desc.nullslast,created_at.desc')||[];
+  _eventsLoaded=true;
+}
+
+// All registrations for one event, hydrated with contact/household display info
+// from the in-memory model (so we don't re-query contacts).
+function _regsForEvent(eventId){
+  const out=[];
+  // Include hidden households — a hidden contact's registration still counts
+  // toward the event roster, headcount, and revenue.
+  const all=(households||[]).concat(hiddenHouseholds||[]);
+  all.forEach(h=>{
+    (h.members||[]).forEach(m=>{
+      (m.registrations||[]).forEach(r=>{
+        if(r.event_id===eventId)out.push({...r,_contact:m,_household:h});
+      });
+    });
+  });
+  out.sort((a,b)=>new Date(b.reg_date||b.created_at)-new Date(a.reg_date||a.created_at));
+  return out;
+}
+
+function _eventStats(eventId){
+  const regs=_regsForEvent(eventId);
+  const heads=regs.reduce((s,r)=>s+(parseInt(r.attendee_count)||1),0);
+  const revenue=regs.reduce((s,r)=>s+(r._fee?parseFloat(r._fee.amount||0):(parseFloat(r.tier_amount||0))),0);
+  return {count:regs.length,heads,revenue,regs};
+}
+
+async function renderEvents(){
+  const host=document.getElementById('eventsViewInner');
+  if(!host)return;
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading events…</div>';
+  try{ await _loadEvents(); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load events: '+_escHtml(e.message)+'</p></div>'; return; }
+  if(_openEventId){ _renderEventDetail(_openEventId); return; }
+  _renderEventList();
+}
+
+function _renderEventList(){
+  const host=document.getElementById('eventsViewInner');
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</h2>
+    <button class="btn btn-pri" onclick="openEventEditor()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Event</button>
+  </div>`;
+  if(!_events.length){
+    host.innerHTML=header+`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No events yet. Create your first event to start tracking registrations.</div>`;
+    return;
+  }
+  const cards=_events.map(ev=>{
+    const st=_eventStats(ev.id);
+    const dateStr=ev.event_date?_fmtDate(ev.event_date):'Date TBD';
+    return `<div class="ev-card" onclick="openEvent('${ev.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div class="ev-name">${_escHtml(ev.name)}${ev.active?'':' <span style="font-size:.6rem;color:var(--txt3);font-weight:400">(inactive)</span>'}</div>
+          <div class="ev-meta">${dateStr}${ev.location?' · '+_escHtml(ev.location):''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <span class="ev-pill">${st.count} reg${st.count===1?'':'s'}</span>
+          <span class="ev-pill">${st.heads} attending</span>
+          ${st.revenue>0?`<span class="ev-pill" style="color:var(--gold)">$${st.revenue.toLocaleString()}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  host.innerHTML=header+cards;
+}
+
+function openEvent(id){ _openEventId=id; _renderEventDetail(id); }
+function backToEvents(){ _openEventId=null; _renderEventList(); }
+
+function _renderEventDetail(id){
+  const host=document.getElementById('eventsViewInner');
+  const ev=_events.find(e=>e.id===id);
+  if(!ev){ backToEvents(); return; }
+  const st=_eventStats(id);
+  const dateStr=ev.event_date?_fmtDate(ev.event_date):'Date TBD';
+  const regRows=st.regs.length?st.regs.map(r=>{
+    const name=_escHtml((r._contact.first_name||'')+' '+(r._contact.last_name||'')).trim()||'Unknown';
+    const fee=r._fee?parseFloat(r._fee.amount||0):(parseFloat(r.tier_amount||0)||0);
+    const tier=r.tier_label?' · '+_escHtml(r.tier_label):'';
+    const cnt=(parseInt(r.attendee_count)||1);
+    const noShow=!r.interaction_id; // no linked attendance interaction = marked no-show
+    const customBits=r.fields&&Object.keys(r.fields).length?Object.entries(r.fields).map(([k,v])=>`${_escHtml(k)}: ${_escHtml(String(v))}`).join(' · '):'';
+    return `<div class="ev-reg-row"${noShow?' style="opacity:.55"':''}>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.78rem;font-weight:600;color:var(--txt);cursor:pointer"${noShow?' ':''} onclick="_gotoContactFromReg('${r._household.id}')">${name}${noShow?' <span style="font-family:var(--font-ui);font-size:.54rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:1px">No-show</span>':''}</div>
+        <div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">${cnt} attendee${cnt===1?'':'s'}${tier}${customBits?' · '+customBits:''}</div>
+        ${r.notes?`<div style="font-size:.66rem;color:var(--txt2);margin-top:3px;font-style:italic">${_escHtml(r.notes)}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0;display:flex;align-items:center;gap:4px">
+        <div>
+          ${fee>0?`<div style="font-size:.72rem;color:var(--gold);font-weight:600">$${fee.toLocaleString()}</div>`:'<div style="font-size:.62rem;color:var(--txt3)">free</div>'}
+          <div style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">${_fmtDate(r.reg_date)||''}</div>
+        </div>
+        <button onclick="toggleNoShow('${r.id}','${r._household.id}')" style="background:none;border:none;cursor:pointer;color:${noShow?'var(--green)':'var(--txt3)'};padding:2px 3px" title="${noShow?'Mark attended':'Mark no-show'}">${noShow
+          ?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+          :'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64M12 2v10"/></svg>'}</button>
+        <button onclick="openEditRegistration('${r.id}','${r._household.id}',null)" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button onclick="deleteRegistration('${r.id}','${r._household.id}',null)" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      </div>
+    </div>`;
+  }).join(''):'<div style="padding:24px 0;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.72rem">No registrations yet.</div>';
+
+  host.innerHTML=`
+    <button class="ev-back" onclick="backToEvents()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg> All events</button>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+      <div>
+        <h2 style="font-family:var(--font-display);font-size:1.25rem;color:var(--txt);margin:0">${_escHtml(ev.name)}</h2>
+        <div class="ev-meta" style="margin-top:4px">${dateStr}${ev.location?' · '+_escHtml(ev.location):''}${ev.campaign_tag?' · '+_escHtml(ev.campaign_tag):''}</div>
+        ${ev.description?`<div style="font-size:.74rem;color:var(--txt2);margin-top:8px;max-width:560px">${_escHtml(ev.description)}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-sec" onclick="openEventEditor('${ev.id}')" style="font-size:.66rem;padding:5px 11px">Edit</button>
+        <button class="btn btn-sec" onclick="deleteEvent('${ev.id}')" style="font-size:.66rem;padding:5px 11px;color:var(--red)">Delete</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:18px;margin:16px 0;font-family:var(--font-ui)">
+      <div><div style="font-size:1.3rem;font-weight:700;color:var(--txt)">${st.count}</div><div style="font-size:.58rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em">Registrations</div></div>
+      <div><div style="font-size:1.3rem;font-weight:700;color:var(--txt)">${st.heads}</div><div style="font-size:.58rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em">Attending</div></div>
+      ${st.revenue>0?`<div><div style="font-size:1.3rem;font-weight:700;color:var(--gold)">$${st.revenue.toLocaleString()}</div><div style="font-size:.58rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em">Collected</div></div>`:''}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:18px 0 4px">
+      <h3 style="font-family:var(--font-ui);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin:0">Registrations</h3>
+      <button class="btn btn-sec" onclick="openAddRegistration('${ev.id}')" style="font-size:.64rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add Registration</button>
+    </div>
+    <div>${regRows}</div>
+  `;
+}
+
+function _gotoContactFromReg(householdId){
+  const idx=households.findIndex(h=>h.id===householdId);
+  if(idx<0)return;
+  switchView('crm');
+  setTimeout(()=>byId('selectHousehold',householdId,idx),120);
+}
+
+// ── EVENT CREATE / EDIT MODAL ──
+let _editingEventId=null;
+function openEventEditor(id){
+  _editingEventId=id||null;
+  const ev=id?_events.find(e=>e.id===id):null;
+  document.getElementById('ev_modal_title').textContent=ev?'Edit Event':'New Event';
+  document.getElementById('ev_name').value=ev?ev.name||'':'';
+  document.getElementById('ev_date').value=ev&&ev.event_date?ev.event_date:'';
+  document.getElementById('ev_location').value=ev?ev.location||'':'';
+  document.getElementById('ev_campaign').value=ev?ev.campaign_tag||'':'';
+  document.getElementById('ev_desc').value=ev?ev.description||'':'';
+  document.getElementById('ev_active').checked=ev?!!ev.active:true;
+  document.getElementById('ev_status').style.display='none';
+  document.getElementById('eventEditorModal').style.display='flex';
+  document.getElementById('ev_name').focus();
+}
+function closeEventEditor(){ document.getElementById('eventEditorModal').style.display='none'; }
+
+async function saveEvent(){
+  const name=document.getElementById('ev_name').value.trim();
+  const status=document.getElementById('ev_status');
+  if(!name){ status.textContent='Event name is required.'; status.style.display='block'; return; }
+  const payload={
+    name,
+    event_date:document.getElementById('ev_date').value||null,
+    location:document.getElementById('ev_location').value.trim()||null,
+    campaign_tag:document.getElementById('ev_campaign').value.trim()||null,
+    description:document.getElementById('ev_desc').value.trim()||null,
+    active:document.getElementById('ev_active').checked
+  };
+  status.textContent='Saving…'; status.style.display='block';
+  try{
+    if(_editingEventId){
+      await sb('events?id=eq.'+_editingEventId,{method:'PATCH',body:JSON.stringify(payload)});
+    }else{
+      await sb('events',{method:'POST',body:JSON.stringify(payload)});
+    }
+    await _loadEvents(true);
+    closeEventEditor();
+    if(_openEventId)_renderEventDetail(_openEventId); else _renderEventList();
+  }catch(e){ status.textContent='Error: '+e.message; }
+}
+
+// ── ADD REGISTRATION (manual) ──
+let _addRegEventId=null;
+let _addRegContact=null; // {contactId, householdId, name}
+function openAddRegistration(eventId){
+  _addRegEventId=eventId; _addRegContact=null;
+  document.getElementById('reg_search').value='';
+  document.getElementById('reg_results').style.display='none';
+  document.getElementById('reg_selected').style.display='none';
+  document.getElementById('reg_count').value='1';
+  document.getElementById('reg_tier_label').value='';
+  document.getElementById('reg_tier_amount').value='';
+  document.getElementById('reg_notes').value='';
+  document.getElementById('reg_status').style.display='none';
+  document.getElementById('addRegistrationModal').style.display='flex';
+  document.getElementById('reg_search').focus();
+}
+function closeAddRegistration(){ document.getElementById('addRegistrationModal').style.display='none'; }
+
+function _regSearch(){
+  const q=document.getElementById('reg_search').value.trim().toLowerCase();
+  const box=document.getElementById('reg_results');
+  if(q.length<2){ box.style.display='none'; return; }
+  const matches=[];
+  households.forEach(h=>{
+    (h.members||[]).forEach(m=>{
+      const nm=((m.first_name||'')+' '+(m.last_name||'')).toLowerCase();
+      if(nm.includes(q)||(m.email||'').toLowerCase().includes(q)){
+        matches.push({contactId:m.id,householdId:h.id,name:((m.first_name||'')+' '+(m.last_name||'')).trim(),email:m.email||''});
+      }
+    });
+  });
+  if(!matches.length){ box.innerHTML='<div style="padding:8px 10px;font-size:.7rem;color:var(--txt3)">No matches</div>'; box.style.display='block'; return; }
+  box.innerHTML=matches.slice(0,8).map(m=>`<div class="reg-result" onclick="_pickRegContact('${m.contactId}','${m.householdId}','${_escHtml(m.name).replace(/'/g,"&#39;")}')" style="padding:8px 10px;cursor:pointer;font-size:.74rem;border-bottom:1px solid var(--border)">${_escHtml(m.name)}${m.email?` <span style="color:var(--txt3);font-size:.64rem">${_escHtml(m.email)}</span>`:''}</div>`).join('');
+  box.style.display='block';
+}
+function _pickRegContact(contactId,householdId,name){
+  _addRegContact={contactId,householdId,name};
+  document.getElementById('reg_results').style.display='none';
+  document.getElementById('reg_search').value='';
+  const sel=document.getElementById('reg_selected');
+  sel.innerHTML=`Registering: <b>${_escHtml(name)}</b> <span style="cursor:pointer;color:var(--accent);margin-left:8px" onclick="_clearRegContact()">change</span>`;
+  sel.style.display='block';
+}
+function _clearRegContact(){ _addRegContact=null; document.getElementById('reg_selected').style.display='none'; document.getElementById('reg_search').focus(); }
+
+// Create the persistent "Event attendance" interaction for a registration and
+// link it back via registrations.interaction_id. Dates the interaction to the
+// EVENT date (when attendance happens), falling back to today. Returns the new
+// interaction id, or null on failure. Used by saveRegistration + un-no-show.
+async function _logEventAttendance(reg,contactId,eventId){
+  try{
+    const ev=(_events||[]).find(e=>e.id===eventId);
+    const when=(ev&&ev.event_date)?ev.event_date:localDateStr(new Date());
+    const note='Attended: '+((ev&&ev.name)||'event');
+    const irows=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Event attendance',date:when,notes:note,created_at:new Date().toISOString()})});
+    const inter=Array.isArray(irows)?irows[0]:irows;
+    if(!inter)return null;
+    await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:inter.id})});
+    reg.interaction_id=inter.id;
+    if(inter.notes)embedAndStore(inter.id,'Event attendance: '+inter.notes);
+    _bumpAGCAgg(contactId,'Event attendance',when);
+    return inter.id;
+  }catch(e){return null;}
+}
+
+// Remove the attendance interaction linked to a registration (no-show / delete).
+async function _unlogEventAttendance(reg){
+  if(!reg||!reg.interaction_id)return;
+  try{
+    await sb('interactions?id=eq.'+reg.interaction_id,{method:'DELETE'});
+    await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:null})});
+  }catch(e){}
+  reg.interaction_id=null;
+}
+
+async function saveRegistration(){
+  const status=document.getElementById('reg_status');
+  if(!_addRegContact){ status.textContent='Pick a contact first.'; status.style.display='block'; return; }
+  const count=parseInt(document.getElementById('reg_count').value)||1;
+  const tierLabel=document.getElementById('reg_tier_label').value.trim()||null;
+  const tierAmount=parseFloat(document.getElementById('reg_tier_amount').value)||null;
+  const notes=document.getElementById('reg_notes').value.trim()||null;
+  const payload={
+    event_id:_addRegEventId,
+    contact_id:_addRegContact.contactId,
+    household_id:_addRegContact.householdId,
+    attendee_count:count,
+    tier_label:tierLabel,
+    tier_amount:tierAmount,
+    notes,
+    source:'manual'
+  };
+  status.textContent='Saving…'; status.style.display='block';
+  try{
+    const rows=await sb('registrations',{method:'POST',body:JSON.stringify(payload)});
+    const newReg=Array.isArray(rows)?rows[0]:rows;
+    // Patch in-memory model so it shows immediately without a full reload.
+    const h=households.find(x=>x.id===_addRegContact.householdId);
+    if(h){ const m=(h.members||[]).find(x=>x.id===_addRegContact.contactId); if(m){ if(!m.registrations)m.registrations=[]; if(newReg){newReg._fee=null;m.registrations.push(newReg);} } }
+    // Registration counts as attendance (a reach). Write a PERSISTENT interaction
+    // row (not just the in-memory bump) so it survives reload and shows in the
+    // feed/timeline/Wins. No-show later deletes this exact row.
+    if(newReg){ await _logEventAttendance(newReg,_addRegContact.contactId,_addRegEventId); if(h){_invHH(h);refreshAGCScore(h.id).then(()=>recolorAll()).catch(()=>{});} }
+    closeAddRegistration();
+    _renderEventDetail(_addRegEventId);
+  }catch(e){ status.textContent='Error: '+e.message; }
+}
+
+// ── EDIT / DELETE REGISTRATION ──
+let _editRegId=null, _editRegHHId=null, _editRegIdx=null;
+function _findRegById(rid){
+  const all=(households||[]).concat(hiddenHouseholds||[]);
+  for(const h of all){ for(const m of (h.members||[])){ const r=(m.registrations||[]).find(x=>x.id===rid); if(r)return{r,m,h}; } }
+  return null;
+}
+function openEditRegistration(rid,hhId,idx){
+  const found=_findRegById(rid); if(!found)return;
+  _editRegId=rid; _editRegHHId=hhId; _editRegIdx=idx;
+  const r=found.r;
+  document.getElementById('ereg_count').value=parseInt(r.attendee_count)||1;
+  document.getElementById('ereg_tier_label').value=r.tier_label||'';
+  document.getElementById('ereg_tier_amount').value=r.tier_amount!=null?r.tier_amount:'';
+  document.getElementById('ereg_notes').value=r.notes||'';
+  document.getElementById('ereg_status').style.display='none';
+  document.getElementById('editRegistrationModal').style.display='flex';
+}
+function closeEditRegistration(){ document.getElementById('editRegistrationModal').style.display='none'; }
+async function saveEditRegistration(){
+  const status=document.getElementById('ereg_status');
+  const payload={
+    attendee_count:parseInt(document.getElementById('ereg_count').value)||1,
+    tier_label:document.getElementById('ereg_tier_label').value.trim()||null,
+    tier_amount:parseFloat(document.getElementById('ereg_tier_amount').value)||null,
+    notes:document.getElementById('ereg_notes').value.trim()||null
+  };
+  status.textContent='Saving…'; status.style.display='block';
+  try{
+    await sb('registrations?id=eq.'+_editRegId,{method:'PATCH',body:JSON.stringify(payload)});
+    const found=_findRegById(_editRegId);
+    if(found){Object.assign(found.r,payload);_invHH(found.h);}
+    closeEditRegistration();
+    // Refresh whichever view is open: contact panel or event detail.
+    if(_editRegIdx!=null&&households[_editRegIdx])selectHousehold(_editRegIdx);
+    if(_openEventId)_renderEventDetail(_openEventId);
+  }catch(e){ status.textContent='Error: '+e.message; }
+}
+async function toggleNoShow(rid,hhId){
+  const found=_findRegById(rid);
+  if(!found)return;
+  const {r,m,h}=found;
+  if(r.interaction_id){
+    // Currently attending → mark no-show: delete the attendance interaction.
+    await _unlogEventAttendance(r);
+  }else{
+    // Currently no-show → restore: re-create the attendance interaction.
+    await _logEventAttendance(r,m.id,r.event_id);
+  }
+  _invHH(h);
+  refreshAGCScore(h.id).then(()=>recolorAll()).catch(()=>{});
+  if(_openEventId)_renderEventDetail(_openEventId);
+}
+
+async function deleteRegistration(rid,hhId,idx){
+  if(!confirm('Delete this registration? This cannot be undone.'))return;
+  try{
+    const found=_findRegById(rid);
+    if(found&&found.r.interaction_id)await _unlogEventAttendance(found.r); // remove linked attendance credit
+    await sb('registrations?id=eq.'+rid,{method:'DELETE'});
+    if(found){found.m.registrations=(found.m.registrations||[]).filter(x=>x.id!==rid);_invHH(found.h);refreshAGCScore(found.h.id).then(()=>recolorAll()).catch(()=>{});}
+    if(idx!=null&&households[idx])selectHousehold(idx);
+    if(_openEventId)_renderEventDetail(_openEventId);
+  }catch(e){ alert('Delete failed: '+e.message); }
+}
+async function deleteEvent(id){
+  const ev=(_events||[]).find(e=>e.id===id);
+  const st=_eventStats(id);
+  if(st.count>0){ alert('This event has '+st.count+' registration(s). Remove them first before deleting the event.'); return; }
+  if(!confirm('Delete event "'+(ev?ev.name:'')+'"? This cannot be undone.'))return;
+  try{
+    await sb('events?id=eq.'+id,{method:'DELETE'});
+    await _loadEvents(true);
+    _openEventId=null;
+    _renderEventList();
+  }catch(e){ alert('Delete failed: '+e.message); }
+}
+function _openEventFromContact(eventId){
+  // The full-panel overlay (z-index 8000) sits on top of all views — close it
+  // first or switching to Events happens invisibly underneath it. Harmless when
+  // the full panel isn't open.
+  try{ if(typeof closeFullPanel==='function' && document.getElementById('fullPanel')?.style.display!=='none')closeFullPanel(); }catch(e){}
+  switchView('events');
+  setTimeout(()=>openEvent(eventId),60);
+}
+
 function switchView(view){
   document.getElementById('appLoading')?.remove();
   const crm=document.getElementById('crmView');
   const dash=document.getElementById('dashView');
   const contacts=document.getElementById('contactsView');
+  const events=document.getElementById('eventsView');
   const strip=document.getElementById('filterStrip');
   const mapCtrl=document.getElementById('mapControls');
   // Reset all
   crm.classList.add('hidden');
   dash.classList.remove('active');
   contacts.classList.remove('active');
+  if(events)events.classList.remove('active');
   const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
-  ['navCRM','navContacts','navDash'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  ['navCRM','navContacts','navDash','navEvents'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   if(view==='dash'){
     dash.classList.add('active');
     document.getElementById('navDash').classList.add('active');
@@ -6929,6 +7483,13 @@ function switchView(view){
     if(strip)strip.style.display='flex';
     if(mapCtrl)mapCtrl.style.display='none';
     renderContacts();
+  } else if(view==='events'){
+    if(events)events.classList.add('active');
+    document.getElementById('navEvents')?.classList.add('active');
+    if(strip)strip.style.display='none';
+    if(mapCtrl)mapCtrl.style.display='none';
+    _openEventId=null; // always land on the list when entering via nav
+    renderEvents();
   } else {
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
