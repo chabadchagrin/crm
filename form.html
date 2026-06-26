@@ -55,6 +55,10 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .field input.err,.field select.err{border-color:var(--red)}
 .field-err{color:var(--red);font-size:.7rem;margin-top:4px;display:none}
 .field-err.show{display:block}
+.check-line{display:flex !important;align-items:flex-start;gap:9px;cursor:pointer;font-size:.88rem;font-weight:500 !important;color:var(--txt) !important;margin-bottom:0 !important;line-height:1.4;}
+.check-line input[type=checkbox]{width:18px;height:18px;margin:1px 0 0;flex-shrink:0;accent-color:var(--accent);cursor:pointer;}
+.check-line.err span{color:var(--red)}
+.check-line .req{color:var(--red);margin-left:2px}
 .pay-section{margin-top:4px;margin-bottom:6px}
 .pay-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);font-weight:600;margin:0 0 9px;}
 #payment-element{margin-bottom:6px}
@@ -123,22 +127,42 @@ function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function showError(msg){root.innerHTML='<div class="state error">'+esc(msg)+'</div>';postHeight();}
 function parseMaybe(v,fallback){if(v==null)return fallback;if(typeof v==='object')return v;try{return JSON.parse(v);}catch(e){return fallback;}}
 
-// ── AUTO-HEIGHT: tell the embedding page how tall we are ──
+// ── AUTO-HEIGHT: tell the embedding page how tall our CONTENT is ──
+// Measure the .wrap element only — never document/body scrollHeight, which
+// reports the iframe's CURRENT height back to us and ratchets upward
+// (form grows but can never shrink). .wrap reflects real content height, so
+// the parent iframe tracks it both ways. We also de-dupe identical heights
+// to avoid a postMessage→resize→observer→postMessage feedback storm.
 const FORM_SLUG=new URLSearchParams(location.search).get('slug')||'';
+let _lastH=0;
 function postHeight(){
   try{
-    const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,
-      (document.querySelector('.wrap')?document.querySelector('.wrap').offsetHeight:0)+8);
+    const wrap=document.querySelector('.wrap');
+    if(!wrap)return;
+    // getBoundingClientRect().height includes sub-pixel content; round up + a
+    // small buffer so nothing clips, but it stays tied to content, not viewport.
+    const h=Math.ceil(wrap.getBoundingClientRect().height)+8;
+    if(h<=0||h===_lastH)return;
+    _lastH=h;
     if(window.parent&&window.parent!==window){
       window.parent.postMessage({daasFormHeight:h,slug:FORM_SLUG},'*');
     }
   }catch(e){}
 }
-// Re-measure on any DOM/size change + a few timed passes for font/Stripe load.
-if(window.ResizeObserver){ new ResizeObserver(()=>postHeight()).observe(document.body); }
-window.addEventListener('load',()=>{postHeight();[120,400,900,1600].forEach(t=>setTimeout(postHeight,t));});
-window.addEventListener('resize',postHeight);
-new MutationObserver(()=>postHeight()).observe(document.documentElement,{subtree:true,childList:true,attributes:true});
+// Re-measure on content size changes + a few timed passes for font/Stripe load.
+// Observe .wrap (the content), NOT body — observing body re-triggers on the
+// height changes we cause. rAF-coalesce so bursts collapse to one post.
+let _hRaf=null;
+function queueHeight(){ if(_hRaf)return; _hRaf=requestAnimationFrame(()=>{_hRaf=null;postHeight();}); }
+window.addEventListener('load',()=>{queueHeight();[120,400,900,1600].forEach(t=>setTimeout(queueHeight,t));});
+window.addEventListener('resize',queueHeight);
+document.addEventListener('DOMContentLoaded',()=>{
+  const wrap=document.querySelector('.wrap');
+  if(wrap){
+    if(window.ResizeObserver)new ResizeObserver(queueHeight).observe(wrap);
+    new MutationObserver(queueHeight).observe(wrap,{subtree:true,childList:true,attributes:true,characterData:true});
+  }
+});
 
 async function init(){
   const slug=FORM_SLUG;
@@ -213,6 +237,15 @@ function render(form){
   // ── custom + standard fields ──
   fields.forEach(f=>{
     const t=f.type;
+    if(t==='checkbox'){
+      // Checkbox: box + label on one line, label after the box. A required
+      // checkbox means "must be ticked" (consent / waiver / opt-in).
+      html+='<div class="field check-field">'
+        +'<label class="check-line"><input type="checkbox" id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'" data-checkbox="1">'
+        +'<span>'+esc(f.label)+(f.required?'<span class="req">*</span>':'')+'</span></label>'
+        +'<div class="field-err" id="err_'+esc(f.key)+'"></div></div>';
+      return;
+    }
     html+='<div class="field"><label for="f_'+esc(f.key)+'">'+esc(f.label)
       +(f.required?'<span class="req">*</span>':'')+'</label>';
     if(t==='select'){
@@ -329,10 +362,21 @@ function refreshPaymentElement(){
 function collectFields(){
   let ok=true;const data={};
   document.querySelectorAll('[data-key]').forEach(inp=>{
-    const key=inp.dataset.key, val=(inp.value||'').trim();
-    data[key]=val;
+    const key=inp.dataset.key;
     const errEl=document.getElementById('err_'+key);
     inp.classList.remove('err');if(errEl)errEl.classList.remove('show');
+    // Checkbox → boolean. Required checkbox must be ticked (consent/waiver).
+    if(inp.dataset.checkbox==='1'){
+      data[key]=inp.checked?'Yes':'No';
+      if(inp.dataset.required==='1'&&!inp.checked){
+        ok=false;
+        const line=inp.closest('.check-line'); if(line)line.classList.add('err');
+        if(errEl){errEl.textContent='Required';errEl.classList.add('show');}
+      }
+      return;
+    }
+    const val=(inp.value||'').trim();
+    data[key]=val;
     if(inp.dataset.required==='1'&&!val){
       ok=false;inp.classList.add('err');
       if(errEl){errEl.textContent='Required';errEl.classList.add('show');}

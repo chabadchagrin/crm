@@ -7521,7 +7521,7 @@ let _forms=[];               // loaded form rows
 let _formsLoaded=false;
 let _fbEditingSlug=undefined;// undefined=list view, null=new form, string=editing slug
 let _fbDraft=null;           // working copy while editing
-const FB_FIELD_TYPES=['text','email','tel','number','select'];
+const FB_FIELD_TYPES=['text','email','tel','number','select','checkbox'];
 const FB_STD_KEYS=['first_name','last_name','email','phone']; // matched by webhook
 
 async function _loadForms(force){
@@ -7880,16 +7880,18 @@ function _fbShowEmbed(slug){
   const code=
 `<!-- Chabad at the Falls — ${slug} form -->
 <iframe id="daas-form-${slug}" src="${url}"
-  style="width:100%;border:none;min-height:520px;overflow:hidden"
+  style="width:100%;border:none;display:block;min-height:160px;overflow:hidden"
   scrolling="no" title="Chabad at the Falls form"></iframe>
 <script>
-  window.addEventListener('message', function (e) {
-    if (e.origin !== 'https://chabadchagrin.github.io') return;
-    if (e.data && e.data.daasFormHeight && e.data.slug === '${slug}') {
-      var f = document.getElementById('daas-form-${slug}');
-      if (f) f.style.height = e.data.daasFormHeight + 'px';
-    }
-  });
+  (function(){
+    var f = document.getElementById('daas-form-${slug}');
+    window.addEventListener('message', function (e) {
+      if (e.origin !== 'https://chabadchagrin.github.io') return;
+      if (e.data && e.data.daasFormHeight && e.data.slug === '${slug}' && f) {
+        f.style.height = e.data.daasFormHeight + 'px';
+      }
+    });
+  })();
 <\/script>`;
   document.getElementById('embed_code').value=code;
   document.getElementById('embed_preview_link').innerHTML=
