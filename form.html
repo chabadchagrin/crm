@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Donation Form</title>
+<title>Chabad at the Falls</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -32,17 +32,27 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .preset.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent);}
 .preset-amt{font-family:var(--font-mono);font-size:1.15rem;font-weight:500;display:block;font-variant-numeric:tabular-nums;}
 .preset-lbl{font-size:.72rem;color:var(--txt2);display:block;margin-top:2px}
+/* tiers: single column, label-forward (event registration levels) */
+.tiers{display:flex;flex-direction:column;gap:9px;margin-bottom:11px}
+.tier{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;padding:13px 15px;cursor:pointer;transition:border-color .14s,background .14s,box-shadow .14s;}
+.tier:hover{border-color:var(--border2)}
+.tier.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent);}
+.tier-lbl{font-weight:600;color:var(--txt);font-size:.95rem}
+.tier-amt{font-family:var(--font-mono);font-size:1.05rem;color:var(--txt2);font-variant-numeric:tabular-nums}
 .custom-row{position:relative;margin-bottom:22px}
 .custom-row .dollar{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--txt3);font-family:var(--font-mono);font-size:.95rem;pointer-events:none;}
 .custom-amt{width:100%;padding:12px 13px 12px 26px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font-mono);font-size:1rem;color:var(--txt);background:var(--surf);outline:none;font-variant-numeric:tabular-nums;transition:border-color .14s;}
 .custom-amt:focus{border-color:var(--accent)}
 .custom-amt.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.addon-row{margin:2px 0 20px}
+.addon-row .addon-lbl{font-size:.72rem;font-weight:600;color:var(--txt2);margin-bottom:5px;display:block}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:.72rem;font-weight:600;color:var(--txt2);margin-bottom:5px;letter-spacing:.01em;}
 .field label .req{color:var(--red);margin-left:2px}
-.field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font-ui);font-size:.92rem;color:var(--txt);background:var(--surf);outline:none;transition:border-color .14s;}
-.field input:focus{border-color:var(--accent)}
-.field input.err{border-color:var(--red)}
+.field input,.field select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font-ui);font-size:.92rem;color:var(--txt);background:var(--surf);outline:none;transition:border-color .14s;}
+.field select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field input.err,.field select.err{border-color:var(--red)}
 .field-err{color:var(--red);font-size:.7rem;margin-top:4px;display:none}
 .field-err.show{display:block}
 .pay-section{margin-top:4px;margin-bottom:6px}
@@ -81,29 +91,58 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 // ============================================================
-// DAAS form.html Stage 3 - embedded Stripe Payment Element
+// DAAS form.html — public renderer (donation + event registration)
 // Donor never leaves the page. Stripe renders card + Apple/Google
 // Pay inside #payment-element. Card data flows straight to Stripe.
+// Schema-driven: one file renders every form from its `forms` row.
+//
+// Added since the donation-only version:
+//   • AUTO-HEIGHT: posts its content height to the embedding parent on
+//     every size change, so the Squarespace iframe resizes to fit (no
+//     inner scrollbar, no dead space). Pairs with the listener the Form
+//     Builder generates in the Embed dialog.
+//   • EVENT forms: tiered pricing (pick-a-level), optional add-on gift,
+//     and free RSVP (no Stripe). Writes a registration via event-register.
+//   • New field types: number, select.
+//   • Per-form success_title / success_message.
 // ============================================================
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
 const STRIPE_PK='pk_test_51KMkaNRuEc7FUNkOSZX3MWVct9VbISgspfy9hEn0mCAwX6BoLNR31NWtsqUdvcKWI4V2x7WwJo1nExmIC3KlLZGS00TPUJYe6D';
 const FORM_SUBMIT_URL=SB_URL+'/functions/v1/form-submit';
+const EVENT_REGISTER_URL=SB_URL+'/functions/v1/event-register'; // free RSVP / event path (Stage C backend)
 
 const root=document.getElementById('root');
-let selectedAmount=null;
+let selectedAmount=null;   // donation amount, or selected tier amount
+let addonAmount=0;         // optional add-on gift on top of a tier
+let selectedTier=null;     // {amount,label} for event forms
 let stripe=null, elements=null, currentForm=null, paymentReady=false;
+let formMode='donation';   // 'donation' | 'tiered' | 'tiered_addon' | 'free'
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function showError(msg){root.innerHTML='<div class="state error">'+esc(msg)+'</div>';}
+function showError(msg){root.innerHTML='<div class="state error">'+esc(msg)+'</div>';postHeight();}
 function parseMaybe(v,fallback){if(v==null)return fallback;if(typeof v==='object')return v;try{return JSON.parse(v);}catch(e){return fallback;}}
 
+// ── AUTO-HEIGHT: tell the embedding page how tall we are ──
+const FORM_SLUG=new URLSearchParams(location.search).get('slug')||'';
+function postHeight(){
+  try{
+    const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,
+      (document.querySelector('.wrap')?document.querySelector('.wrap').offsetHeight:0)+8);
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({daasFormHeight:h,slug:FORM_SLUG},'*');
+    }
+  }catch(e){}
+}
+// Re-measure on any DOM/size change + a few timed passes for font/Stripe load.
+if(window.ResizeObserver){ new ResizeObserver(()=>postHeight()).observe(document.body); }
+window.addEventListener('load',()=>{postHeight();[120,400,900,1600].forEach(t=>setTimeout(postHeight,t));});
+window.addEventListener('resize',postHeight);
+new MutationObserver(()=>postHeight()).observe(document.documentElement,{subtree:true,childList:true,attributes:true});
+
 async function init(){
-  const params=new URLSearchParams(location.search);
-  const slug=params.get('slug');
+  const slug=FORM_SLUG;
   if(!slug){showError('No form specified.');return;}
-  if(typeof Stripe==='undefined'){showError('Payment system unavailable. Please refresh.');return;}
-  stripe=Stripe(STRIPE_PK);
   let rows;
   try{
     const res=await fetch(SB_URL+'/rest/v1/forms?select=*&slug=eq.'+encodeURIComponent(slug)+'&active=eq.true',{
@@ -114,6 +153,14 @@ async function init(){
   }catch(e){showError('We could not load this form. Please refresh and try again.');return;}
   if(!rows||!rows.length){showError('This form is not available.');return;}
   currentForm=rows[0];
+  const cfg=parseMaybe(currentForm.stripe_config,{});
+  formMode=currentForm.type==='event'?(cfg.mode||'tiered'):'donation';
+  // Stripe only needed when money can be collected.
+  const needsStripe=(formMode!=='free');
+  if(needsStripe){
+    if(typeof Stripe==='undefined'){showError('Payment system unavailable. Please refresh.');return;}
+    stripe=Stripe(STRIPE_PK);
+  }
   render(currentForm);
 }
 
@@ -121,38 +168,80 @@ function render(form){
   const schema=parseMaybe(form.schema,{fields:[]});
   const cfg=parseMaybe(form.stripe_config,{presets:[],allow_custom:true});
   const fields=schema.fields||[];
-  const presets=cfg.presets||[];
-  const allowCustom=cfg.allow_custom!==false;
+  const isEvent=form.type==='event';
   let html='<div class="form-card" id="formCard">';
   if(form.show_title&&form.title)html+='<h1 class="f-title">'+esc(form.title)+'</h1>';
   if(form.show_description&&form.description)html+='<p class="f-desc">'+esc(form.description)+'</p>';
   html+='<div class="'+((form.show_title||form.show_description)?'has-head':'')+'">';
-  html+='<p class="amt-label">Choose an amount</p><div class="presets">';
-  presets.forEach((p)=>{
-    const amt=Number(p.amount)||0;
-    html+='<button type="button" class="preset" data-amt="'+amt+'" onclick="pickPreset(this,'+amt+')">'
-      +'<span class="preset-amt">$'+amt.toLocaleString()+'</span>'
-      +(p.label?'<span class="preset-lbl">'+esc(p.label)+'</span>':'')+'</button>';
-  });
-  html+='</div>';
-  if(allowCustom){
-    html+='<div class="custom-row"><span class="dollar">$</span>'
-      +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div>';
+
+  if(!isEvent){
+    // ── DONATION: presets + optional custom ──
+    const presets=cfg.presets||[];
+    const allowCustom=cfg.allow_custom!==false;
+    html+='<p class="amt-label">Choose an amount</p><div class="presets">';
+    presets.forEach((p)=>{
+      const amt=Number(p.amount)||0;
+      html+='<button type="button" class="preset" data-amt="'+amt+'" onclick="pickPreset(this,'+amt+')">'
+        +'<span class="preset-amt">$'+amt.toLocaleString()+'</span>'
+        +(p.label?'<span class="preset-lbl">'+esc(p.label)+'</span>':'')+'</button>';
+    });
+    html+='</div>';
+    if(allowCustom){
+      html+='<div class="custom-row"><span class="dollar">$</span>'
+        +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div>';
+    }
+  } else if(formMode!=='free'){
+    // ── EVENT: pick-a-tier (+ optional add-on gift) ──
+    const tiers=cfg.tiers||[];
+    html+='<p class="amt-label">Select</p><div class="tiers">';
+    tiers.forEach((t,i)=>{
+      const amt=Number(t.amount)||0;
+      html+='<button type="button" class="tier" data-amt="'+amt+'" onclick="pickTier(this,'+amt+','+i+')">'
+        +'<span class="tier-lbl">'+esc(t.label||('Option '+(i+1)))+'</span>'
+        +'<span class="tier-amt">$'+amt.toLocaleString()+'</span></button>';
+    });
+    html+='</div>';
+    if(formMode==='tiered_addon'){
+      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>'
+        +'<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
+        +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="0" oninput="pickAddon(this)" autocomplete="off"></div></div>';
+    }
+  } else {
+    html+='<p class="amt-label" style="margin-bottom:14px">RSVP below — no payment needed</p>';
   }
+
+  // ── custom + standard fields ──
   fields.forEach(f=>{
-    const type=f.type==='email'?'email':(f.type==='tel'?'tel':'text');
+    const t=f.type;
     html+='<div class="field"><label for="f_'+esc(f.key)+'">'+esc(f.label)
-      +(f.required?'<span class="req">*</span>':'')+'</label>'
-      +'<input type="'+type+'" id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'" autocomplete="'+autoFor(f.key,type)+'">'
-      +'<div class="field-err" id="err_'+esc(f.key)+'"></div></div>';
+      +(f.required?'<span class="req">*</span>':'')+'</label>';
+    if(t==='select'){
+      const opts=(f.options||[]);
+      html+='<select id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'">'
+        +'<option value="">Choose…</option>'
+        +opts.map(o=>'<option value="'+esc(o)+'">'+esc(o)+'</option>').join('')
+        +'</select>';
+    }else{
+      const inputType=t==='email'?'email':(t==='tel'?'tel':(t==='number'?'number':'text'));
+      const extra=t==='number'?' inputmode="numeric" min="0"':'';
+      html+='<input type="'+inputType+'"'+extra+' id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'" autocomplete="'+autoFor(f.key,inputType)+'">';
+    }
+    html+='<div class="field-err" id="err_'+esc(f.key)+'"></div></div>';
   });
-  html+='<div class="pay-section"><p class="pay-label">Payment</p>'
-    +'<div id="payment-element"><div class="pay-loading">Choose an amount to continue...</div></div></div>';
-  html+='<button type="button" class="submit-btn" id="submitBtn" onclick="onPay()">Donate</button>';
+
+  if(formMode!=='free'){
+    html+='<div class="pay-section"><p class="pay-label">Payment</p>'
+      +'<div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div>';
+  }
+  const btnText=isEvent?(formMode==='free'?'RSVP':'Register'):'Donate';
+  html+='<button type="button" class="submit-btn" id="submitBtn" onclick="onSubmit()">'+btnText+'</button>';
   html+='<div class="pay-msg" id="payMsg"></div>';
-  html+='<div class="secure-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure payment by Stripe</div>';
+  if(formMode!=='free'){
+    html+='<div class="secure-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure payment by Stripe</div>';
+  }
   html+='</div></div>';
   root.innerHTML=html;
+  postHeight();
 }
 
 function autoFor(key,type){
@@ -163,6 +252,7 @@ function autoFor(key,type){
   return'off';
 }
 
+// ── DONATION selection ──
 function pickPreset(btn,amt){
   selectedAmount=amt;
   document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
@@ -184,6 +274,29 @@ function pickCustom(input){
   refreshPaymentElementDebounced();
 }
 
+// ── EVENT tier + add-on selection ──
+function pickTier(btn,amt,i){
+  const cfg=parseMaybe(currentForm.stripe_config,{tiers:[]});
+  selectedTier=(cfg.tiers||[])[i]||{amount:amt,label:''};
+  document.querySelectorAll('.tier').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  recomputeEventTotal();
+}
+function pickAddon(input){
+  let v=input.value.replace(/[^0-9.]/g,'');
+  const parts=v.split('.');if(parts.length>2)v=parts[0]+'.'+parts.slice(1).join('');
+  input.value=v;
+  addonAmount=parseFloat(v)||0;
+  recomputeEventTotalDebounced();
+}
+function recomputeEventTotal(){
+  const tier=selectedTier?(Number(selectedTier.amount)||0):0;
+  selectedAmount=tier+(addonAmount||0);
+  refreshPaymentElement();
+}
+let _evtTimer=null;
+function recomputeEventTotalDebounced(){clearTimeout(_evtTimer);_evtTimer=setTimeout(recomputeEventTotal,500);}
+
 let _refreshTimer=null;
 function refreshPaymentElementDebounced(){
   clearTimeout(_refreshTimer);
@@ -194,8 +307,8 @@ function refreshPaymentElement(){
   if(!mount)return;
   if(!selectedAmount||selectedAmount<=0){
     paymentReady=false;
-    mount.innerHTML='<div class="pay-loading">Choose an amount to continue...</div>';
-    return;
+    mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue...':'Choose an amount to continue...')+'</div>';
+    postHeight();return;
   }
   const cfg=parseMaybe(currentForm.stripe_config,{currency:'usd'});
   const currency=(cfg.currency||'usd').toLowerCase();
@@ -209,16 +322,14 @@ function refreshPaymentElement(){
   });
   const paymentElement=elements.create('payment',{layout:'tabs'});
   paymentElement.mount('#payment-element');
-  paymentElement.on('ready',()=>{paymentReady=true;});
+  paymentElement.on('ready',()=>{paymentReady=true;postHeight();});
 }
 
-async function onPay(){
-  const msg=document.getElementById('payMsg');
-  msg.className='pay-msg';msg.textContent='';
-  if(!selectedAmount||selectedAmount<=0){flashAmount();return;}
+// ── validate fields (shared) ──
+function collectFields(){
   let ok=true;const data={};
   document.querySelectorAll('[data-key]').forEach(inp=>{
-    const key=inp.dataset.key, val=inp.value.trim();
+    const key=inp.dataset.key, val=(inp.value||'').trim();
     data[key]=val;
     const errEl=document.getElementById('err_'+key);
     inp.classList.remove('err');if(errEl)errEl.classList.remove('show');
@@ -230,25 +341,57 @@ async function onPay(){
       if(errEl){errEl.textContent='Enter a valid email';errEl.classList.add('show');}
     }
   });
-  if(!ok)return;
+  return ok?data:null;
+}
+
+async function onSubmit(){
+  const msg=document.getElementById('payMsg');
+  if(msg){msg.className='pay-msg';msg.textContent='';}
+  const isEvent=currentForm.type==='event';
+
+  // FREE RSVP — no payment, post straight to event-register.
+  if(formMode==='free'){
+    const data=collectFields();
+    if(!data)return;
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=true;btn.textContent='Submitting...';
+    try{
+      const res=await fetch(EVENT_REGISTER_URL,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({slug:currentForm.slug,fields:data,tier:null,amount:0})
+      });
+      const out=await res.json().catch(()=>({}));
+      if(!res.ok){showMsg('err',out.error||'Could not submit your RSVP.');resetBtn();return;}
+      showThanks();
+    }catch(e){showMsg('err','Something went wrong. Please try again.');resetBtn();}
+    return;
+  }
+
+  // PAID (donation or event tier) — needs an amount + Stripe.
+  if(!selectedAmount||selectedAmount<=0){flashAmount();return;}
+  if(isEvent&&!selectedTier){flashAmount();return;}
+  const data=collectFields();
+  if(!data)return;
   if(!paymentReady||!elements){showMsg('err','Payment form still loading - one moment.');return;}
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='Processing...';
   try{
     const sub=await elements.submit();
     if(sub.error){showMsg('err',sub.error.message||'Please check your payment details.');resetBtn();return;}
+    // Event tier vs plain donation differ only in the metadata we send; the
+    // PaymentIntent flow is identical. form-submit routes on form type/slug.
+    const body=isEvent
+      ? {slug:currentForm.slug,amount:selectedAmount,fields:data,tier:selectedTier?{label:selectedTier.label,amount:Number(selectedTier.amount)||0}:null,addon:addonAmount||0}
+      : {slug:currentForm.slug,amount:selectedAmount,fields:data};
     const res=await fetch(FORM_SUBMIT_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({slug:currentForm.slug,amount:selectedAmount,fields:data})
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
     });
     const out=await res.json();
     if(!res.ok||!out.client_secret){showMsg('err',out.error||'Could not start payment.');resetBtn();return;}
     const conf=await stripe.confirmPayment({
-      elements,
-      clientSecret:out.client_secret,
-      confirmParams:{return_url:location.href},
-      redirect:'if_required'
+      elements,clientSecret:out.client_secret,
+      confirmParams:{return_url:location.href},redirect:'if_required'
     });
     if(conf.error){showMsg('err',conf.error.message||'Payment did not go through.');resetBtn();return;}
     showThanks();
@@ -258,11 +401,11 @@ async function onPay(){
 function showMsg(kind,text){
   const msg=document.getElementById('payMsg');
   if(!msg)return;
-  msg.className='pay-msg show '+kind;msg.textContent=text;
+  msg.className='pay-msg show '+kind;msg.textContent=text;postHeight();
 }
 function resetBtn(){
   const btn=document.getElementById('submitBtn');
-  if(btn){btn.disabled=false;btn.textContent='Donate';}
+  if(btn){btn.disabled=false;btn.textContent=currentForm.type==='event'?(formMode==='free'?'RSVP':'Register'):'Donate';}
 }
 function flashAmount(){
   const lbl=document.querySelector('.amt-label');
@@ -271,10 +414,17 @@ function flashAmount(){
 function showThanks(){
   const card=document.getElementById('formCard');
   if(!card)return;
+  const title=esc(currentForm.success_title||'Thank you');
+  let body=currentForm.success_message
+    ? esc(currentForm.success_message)
+    : (currentForm.type==='event'
+        ? 'Your registration is confirmed. See you there!'
+        : 'Your gift of $'+(selectedAmount||0).toLocaleString()+' was received.');
   card.innerHTML='<div class="thanks">'
     +'<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-    +'<h2>Thank you</h2>'
-    +'<p>Your gift of $'+selectedAmount.toLocaleString()+' was received.</p></div>';
+    +'<h2>'+title+'</h2>'
+    +'<p>'+body+'</p></div>';
+  postHeight();
 }
 
 init();

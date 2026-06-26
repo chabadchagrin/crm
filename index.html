@@ -405,6 +405,36 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .ev-reg-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
 .ev-back{font-family:var(--font-ui);font-size:.7rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:12px;background:none;border:none;padding:4px 0}
 .reg-result:hover{background:var(--surf2)}
+/* ── FORM BUILDER ── */
+.forms-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.forms-view.active{display:block}
+.fb-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:border-color .15s}
+.fb-card:hover{border-color:var(--accent)}
+.fb-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
+.fb-meta{font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px}
+.fb-type{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:4px;vertical-align:1px}
+.fb-type.donation{background:var(--accent-soft);color:var(--accent)}
+.fb-type.event{background:rgba(180,130,40,.14);color:var(--gold)}
+.fb-back{font-family:var(--font-ui);font-size:.7rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:12px;background:none;border:none;padding:4px 0}
+.fb-section{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:14px;max-width:680px}
+.fb-section h3{font-family:var(--font-ui);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:0 0 12px;font-weight:700}
+.fb-lbl{display:block;font-family:var(--font-ui);font-size:.68rem;color:var(--txt2);margin:0 0 4px;font-weight:600}
+.fb-in{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.8rem;border-radius:5px;outline:none;margin-bottom:12px;box-sizing:border-box}
+.fb-in:focus{border-color:var(--accent)}
+.fb-check{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin-bottom:10px}
+.fb-check input{width:auto;margin:0}
+.fb-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.fb-row .fb-in{margin-bottom:0}
+.fb-mini-btn{background:var(--surf2);border:1px solid var(--border2);color:var(--txt2);border-radius:5px;padding:5px 9px;font-family:var(--font-ui);font-size:.66rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.fb-mini-btn:hover{border-color:var(--accent);color:var(--accent)}
+.fb-x{background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px;flex-shrink:0;display:inline-flex}
+.fb-x:hover{color:var(--red)}
+.fb-tag{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;margin:0 6px 6px 0;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)}
+.fb-seg{display:inline-flex;border:1px solid var(--border2);border-radius:6px;overflow:hidden;margin-bottom:12px}
+.fb-seg button{background:var(--bg);border:none;padding:7px 14px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2);cursor:pointer;border-right:1px solid var(--border2)}
+.fb-seg button:last-child{border-right:none}
+.fb-seg button.active{background:var(--accent);color:#fff}
+.fb-hint{font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin:-6px 0 12px;line-height:1.4}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
 .ct-wrap{flex:1;overflow:auto;padding:18px 24px}
 .ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -577,11 +607,27 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <input type="text" id="ev_campaign" placeholder="optional — for reporting" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
     <label>Description</label>
     <textarea id="ev_desc" placeholder="Internal notes about this event…" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt2);margin-bottom:12px"><input type="checkbox" id="ev_active" checked="" style="width:auto"> Active</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt2);margin-bottom:12px"><input type="checkbox" id="ev_active" checked style="width:auto"> Active</label>
     <div id="ev_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="_guardClick(this,saveEvent)">Save Event</button>
       <button class="btn btn-sec" onclick="closeEventEditor()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMBED CODE MODAL (Form Builder) -->
+<div class="modal-bg" id="embedCodeModal" style="display:none">
+  <div class="modal" style="width:560px;max-width:94vw">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Embed on your website</h2>
+    <p style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:0 0 8px;line-height:1.5">Paste this into a Squarespace <b>Code block</b>. The form auto-resizes to fit its content (no inner scrollbar), so you don't need to guess a height.</p>
+    <div style="position:relative">
+      <textarea id="embed_code" readonly style="width:100%;min-height:170px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:var(--txt);resize:vertical;outline:none;line-height:1.45"></textarea>
+    </div>
+    <div id="embed_preview_link" style="font-family:var(--font-ui);font-size:.7rem;margin-top:8px"></div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-pri" onclick="_copyEmbedCode(this)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy code</button>
+      <button class="btn btn-sec" onclick="document.getElementById('embedCodeModal').style.display='none'">Close</button>
     </div>
   </div>
 </div>
@@ -613,7 +659,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- EDIT REGISTRATION MODAL -->
 <div class="modal-bg" id="editRegistrationModal" style="display:none">
   <div class="modal" style="width:440px">
-    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Registration</h2>
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit Registration</h2>
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label># Attendees</label><input type="number" id="ereg_count" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
       <div style="flex:1"><label>Tier label</label><input type="text" id="ereg_tier_label" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
@@ -742,6 +788,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" onclick="closeSidebar();switchView('crm')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 6 2 6-2v15l-6 2-6-2-6 2V5Zm0 0v15M15 6v15"></path></svg> Map</button>
     <button class="sb-item" onclick="closeSidebar();switchView('contacts')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Contacts</button>
     <button class="sb-item" onclick="closeSidebar();switchView('events')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('forms')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
     <button class="sb-item" onclick="showHiddenView()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg> Hidden Contacts</button>
 
     <!-- DATA-- DATA section -->
@@ -919,6 +966,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="dash-nav-btn" id="navContacts" onclick="switchView('contacts')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Contacts</button>
     <button class="dash-nav-btn" id="navDash" onclick="switchView('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14v4M12 9v9M17 5v13"></path></svg> Dashboard</button>
     <button class="dash-nav-btn" id="navEvents" onclick="switchView('events')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
+    <button class="dash-nav-btn" id="navForms" onclick="switchView('forms')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg></button>
@@ -1039,6 +1087,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <!-- EVENTS VIEW -->
   <div class="events-view" id="eventsView">
     <div id="eventsViewInner"></div>
+  </div>
+
+  <!-- FORMS VIEW (Form Builder) -->
+  <div class="forms-view" id="formsView">
+    <div id="formsViewInner"></div>
   </div>
 </div>
 
@@ -1330,6 +1383,8 @@ function _fmtHomeVal(v){
 // ── HTML ESCAPE — chat bubbles previously injected raw text via innerHTML, so
 // pasted HTML (or a stray < in a note) corrupted the chat display.
 function _escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Attribute-safe escape (also escapes single quotes for value="" / handler args).
+function _escAttr(s){return _escHtml(s).replace(/'/g,'&#39;');}
 // Escape a value for safe embedding inside a single-quoted JS string in an inline handler.
 function _escJs(s){return String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3c').replace(/"/g,'&quot;').replace(/\r?\n/g,' ');}
 
@@ -7455,12 +7510,407 @@ function _openEventFromContact(eventId){
   setTimeout(()=>openEvent(eventId),60);
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// FORM BUILDER — create/edit public forms (donation + event) without SQL.
+// Writes the `forms` table; the public form.html renderer reads it. The two
+// files are connected ONLY through this table. Donation forms use
+// stripe_config.mode='donation' (presets + custom). Event forms add tiered
+// pricing and link to an event via events.form_slug == this form's slug.
+// ════════════════════════════════════════════════════════════════════════
+let _forms=[];               // loaded form rows
+let _formsLoaded=false;
+let _fbEditingSlug=undefined;// undefined=list view, null=new form, string=editing slug
+let _fbDraft=null;           // working copy while editing
+const FB_FIELD_TYPES=['text','email','tel','number','select'];
+const FB_STD_KEYS=['first_name','last_name','email','phone']; // matched by webhook
+
+async function _loadForms(force){
+  if(_formsLoaded&&!force)return;
+  _forms=await sbAll('forms?select=*&order=created_at.desc')||[];
+  _formsLoaded=true;
+}
+
+async function renderForms(){
+  const host=document.getElementById('formsViewInner');
+  if(!host)return;
+  if(_fbEditingSlug!==undefined){ _fbRenderEditor(); return; }
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading forms…</div>';
+  try{ await _loadForms(); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load forms: '+_escHtml(e.message)+'</p></div>'; return; }
+  // Also load events so the event-form picker has options.
+  try{ await _loadEvents(); }catch(e){}
+  _fbRenderList();
+}
+
+function _fbRenderList(){
+  const host=document.getElementById('formsViewInner');
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</h2>
+    <button class="btn btn-pri" onclick="_fbNew()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Form</button>
+  </div>`;
+  if(!_forms.length){
+    host.innerHTML=header+`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No forms yet. Create your first public donation or event form.</div>`;
+    return;
+  }
+  const cards=_forms.map(f=>{
+    const cfg=f.stripe_config||{};
+    const presetCount=(cfg.presets||[]).length;
+    const tierCount=(cfg.tiers||[]).length;
+    const fieldCount=((f.schema||{}).fields||[]).length;
+    let priceBit='';
+    if(f.type==='donation')priceBit=presetCount?presetCount+' preset'+(presetCount===1?'':'s'):'custom amount';
+    else priceBit=tierCount?tierCount+' tier'+(tierCount===1?'':'s'):(cfg.mode==='free'?'free RSVP':'pricing TBD');
+    return `<div class="fb-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0;cursor:pointer" onclick="_fbEdit('${_escAttr(f.slug)}')">
+          <div class="fb-name">${_escHtml(f.title||f.slug)} <span class="fb-type ${f.type==='event'?'event':'donation'}">${f.type}</span>${f.active?'':' <span style="font-size:.6rem;color:var(--txt3);font-weight:400">(inactive)</span>'}</div>
+          <div class="fb-meta">/${_escHtml(f.slug)} · ${priceBit} · ${fieldCount} field${fieldCount===1?'':'s'}${f.campaign_tag?' · '+_escHtml(f.campaign_tag):''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+          <button class="fb-mini-btn" onclick="_fbShowEmbed('${_escAttr(f.slug)}')" title="Get embed code"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Embed</button>
+          <button class="fb-mini-btn" onclick="_fbEdit('${_escAttr(f.slug)}')">Edit</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  host.innerHTML=header+cards;
+}
+
+function _fbNew(){
+  _fbEditingSlug=null;
+  _fbDraft={
+    slug:'', type:'donation', title:'', show_title:false,
+    description:'', show_description:false,
+    schema:{fields:[
+      {key:'first_name',label:'First name',type:'text',required:true},
+      {key:'last_name',label:'Last name',type:'text',required:true},
+      {key:'email',label:'Email',type:'email',required:true},
+      {key:'phone',label:'Phone',type:'tel',required:false}
+    ]},
+    stripe_config:{mode:'donation',currency:'usd',allow_custom:true,presets:[{amount:36,label:'Chai x2'},{amount:100,label:''},{amount:180,label:'Double chai'}],tiers:[],optional_addon:false},
+    campaign_tag:'', active:true,
+    success_title:'Thank you!', success_message:'Your gift means more than you know. A receipt is on its way.'
+  };
+  _fbRenderEditor();
+}
+
+function _fbEdit(slug){
+  const f=_forms.find(x=>x.slug===slug);
+  if(!f){ alert('Form not found'); return; }
+  _fbEditingSlug=slug;
+  // Deep-clone so cancel discards cleanly.
+  _fbDraft=JSON.parse(JSON.stringify(f));
+  _fbDraft.schema=_fbDraft.schema||{fields:[]};
+  _fbDraft.schema.fields=_fbDraft.schema.fields||[];
+  _fbDraft.stripe_config=_fbDraft.stripe_config||{};
+  const c=_fbDraft.stripe_config;
+  c.mode=c.mode||(f.type==='event'?'tiered':'donation');
+  c.currency=c.currency||'usd';
+  if(c.allow_custom===undefined)c.allow_custom=(f.type==='donation');
+  c.presets=c.presets||[];
+  c.tiers=c.tiers||[];
+  if(_fbDraft.success_title===undefined)_fbDraft.success_title='Thank you!';
+  if(_fbDraft.success_message===undefined)_fbDraft.success_message='';
+  _fbRenderEditor();
+}
+
+function _fbBackToList(){ _fbEditingSlug=undefined; _fbDraft=null; _fbRenderList(); }
+
+// ── pull live form-control values back into the draft before any re-render ──
+function _fbSync(){
+  if(!_fbDraft)return;
+  const g=id=>document.getElementById(id);
+  if(g('fb_slug'))_fbDraft.slug=g('fb_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');
+  if(g('fb_title'))_fbDraft.title=g('fb_title').value;
+  if(g('fb_show_title'))_fbDraft.show_title=g('fb_show_title').checked;
+  if(g('fb_desc'))_fbDraft.description=g('fb_desc').value;
+  if(g('fb_show_desc'))_fbDraft.show_description=g('fb_show_desc').checked;
+  if(g('fb_campaign'))_fbDraft.campaign_tag=g('fb_campaign').value.trim();
+  if(g('fb_active'))_fbDraft.active=g('fb_active').checked;
+  if(g('fb_success_title'))_fbDraft.success_title=g('fb_success_title').value;
+  if(g('fb_success_msg'))_fbDraft.success_message=g('fb_success_msg').value;
+  if(g('fb_event_slug'))_fbDraft._linkedEventId=g('fb_event_slug').value||null;
+  if(g('fb_allow_custom'))_fbDraft.stripe_config.allow_custom=g('fb_allow_custom').checked;
+  if(g('fb_optional_addon'))_fbDraft.stripe_config.optional_addon=g('fb_optional_addon').checked;
+  // presets
+  (_fbDraft.stripe_config.presets||[]).forEach((p,i)=>{
+    const a=g('fb_preset_amt_'+i),l=g('fb_preset_lbl_'+i);
+    if(a)p.amount=parseFloat(a.value)||0;
+    if(l)p.label=l.value.trim();
+  });
+  // tiers
+  (_fbDraft.stripe_config.tiers||[]).forEach((t,i)=>{
+    const a=g('fb_tier_amt_'+i),l=g('fb_tier_lbl_'+i);
+    if(a)t.amount=parseFloat(a.value)||0;
+    if(l)t.label=l.value.trim();
+  });
+  // custom fields
+  (_fbDraft.schema.fields||[]).forEach((fld,i)=>{
+    const lbl=g('fb_fld_lbl_'+i),req=g('fb_fld_req_'+i),typ=g('fb_fld_type_'+i),opt=g('fb_fld_opts_'+i);
+    if(lbl)fld.label=lbl.value;
+    if(req)fld.required=req.checked;
+    if(typ)fld.type=typ.value;
+    if(opt)fld.options=opt.value.split(',').map(s=>s.trim()).filter(Boolean);
+  });
+}
+
+function _fbSetType(t){ _fbSync(); _fbDraft.type=t;
+  const c=_fbDraft.stripe_config;
+  if(t==='donation'){ c.mode='donation'; if(c.allow_custom===undefined)c.allow_custom=true; }
+  else { if(c.mode==='donation')c.mode='tiered'; if(!c.tiers||!c.tiers.length)c.tiers=[{amount:18,label:'Single'},{amount:36,label:'Couple'}]; }
+  _fbRenderEditor();
+}
+function _fbSetMode(m){ _fbSync(); _fbDraft.stripe_config.mode=m;
+  if((m==='tiered'||m==='tiered_addon')&&(!_fbDraft.stripe_config.tiers||!_fbDraft.stripe_config.tiers.length))
+    _fbDraft.stripe_config.tiers=[{amount:18,label:'Single'},{amount:36,label:'Couple'}];
+  _fbDraft.stripe_config.optional_addon=(m==='tiered_addon');
+  _fbRenderEditor();
+}
+function _fbAddPreset(){ _fbSync(); _fbDraft.stripe_config.presets.push({amount:0,label:''}); _fbRenderEditor(); }
+function _fbDelPreset(i){ _fbSync(); _fbDraft.stripe_config.presets.splice(i,1); _fbRenderEditor(); }
+function _fbAddTier(){ _fbSync(); _fbDraft.stripe_config.tiers.push({amount:0,label:''}); _fbRenderEditor(); }
+function _fbDelTier(i){ _fbSync(); _fbDraft.stripe_config.tiers.splice(i,1); _fbRenderEditor(); }
+function _fbAddField(){ _fbSync();
+  _fbDraft.schema.fields.push({key:'custom_'+Date.now().toString(36),label:'New field',type:'text',required:false});
+  _fbRenderEditor();
+}
+function _fbDelField(i){ _fbSync();
+  const fld=_fbDraft.schema.fields[i];
+  if(FB_STD_KEYS.includes(fld.key)&&!confirm('"'+fld.label+'" is a standard field the donor-matching webhook uses ('+fld.key+'). Remove it anyway?'))return;
+  _fbDraft.schema.fields.splice(i,1); _fbRenderEditor();
+}
+
+function _fbRenderEditor(){
+  const host=document.getElementById('formsViewInner');
+  const d=_fbDraft; if(!d){ _fbBackToList(); return; }
+  const c=d.stripe_config;
+  const isEvent=d.type==='event';
+  const isNew=(_fbEditingSlug===null);
+  // events with a form_slug already pointing here → preselect
+  const linkedEvent=(_events||[]).find(e=>e.form_slug && e.form_slug===d.slug);
+  const linkedId=d._linkedEventId!==undefined?d._linkedEventId:(linkedEvent?linkedEvent.id:'');
+
+  // ── pricing section (depends on type/mode) ──
+  let pricingHtml='';
+  if(!isEvent){
+    pricingHtml=`<div class="fb-section"><h3>Donation amounts</h3>
+      <div class="fb-hint">Buttons the donor sees. Label is optional (e.g. "Chai" for $18).</div>
+      ${(c.presets||[]).map((p,i)=>`<div class="fb-row">
+        <span style="font-family:var(--font-ui);color:var(--txt3);font-size:.8rem">$</span>
+        <input id="fb_preset_amt_${i}" class="fb-in" type="number" min="0" step="1" value="${p.amount||''}" placeholder="36" style="max-width:90px">
+        <input id="fb_preset_lbl_${i}" class="fb-in" type="text" value="${_escAttr(p.label||'')}" placeholder="label (optional)" style="flex:1">
+        <button class="fb-x" onclick="_fbDelPreset(${i})" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>`).join('')}
+      <button class="fb-mini-btn" onclick="_fbAddPreset()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add amount</button>
+      <label class="fb-check" style="margin-top:12px"><input type="checkbox" id="fb_allow_custom" ${c.allow_custom?'checked':''}> Allow a custom "other amount"</label>
+    </div>`;
+  } else {
+    pricingHtml=`<div class="fb-section"><h3>Event pricing</h3>
+      <div class="fb-seg">
+        <button class="${c.mode==='free'?'active':''}" onclick="_fbSetMode('free')">Free RSVP</button>
+        <button class="${c.mode==='tiered'?'active':''}" onclick="_fbSetMode('tiered')">Tiered</button>
+        <button class="${c.mode==='tiered_addon'?'active':''}" onclick="_fbSetMode('tiered_addon')">Tiered + donation</button>
+      </div>
+      ${c.mode==='free'?'<div class="fb-hint">Free RSVP — no payment collected. Submitting writes a registration straight away.</div>':`
+      <div class="fb-hint">Levels the registrant picks (e.g. Single $18 / Couple $36).</div>
+      ${(c.tiers||[]).map((t,i)=>`<div class="fb-row">
+        <input id="fb_tier_lbl_${i}" class="fb-in" type="text" value="${_escAttr(t.label||'')}" placeholder="Single" style="flex:1">
+        <span style="font-family:var(--font-ui);color:var(--txt3);font-size:.8rem">$</span>
+        <input id="fb_tier_amt_${i}" class="fb-in" type="number" min="0" step="1" value="${t.amount||''}" placeholder="18" style="max-width:90px">
+        <button class="fb-x" onclick="_fbDelTier(${i})" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>`).join('')}
+      <button class="fb-mini-btn" onclick="_fbAddTier()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add tier</button>
+      ${c.mode==='tiered_addon'?'<label class="fb-check" style="margin-top:12px"><input type="checkbox" id="fb_optional_addon" checked disabled> Optional add-on gift on top of the tier</label>':''}`}
+    </div>`;
+  }
+
+  // ── event linkage (event forms only) ──
+  let eventLinkHtml='';
+  if(isEvent){
+    const opts=(_events||[]).map(e=>`<option value="${e.id}" ${e.id===linkedId?'selected':''}>${_escHtml(e.name)}${e.event_date?' — '+_fmtDate(e.event_date):''}</option>`).join('');
+    eventLinkHtml=`<div class="fb-section"><h3>Linked event</h3>
+      <div class="fb-hint">Online registrations attach to this event (sets its <code>form_slug</code> to this form's slug on save).</div>
+      <label class="fb-lbl">Event</label>
+      <select id="fb_event_slug" class="fb-in">${_events&&_events.length?'<option value="">— none —</option>'+opts:'<option value="">No events yet — create one in Events first</option>'}</select>
+    </div>`;
+  }
+
+  host.innerHTML=`
+    <button class="fb-back" onclick="_fbBackToList()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg> All forms</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <h2 style="font-family:var(--font-display);font-size:1.25rem;color:var(--txt);margin:0">${isNew?'New form':'Edit form'}</h2>
+      <div style="display:flex;gap:6px">
+        ${!isNew?`<button class="btn btn-sec" onclick="_fbDelete()" style="font-size:.66rem;padding:5px 11px;color:var(--red)">Delete</button>`:''}
+        <button class="btn btn-pri" onclick="_guardClick(this,_fbSave)" style="font-size:.7rem;padding:6px 16px">Save form</button>
+      </div>
+    </div>
+
+    <div class="fb-section"><h3>Type</h3>
+      <div class="fb-seg">
+        <button class="${!isEvent?'active':''}" onclick="_fbSetType('donation')">Donation</button>
+        <button class="${isEvent?'active':''}" onclick="_fbSetType('event')">Event registration</button>
+      </div>
+      <div class="fb-hint">One builder, two outputs. ${isEvent?'Event forms create a registration (+ attendance credit) and an event-fee charge.':'Donation forms create a scored contact + gift.'}</div>
+    </div>
+
+    <div class="fb-section"><h3>Basics</h3>
+      <label class="fb-lbl">Slug (public URL) *</label>
+      <input id="fb_slug" class="fb-in" type="text" value="${_escAttr(d.slug||'')}" placeholder="chanukah-dinner" ${isNew?'':'readonly style="opacity:.6;cursor:not-allowed;background:var(--surf2)"'}>
+      <div class="fb-hint" style="margin-top:-8px">${isNew?'Letters, numbers, dashes. This becomes form.html?slug=…':'Slug is locked after creation (it is the public URL + event link key).'}</div>
+      <label class="fb-lbl">Title</label>
+      <input id="fb_title" class="fb-in" type="text" value="${_escAttr(d.title||'')}" placeholder="Support Chabad at the Falls">
+      <label class="fb-check"><input type="checkbox" id="fb_show_title" ${d.show_title?'checked':''}> Show title on the public form</label>
+      <label class="fb-lbl" style="margin-top:6px">Description</label>
+      <textarea id="fb_desc" class="fb-in" style="min-height:60px;resize:vertical" placeholder="A short blurb shown above the form…">${_escHtml(d.description||'')}</textarea>
+      <label class="fb-check"><input type="checkbox" id="fb_show_desc" ${d.show_description?'checked':''}> Show description on the public form</label>
+      <label class="fb-lbl" style="margin-top:6px">Campaign tag</label>
+      <input id="fb_campaign" class="fb-in" type="text" value="${_escAttr(d.campaign_tag||'')}" placeholder="optional — for reporting">
+      <label class="fb-check" style="margin-top:2px"><input type="checkbox" id="fb_active" ${d.active?'checked':''}> Active (live and publicly readable)</label>
+    </div>
+
+    ${eventLinkHtml}
+    ${pricingHtml}
+
+    <div class="fb-section"><h3>Fields</h3>
+      <div class="fb-hint">first_name, last_name, email, phone are <b>standard</b> — the webhook matches donors on them. Anything else is custom (dedication, # challahs, ages…) and stored without affecting matching.</div>
+      ${(d.schema.fields||[]).map((fld,i)=>{
+        const std=FB_STD_KEYS.includes(fld.key);
+        return `<div style="border:1px solid var(--border);border-radius:7px;padding:10px;margin-bottom:8px;background:var(--bg)">
+          <div class="fb-row" style="margin-bottom:6px">
+            <input id="fb_fld_lbl_${i}" class="fb-in" type="text" value="${_escAttr(fld.label||'')}" placeholder="Field label" style="flex:1">
+            <button class="fb-x" onclick="_fbDelField(${i})" title="Remove field"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div class="fb-row" style="margin-bottom:0">
+            <select id="fb_fld_type_${i}" class="fb-in" style="max-width:130px" ${std?'disabled style="max-width:130px;opacity:.6"':''}>
+              ${FB_FIELD_TYPES.map(t=>`<option value="${t}" ${fld.type===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+            <label class="fb-check" style="margin:0"><input type="checkbox" id="fb_fld_req_${i}" ${fld.required?'checked':''}> required</label>
+            <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${std?'standard ('+fld.key+')':'custom ('+_escHtml(fld.key)+')'}</span>
+          </div>
+          ${fld.type==='select'?`<input id="fb_fld_opts_${i}" class="fb-in" type="text" value="${_escAttr((fld.options||[]).join(', '))}" placeholder="Option A, Option B, Option C" style="margin-top:6px;margin-bottom:0">`:''}
+        </div>`;
+      }).join('')}
+      <button class="fb-mini-btn" onclick="_fbAddField()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add field</button>
+    </div>
+
+    <div class="fb-section"><h3>After submitting</h3>
+      <div class="fb-hint">Shown in place of the form once it succeeds.</div>
+      <label class="fb-lbl">Success title</label>
+      <input id="fb_success_title" class="fb-in" type="text" value="${_escAttr(d.success_title||'')}" placeholder="Thank you!">
+      <label class="fb-lbl">Success message</label>
+      <textarea id="fb_success_msg" class="fb-in" style="min-height:60px;resize:vertical" placeholder="Your gift means more than you know…">${_escHtml(d.success_message||'')}</textarea>
+    </div>
+
+    <div id="fb_status" style="display:none;padding:10px;background:var(--surf2);border-radius:6px;margin-bottom:14px;font-size:.74rem;color:var(--txt2);max-width:680px"></div>
+  `;
+}
+
+async function _fbSave(){
+  _fbSync();
+  const d=_fbDraft;
+  const status=document.getElementById('fb_status');
+  const fail=msg=>{ if(status){status.textContent=msg;status.style.display='block';status.style.color='var(--red)';} };
+  if(!d.slug){ return fail('A slug is required (the public URL).'); }
+  if(!/^[a-z0-9][a-z0-9-]*$/.test(d.slug)){ return fail('Slug must be lowercase letters, numbers and dashes.'); }
+  // Uniqueness check on NEW forms.
+  if(_fbEditingSlug===null && _forms.some(f=>f.slug===d.slug)){ return fail('A form with that slug already exists — pick another.'); }
+  if(d.type==='event'){
+    const c=d.stripe_config;
+    if(c.mode!=='free' && !(c.tiers||[]).some(t=>(parseFloat(t.amount)||0)>0 || t.label)){ return fail('Add at least one pricing tier, or switch to Free RSVP.'); }
+  }
+  // Build the row payload (only real columns).
+  const payload={
+    slug:d.slug, type:d.type, title:d.title||null,
+    show_title:!!d.show_title, description:d.description||null, show_description:!!d.show_description,
+    schema:{fields:(d.schema.fields||[]).map(f=>{
+      const o={key:f.key,label:f.label||f.key,type:f.type||'text',required:!!f.required};
+      if(f.type==='select')o.options=f.options||[];
+      return o;
+    })},
+    stripe_config:(()=>{ const c=d.stripe_config; if(d.type==='donation'){
+        return {mode:'donation',currency:c.currency||'usd',allow_custom:!!c.allow_custom,presets:(c.presets||[]).filter(p=>(parseFloat(p.amount)||0)>0).map(p=>({amount:parseFloat(p.amount),label:p.label||''}))};
+      } else {
+        return {mode:c.mode||'tiered',currency:c.currency||'usd',optional_addon:c.mode==='tiered_addon',tiers:(c.tiers||[]).filter(t=>(parseFloat(t.amount)||0)>0||t.label).map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}))};
+      }})(),
+    campaign_tag:d.campaign_tag||null, active:!!d.active,
+    success_title:d.success_title||null, success_message:d.success_message||null
+  };
+  if(status){status.textContent='Saving…';status.style.display='block';status.style.color='var(--txt2)';}
+  try{
+    if(_fbEditingSlug===null){
+      await sb('forms',{method:'POST',body:JSON.stringify(payload)});
+    } else {
+      await sb('forms?slug=eq.'+encodeURIComponent(_fbEditingSlug),{method:'PATCH',body:JSON.stringify(payload)});
+    }
+    // Event linkage: point the chosen event's form_slug at this slug.
+    if(d.type==='event' && d._linkedEventId!==undefined){
+      try{
+        // clear any other event currently pointing here, then set the chosen one
+        const others=(_events||[]).filter(e=>e.form_slug===d.slug && e.id!==d._linkedEventId);
+        for(const e of others){ await sb('events?id=eq.'+e.id,{method:'PATCH',body:JSON.stringify({form_slug:null})}); e.form_slug=null; }
+        if(d._linkedEventId){ await sb('events?id=eq.'+d._linkedEventId,{method:'PATCH',body:JSON.stringify({form_slug:d.slug})}); const ev=(_events||[]).find(e=>e.id===d._linkedEventId); if(ev)ev.form_slug=d.slug; }
+      }catch(e){ /* linkage is best-effort; form itself saved */ }
+    }
+    await _loadForms(true);
+    _fbBackToList();
+  }catch(e){ fail('Error: '+e.message); }
+}
+
+async function _fbDelete(){
+  if(_fbEditingSlug===null||!_fbDraft)return;
+  const slug=_fbEditingSlug;
+  // Soft delete = deactivate (keeps any historical references intact). Offer hard delete too.
+  const choice=prompt('Type "deactivate" to hide this form (recommended), or "delete" to permanently remove it.','deactivate');
+  if(choice===null)return;
+  const status=document.getElementById('fb_status');
+  try{
+    if(choice.toLowerCase()==='delete'){
+      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
+    } else if(choice.toLowerCase()==='deactivate'){
+      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
+    } else { if(status){status.textContent='Cancelled — type exactly "deactivate" or "delete".';status.style.display='block';} return; }
+    await _loadForms(true);
+    _fbBackToList();
+  }catch(e){ if(status){status.textContent='Error: '+e.message;status.style.display='block';status.style.color='var(--red)';} }
+}
+
+// ── EMBED CODE (auto-height iframe) ──
+const FB_FORM_BASE='https://chabadchagrin.github.io/crm/form.html';
+function _fbShowEmbed(slug){
+  const url=FB_FORM_BASE+'?slug='+encodeURIComponent(slug);
+  const code=
+`<!-- Chabad at the Falls — ${slug} form -->
+<iframe id="daas-form-${slug}" src="${url}"
+  style="width:100%;border:none;min-height:520px;overflow:hidden"
+  scrolling="no" title="Chabad at the Falls form"></iframe>
+<script>
+  window.addEventListener('message', function (e) {
+    if (e.origin !== 'https://chabadchagrin.github.io') return;
+    if (e.data && e.data.daasFormHeight && e.data.slug === '${slug}') {
+      var f = document.getElementById('daas-form-${slug}');
+      if (f) f.style.height = e.data.daasFormHeight + 'px';
+    }
+  });
+<\/script>`;
+  document.getElementById('embed_code').value=code;
+  document.getElementById('embed_preview_link').innerHTML=
+    'Live preview: <a href="'+url+'" target="_blank" rel="noopener" style="color:var(--accent)">'+_escHtml(url)+'</a>';
+  document.getElementById('embedCodeModal').style.display='flex';
+}
+function _copyEmbedCode(btn){
+  const ta=document.getElementById('embed_code');
+  ta.select(); ta.setSelectionRange(0,99999);
+  const done=()=>{ const o=btn.innerHTML; btn.innerHTML='Copied!'; setTimeout(()=>btn.innerHTML=o,1400); };
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(done).catch(()=>{document.execCommand('copy');done();});} else {document.execCommand('copy');done();} }
+  catch(e){ document.execCommand('copy'); done(); }
+}
+
 function switchView(view){
   document.getElementById('appLoading')?.remove();
   const crm=document.getElementById('crmView');
   const dash=document.getElementById('dashView');
   const contacts=document.getElementById('contactsView');
   const events=document.getElementById('eventsView');
+  const forms=document.getElementById('formsView');
   const strip=document.getElementById('filterStrip');
   const mapCtrl=document.getElementById('mapControls');
   // Reset all
@@ -7468,8 +7918,9 @@ function switchView(view){
   dash.classList.remove('active');
   contacts.classList.remove('active');
   if(events)events.classList.remove('active');
+  if(forms)forms.classList.remove('active');
   const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
-  ['navCRM','navContacts','navDash','navEvents'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  ['navCRM','navContacts','navDash','navEvents','navForms'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   if(view==='dash'){
     dash.classList.add('active');
     document.getElementById('navDash').classList.add('active');
@@ -7490,6 +7941,13 @@ function switchView(view){
     if(mapCtrl)mapCtrl.style.display='none';
     _openEventId=null; // always land on the list when entering via nav
     renderEvents();
+  } else if(view==='forms'){
+    if(forms)forms.classList.add('active');
+    document.getElementById('navForms')?.classList.add('active');
+    if(strip)strip.style.display='none';
+    if(mapCtrl)mapCtrl.style.display='none';
+    _fbEditingSlug=undefined; // land on the list
+    renderForms();
   } else {
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
