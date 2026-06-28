@@ -406,7 +406,7 @@ async function onSubmit(){
       });
       const out=await res.json().catch(()=>({}));
       if(!res.ok){showMsg('err',out.error||'Could not submit your RSVP.');resetBtn();return;}
-      showThanks();
+      if(out.already){ showThanks(true); } else { showThanks(); }
     }catch(e){showMsg('err','Something went wrong. Please try again.');resetBtn();}
     return;
   }
@@ -455,15 +455,21 @@ function flashAmount(){
   const lbl=document.querySelector('.amt-label');
   if(lbl){lbl.style.color='var(--red)';setTimeout(()=>lbl.style.color='',1400);}
 }
-function showThanks(){
+function showThanks(already){
   const card=document.getElementById('formCard');
   if(!card)return;
-  const title=esc(currentForm.success_title||'Thank you');
-  let body=currentForm.success_message
-    ? esc(currentForm.success_message)
-    : (currentForm.type==='event'
-        ? 'Your registration is confirmed. See you there!'
-        : 'Your gift of $'+(selectedAmount||0).toLocaleString()+' was received.');
+  let title,body;
+  if(already){
+    title='You&rsquo;re already registered';
+    body='Looks like this email is already signed up for '+esc(currentForm.title||'this event')+'. We&rsquo;ve got you — no need to register again.';
+  }else{
+    title=esc(currentForm.success_title||'Thank you');
+    body=currentForm.success_message
+      ? esc(currentForm.success_message)
+      : (currentForm.type==='event'
+          ? 'Your registration is confirmed. See you there!'
+          : 'Your gift of $'+(selectedAmount||0).toLocaleString()+' was received.');
+  }
   card.innerHTML='<div class="thanks">'
     +'<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
     +'<h2>'+title+'</h2>'

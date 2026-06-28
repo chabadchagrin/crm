@@ -7670,8 +7670,18 @@ function _fbDelPreset(i){ _fbSync(); _fbDraft.stripe_config.presets.splice(i,1);
 function _fbAddTier(){ _fbSync(); _fbDraft.stripe_config.tiers.push({amount:0,label:''}); _fbRenderEditor(); }
 function _fbDelTier(i){ _fbSync(); _fbDraft.stripe_config.tiers.splice(i,1); _fbRenderEditor(); }
 function _fbAddField(){ _fbSync();
-  _fbDraft.schema.fields.push({key:'custom_'+Date.now().toString(36),label:'New field',type:'text',required:false});
+  _fbDraft.schema.fields.push({key:'',label:'New field',type:'text',required:false,_isNew:true});
   _fbRenderEditor();
+}
+// Turn a human label into a clean, stable field key: "Number of guests" →
+// "number_of_guests". Used for custom fields so registration/Stripe data reads
+// nicely instead of "custom_sq879". Standard keys (first_name…) are never re-keyed.
+function _fbSlugKey(label){
+  let k=String(label||'').toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').replace(/_+/g,'_');
+  if(!k)k='field';
+  if(/^[0-9]/.test(k))k='f_'+k; // keys shouldn't start with a digit
+  return k;
 }
 function _fbDelField(i){ _fbSync();
   const fld=_fbDraft.schema.fields[i];
@@ -7784,7 +7794,7 @@ function _fbRenderEditor(){
               ${FB_FIELD_TYPES.map(t=>`<option value="${t}" ${fld.type===t?'selected':''}>${t}</option>`).join('')}
             </select>
             <label class="fb-check" style="margin:0"><input type="checkbox" id="fb_fld_req_${i}" ${fld.required?'checked':''}> required</label>
-            <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${std?'standard ('+fld.key+')':'custom ('+_escHtml(fld.key)+')'}</span>
+            <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${std?'standard ('+fld.key+')':'custom → '+_escHtml(_fbSlugKey(fld.label||'')||'field')}</span>
           </div>
           ${fld.type==='select'?`<input id="fb_fld_opts_${i}" class="fb-in" type="text" value="${_escAttr((fld.options||[]).join(', '))}" placeholder="Option A, Option B, Option C" style="margin-top:6px;margin-bottom:0">`:''}
         </div>`;
@@ -7818,11 +7828,23 @@ async function _fbSave(){
     if(c.mode!=='free' && !(c.tiers||[]).some(t=>(parseFloat(t.amount)||0)>0 || t.label)){ return fail('Add at least one pricing tier, or switch to Free RSVP.'); }
   }
   // Build the row payload (only real columns).
+  // Derive clean keys from labels for custom fields (standard keys are fixed).
+  const _usedKeys={};
   const payload={
     slug:d.slug, type:d.type, title:d.title||null,
     show_title:!!d.show_title, description:d.description||null, show_description:!!d.show_description,
     schema:{fields:(d.schema.fields||[]).map(f=>{
-      const o={key:f.key,label:f.label||f.key,type:f.type||'text',required:!!f.required};
+      let key;
+      if(FB_STD_KEYS.includes(f.key)){
+        key=f.key; // never re-key the webhook-matched standard fields
+      } else if(f.key && !f._isNew && !/^custom_[a-z0-9]+$/.test(f.key)){
+        key=f.key; // keep an already-clean saved key (don't churn on edit)
+      } else {
+        key=_fbSlugKey(f.label); // fresh clean key from the label
+      }
+      // de-dupe within this form
+      let base=key,n=2; while(_usedKeys[key]){key=base+'_'+n;n++;} _usedKeys[key]=1;
+      const o={key,label:f.label||key,type:f.type||'text',required:!!f.required};
       if(f.type==='select')o.options=f.options||[];
       return o;
     })},
