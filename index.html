@@ -7558,7 +7558,8 @@ function _fbRenderList(){
     const fieldCount=((f.schema||{}).fields||[]).length;
     let priceBit='';
     if(f.type==='donation')priceBit=presetCount?presetCount+' preset'+(presetCount===1?'':'s'):'custom amount';
-    else priceBit=tierCount?tierCount+' tier'+(tierCount===1?'':'s'):(cfg.mode==='free'?'free RSVP':'pricing TBD');
+    else if(cfg.mode==='free')priceBit='free RSVP';
+    else priceBit=tierCount?tierCount+' tier'+(tierCount===1?'':'s'):'pricing TBD';
     return `<div class="fb-card">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="flex:1;min-width:0;cursor:pointer" onclick="_fbEdit('${_escAttr(f.slug)}')">
@@ -7851,7 +7852,11 @@ async function _fbSave(){
     stripe_config:(()=>{ const c=d.stripe_config; if(d.type==='donation'){
         return {mode:'donation',currency:c.currency||'usd',allow_custom:!!c.allow_custom,presets:(c.presets||[]).filter(p=>(parseFloat(p.amount)||0)>0).map(p=>({amount:parseFloat(p.amount),label:p.label||''}))};
       } else {
-        return {mode:c.mode||'tiered',currency:c.currency||'usd',optional_addon:c.mode==='tiered_addon',tiers:(c.tiers||[]).filter(t=>(parseFloat(t.amount)||0)>0||t.label).map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}))};
+        const mode=c.mode||'tiered';
+        if(mode==='free'){
+          return {mode:'free',currency:c.currency||'usd',tiers:[]}; // free RSVP carries no pricing
+        }
+        return {mode,currency:c.currency||'usd',optional_addon:mode==='tiered_addon',tiers:(c.tiers||[]).filter(t=>(parseFloat(t.amount)||0)>0||t.label).map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}))};
       }})(),
     campaign_tag:d.campaign_tag||null, active:!!d.active,
     success_title:d.success_title||null, success_message:d.success_message||null
