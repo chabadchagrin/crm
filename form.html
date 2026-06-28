@@ -122,6 +122,7 @@ let addonAmount=0;         // optional add-on gift on top of a tier
 let selectedTier=null;     // {amount,label} for event forms
 let stripe=null, elements=null, currentForm=null, paymentReady=false;
 let formMode='donation';   // 'donation' | 'tiered' | 'tiered_addon' | 'free'
+let freeAllowsDonation=false; // free event that also accepts an optional gift
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showError(msg){root.innerHTML='<div class="state error">'+esc(msg)+'</div>';postHeight();}
@@ -179,8 +180,10 @@ async function init(){
   currentForm=rows[0];
   const cfg=parseMaybe(currentForm.stripe_config,{});
   formMode=currentForm.type==='event'?(cfg.mode||'tiered'):'donation';
-  // Stripe only needed when money can be collected.
-  const needsStripe=(formMode!=='free');
+  // A free event MAY still allow an optional donation → Stripe is needed then.
+  freeAllowsDonation=(formMode==='free' && !!cfg.allow_donation);
+  // Stripe needed whenever money can be collected (paid modes, or free+donation).
+  const needsStripe=(formMode!=='free')||freeAllowsDonation;
   if(needsStripe){
     if(typeof Stripe==='undefined'){showError('Payment system unavailable. Please refresh.');return;}
     stripe=Stripe(STRIPE_PK);
@@ -231,7 +234,7 @@ function render(form){
         +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="0" oninput="pickAddon(this)" autocomplete="off"></div></div>';
     }
   } else {
-    html+='<p class="amt-label" style="margin-bottom:14px">RSVP below — no payment needed</p>';
+    html+='<p class="amt-label" style="margin-bottom:14px">RSVP below'+(freeAllowsDonation?'':' — no payment needed')+'</p>';
   }
 
   // ── custom + standard fields ──
@@ -262,14 +265,37 @@ function render(form){
     html+='<div class="field-err" id="err_'+esc(f.key)+'"></div></div>';
   });
 
+  // Free event with an optional donation: an amount box (presets if provided,
+  // else just custom). Leaving it blank = free RSVP; any amount = a real gift.
+  if(formMode==='free' && freeAllowsDonation){
+    const presets=cfg.presets||[];
+    html+='<div class="addon-row"><label class="addon-lbl">Add an optional donation (optional)</label>';
+    if(presets.length){
+      html+='<div class="presets">';
+      presets.forEach((p)=>{
+        const amt=Number(p.amount)||0;
+        html+='<button type="button" class="preset" data-amt="'+amt+'" onclick="pickPreset(this,'+amt+')">'
+          +'<span class="preset-amt">$'+amt.toLocaleString()+'</span>'
+          +(p.label?'<span class="preset-lbl">'+esc(p.label)+'</span>':'')+'</button>';
+      });
+      html+='</div>';
+    }
+    html+='<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
+      +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div></div>';
+  }
+
   if(formMode!=='free'){
     html+='<div class="pay-section"><p class="pay-label">Payment</p>'
       +'<div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div>';
+  } else if(freeAllowsDonation){
+    // Payment element is hidden until they actually enter a donation amount.
+    html+='<div class="pay-section" id="freePaySection" style="display:none"><p class="pay-label">Payment</p>'
+      +'<div id="payment-element"></div></div>';
   }
   const btnText=isEvent?(formMode==='free'?'RSVP':'Register'):'Donate';
   html+='<button type="button" class="submit-btn" id="submitBtn" onclick="onSubmit()">'+btnText+'</button>';
   html+='<div class="pay-msg" id="payMsg"></div>';
-  if(formMode!=='free'){
+  if(formMode!=='free'||freeAllowsDonation){
     html+='<div class="secure-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure payment by Stripe</div>';
   }
   html+='</div></div>';
@@ -337,10 +363,14 @@ function refreshPaymentElementDebounced(){
 }
 function refreshPaymentElement(){
   const mount=document.getElementById('payment-element');
+  // For free+donation, reveal the payment section only once an amount is entered.
+  const freeSec=document.getElementById('freePaySection');
+  if(freeSec)freeSec.style.display=(selectedAmount&&selectedAmount>0)?'block':'none';
   if(!mount)return;
   if(!selectedAmount||selectedAmount<=0){
     paymentReady=false;
-    mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue...':'Choose an amount to continue...')+'</div>';
+    if(formMode!=='free')mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue...':'Choose an amount to continue...')+'</div>';
+    else mount.innerHTML='';
     postHeight();return;
   }
   const cfg=parseMaybe(currentForm.stripe_config,{currency:'usd'});
@@ -393,8 +423,11 @@ async function onSubmit(){
   if(msg){msg.className='pay-msg';msg.textContent='';}
   const isEvent=currentForm.type==='event';
 
-  // FREE RSVP — no payment, post straight to event-register.
-  if(formMode==='free'){
+  // FREE event:
+  //  • no donation entered → post straight to event-register (no Stripe).
+  //  • donation entered (free+donation forms) → fall through to the Stripe path,
+  //    which sends event metadata so the webhook makes the registration + gift.
+  if(formMode==='free' && !(freeAllowsDonation && selectedAmount>0)){
     const data=collectFields();
     if(!data)return;
     const btn=document.getElementById('submitBtn');
@@ -411,9 +444,9 @@ async function onSubmit(){
     return;
   }
 
-  // PAID (donation or event tier) — needs an amount + Stripe.
+  // PAID (donation, event tier, OR free event + optional donation) — Stripe.
   if(!selectedAmount||selectedAmount<=0){flashAmount();return;}
-  if(isEvent&&!selectedTier){flashAmount();return;}
+  if(isEvent&&formMode!=='free'&&!selectedTier){flashAmount();return;}
   const data=collectFields();
   if(!data)return;
   if(!paymentReady||!elements){showMsg('err','Payment form still loading - one moment.');return;}
@@ -422,10 +455,10 @@ async function onSubmit(){
   try{
     const sub=await elements.submit();
     if(sub.error){showMsg('err',sub.error.message||'Please check your payment details.');resetBtn();return;}
-    // Event tier vs plain donation differ only in the metadata we send; the
+    // Event tier vs free+donation vs plain donation differ only in metadata; the
     // PaymentIntent flow is identical. form-submit routes on form type/slug.
     const body=isEvent
-      ? {slug:currentForm.slug,amount:selectedAmount,fields:data,tier:selectedTier?{label:selectedTier.label,amount:Number(selectedTier.amount)||0}:null,addon:addonAmount||0}
+      ? {slug:currentForm.slug,amount:selectedAmount,fields:data,tier:selectedTier?{label:selectedTier.label,amount:Number(selectedTier.amount)||0}:null,addon:addonAmount||0,free_donation:(formMode==='free'?selectedAmount:0)}
       : {slug:currentForm.slug,amount:selectedAmount,fields:data};
     const res=await fetch(FORM_SUBMIT_URL,{
       method:'POST',headers:{'Content-Type':'application/json'},

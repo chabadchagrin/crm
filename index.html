@@ -7632,6 +7632,7 @@ function _fbSync(){
   if(g('fb_event_slug'))_fbDraft._linkedEventId=g('fb_event_slug').value||null;
   if(g('fb_allow_custom'))_fbDraft.stripe_config.allow_custom=g('fb_allow_custom').checked;
   if(g('fb_optional_addon'))_fbDraft.stripe_config.optional_addon=g('fb_optional_addon').checked;
+  if(g('fb_free_donation'))_fbDraft.stripe_config.allow_donation=g('fb_free_donation').checked;
   // presets
   (_fbDraft.stripe_config.presets||[]).forEach((p,i)=>{
     const a=g('fb_preset_amt_'+i),l=g('fb_preset_lbl_'+i);
@@ -7721,7 +7722,9 @@ function _fbRenderEditor(){
         <button class="${c.mode==='tiered'?'active':''}" onclick="_fbSetMode('tiered')">Tiered</button>
         <button class="${c.mode==='tiered_addon'?'active':''}" onclick="_fbSetMode('tiered_addon')">Tiered + donation</button>
       </div>
-      ${c.mode==='free'?'<div class="fb-hint">Free RSVP — no payment collected. Submitting writes a registration straight away.</div>':`
+      ${c.mode==='free'?`<div class="fb-hint">Free RSVP — no required payment. Submitting writes a registration straight away.</div>
+      <label class="fb-check" style="margin-top:6px"><input type="checkbox" id="fb_free_donation" ${c.allow_donation?'checked':''} onchange="_fbSync()"> Allow an optional donation on this RSVP</label>
+      <div class="fb-hint" style="margin-top:-6px">If on, registrants can add a gift (counts as a real donation). Leaving it blank still RSVPs for free.</div>`:`
       <div class="fb-hint">Levels the registrant picks (e.g. Single $18 / Couple $36).</div>
       ${(c.tiers||[]).map((t,i)=>`<div class="fb-row">
         <input id="fb_tier_lbl_${i}" class="fb-in" type="text" value="${_escAttr(t.label||'')}" placeholder="Single" style="flex:1">
@@ -7854,7 +7857,7 @@ async function _fbSave(){
       } else {
         const mode=c.mode||'tiered';
         if(mode==='free'){
-          return {mode:'free',currency:c.currency||'usd',tiers:[]}; // free RSVP carries no pricing
+          return {mode:'free',currency:c.currency||'usd',tiers:[],allow_donation:!!c.allow_donation,presets:c.allow_donation?(c.presets||[]).filter(p=>(parseFloat(p.amount)||0)>0).map(p=>({amount:parseFloat(p.amount),label:p.label||''})):[]}; // free RSVP; optional donation if allowed
         }
         return {mode,currency:c.currency||'usd',optional_addon:mode==='tiered_addon',tiers:(c.tiers||[]).filter(t=>(parseFloat(t.amount)||0)>0||t.label).map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}))};
       }})(),
