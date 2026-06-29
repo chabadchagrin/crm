@@ -257,9 +257,23 @@ function render(form){
     });
     html+='</div>';
     if(formMode==='tiered_addon'){
-      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>'
-        +'<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
-        +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="0" oninput="pickAddon(this)" autocomplete="off"></div></div>';
+      const aPresets=cfg.presets||[];
+      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>';
+      if(aPresets.length){
+        html+='<div class="presets">';
+        aPresets.forEach((p)=>{
+          const amt=Number(p.amount)||0;
+          html+='<button type="button" class="preset addon-preset" data-amt="'+amt+'" onclick="pickAddonPreset(this,'+amt+')">'
+            +'<span class="preset-amt">$'+amt.toLocaleString()+'</span>'
+            +(p.label?'<span class="preset-lbl">'+esc(p.label)+'</span>':'')+'</button>';
+        });
+        html+='</div>';
+      }
+      if(cfg.allow_custom!==false){
+        html+='<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
+          +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="Other amount" oninput="pickAddon(this)" autocomplete="off"></div>';
+      }
+      html+='</div>';
     }
   } else if(isEvent && formMode==='free'){
     html+='<p class="amt-label" style="margin-bottom:14px">RSVP below'+(freeAllowsDonation?'':' — no payment needed')+'</p>';
@@ -346,11 +360,22 @@ function pickTier(btn,amt,i){
   btn.classList.add('sel');
   recomputeEventTotal();
 }
+function pickAddonPreset(btn,amt){
+  addonAmount=amt;
+  document.querySelectorAll('.addon-preset').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const ci=document.getElementById('addonAmt');
+  if(ci){ci.value='';ci.classList.remove('sel');}
+  recomputeEventTotal();
+}
 function pickAddon(input){
   let v=input.value.replace(/[^0-9.]/g,'');
   const parts=v.split('.');if(parts.length>2)v=parts[0]+'.'+parts.slice(1).join('');
   input.value=v;
   addonAmount=parseFloat(v)||0;
+  // Typing a custom add-on clears any selected addon preset.
+  document.querySelectorAll('.addon-preset').forEach(b=>b.classList.remove('sel'));
+  if(addonAmount>0)input.classList.add('sel');else input.classList.remove('sel');
   recomputeEventTotalDebounced();
 }
 function recomputeEventTotal(){

@@ -144,6 +144,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   .mobile-bar input{flex:1;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:var(--font-ui);font-size:.85rem;border-radius:6px;outline:none}
   .mobile-add-btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:.8rem;cursor:pointer;white-space:nowrap}
   .modal{width:95vw;padding:20px}.modal-btns{flex-direction:column}.modal-btns .btn{width:100%;padding:12px}
+  .cr-modal{width:96vw;max-height:94vh}.cr-head{padding:14px 16px 0}.cr-tabs{padding:12px 16px 0}.cr-tab{padding:8px 8px 11px;font-size:.7rem}.cr-body{padding:14px 16px}.cr-foot{padding:12px 16px}.cr-foot .btn{flex:1}
 
   /* ===== DAAS MOBILE SHELL ===== */
   /* Hide the entire desktop app on mobile. Every overlay the shell needs
@@ -434,6 +435,25 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .fb-seg button:last-child{border-right:none}
 .fb-seg button.active{background:var(--accent);color:#fff}
 .fb-hint{font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin:-6px 0 12px;line-height:1.4}
+/* ── Unified creator modal (events + donation forms) ── */
+.cr-modal{background:var(--surf);border:1px solid var(--border);border-radius:14px;width:640px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:var(--sh-lg);overflow:hidden}
+.cr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px 0;flex-shrink:0}
+.cr-head h2{font-family:var(--font-display);font-size:1.2rem;color:var(--txt);margin:0}
+.cr-close{background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px;display:inline-flex;border-radius:5px}
+.cr-close:hover{color:var(--txt);background:var(--surf2)}
+.cr-tabs{display:flex;gap:4px;padding:14px 22px 0;flex-shrink:0;border-bottom:1px solid var(--border)}
+.cr-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px 11px;font-family:var(--font-ui);font-size:.74rem;font-weight:600;color:var(--txt3);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.cr-tab:hover{color:var(--txt2)}
+.cr-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.cr-tab.done .cr-tab-num{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cr-tab-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border2);font-size:.62rem;font-weight:700;flex-shrink:0}
+.cr-tab.active .cr-tab-num{border-color:var(--accent);color:var(--accent)}
+.cr-body{padding:18px 22px;overflow-y:auto;flex:1}
+.cr-body .fb-section{max-width:none}
+.cr-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
+.cr-foot-r{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.cr-status{font-family:var(--font-ui);font-size:.7rem;color:var(--txt2);margin-right:auto}
+.cr-status.err{color:var(--red)}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
 .ct-wrap{flex:1;overflow:auto;padding:18px 24px}
 .ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -7113,13 +7133,24 @@ let _openEventId=null;     // currently-open event detail, or null = list
 // ── Unified Event Creator state ──────────────────────────────────────────
 // SQL to run once in Supabase before deploying:
 //   ALTER TABLE events ADD COLUMN IF NOT EXISTS notify_emails text[] DEFAULT '{}';
-let _ecEditingId=null;     // null=new, string=editing id
+let _ecEditingId=null;     // null=new, string=editing id (event id, or form slug when kind='donation')
 let _ecDraft=null;         // working copy for the creator editor
+let _ecStep=1;             // 1=details, 2=fields, 3=pricing — current modal step
+let _ecSavedEventId=null;  // event id once created this session (so step saves PATCH, not duplicate)
+let _ecSavedFormSlug=null; // form slug once created this session
 const _EC_DEFAULT_FIELDS=[
   {key:'first_name',label:'First name',type:'text',required:true},
   {key:'last_name', label:'Last name', type:'text',required:true},
   {key:'email',     label:'Email',     type:'email',required:true},
   {key:'phone',     label:'Phone',     type:'tel', required:true}
+];
+// Address block: four fields toggled together (kept out of the field editor list)
+const EC_ADDR_KEYS=['address','city','state','zip'];
+const EC_ADDR_FIELDS=[
+  {key:'address',label:'Street address',type:'text',required:true},
+  {key:'city',   label:'City',          type:'text',required:true},
+  {key:'state',  label:'State',         type:'text',required:true},
+  {key:'zip',    label:'ZIP',           type:'text',required:true}
 ];
 
 async function _loadEvents(force){
@@ -7156,8 +7187,9 @@ function _eventStats(eventId){
 async function renderEvents(){
   const host=document.getElementById('eventsViewInner');
   if(!host)return;
-  // If we're in the event creator, re-render it (avoids losing state on tab switch)
-  if(_ecDraft!==null){ _ecRenderCreator(); return; }
+  // The creator is now a modal overlay; if it's open for an EVENT, leave it and
+  // render the list underneath. (Donation-kind drafts belong to the Forms tab.)
+  if(_ecDraft!==null&&_ecDraft.kind==='donation'){ /* modal owns the screen */ }
   host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading events…</div>';
   try{ await Promise.all([_loadEvents(),_loadForms()]); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load events: '+_escHtml(e.message)+'</p></div>'; return; }
   if(_openEventId){ _renderEventDetail(_openEventId); return; }
@@ -7264,28 +7296,36 @@ function _renderEventDetail(id){
 // in-page editor with progressive disclosure. Replaces the old modal.
 // ════════════════════════════════════════════════════════════════════════
 
-function _ecNew(){
+function _ecNew(kind){
+  kind=kind||'event';
   _ecEditingId=null;
+  _ecStep=1; _ecSavedEventId=null; _ecSavedFormSlug=null;
+  const isDon=(kind==='donation');
   _ecDraft={
+    kind,
     // event fields
     name:'', event_date:'', location:'', location_url:'', description:'', campaign_tag:'',
     active:true, notify_emails:[],
     _formTitleManual:false, _locationUrlManual:false,
-    // online reg toggle
-    allow_online:false,
+    // online reg toggle — donation forms are always "online" (that's the whole point)
+    allow_online:isDon?true:false,
     // form fields (only relevant when allow_online=true)
     form_slug:'', form_title:'', form_show_title:false,
     form_description:'', form_show_description:false,
-    form_success_title:'Thank you for registering!',
-    form_success_message:'',
-    // pricing
-    paid:false,
-    stripe_mode:'tiered', // 'free' | 'tiered' | 'tiered_addon'
+    form_success_title:isDon?'Thank you!':'Thank you for registering!',
+    form_success_message:isDon?'Your gift means more than you know. A receipt is on its way.':'',
+    // pricing — donation forms are always paid (no free mode)
+    paid:isDon?true:false,
+    stripe_mode:isDon?'donation':'tiered', // 'free' | 'tiered' | 'tiered_addon' | 'donation'
     tiers:[{amount:18,label:'Single'},{amount:36,label:'Couple'}],
-    // optional donation (free RSVP only)
+    // donation presets double as the donation-form amount buttons
     allow_donation:false,
-    donation_presets:[{amount:18,label:''},{amount:36,label:''},{amount:72,label:''}],
+    donation_presets:isDon
+      ?[{amount:36,label:'Chai x2'},{amount:100,label:''},{amount:180,label:'Double chai'}]
+      :[{amount:18,label:''},{amount:36,label:''},{amount:72,label:''}],
     donation_allow_custom:true,
+    // address block toggle (donation forms; off by default)
+    collect_address:false,
     // custom fields
     fields:JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS))
   };
@@ -7296,11 +7336,17 @@ function _ecEdit(id){
   const ev=_events.find(e=>e.id===id);
   if(!ev){alert('Event not found');return;}
   _ecEditingId=id;
+  _ecStep=1; _ecSavedEventId=id; _ecSavedFormSlug=ev.form_slug||null;
   // Find the linked form (if any)
   const lf=_forms.find(f=>f.slug===ev.form_slug)||null;
   const c=lf?lf.stripe_config||{}:{};
   const mode=c.mode||'tiered';
+  const allFields=lf&&lf.schema&&lf.schema.fields&&lf.schema.fields.length
+    ?JSON.parse(JSON.stringify(lf.schema.fields))
+    :JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS));
+  const hasAddr=allFields.some(f=>EC_ADDR_KEYS.includes(f.key));
   _ecDraft={
+    kind:'event',
     name:ev.name||'', event_date:ev.event_date||'', location:ev.location||'',
     location_url:ev.location_url||'',
     description:ev.description||'', campaign_tag:ev.campaign_tag||'',
@@ -7322,19 +7368,178 @@ function _ecEdit(id){
     allow_donation:!!c.allow_donation,
     donation_presets:(c.presets&&c.presets.length)?c.presets:[{amount:18,label:''},{amount:36,label:''},{amount:72,label:''}],
     donation_allow_custom:c.allow_custom!==false,
-    fields:lf&&lf.schema&&lf.schema.fields&&lf.schema.fields.length
-      ?JSON.parse(JSON.stringify(lf.schema.fields))
-      :JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS))
+    collect_address:hasAddr,
+    fields:allFields.filter(f=>!EC_ADDR_KEYS.includes(f.key))
   };
   _ecRenderCreator();
 }
 
-function _ecBackToList(){
-  _ecDraft=null; _ecEditingId=null; _openEventId=null; _renderEventList();
+// Open the creator for a donation FORM (no event row; edits the forms table directly)
+function _ecEditForm(slug){
+  const lf=_forms.find(f=>f.slug===slug);
+  if(!lf){alert('Form not found');return;}
+  _ecEditingId=slug;
+  _ecStep=1; _ecSavedEventId=null; _ecSavedFormSlug=slug;
+  const c=lf.stripe_config||{};
+  const allFields=lf.schema&&lf.schema.fields&&lf.schema.fields.length
+    ?JSON.parse(JSON.stringify(lf.schema.fields))
+    :JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS));
+  const hasAddr=allFields.some(f=>EC_ADDR_KEYS.includes(f.key));
+  _ecDraft={
+    kind:'donation',
+    name:lf.title||'', event_date:'', location:'', location_url:'',
+    description:'', campaign_tag:lf.campaign_tag||'',
+    active:lf.active!==false, notify_emails:[],
+    _formTitleManual:true, _locationUrlManual:false,
+    allow_online:true,
+    form_slug:lf.slug,
+    form_title:lf.title||'',
+    form_show_title:!!lf.show_title,
+    form_description:lf.description||'',
+    form_show_description:!!lf.show_description,
+    form_success_title:lf.success_title||'Thank you!',
+    form_success_message:lf.success_message||'',
+    paid:true,
+    stripe_mode:'donation',
+    tiers:[{amount:18,label:'Single'},{amount:36,label:'Couple'}],
+    allow_donation:false,
+    donation_presets:(c.presets&&c.presets.length)?c.presets:[{amount:36,label:'Chai x2'},{amount:100,label:''},{amount:180,label:'Double chai'}],
+    donation_allow_custom:c.allow_custom!==false,
+    collect_address:hasAddr,
+    fields:allFields.filter(f=>!EC_ADDR_KEYS.includes(f.key))
+  };
+  _ecRenderCreator();
 }
-function _ecBackToDetail(){
-  if(_ecEditingId){ _ecDraft=null; const id=_ecEditingId; _ecEditingId=null; openEvent(id); }
-  else { _ecBackToList(); }
+
+function _ecCloseModal(){
+  const bg=document.getElementById('ecModal');
+  if(bg){ bg.style.display='none'; bg.innerHTML=''; }
+  _ecDraft=null; _ecEditingId=null; _ecStep=1; _ecSavedEventId=null; _ecSavedFormSlug=null;
+}
+function _ecBackToList(){
+  const kind=_ecDraft?_ecDraft.kind:'event';
+  _ecCloseModal();
+  _openEventId=null;
+  if(kind==='donation'){ if(typeof renderForms==='function')renderForms(); }
+  else { _renderEventList(); }
+}
+function _ecBackToDetail(){ _ecBackToList(); }
+
+// Step status helper (writes into the footer status line)
+function _ecStatus(msg,isErr){
+  const el=document.getElementById('ec_status');
+  if(el){ el.textContent=msg||''; el.className='cr-status'+(isErr?' err':''); }
+}
+
+// Navigate to a step. Syncs current DOM → draft, persists, then re-renders at target step.
+// Free movement: tabs and Back/Next all route through here.
+async function _ecGoStep(n){
+  if(!_ecDraft)return;
+  _ecSync();
+  // Validate + persist before leaving the current step (so "save as you work" holds).
+  const ok=await _ecPersist();
+  if(!ok)return; // _ecPersist surfaced the error; stay put
+  _ecStep=n;
+  _ecRenderCreator();
+}
+
+// Shared persister. Creates the event/form on first save, PATCHes thereafter.
+// Returns true on success, false (with status shown) on validation/network failure.
+async function _ecPersist(){
+  const d=_ecDraft;
+  const isDon=(d.kind==='donation');
+  if(!d.name||!d.name.trim()){ _ecStatus(isDon?'Form name is required.':'Event name is required.',true); return false; }
+
+  // ---- EVENT ROW (events kind only) ----
+  if(!isDon){
+    const evPayload={
+      name:d.name.trim(),
+      event_date:d.event_date||null,
+      location:(d.location||'').trim()||null,
+      location_url:(d.location_url||'').trim()||null,
+      description:(d.description||'').trim()||null,
+      campaign_tag:(d.campaign_tag||'').trim()||null,
+      active:d.active
+    };
+    if(d.notify_emails&&d.notify_emails.length)evPayload.notify_emails=d.notify_emails;
+    if(d.allow_online&&(_ecSavedFormSlug||d.form_slug))evPayload.form_slug=(_ecSavedFormSlug||d.form_slug);
+    try{
+      if(_ecSavedEventId){
+        await sb('events?id=eq.'+_ecSavedEventId,{method:'PATCH',body:JSON.stringify(evPayload)});
+      } else {
+        const r=await sb('events',{method:'POST',body:JSON.stringify(evPayload),headers:{Prefer:'return=representation'}});
+        const row=Array.isArray(r)?r[0]:r;
+        if(row&&row.id){ _ecSavedEventId=row.id; _ecEditingId=row.id; }
+      }
+    }catch(e){ _ecStatus('Could not save: '+e.message,true); return false; }
+  }
+
+  // ---- FORM ROW (donation kind always; events only when online reg is on) ----
+  const buildForm=isDon||d.allow_online;
+  if(buildForm){
+    const fp=_ecBuildFormPayload();
+    if(fp.error){ _ecStatus(fp.error,true); return false; }
+    try{
+      if(_ecSavedFormSlug){
+        await sb('forms?slug=eq.'+encodeURIComponent(_ecSavedFormSlug),{method:'PATCH',body:JSON.stringify(fp.payload)});
+      } else {
+        await sb('forms',{method:'POST',body:JSON.stringify(fp.payload)});
+        _ecSavedFormSlug=fp.payload.slug;
+        if(isDon)_ecEditingId=fp.payload.slug;
+        // Link the form back onto the event row now that the slug exists.
+        if(!isDon&&_ecSavedEventId){
+          try{ await sb('events?id=eq.'+_ecSavedEventId,{method:'PATCH',body:JSON.stringify({form_slug:fp.payload.slug})}); }catch(e){}
+        }
+      }
+    }catch(e){ _ecStatus('Could not save form: '+e.message,true); return false; }
+  }
+
+  _ecStatus('Saved.');
+  return true;
+}
+
+// Save & close on step 1 of an EVENT with no online reg → internal-only event, done.
+async function _ecSaveAndClose(){
+  if(!_ecDraft)return;
+  _ecSync();
+  // Honor the online-reg toggle the user may have just flipped.
+  if(_ecDraft.allow_online){ return _ecGoStep(2); }
+  const ok=await _ecPersist();
+  if(!ok)return;
+  await _loadEvents(true);
+  _ecBackToList();
+}
+
+// Deactivate (recommended) or permanently delete a donation form. The user
+// confirms the destructive choice themselves via prompt.
+async function _ecDeleteForm(){
+  const slug=_ecSavedFormSlug;
+  if(!slug){ _ecStatus('Save the form first.',true); return; }
+  const choice=prompt('Type "deactivate" to hide this form (recommended), or "delete" to permanently remove it.','deactivate');
+  if(choice===null)return;
+  const c=choice.trim().toLowerCase();
+  try{
+    if(c==='delete'){
+      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
+    } else if(c==='deactivate'){
+      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
+    } else { _ecStatus('Cancelled — type exactly "deactivate" or "delete".',true); return; }
+    await _loadForms(true);
+    _ecBackToList();
+  }catch(e){ _ecStatus('Error: '+e.message,true); }
+}
+
+// Save & publish (final step) — persist, refresh caches, show embed if there's a form.
+async function _ecPublish(){
+  if(!_ecDraft)return;
+  _ecSync();
+  const ok=await _ecPersist();
+  if(!ok)return;
+  const isDon=_ecDraft.kind==='donation';
+  const slug=_ecSavedFormSlug;
+  await Promise.all([_loadEvents(true),_loadForms(true)]);
+  _ecBackToList();
+  if(slug&&typeof _fbShowEmbed==='function')_fbShowEmbed(slug);
 }
 
 // Pull live DOM values back into the draft (called before any re-render or save)
@@ -7342,19 +7547,24 @@ function _ecSync(){
   if(!_ecDraft)return;
   const g=id=>document.getElementById(id);
   const d=_ecDraft;
-  // event details
+  const isDon=(d.kind==='donation');
+  // name / title
   if(g('ec_name'))d.name=g('ec_name').value;
-  // Mirror name → form_title unless user has manually edited the title
   if(!d._formTitleManual)d.form_title=d.name;
-  if(g('ec_date'))d.event_date=g('ec_date').value;
-  if(g('ec_location'))d.location=g('ec_location').value;
-  if(g('ec_location_url'))d.location_url=g('ec_location_url').value;
-  if(g('ec_desc'))d.description=g('ec_desc').value;
+  if(!isDon){
+    if(g('ec_date'))d.event_date=g('ec_date').value;
+    if(g('ec_location'))d.location=g('ec_location').value;
+    if(g('ec_location_url'))d.location_url=g('ec_location_url').value;
+    if(g('ec_desc'))d.description=g('ec_desc').value;
+  } else {
+    // Donation step 1 uses ec_desc for the public description.
+    if(g('ec_desc'))d.form_description=g('ec_desc').value;
+  }
   if(g('ec_campaign'))d.campaign_tag=g('ec_campaign').value;
   if(g('ec_active'))d.active=g('ec_active').checked;
-  // notify emails
+  // notify emails (events only; field absent on donation)
   if(g('ec_notify'))d.notify_emails=g('ec_notify').value.split(',').map(s=>s.trim()).filter(Boolean);
-  // online reg
+  // online reg + form meta
   if(g('ec_allow_online'))d.allow_online=g('ec_allow_online').checked;
   if(g('ec_form_slug'))d.form_slug=g('ec_form_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
   if(g('ec_form_title'))d.form_title=g('ec_form_title').value;
@@ -7363,31 +7573,109 @@ function _ecSync(){
   if(g('ec_form_show_desc'))d.form_show_description=g('ec_form_show_desc').checked;
   if(g('ec_success_title'))d.form_success_title=g('ec_success_title').value;
   if(g('ec_success_msg'))d.form_success_message=g('ec_success_msg').value;
+  // address toggle
+  if(g('ec_collect_address'))d.collect_address=g('ec_collect_address').checked;
   // pricing
   if(g('ec_paid'))d.paid=g('ec_paid').checked;
-  // tiers
   _ecSyncTiers();
-  // donation presets
   if(g('ec_allow_donation'))d.allow_donation=g('ec_allow_donation').checked;
   if(g('ec_don_allow_custom'))d.donation_allow_custom=g('ec_don_allow_custom').checked;
   if(g('ec_don_allow_custom_free'))d.donation_allow_custom=g('ec_don_allow_custom_free').checked;
-  _ecSyncDonPresets(d.paid&&d.stripe_mode==='tiered_addon'?'addon':'free');
-  // custom fields
+  _ecSyncDonPresets((d.paid&&d.stripe_mode==='tiered_addon')?'addon':'free');
   _ecSyncFields();
 }
 
+// ── Shared stripe_config + form payload builder (single source of truth) ──
+// Replaces the 3 divergent copies that caused the addon-preset bug. Every
+// mode routes through here: donation, tiered, tiered_addon, free(+optional gift).
+function _ecBuildStripeConfig(d){
+  const isDon=(d.kind==='donation');
+  const presets=(d.donation_presets||[])
+    .filter(p=>(parseFloat(p.amount)||0)>0)
+    .map(p=>({amount:parseFloat(p.amount),label:p.label||''}));
+  const tiers=(d.tiers||[])
+    .filter(t=>(parseFloat(t.amount)||0)>0||t.label)
+    .map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}));
+
+  if(isDon){
+    return {ok:true,cfg:{mode:'donation',currency:'usd',allow_custom:!!d.donation_allow_custom,presets,tiers:[]}};
+  }
+  if(!d.paid){
+    // Free RSVP, optionally with a real donation add-on.
+    const cfg={mode:'free',currency:'usd',tiers:[],allow_donation:!!d.allow_donation,presets:d.allow_donation?presets:[]};
+    if(d.allow_donation)cfg.allow_custom=!!d.donation_allow_custom;
+    return {ok:true,cfg};
+  }
+  // Paid event — tiered or tiered_addon.
+  const mode=d.stripe_mode==='tiered_addon'?'tiered_addon':'tiered';
+  if(!tiers.length)return {ok:false,error:'Add at least one pricing tier.'};
+  const cfg={mode,currency:'usd',optional_addon:mode==='tiered_addon',tiers};
+  if(mode==='tiered_addon'){
+    cfg.presets=presets;                       // ← the previously-missing write
+    cfg.allow_custom=!!d.donation_allow_custom;
+  }
+  return {ok:true,cfg};
+}
+
+// Build the full `forms` row payload (schema + stripe_config + meta). Validates slug.
+function _ecBuildFormPayload(){
+  const d=_ecDraft;
+  const isDon=(d.kind==='donation');
+  let slug=_ecSavedFormSlug||d.form_slug;
+  if(!slug&&d.name){
+    slug=d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,50);
+    d.form_slug=slug;
+  }
+  if(!slug)return {error:'A form slug is required.'};
+  if(!/^[a-z0-9][a-z0-9-]*$/.test(slug))return {error:'Slug must be lowercase letters, numbers, and dashes.'};
+  if(!_ecSavedFormSlug&&_forms.some(f=>f.slug===slug))return {error:'That slug is already in use — pick another.'};
+
+  const sc=_ecBuildStripeConfig(d);
+  if(!sc.ok)return {error:sc.error};
+
+  // Merge fields + optional address block, clean keys, dedupe.
+  let allFields=(d.fields||[]).slice();
+  if(d.collect_address)allFields=allFields.concat(JSON.parse(JSON.stringify(EC_ADDR_FIELDS)));
+  const usedKeys={};
+  const cleanFields=allFields.map(f=>{
+    let key;
+    if(FB_STD_KEYS.includes(f.key)||EC_ADDR_KEYS.includes(f.key)){key=f.key;}
+    else if(f.key&&!f._isNew&&!/^custom_/.test(f.key)){key=f.key;}
+    else{key=_fbSlugKey(f.label);}
+    let base=key,n=2; while(usedKeys[key]){key=base+'_'+n;n++;} usedKeys[key]=1;
+    const o={key,label:f.label||key,type:f.type||'text',required:!!f.required};
+    if(f.type==='select')o.options=f.options||[];
+    return o;
+  });
+
+  return {payload:{
+    slug,
+    type:isDon?'donation':'event',
+    title:d.form_title||d.name||'',
+    show_title:!!d.form_show_title,
+    description:d.form_description||null,
+    show_description:!!d.form_show_description,
+    schema:{fields:cleanFields},
+    stripe_config:sc.cfg,
+    campaign_tag:(d.campaign_tag||'').trim()||null,
+    active:d.active,
+    success_title:d.form_success_title||null,
+    success_message:d.form_success_message||null
+  }};
+}
+
 function _ecToggleOnlineReg(el){
-  _ecDraft.allow_online=el.checked;
-  document.getElementById('ec_sec_online').style.display=el.checked?'':'none';
+  // Online-reg toggle now lives on step 1 and just sets the flag; no section to show/hide.
+  if(_ecDraft)_ecDraft.allow_online=el.checked;
 }
 function _ecTogglePaid(el){
   _ecDraft.paid=el.checked;
-  document.getElementById('ec_sec_tiers').style.display=el.checked?'':'none';
-  document.getElementById('ec_sec_freedon').style.display=el.checked?'none':'';
+  const t=document.getElementById('ec_sec_tiers'); if(t)t.style.display=el.checked?'':'none';
+  const f=document.getElementById('ec_sec_freedon'); if(f)f.style.display=el.checked?'none':'';
 }
 function _ecToggleDonation(el){
   _ecDraft.allow_donation=el.checked;
-  document.getElementById('ec_sec_donpresets').style.display=el.checked?'':'none';
+  const p=document.getElementById('ec_sec_donpresets'); if(p)p.style.display=el.checked?'':'none';
 }
 function _ecSetMode(m){
   _ecSync();_ecDraft.stripe_mode=m;
@@ -7481,7 +7769,7 @@ function _ecFieldRowHtml(fld,i){
   return '<div class="fb-row" id="ec_fld_row_'+i+'" draggable="true" ondragstart="_ecFldDragStart(event,'+i+')" ondragover="_ecFldDragOver(event,'+i+')" ondrop="_ecFldDrop(event,'+i+')" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--bg);cursor:grab">'
     +'<div style="display:flex;gap:6px;flex:1;min-width:0">'
     +'<input id="ec_fld_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(fld.label||'')+'" placeholder="Field label" style="flex:1;margin-bottom:0">'
-    +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:110px;margin-bottom:0"'+(std?' disabled':'')+'>'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+    +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:110px;margin-bottom:0"'+(std?' disabled':'')+' onchange="_ecFieldTypeChanged('+i+')">'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
     +'<label class="fb-check" style="margin:0;white-space:nowrap"><input type="checkbox" id="ec_fld_req_'+i+'"'+(fld.required?' checked':'')+'> req</label>'
     +'</div>'
     +'<div style="display:flex;gap:4px;align-items:center">'
@@ -7506,6 +7794,22 @@ function _ecRefreshFieldRows(){
   const host=document.getElementById('ec_field_rows');
   if(!host)return;
   host.innerHTML=_ecDraft.fields.map((fld,i)=>_ecFieldRowHtml(fld,i)).join('');
+}
+
+// Field type dropdown changed: capture current row values, update the type,
+// then re-render just that row so the select-options input appears/disappears.
+function _ecFieldTypeChanged(i){
+  _ecSyncFields();
+  const tp=document.getElementById('ec_fld_type_'+i);
+  if(tp&&_ecDraft.fields[i])_ecDraft.fields[i].type=tp.value;
+  const row=document.getElementById('ec_fld_row_'+i);
+  if(row){
+    const tmp=document.createElement('div');
+    tmp.innerHTML=_ecFieldRowHtml(_ecDraft.fields[i],i);
+    row.replaceWith(tmp.firstChild);
+  }else{
+    _ecRefreshFieldRows();
+  }
 }
 
 let _ecFldDragIdx=null;
@@ -7557,82 +7861,158 @@ function _ecNotifyChipsHtml(){
     +'</span>').join('')||'<span style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">No recipients yet.</span>';
 }
 
+// ── Modal shell + 3-step flow (events AND donation forms share this engine) ──
+// Step 1 = details, Step 2 = fields, Step 3 = pricing + after + (events) notify/embed.
+// _ecDraft.kind is 'event' or 'donation'. Donation forms: no free mode, no pay-later,
+// no date/location, plus an address-block toggle.
+const _ecIcons={
+  back:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>',
+  next:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>',
+  close:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>',
+  plus:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>',
+  code:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg>'
+};
+
 function _ecRenderCreator(){
-  const host=document.getElementById('eventsViewInner');
-  if(!host||!_ecDraft)return;
+  let bg=document.getElementById('ecModal');
+  if(!bg){
+    bg=document.createElement('div');
+    bg.id='ecModal'; bg.className='modal-bg';
+    bg.addEventListener('mousedown',e=>{ if(e.target===bg)_ecBackToList(); });
+    document.body.appendChild(bg);
+  }
+  bg.style.display='flex';
+  bg.innerHTML='<div class="cr-modal" role="dialog" aria-modal="true">'
+    +_ecHeadHtml()+_ecTabsHtml()
+    +'<div class="cr-body" id="ec_body">'+_ecStepBodyHtml()+'</div>'
+    +_ecFootHtml()
+    +'</div>';
+  _ecAfterRender();
+}
+
+function _ecHeadHtml(){
+  const d=_ecDraft, isNew=(_ecEditingId===null);
+  const noun=d.kind==='donation'?'Donation Form':'Event';
+  return '<div class="cr-head"><h2>'+(isNew?'New ':'Edit ')+noun+'</h2>'
+    +'<button class="cr-close" onclick="_ecBackToList()" title="Close" aria-label="Close">'+_ecIcons.close+'</button></div>';
+}
+
+function _ecTabsHtml(){
   const d=_ecDraft;
-  const isNew=(_ecEditingId===null);
-  const isEditing=!!_ecEditingId;
-  const _scrollY=host.scrollTop;
+  // Donation forms always collect online; events only show steps 2/3 once online reg is on,
+  // but we always show the tabs so the flow is predictable. Step labels differ by kind.
+  const labels=d.kind==='donation'
+    ?['Form details','Fields','Donation amounts']
+    :['Event basics','Registration form','Pricing'];
+  let h='<div class="cr-tabs">';
+  for(let n=1;n<=3;n++){
+    const active=_ecStep===n, done=_ecStep>n;
+    h+='<button class="cr-tab'+(active?' active':'')+(done?' done':'')+'" onclick="_ecGoStep('+n+')">'
+      +'<span class="cr-tab-num">'+n+'</span>'+labels[n-1]+'</button>';
+  }
+  return h+'</div>';
+}
 
-  const tierRows=(d.tiers||[]).map((t,i)=>_ecTierRowHtml(t,i,d.tiers.length)).join('');
-  const donRows=(d.donation_presets||[]).map((p,i)=>_ecDonRowHtml(p,i,d.paid&&d.stripe_mode==='tiered_addon'?'addon':'free')).join('');
+function _ecStepBodyHtml(){
+  if(_ecStep===2)return _ecStep2Html();
+  if(_ecStep===3)return _ecStep3Html();
+  return _ecStep1Html();
+}
+
+// ── STEP 1 — details ──────────────────────────────────────────────────────
+function _ecStep1Html(){
+  const d=_ecDraft, isDon=(d.kind==='donation');
+  let h='<div class="fb-section"><h3>'+(isDon?'Form details':'Event details')+'</h3>'
+    +'<label class="fb-lbl">'+(isDon?'Form name *':'Event name *')+'</label>'
+    +'<input id="ec_name" class="fb-in" type="text" value="'+_escAttr(d.name||'')+'" placeholder="'+(isDon?'General Donation':'Chanukah Dinner 2026')+'" oninput="if(!_ecDraft._formTitleManual){_ecDraft.form_title=this.value;}">';
+  if(!isDon){
+    h+='<label class="fb-lbl">Date</label>'
+      +'<input id="ec_date" class="fb-in" type="date" value="'+_escAttr(d.event_date||'')+'">'
+      +'<label class="fb-lbl">Location</label>'
+      +'<input id="ec_location" class="fb-in" type="text" value="'+_escAttr(d.location||'')+'" placeholder="100 N. Main St, Moreland Hills, OH" oninput="if(!_ecDraft._locationUrlManual){var q=encodeURIComponent(this.value);_ecDraft.location_url=\'https://maps.google.com/?q=\'+q;var u=document.getElementById(\'ec_location_url\');if(u)u.value=_ecDraft.location_url;}">'
+      +'<div class="fb-hint" style="margin-top:-8px">Included in confirmation emails as a clickable map link.</div>'
+      +'<label class="fb-lbl">Map link <span style="font-weight:400;color:var(--txt3)">(auto-filled)</span></label>'
+      +'<input id="ec_location_url" class="fb-in" type="url" value="'+_escAttr(d.location_url||'')+'" placeholder="https://maps.google.com/?q=\u2026" oninput="_ecDraft._locationUrlManual=true;_ecDraft.location_url=this.value">';
+  }
+  h+='<label class="fb-lbl" style="margin-top:6px">'+(isDon?'Public description':'Description')+'</label>'
+    +'<textarea id="ec_desc" class="fb-in" style="min-height:70px;resize:vertical" placeholder="'+(isDon?'A short blurb shown above the form\u2026':'Internal notes about this event\u2026')+'">'+_escHtml(isDon?(d.form_description||''):(d.description||''))+'</textarea>';
+  if(isDon){
+    h+='<label class="fb-check"><input type="checkbox" id="ec_form_show_desc"'+(d.form_show_description?' checked':'')+'> Show description on the public form</label>'
+      +'<label class="fb-lbl" style="margin-top:6px">Public title</label>'
+      +'<input id="ec_form_title" class="fb-in" type="text" value="'+_escAttr(d.form_title||d.name||'')+'" placeholder="Support Chabad at the Falls" oninput="_ecDraft._formTitleManual=true;_ecDraft.form_title=this.value">'
+      +'<label class="fb-check"><input type="checkbox" id="ec_form_show_title"'+(d.form_show_title?' checked':'')+'> Show title on the public form</label>'
+      +'<label class="fb-lbl" style="margin-top:6px">Form slug (public URL) *</label>'
+      +'<input id="ec_form_slug" class="fb-in" type="text" value="'+_escAttr(d.form_slug||'')+'" placeholder="general-donation"'+(_ecSavedFormSlug?' readonly style="opacity:.6;cursor:not-allowed;background:var(--surf2)"':'')+'>'
+      +'<div class="fb-hint" style="margin-top:-8px">'+(_ecSavedFormSlug?'Slug locked after first save.':'Letters, numbers, dashes. Becomes form.html?slug=\u2026')+'</div>';
+  }
+  h+='<label class="fb-lbl">Campaign tag</label>'
+    +'<input id="ec_campaign" class="fb-in" type="text" value="'+_escAttr(d.campaign_tag||'')+'" placeholder="'+(isDon?'optional \u2014 for reporting':'chanukah-2026')+'">'
+    +'<label class="fb-check"><input type="checkbox" id="ec_active"'+(d.active?' checked':'')+'> Active'+(isDon?' (live and publicly readable)':'')+'</label>'
+    +'</div>';
+  if(!isDon){
+    h+='<div class="fb-section"><h3>Online registration</h3>'
+      +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
+      +'<input type="checkbox" id="ec_allow_online"'+(d.allow_online?' checked':'')+' onchange="_ecDraft.allow_online=this.checked" style="width:auto;accent-color:var(--accent)"> Allow online registration'
+      +'</label>'
+      +'<div class="fb-hint" style="margin-bottom:0">Off = internal-only event (Save &amp; close). On = build a public form (Save &amp; next).</div>'
+      +'</div>';
+  }
+  return h;
+}
+
+// ── STEP 2 — fields ────────────────────────────────────────────────────────
+function _ecStep2Html(){
+  const d=_ecDraft, isDon=(d.kind==='donation');
   const fieldRows=(d.fields||[]).map((fld,i)=>_ecFieldRowHtml(fld,i)).join('');
-  const emailChips=_ecNotifyChipsHtml();
-
-  const suggestedSlug=isNew&&d.name?d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,50):'';
-  const addTierBtn='<button class="fb-mini-btn" onclick="_ecAddTier()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add tier</button>';
-  const addPresetBtn='<button class="fb-mini-btn" onclick="_ecAddDonPreset()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add amount</button>';
-  const addFieldBtn='<button class="fb-mini-btn" onclick="_ecAddField()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add field</button>';
-
-  host.innerHTML=
-    '<button class="ev-back" onclick="_ecBackToDetail()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg> '+(isEditing?'Back to event':'All events')+'</button>'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">'
-    +'<h2 style="font-family:var(--font-display);font-size:1.25rem;color:var(--txt);margin:0">'+(isNew?'New Event':'Edit Event')+'</h2>'
-    +'<button class="btn btn-pri" onclick="_guardClick(this,_ecSave)" style="font-size:.7rem;padding:6px 16px">Save event</button>'
-    +'</div>'
-
-    +'<div class="fb-section"><h3>Event details</h3>'
-    +'<label class="fb-lbl">Event name *</label>'
-    +'<input id="ec_name" class="fb-in" type="text" value="'+_escAttr(d.name||'')+'" placeholder="Chanukah Dinner 2026" oninput="if(!_ecDraft._formTitleManual){_ecDraft.form_title=this.value;var t=document.getElementById(\'ec_form_title\');if(t)t.value=this.value;}">'
-    +'<label class="fb-lbl">Date</label>'
-    +'<input id="ec_date" class="fb-in" type="date" value="'+_escAttr(d.event_date||'')+'">'
-    +'<label class="fb-lbl">Location</label>'
-    +'<input id="ec_location" class="fb-in" type="text" value="'+_escAttr(d.location||'')+'" placeholder="100 N. Main St, Moreland Hills, OH" oninput="if(!_ecDraft._locationUrlManual){var q=encodeURIComponent(this.value);_ecDraft.location_url=\'https://maps.google.com/?q=\'+q;var u=document.getElementById(\'ec_location_url\');if(u)u.value=_ecDraft.location_url;}">'
-    +'<div class="fb-hint" style="margin-top:-8px">Included in confirmation emails as a clickable map link.</div>'
-    +'<label class="fb-lbl">Map link <span style="font-weight:400;color:var(--txt3)">(auto-filled)</span></label>'
-    +'<input id="ec_location_url" class="fb-in" type="url" value="'+_escAttr(d.location_url||'')+'" placeholder="https://maps.google.com/?q=\u2026" oninput="_ecDraft._locationUrlManual=true;_ecDraft.location_url=this.value">'
-    +'<label class="fb-lbl" style="margin-top:6px">Description</label>'
-    +'<textarea id="ec_desc" class="fb-in" style="min-height:70px;resize:vertical" placeholder="Internal notes about this event\u2026">'+_escHtml(d.description||'')+'</textarea>'
-    +'<label class="fb-lbl">Campaign tag</label>'
-    +'<input id="ec_campaign" class="fb-in" type="text" value="'+_escAttr(d.campaign_tag||'')+'" placeholder="chanukah-2026">'
-    +'<label class="fb-check"><input type="checkbox" id="ec_active"'+(d.active?' checked':'')+''+'> Active</label>'
-    +'</div>'
-
-    +'<div class="fb-section"><h3>Online registration</h3>'
-    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
-    +'<input type="checkbox" id="ec_allow_online"'+(d.allow_online?' checked':'')+' onchange="_ecToggleOnlineReg(this)" style="width:auto;accent-color:var(--accent)"> Allow online registration'
-    +'</label>'
-    +'<div class="fb-hint" style="margin-bottom:0">Off = internal-only event. On = creates a public registration form.</div>'
-    +'</div>'
-
-    +'<div id="ec_sec_online" style="display:'+(d.allow_online?'':'none')+'">'
-
-      +'<div class="fb-section"><h3>Registration form</h3>'
+  let h='';
+  if(!isDon){
+    h+='<div class="fb-section"><h3>Registration form</h3>'
       +'<div class="fb-hint">Public URL: form.html?slug=\u2026 \u00b7 Embed via Squarespace <b>Code</b> block.</div>'
       +'<label class="fb-lbl">Form slug *</label>'
-      +'<input id="ec_form_slug" class="fb-in" type="text" value="'+_escAttr(d.form_slug||suggestedSlug)+'" placeholder="chanukah-dinner-2026"'+(isEditing&&d.form_slug?' readonly style="opacity:.6;cursor:not-allowed;background:var(--surf2)"':'')+''+'>'
-      +'<div class="fb-hint" style="margin-top:-8px">'+(isEditing&&d.form_slug?'Slug locked after first save.':'Letters, numbers, dashes only.')+'</div>'
+      +'<input id="ec_form_slug" class="fb-in" type="text" value="'+_escAttr(d.form_slug||'')+'" placeholder="chanukah-dinner-2026"'+(_ecSavedFormSlug?' readonly style="opacity:.6;cursor:not-allowed;background:var(--surf2)"':'')+'>'
+      +'<div class="fb-hint" style="margin-top:-8px">'+(_ecSavedFormSlug?'Slug locked after first save.':'Letters, numbers, dashes only.')+'</div>'
       +'<label class="fb-lbl">Form title</label>'
       +'<input id="ec_form_title" class="fb-in" type="text" value="'+_escAttr(d.form_title||d.name||'')+'" placeholder="Chanukah Dinner 2026" oninput="_ecDraft._formTitleManual=true;_ecDraft.form_title=this.value">'
-      +'<label class="fb-check"><input type="checkbox" id="ec_form_show_title"'+(d.form_show_title?' checked':'')+''+'> Show title on the public form</label>'
+      +'<label class="fb-check"><input type="checkbox" id="ec_form_show_title"'+(d.form_show_title?' checked':'')+'> Show title on the public form</label>'
       +'<label class="fb-lbl" style="margin-top:6px">Public description</label>'
       +'<textarea id="ec_form_desc" class="fb-in" style="min-height:60px;resize:vertical" placeholder="A short blurb shown above the form\u2026">'+_escHtml(d.form_description||'')+'</textarea>'
-      +'<label class="fb-check"><input type="checkbox" id="ec_form_show_desc"'+(d.form_show_description?' checked':'')+''+'> Show description on the public form</label>'
-      +'</div>'
+      +'<label class="fb-check"><input type="checkbox" id="ec_form_show_desc"'+(d.form_show_description?' checked':'')+'> Show description on the public form</label>'
+      +'</div>';
+  }
+  h+='<div class="fb-section"><h3>'+(isDon?'Form fields':'Registration fields')+'</h3>'
+    +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below.</div>'
+    +'<div id="ec_field_rows">'+fieldRows+'</div>'
+    +'<button class="fb-mini-btn" onclick="_ecAddField()" style="margin-top:4px">'+_ecIcons.plus+' Add field</button>'
+    +'<label class="fb-check" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><input type="checkbox" id="ec_collect_address"'+(d.collect_address?' checked':'')+' onchange="_ecDraft.collect_address=this.checked"> Collect mailing address (street, city, state, ZIP)</label>'
+    +'</div>';
+  return h;
+}
 
-      +'<div class="fb-section"><h3>Registration fields</h3>'
-      +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below.</div>'
-      +'<div id="ec_field_rows">'+fieldRows+'</div>'
-      +addFieldBtn
-      +'</div>'
+// ── STEP 3 — pricing + after + (events) notify/embed ────────────────────────
+function _ecStep3Html(){
+  const d=_ecDraft, isDon=(d.kind==='donation');
+  const tierRows=(d.tiers||[]).map((t,i)=>_ecTierRowHtml(t,i,d.tiers.length)).join('');
+  // Two independent row sets so the hidden block never duplicates the active block's IDs.
+  const donRowsFree=(d.donation_presets||[]).map((p,i)=>_ecDonRowHtml(p,i,'free')).join('');
+  const donRowsAddon=(d.donation_presets||[]).map((p,i)=>_ecDonRowHtml(p,i,'addon')).join('');
+  const addPresetBtn='<button class="fb-mini-btn" onclick="_ecAddDonPreset()" style="margin-top:4px">'+_ecIcons.plus+' Add amount</button>';
+  const addTierBtn='<button class="fb-mini-btn" onclick="_ecAddTier()" style="margin-top:4px">'+_ecIcons.plus+' Add tier</button>';
+  let h='';
 
-      +'<div class="fb-section"><h3>Pricing</h3>'
+  if(isDon){
+    // Donation form: 2-col preset amount buttons + custom. No free, no tiers, no pay-later.
+    h+='<div class="fb-section"><h3>Donation amounts</h3>'
+      +'<div class="fb-hint">Buttons the donor sees (2-column grid). Label is optional \u2014 e.g. "Chai" for $18.</div>'
+      +'<div id="ec_don_rows">'+donRowsFree+'</div>'
+      +addPresetBtn
+      +'<label class="fb-check" style="margin-top:12px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+'> Allow a custom "other amount"</label>'
+      +'</div>';
+  } else {
+    h+='<div class="fb-section"><h3>Pricing</h3>'
       +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
       +'<input type="checkbox" id="ec_paid"'+(d.paid?' checked':'')+' onchange="_ecTogglePaid(this)" style="width:auto;accent-color:var(--accent)"> Paid event'
       +'</label>'
       +'<div class="fb-hint" style="margin-bottom:12px">Off = free RSVP. On = ticket tiers with Stripe payment.</div>'
-
       +'<div id="ec_sec_tiers" style="display:'+(d.paid?'':'none')+'">'
         +'<div class="fb-seg">'
         +'<button class="ec-mode-btn '+(d.stripe_mode!=='tiered_addon'?'active':'')+'" data-mode="tiered" onclick="_ecSetMode(\'tiered\')">Tiered only</button>'
@@ -7643,12 +8023,11 @@ function _ecRenderCreator(){
         +addTierBtn
         +'<div id="ec_sec_addon" style="display:'+(d.stripe_mode==='tiered_addon'?'':'none')+';margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
           +'<div class="fb-lbl" style="margin-bottom:6px">Optional donation amounts <span style="font-weight:400;color:var(--txt3)">(shown after tier selection)</span></div>'
-          +'<div id="ec_don_rows_addon">'+donRows+'</div>'
+          +'<div id="ec_don_rows_addon">'+donRowsAddon+'</div>'
           +addPresetBtn
-          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom"'+(d.donation_allow_custom?' checked':'')+''+'> Allow custom "other amount"</label>'
+          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom"'+(d.donation_allow_custom?' checked':'')+'> Allow custom "other amount"</label>'
         +'</div>'
       +'</div>'
-
       +'<div id="ec_sec_freedon" style="display:'+(d.paid?'none':'')+'">'
         +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
         +'<input type="checkbox" id="ec_allow_donation"'+(d.allow_donation?' checked':'')+' onchange="_ecToggleDonation(this)" style="width:auto;accent-color:var(--accent)"> Allow optional donation'
@@ -7656,174 +8035,77 @@ function _ecRenderCreator(){
         +'<div class="fb-hint" style="margin-bottom:8px">Registrants can leave a gift after RSVPing \u2014 counts as real giving.</div>'
         +'<div id="ec_sec_donpresets" style="display:'+(d.allow_donation?'':'none')+'">'
           +'<div class="fb-hint">Donation amount buttons (leave empty for open-amount only).</div>'
-          +'<div id="ec_don_rows">'+donRows+'</div>'
+          +'<div id="ec_don_rows">'+donRowsFree+'</div>'
           +addPresetBtn
-          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+''+'> Allow custom "other amount"</label>'
+          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+'> Allow custom "other amount"</label>'
         +'</div>'
       +'</div>'
-      +'</div>'
+      +'</div>';
+  }
 
-      +'<div class="fb-section"><h3>After registering</h3>'
-      +'<label class="fb-lbl">Success title</label>'
-      +'<input id="ec_success_title" class="fb-in" type="text" value="'+_escAttr(d.form_success_title||'')+'" placeholder="Thank you for registering!">'
-      +'<label class="fb-lbl">Success message</label>'
-      +'<textarea id="ec_success_msg" class="fb-in" style="min-height:60px;resize:vertical" placeholder="We can\'t wait to see you there\u2026">'+_escHtml(d.form_success_message||'')+'</textarea>'
-      +'</div>'
-
-      +'<div class="fb-section"><h3>Notify on signup</h3>'
-      +'<div class="fb-hint">Stored for when email delivery is wired up.</div>'
-      +'<div id="ec_notify_chips" style="margin-bottom:10px">'+emailChips+'</div>'
-      +'<div class="fb-row">'
-      +'<input id="ec_notify_new" class="fb-in" type="email" placeholder="simi@chabadchagrin.com" style="flex:1;margin-bottom:0">'
-      +'<button class="fb-mini-btn" onclick="_ecAddNotifyEmail()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add</button>'
-      +'</div>'
-      +'</div>'
-
-      +'<div class="fb-section"><h3>Embed code</h3>'
-      +'<div class="fb-hint">Paste into a Squarespace <b>Code</b> block (not Embed block).</div>'
-      +(d.form_slug?'<button class="fb-mini-btn" onclick="_ecShowEmbed()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Get embed code</button>':'<div class="fb-hint" style="color:var(--gold)">Save the event first to generate the embed code.</div>')
-      +'</div>'
-    +'</div>'
-
-    +'<div id="ec_status" style="display:none;padding:10px;background:var(--surf2);border-radius:6px;margin-bottom:14px;font-size:.74rem;color:var(--txt2);max-width:680px"></div>'
-    +'<div style="max-width:680px;margin-bottom:32px">'
-    +'<button class="btn btn-pri" onclick="_guardClick(this,_ecSave)" style="font-size:.78rem;padding:8px 22px">Save event</button>'
+  h+='<div class="fb-section"><h3>'+(isDon?'After submitting':'After registering')+'</h3>'
+    +'<label class="fb-lbl">Success title</label>'
+    +'<input id="ec_success_title" class="fb-in" type="text" value="'+_escAttr(d.form_success_title||'')+'" placeholder="'+(isDon?'Thank you!':'Thank you for registering!')+'">'
+    +'<label class="fb-lbl">Success message</label>'
+    +'<textarea id="ec_success_msg" class="fb-in" style="min-height:60px;resize:vertical" placeholder="'+(isDon?'Your gift means more than you know\u2026':'We can\'t wait to see you there\u2026')+'">'+_escHtml(d.form_success_message||'')+'</textarea>'
     +'</div>';
 
-  requestAnimationFrame(()=>{ host.scrollTop=_scrollY; });
-  if(isNew&&_scrollY===0){ const n=document.getElementById('ec_name'); if(n)n.focus(); }
+  if(!isDon){
+    h+='<div class="fb-section"><h3>Notify on signup</h3>'
+      +'<div class="fb-hint">Stored for when email delivery is wired up.</div>'
+      +'<div id="ec_notify_chips" style="margin-bottom:10px">'+_ecNotifyChipsHtml()+'</div>'
+      +'<div class="fb-row">'
+      +'<input id="ec_notify_new" class="fb-in" type="email" placeholder="simi@chabadchagrin.com" style="flex:1;margin-bottom:0">'
+      +'<button class="fb-mini-btn" onclick="_ecAddNotifyEmail()">'+_ecIcons.plus+' Add</button>'
+      +'</div>'
+      +'</div>';
+  }
+
+  const slug=_ecSavedFormSlug||d.form_slug;
+  h+='<div class="fb-section"><h3>Embed code</h3>'
+    +'<div class="fb-hint">Paste into a Squarespace <b>Code</b> block (not Embed block).</div>'
+    +(slug&&_ecSavedFormSlug?'<button class="fb-mini-btn" onclick="_ecShowEmbed()">'+_ecIcons.code+' Get embed code</button>':'<div class="fb-hint" style="color:var(--gold)">Save the form first to generate the embed code.</div>')
+    +'</div>';
+  if(isDon&&_ecSavedFormSlug){
+    h+='<div class="fb-section"><h3>Danger zone</h3>'
+      +'<div class="fb-hint">Deactivate hides the form from the public (recommended). Delete removes it permanently.</div>'
+      +'<button class="btn btn-sec" onclick="_ecDeleteForm()" style="font-size:.66rem;padding:5px 11px;color:var(--red)">Deactivate or delete\u2026</button>'
+      +'</div>';
+  }
+  return h;
+}
+
+// ── footer (step-dependent buttons) ──────────────────────────────────────────
+function _ecFootHtml(){
+  const d=_ecDraft, isDon=(d.kind==='donation');
+  let left='<div class="cr-status" id="ec_status"></div>';
+  let btns='';
+  if(_ecStep===1){
+    if(isDon){
+      btns='<button class="btn btn-pri" onclick="_guardClick(this,function(){_ecGoStep(2);})">Save &amp; next '+_ecIcons.next+'</button>';
+    } else {
+      btns='<button class="btn btn-sec" onclick="_guardClick(this,_ecSaveAndClose)">Save &amp; close</button>'
+        +'<button class="btn btn-pri" onclick="_guardClick(this,function(){_ecGoStep(2);})">Save &amp; next '+_ecIcons.next+'</button>';
+    }
+  } else if(_ecStep===2){
+    btns='<button class="btn btn-sec" onclick="_ecGoStep(1)">'+_ecIcons.back+' Back</button>'
+      +'<button class="btn btn-pri" onclick="_guardClick(this,function(){_ecGoStep(3);})">Save &amp; next '+_ecIcons.next+'</button>';
+  } else {
+    btns='<button class="btn btn-sec" onclick="_ecGoStep(2)">'+_ecIcons.back+' Back</button>'
+      +'<button class="btn btn-pri" onclick="_guardClick(this,_ecPublish)">Save &amp; publish</button>';
+  }
+  return '<div class="cr-foot">'+left+'<div class="cr-foot-r">'+btns+'</div></div>';
+}
+
+function _ecAfterRender(){
+  if(_ecStep===1){ const n=document.getElementById('ec_name'); if(n&&!n.value)n.focus(); }
 }
 
 function _ecShowEmbed(){
   _ecSync();
-  const slug=_ecDraft&&_ecDraft.form_slug;
-  if(!slug){alert('Save the event first.');return;}
+  const slug=_ecSavedFormSlug||(_ecDraft&&_ecDraft.form_slug);
+  if(!slug){alert('Save the form first.');return;}
   _fbShowEmbed(slug);
-}
-
-async function _ecSave(){
-  _ecSync();
-  const d=_ecDraft;
-  const status=document.getElementById('ec_status');
-  const fail=msg=>{if(status){status.textContent=msg;status.style.display='block';status.style.color='var(--red)';}};
-  const info=msg=>{if(status){status.textContent=msg;status.style.display='block';status.style.color='var(--txt2)';}};
-
-  if(!d.name.trim()){return fail('Event name is required.');}
-
-  // Build event payload
-  // NOTE: notify_emails requires: ALTER TABLE events ADD COLUMN IF NOT EXISTS notify_emails text[] DEFAULT '{}';
-  // Until that SQL is run, we omit it to avoid a schema cache error.
-  const evPayload={
-    name:d.name.trim(),
-    event_date:d.event_date||null,
-    location:d.location.trim()||null,
-    location_url:d.location_url.trim()||null,
-    description:d.description.trim()||null,
-    campaign_tag:d.campaign_tag.trim()||null,
-    active:d.active
-  };
-  // Add notify_emails only if the array has entries (column may not exist yet)
-  if(d.notify_emails&&d.notify_emails.length)evPayload.notify_emails=d.notify_emails;
-
-  // If online registration: validate slug and build form payload
-  let formPayload=null;
-  let slugToUse=null;
-  if(d.allow_online){
-    // Auto-generate slug from name if empty and new
-    if(!d.form_slug&&d.name){
-      d.form_slug=d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,50);
-    }
-    slugToUse=d.form_slug;
-    if(!slugToUse){return fail('A form slug is required for online registration.');}
-    if(!/^[a-z0-9][a-z0-9-]*$/.test(slugToUse)){return fail('Form slug must be lowercase letters, numbers, and dashes.');}
-    // Check uniqueness for new forms
-    const isNewForm=!(_ecEditingId&&_forms.some(f=>f.slug===slugToUse));
-    if(isNewForm&&_forms.some(f=>f.slug===slugToUse)){return fail('That slug is already in use — pick another.');}
-
-    // Determine pricing mode
-    let pricingMode;
-    if(!d.paid){ pricingMode='free'; }
-    else { pricingMode=d.stripe_mode||'tiered'; }
-
-    let stripeConfig;
-    if(pricingMode==='free'){
-      stripeConfig={
-        mode:'free',currency:'usd',tiers:[],
-        allow_donation:!!d.allow_donation,
-        presets:d.allow_donation?(d.donation_presets||[]).filter(p=>(parseFloat(p.amount)||0)>0).map(p=>({amount:parseFloat(p.amount),label:p.label||''})):[]
-      };
-      if(d.allow_donation)stripeConfig.allow_custom=!!d.donation_allow_custom;
-    } else {
-      stripeConfig={
-        mode:pricingMode,currency:'usd',
-        optional_addon:pricingMode==='tiered_addon',
-        tiers:(d.tiers||[]).filter(t=>(parseFloat(t.amount)||0)>0||t.label).map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}))
-      };
-      if(!stripeConfig.tiers.length){return fail('Add at least one pricing tier.');}
-    }
-
-    // Build clean field list
-    const usedKeys={};
-    const cleanFields=(d.fields||[]).map(f=>{
-      let key;
-      if(FB_STD_KEYS.includes(f.key)){key=f.key;}
-      else if(f.key&&!f._isNew&&!/^custom_/.test(f.key)){key=f.key;}
-      else{key=_fbSlugKey(f.label);}
-      let base=key,n=2; while(usedKeys[key]){key=base+'_'+n;n++;} usedKeys[key]=1;
-      const o={key,label:f.label||key,type:f.type||'text',required:!!f.required};
-      if(f.type==='select')o.options=f.options||[];
-      return o;
-    });
-
-    formPayload={
-      slug:slugToUse, type:'event',
-      title:d.form_title||d.name||'', show_title:!!d.form_show_title,
-      description:d.form_description||null, show_description:!!d.form_show_description,
-      schema:{fields:cleanFields},
-      stripe_config:stripeConfig,
-      campaign_tag:d.campaign_tag.trim()||null,
-      active:d.active,
-      success_title:d.form_success_title||null,
-      success_message:d.form_success_message||null
-    };
-    evPayload.form_slug=slugToUse;
-  } else {
-    // If turning off online reg on an existing event that had a form, clear form_slug
-    if(_ecEditingId){
-      const existingEv=_events.find(e=>e.id===_ecEditingId);
-      if(existingEv&&existingEv.form_slug)evPayload.form_slug=null;
-    }
-  }
-
-  info('Saving…');
-  try{
-    // 1. Save or update event
-    if(_ecEditingId){
-      await sb('events?id=eq.'+_ecEditingId,{method:'PATCH',body:JSON.stringify(evPayload)});
-    } else {
-      await sb('events',{method:'POST',body:JSON.stringify(evPayload)});
-    }
-
-    // 2. Save or update form (if online reg on)
-    if(formPayload){
-      const existingForm=_forms.find(f=>f.slug===slugToUse);
-      if(existingForm){
-        await sb('forms?slug=eq.'+encodeURIComponent(slugToUse),{method:'PATCH',body:JSON.stringify(formPayload)});
-      } else {
-        await sb('forms',{method:'POST',body:JSON.stringify(formPayload)});
-      }
-    }
-
-    // 3. Reload caches
-    await Promise.all([_loadEvents(true),_loadForms(true)]);
-
-    // 4. Navigate — open embed code right away if this event has a form
-    const savedId=_ecEditingId;
-    const savedSlug=slugToUse;
-    _ecDraft=null; _ecEditingId=null;
-    if(savedId){ openEvent(savedId); } else { _renderEventList(); }
-    if(savedSlug){ setTimeout(()=>_fbShowEmbed(savedSlug),80); }
-  }catch(e){ fail('Error: '+e.message); }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -8051,10 +8333,9 @@ async function _loadForms(force){
 async function renderForms(){
   const host=document.getElementById('formsViewInner');
   if(!host)return;
-  if(_fbEditingSlug!==undefined){ _fbRenderEditor(); return; }
   host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading forms…</div>';
-  try{ await _loadForms(); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load forms: '+_escHtml(e.message)+'</p></div>'; return; }
-  // Also load events so the event-form picker has options.
+  try{ await _loadForms(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load forms: '+_escHtml(e.message)+'</p></div>'; return; }
+  // Also load events so cross-references resolve.
   try{ await _loadEvents(); }catch(e){}
   _fbRenderList();
 }
@@ -8068,7 +8349,7 @@ function _fbRenderList(){
       <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Donation Forms</h2>
       <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Standalone donation forms. Event registration forms are managed inside Events.</div>
     </div>
-    <button class="btn btn-pri" onclick="_fbNew()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Form</button>
+    <button class="btn btn-pri" onclick="_ecNew('donation')" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Form</button>
   </div>`;
   if(!donationForms.length){
     host.innerHTML=header+`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No donation forms yet. Create a standalone form to embed a giving widget on your website.</div>`;
@@ -8085,13 +8366,13 @@ function _fbRenderList(){
     else priceBit=tierCount?tierCount+' tier'+(tierCount===1?'':'s'):'pricing TBD';
     return `<div class="fb-card">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-        <div style="flex:1;min-width:0;cursor:pointer" onclick="_fbEdit('${_escAttr(f.slug)}')">
+        <div style="flex:1;min-width:0;cursor:pointer" onclick="_ecEditForm('${_escAttr(f.slug)}')">
           <div class="fb-name">${_escHtml(f.title||f.slug)} <span class="fb-type ${f.type==='event'?'event':'donation'}">${f.type}</span>${f.active?'':' <span style="font-size:.6rem;color:var(--txt3);font-weight:400">(inactive)</span>'}</div>
           <div class="fb-meta">/${_escHtml(f.slug)} · ${priceBit} · ${fieldCount} field${fieldCount===1?'':'s'}${f.campaign_tag?' · '+_escHtml(f.campaign_tag):''}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
           <button class="fb-mini-btn" onclick="_fbShowEmbed('${_escAttr(f.slug)}')" title="Get embed code"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Embed</button>
-          <button class="fb-mini-btn" onclick="_fbEdit('${_escAttr(f.slug)}')">Edit</button>
+          <button class="fb-mini-btn" onclick="_ecEditForm('${_escAttr(f.slug)}')">Edit</button>
         </div>
       </div>
     </div>`;
