@@ -61,7 +61,6 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .check-line .req{color:var(--red);margin-left:2px}
 .pay-section{margin-top:4px;margin-bottom:6px}
 .pay-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);font-weight:600;margin:0 0 9px;}
-#payment-element{margin-bottom:6px}
 .pay-loading{font-size:.8rem;color:var(--txt3);padding:14px 0;text-align:center}
 .submit-btn{width:100%;margin-top:10px;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:var(--font-ui);font-size:.95rem;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.01em;}
 .submit-btn:hover{background:var(--accent-d)}
@@ -72,6 +71,19 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .pay-msg.ok{color:var(--green)}
 .secure-note{display:flex;align-items:center;justify-content:center;gap:5px;font-size:.68rem;color:var(--txt3);margin-top:13px;}
 .secure-note svg{width:12px;height:12px}
+/* checkout total summary */
+.total-box{margin-top:6px;margin-bottom:4px;padding:13px 15px;background:var(--surf2);border:1.5px solid var(--border);border-radius:10px;display:none}
+.total-box.show{display:block}
+.total-break{font-size:.78rem;color:var(--txt2);margin-bottom:6px;line-height:1.5}
+.total-break .ln{display:flex;justify-content:space-between;gap:12px}
+.total-break .ln span:last-child{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.total-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding-top:8px;margin-top:2px}
+.total-row.no-break{border-top:none;padding-top:0;margin-top:0}
+.total-row .lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);font-weight:600}
+.total-row .amt{font-family:var(--font-mono);font-size:1.5rem;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
+/* Stripe Payment Element: give it the same bordered box as the rest of the form */
+#payment-element{margin-bottom:6px;padding:13px;border:1.5px solid var(--border);border-radius:9px;background:var(--surf);}
+#payment-element:empty,#payment-element:has(.pay-loading){border-style:dashed;}
 .state{text-align:center;padding:40px 20px;color:var(--txt2);font-size:.9rem;}
 .state .spin{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -312,6 +324,9 @@ function render(form){
       +'<div id="payment-element"></div></div>';
   }
   const btnText=isEvent?(formMode==='free'?'RSVP':'Register'):'Donate';
+  if(formMode!=='free'||freeAllowsDonation){
+    html+='<div class="total-box" id="totalBox"></div>';
+  }
   html+='<button type="button" class="submit-btn" id="submitBtn" onclick="onSubmit()">'+btnText+'</button>';
   html+='<div class="pay-msg" id="payMsg"></div>';
   if(formMode!=='free'||freeAllowsDonation){
@@ -386,12 +401,45 @@ function recomputeEventTotal(){
 let _evtTimer=null;
 function recomputeEventTotalDebounced(){clearTimeout(_evtTimer);_evtTimer=setTimeout(recomputeEventTotal,500);}
 
+// Clear, itemized checkout summary: small breakdown line(s) + big total.
+function renderTotal(){
+  const box=document.getElementById('totalBox');
+  if(!box)return;
+  const fmt=n=>'$'+(Math.round((Number(n)||0)*100)/100).toLocaleString(undefined,{minimumFractionDigits:(n%1?2:0),maximumFractionDigits:2});
+  const total=Number(selectedAmount)||0;
+  if(total<=0){ box.className='total-box'; box.innerHTML=''; postHeight(); return; }
+  const isEvent=currentForm&&currentForm.type==='event';
+  let lines=[];
+  if(isEvent&&selectedTier){
+    const tierAmt=Number(selectedTier.amount)||0;
+    lines.push({lbl:(selectedTier.label||'Registration'),amt:tierAmt});
+    if(addonAmount>0)lines.push({lbl:'Optional gift',amt:Number(addonAmount)||0});
+  } else if(isEvent&&formMode==='free'&&total>0){
+    lines.push({lbl:'Optional donation',amt:total});
+  }
+  // Only show a breakdown when there is genuinely more than one line.
+  let html='';
+  if(lines.length>1){
+    html+='<div class="total-break">'
+      +lines.map(l=>'<div class="ln"><span>'+esc(l.lbl)+'</span><span>'+fmt(l.amt)+'</span></div>').join('')
+      +'</div>';
+    html+='<div class="total-row"><span class="lbl">Total</span><span class="amt">'+fmt(total)+'</span></div>';
+  } else {
+    const lbl=isEvent?(lines[0]?lines[0].lbl:'Total'):'Your gift';
+    html+='<div class="total-row no-break"><span class="lbl">'+esc(lbl)+'</span><span class="amt">'+fmt(total)+'</span></div>';
+  }
+  box.innerHTML=html;
+  box.className='total-box show';
+  postHeight();
+}
+
 let _refreshTimer=null;
 function refreshPaymentElementDebounced(){
   clearTimeout(_refreshTimer);
   _refreshTimer=setTimeout(refreshPaymentElement,500);
 }
 function refreshPaymentElement(){
+  renderTotal();
   const mount=document.getElementById('payment-element');
   // For free+donation, reveal the payment section only once an amount is entered.
   const freeSec=document.getElementById('freePaySection');
