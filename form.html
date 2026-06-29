@@ -311,14 +311,17 @@ function render(form){
       +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div></div>';
   }
 
+  const showPayLater=isEvent && formMode!=='free';
   if(formMode!=='free'){
-    html+='<div class="pay-section"><p class="pay-label">Payment</p>'
-      +'<label id="payLaterLabel" style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;margin-bottom:14px;padding:11px 13px;background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;transition:border-color .14s" onclick="togglePayLater()">'
+    html+='<div class="pay-section"><p class="pay-label">Payment</p>';
+    if(showPayLater){
+      html+='<label id="payLaterLabel" style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;margin-bottom:14px;padding:11px 13px;background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;transition:border-color .14s" onclick="togglePayLater()">'
       +'<input type="checkbox" id="payLaterChk" style="margin-top:2px;width:auto;accent-color:var(--accent)" onclick="event.stopPropagation();togglePayLater()">'
       +'<div><div style="font-weight:600;font-size:.88rem;color:var(--txt)">Pay later</div>'
       +'<div style="font-size:.72rem;color:var(--txt2);margin-top:1px">Submit payment by check, Venmo, or cash</div></div>'
-      +'</label>'
-      +'<div id="stripePaySection"><div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div></div>';
+      +'</label>';
+    }
+    html+='<div id="stripePaySection"><div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div></div>';
   } else if(freeAllowsDonation){
     // Payment element is hidden until they actually enter a donation amount.
     html+='<div class="pay-section" id="freePaySection" style="display:none"><p class="pay-label">Payment</p>'
