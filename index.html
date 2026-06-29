@@ -598,7 +598,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Embed on your website</h2>
     <p style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:0 0 8px;line-height:1.5">Paste this into a Squarespace <b>Code block</b>. The form auto-resizes to fit its content (no inner scrollbar), so you don't need to guess a height.</p>
     <div style="position:relative">
-      <textarea id="embed_code" readonly style="width:100%;min-height:170px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:var(--txt);resize:vertical;outline:none;line-height:1.45"></textarea>
+      <textarea id="embed_code" readonly="" style="width:100%;min-height:170px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:var(--txt);resize:vertical;outline:none;line-height:1.45"></textarea>
     </div>
     <div id="embed_preview_link" style="font-family:var(--font-ui);font-size:.7rem;margin-top:8px"></div>
     <div class="modal-btns" style="margin-top:14px">
@@ -635,7 +635,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- EDIT REGISTRATION MODAL -->
 <div class="modal-bg" id="editRegistrationModal" style="display:none">
   <div class="modal" style="width:440px">
-    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit Registration</h2>
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Registration</h2>
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label># Attendees</label><input type="number" id="ereg_count" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
       <div style="flex:1"><label>Tier label</label><input type="text" id="ereg_tier_label" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
@@ -7366,27 +7366,14 @@ function _ecSync(){
   // pricing
   if(g('ec_paid'))d.paid=g('ec_paid').checked;
   // tiers
-  (d.tiers||[]).forEach((_,i)=>{
-    const la=g('ec_tier_lbl_'+i),am=g('ec_tier_amt_'+i);
-    if(la)d.tiers[i].label=la.value;
-    if(am)d.tiers[i].amount=parseFloat(am.value)||0;
-  });
+  _ecSyncTiers();
   // donation presets
   if(g('ec_allow_donation'))d.allow_donation=g('ec_allow_donation').checked;
   if(g('ec_don_allow_custom'))d.donation_allow_custom=g('ec_don_allow_custom').checked;
-  (d.donation_presets||[]).forEach((_,i)=>{
-    const la=g('ec_don_lbl_'+i),am=g('ec_don_amt_'+i);
-    if(la)d.donation_presets[i].label=la.value;
-    if(am)d.donation_presets[i].amount=parseFloat(am.value)||0;
-  });
+  if(g('ec_don_allow_custom_free'))d.donation_allow_custom=g('ec_don_allow_custom_free').checked;
+  _ecSyncDonPresets(d.paid&&d.stripe_mode==='tiered_addon'?'addon':'free');
   // custom fields
-  (d.fields||[]).forEach((_,i)=>{
-    const lb=g('ec_fld_lbl_'+i),tp=g('ec_fld_type_'+i),rq=g('ec_fld_req_'+i),op=g('ec_fld_opts_'+i);
-    if(lb)d.fields[i].label=lb.value;
-    if(tp&&!g('ec_fld_type_'+i)?.disabled)d.fields[i].type=tp.value;
-    if(rq)d.fields[i].required=rq.checked;
-    if(op)d.fields[i].options=(op.value||'').split(',').map(s=>s.trim()).filter(Boolean);
-  });
+  _ecSyncFields();
 }
 
 function _ecToggleOnlineReg(el){
@@ -7407,19 +7394,147 @@ function _ecSetMode(m){
   document.querySelectorAll('.ec-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
   document.getElementById('ec_sec_addon').style.display=m==='tiered_addon'?'':'none';
 }
-function _ecAddTier(){_ecSync();_ecDraft.tiers.push({amount:0,label:''});_ecRenderCreator();}
-function _ecDelTier(i){_ecSync();_ecDraft.tiers.splice(i,1);_ecRenderCreator();}
-function _ecAddDonPreset(){_ecSync();_ecDraft.donation_presets.push({amount:0,label:''});_ecRenderCreator();}
-function _ecDelDonPreset(i){_ecSync();_ecDraft.donation_presets.splice(i,1);_ecRenderCreator();}
-function _ecAddField(){_ecSync();_ecDraft.fields.push({key:'',label:'New field',type:'text',required:false,_isNew:true});_ecRenderCreator();}
-function _ecDelField(i){
-  _ecSync();
-  const fld=_ecDraft.fields[i];
-  if(FB_STD_KEYS.includes(fld.key)&&!confirm('"'+fld.label+'" is a standard matching field ('+fld.key+'). Remove it anyway?'))return;
-  _ecDraft.fields.splice(i,1);_ecRenderCreator();
+function _ecTierRowHtml(t,i,total){
+  const upBtn=i>0?'<button class="fb-x" onclick="_ecMoveTier('+i+',-1)" title="Move up" style="color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg></button>':'<span style="width:1.4em"></span>';
+  const dnBtn=i<total-1?'<button class="fb-x" onclick="_ecMoveTier('+i+',1)" title="Move down" style="color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>':'<span style="width:1.4em"></span>';
+  return '<div class="fb-row" id="ec_tier_row_'+i+'">'
+    +'<input id="ec_tier_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(t.label||'')+'" placeholder="Single" style="flex:1">'
+    +'<span style="color:var(--txt3);font-size:.8rem">$</span>'
+    +'<input id="ec_tier_amt_'+i+'" class="fb-in" type="number" min="0" step="1" value="'+(t.amount||'')+'" placeholder="18" style="max-width:90px">'
+    +upBtn+dnBtn
+    +'<button class="fb-x" onclick="_ecDelTier('+i+')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+    +'</div>';
 }
+function _ecRefreshTierRows(){
+  const host=document.getElementById('ec_tier_rows');
+  if(!host)return;
+  host.innerHTML=_ecDraft.tiers.map((t,i)=>_ecTierRowHtml(t,i,_ecDraft.tiers.length)).join('');
+}
+function _ecSyncTiers(){
+  (_ecDraft.tiers||[]).forEach((_,i)=>{
+    const la=document.getElementById('ec_tier_lbl_'+i),am=document.getElementById('ec_tier_amt_'+i);
+    if(la)_ecDraft.tiers[i].label=la.value;
+    if(am)_ecDraft.tiers[i].amount=parseFloat(am.value)||0;
+  });
+}
+function _ecAddTier(){
+  _ecSyncTiers();
+  _ecDraft.tiers.push({amount:0,label:''});
+  _ecRefreshTierRows();
+}
+function _ecDelTier(i){
+  _ecSyncTiers();
+  _ecDraft.tiers.splice(i,1);
+  _ecRefreshTierRows();
+}
+function _ecMoveTier(i,dir){
+  _ecSyncTiers();
+  const j=i+dir;
+  if(j<0||j>=_ecDraft.tiers.length)return;
+  const tmp=_ecDraft.tiers[i];_ecDraft.tiers[i]=_ecDraft.tiers[j];_ecDraft.tiers[j]=tmp;
+  _ecRefreshTierRows();
+}
+// ── DOM-patch helpers (no full re-render, no scroll bounce) ──────────────
+
+function _ecDonRowHtml(p,i,ctx){
+  // ctx: 'addon' (tiered_addon) or 'free'
+  const idPfx=ctx==='addon'?'ec_don_addon_':'ec_don_';
+  return '<div class="fb-row" id="'+idPfx+'row_'+i+'">'
+    +'<span style="color:var(--txt3);font-size:.8rem">$</span>'
+    +'<input id="'+idPfx+'amt_'+i+'" class="fb-in" type="number" min="0" step="1" value="'+(p.amount||'')+'" placeholder="36" style="max-width:90px">'
+    +'<input id="'+idPfx+'lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(p.label||'')+'" placeholder="label (optional)" style="flex:1">'
+    +'<button class="fb-x" onclick="_ecDelDonPreset('+i+',\''+ctx+'\')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+    +'</div>';
+}
+
+function _ecSyncDonPresets(ctx){
+  const pfx=ctx==='addon'?'ec_don_addon_':'ec_don_';
+  (_ecDraft.donation_presets||[]).forEach((_,i)=>{
+    const la=document.getElementById(pfx+'lbl_'+i),am=document.getElementById(pfx+'amt_'+i);
+    if(la)_ecDraft.donation_presets[i].label=la.value;
+    if(am)_ecDraft.donation_presets[i].amount=parseFloat(am.value)||0;
+  });
+}
+
+function _ecRefreshDonRows(ctx){
+  const hostId=ctx==='addon'?'ec_don_rows_addon':'ec_don_rows';
+  const host=document.getElementById(hostId);
+  if(!host)return;
+  host.innerHTML=_ecDraft.donation_presets.map((p,i)=>_ecDonRowHtml(p,i,ctx)).join('');
+}
+
+function _ecAddDonPreset(){
+  const ctx=_ecDraft.paid&&_ecDraft.stripe_mode==='tiered_addon'?'addon':'free';
+  _ecSyncDonPresets(ctx);
+  _ecDraft.donation_presets.push({amount:0,label:''});
+  _ecRefreshDonRows(ctx);
+}
+function _ecDelDonPreset(i,ctx){
+  if(!ctx)ctx=_ecDraft.paid&&_ecDraft.stripe_mode==='tiered_addon'?'addon':'free';
+  _ecSyncDonPresets(ctx);
+  _ecDraft.donation_presets.splice(i,1);
+  _ecRefreshDonRows(ctx);
+}
+
+function _ecFieldRowHtml(fld,i){
+  const std=FB_STD_KEYS.includes(fld.key);
+  return '<div class="fb-row" id="ec_fld_row_'+i+'" draggable="true" ondragstart="_ecFldDragStart(event,'+i+')" ondragover="_ecFldDragOver(event,'+i+')" ondrop="_ecFldDrop(event,'+i+')" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--bg);cursor:grab">'
+    +'<div style="display:flex;gap:6px;flex:1;min-width:0">'
+    +'<input id="ec_fld_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(fld.label||'')+'" placeholder="Field label" style="flex:1;margin-bottom:0">'
+    +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:110px;margin-bottom:0"'+(std?' disabled':'')+'>'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+    +'<label class="fb-check" style="margin:0;white-space:nowrap"><input type="checkbox" id="ec_fld_req_'+i+'"'+(fld.required?' checked':'')+'> req</label>'
+    +'</div>'
+    +'<div style="display:flex;gap:4px;align-items:center">'
+    +'<span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">'+(std?fld.key:'custom')+'</span>'
+    +'<button class="fb-x" onclick="_ecDelField('+i+')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+    +'</div>'
+    +(fld.type==='select'?'<input id="ec_fld_opts_'+i+'" class="fb-in" type="text" value="'+_escAttr((fld.options||[]).join(', '))+'" placeholder="Option A, Option B, Option C" style="width:100%;margin-bottom:0">':'')
+    +'</div>';
+}
+
+function _ecSyncFields(){
+  (_ecDraft.fields||[]).forEach((_,i)=>{
+    const lb=document.getElementById('ec_fld_lbl_'+i),tp=document.getElementById('ec_fld_type_'+i),rq=document.getElementById('ec_fld_req_'+i),op=document.getElementById('ec_fld_opts_'+i);
+    if(lb)_ecDraft.fields[i].label=lb.value;
+    if(tp&&!tp.disabled)_ecDraft.fields[i].type=tp.value;
+    if(rq)_ecDraft.fields[i].required=rq.checked;
+    if(op)_ecDraft.fields[i].options=(op.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  });
+}
+
+function _ecRefreshFieldRows(){
+  const host=document.getElementById('ec_field_rows');
+  if(!host)return;
+  host.innerHTML=_ecDraft.fields.map((fld,i)=>_ecFieldRowHtml(fld,i)).join('');
+}
+
+let _ecFldDragIdx=null;
+function _ecFldDragStart(e,i){ _ecFldDragIdx=i; e.dataTransfer.effectAllowed='move'; }
+function _ecFldDragOver(e,i){ e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function _ecFldDrop(e,i){
+  e.preventDefault();
+  if(_ecFldDragIdx===null||_ecFldDragIdx===i)return;
+  _ecSyncFields();
+  const moved=_ecDraft.fields.splice(_ecFldDragIdx,1)[0];
+  _ecDraft.fields.splice(i,0,moved);
+  _ecFldDragIdx=null;
+  _ecRefreshFieldRows();
+}
+
+function _ecAddField(){
+  _ecSyncFields();
+  _ecDraft.fields.push({key:'',label:'New field',type:'text',required:false,_isNew:true});
+  _ecRefreshFieldRows();
+}
+function _ecDelField(i){
+  _ecSyncFields();
+  const fld=_ecDraft.fields[i];
+  if(FB_STD_KEYS.includes(fld.key)&&!confirm('"'+fld.label+'" is a standard field ('+fld.key+'). Remove it anyway?'))return;
+  _ecDraft.fields.splice(i,1);
+  _ecRefreshFieldRows();
+}
+
 function _ecAddNotifyEmail(){
-  _ecSync();
   const inp=document.getElementById('ec_notify_new');
   if(!inp)return;
   const v=inp.value.trim();
@@ -7427,12 +7542,19 @@ function _ecAddNotifyEmail(){
   if(!_ecDraft.notify_emails)_ecDraft.notify_emails=[];
   _ecDraft.notify_emails.push(v);
   inp.value='';
-  _ecRenderCreator();
+  const chips=document.getElementById('ec_notify_chips');
+  if(chips)chips.innerHTML=_ecNotifyChipsHtml();
 }
 function _ecDelNotifyEmail(i){
-  _ecSync();
   _ecDraft.notify_emails.splice(i,1);
-  _ecRenderCreator();
+  const chips=document.getElementById('ec_notify_chips');
+  if(chips)chips.innerHTML=_ecNotifyChipsHtml();
+}
+function _ecNotifyChipsHtml(){
+  return (_ecDraft.notify_emails||[]).map((e,i)=>
+    '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surf2);border:1px solid var(--border2);border-radius:20px;padding:3px 8px;font-size:.64rem;font-family:var(--font-ui);color:var(--txt2);margin:3px 4px 3px 0">'
+    +_escHtml(e)+'<button onclick="_ecDelNotifyEmail('+i+')" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:0 0 0 2px;line-height:1;font-size:.75rem">×</button>'
+    +'</span>').join('')||'<span style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">No recipients yet.</span>';
 }
 
 function _ecRenderCreator(){
@@ -7443,42 +7565,10 @@ function _ecRenderCreator(){
   const isEditing=!!_ecEditingId;
   const _scrollY=host.scrollTop;
 
-  const tierRows=(d.tiers||[]).map((t,i)=>
-    '<div class="fb-row">'
-    +'<input id="ec_tier_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(t.label||'')+'" placeholder="Single" style="flex:1">'
-    +'<span style="color:var(--txt3);font-size:.8rem">$</span>'
-    +'<input id="ec_tier_amt_'+i+'" class="fb-in" type="number" min="0" step="1" value="'+(t.amount||'')+'" placeholder="18" style="max-width:90px">'
-    +'<button class="fb-x" onclick="_ecDelTier('+i+')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
-    +'</div>').join('');
-
-  const donRows=(d.donation_presets||[]).map((p,i)=>
-    '<div class="fb-row">'
-    +'<span style="color:var(--txt3);font-size:.8rem">$</span>'
-    +'<input id="ec_don_amt_'+i+'" class="fb-in" type="number" min="0" step="1" value="'+(p.amount||'')+'" placeholder="36" style="max-width:90px">'
-    +'<input id="ec_don_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(p.label||'')+'" placeholder="label (optional)" style="flex:1">'
-    +'<button class="fb-x" onclick="_ecDelDonPreset('+i+')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
-    +'</div>').join('');
-
-  const fieldRows=(d.fields||[]).map((fld,i)=>{
-    const std=FB_STD_KEYS.includes(fld.key);
-    return '<div style="border:1px solid var(--border);border-radius:7px;padding:10px;margin-bottom:8px;background:var(--bg)">'
-      +'<div class="fb-row" style="margin-bottom:6px">'
-      +'<input id="ec_fld_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(fld.label||'')+'" placeholder="Field label" style="flex:1">'
-      +'<button class="fb-x" onclick="_ecDelField('+i+')" title="Remove field"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
-      +'</div>'
-      +'<div class="fb-row" style="margin-bottom:0">'
-      +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:130px"'+(std?' disabled':'')+'>'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
-      +'<label class="fb-check" style="margin:0"><input type="checkbox" id="ec_fld_req_'+i+'"'+(fld.required?' checked':'')+''+'> required</label>'
-      +'<span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">'+(std?'standard ('+fld.key+')':'custom')+'</span>'
-      +'</div>'
-      +(fld.type==='select'?'<input id="ec_fld_opts_'+i+'" class="fb-in" type="text" value="'+_escAttr((fld.options||[]).join(', '))+'" placeholder="Option A, Option B, Option C" style="margin-top:6px;margin-bottom:0">':'')
-      +'</div>';
-  }).join('');
-
-  const emailChips=(d.notify_emails||[]).map((e,i)=>
-    '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surf2);border:1px solid var(--border2);border-radius:20px;padding:3px 8px;font-size:.64rem;font-family:var(--font-ui);color:var(--txt2);margin:3px 4px 3px 0">'
-    +_escHtml(e)+'<button onclick="_ecDelNotifyEmail('+i+')" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:0 0 0 2px;line-height:1;font-size:.75rem">×</button>'
-    +'</span>').join('');
+  const tierRows=(d.tiers||[]).map((t,i)=>_ecTierRowHtml(t,i,d.tiers.length)).join('');
+  const donRows=(d.donation_presets||[]).map((p,i)=>_ecDonRowHtml(p,i,d.paid&&d.stripe_mode==='tiered_addon'?'addon':'free')).join('');
+  const fieldRows=(d.fields||[]).map((fld,i)=>_ecFieldRowHtml(fld,i)).join('');
+  const emailChips=_ecNotifyChipsHtml();
 
   const suggestedSlug=isNew&&d.name?d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,50):'';
   const addTierBtn='<button class="fb-mini-btn" onclick="_ecAddTier()" style="margin-top:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add tier</button>';
@@ -7531,6 +7621,12 @@ function _ecRenderCreator(){
       +'<label class="fb-check"><input type="checkbox" id="ec_form_show_desc"'+(d.form_show_description?' checked':'')+''+'> Show description on the public form</label>'
       +'</div>'
 
+      +'<div class="fb-section"><h3>Registration fields</h3>'
+      +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below.</div>'
+      +'<div id="ec_field_rows">'+fieldRows+'</div>'
+      +addFieldBtn
+      +'</div>'
+
       +'<div class="fb-section"><h3>Pricing</h3>'
       +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
       +'<input type="checkbox" id="ec_paid"'+(d.paid?' checked':'')+' onchange="_ecTogglePaid(this)" style="width:auto;accent-color:var(--accent)"> Paid event'
@@ -7567,12 +7663,6 @@ function _ecRenderCreator(){
       +'</div>'
       +'</div>'
 
-      +'<div class="fb-section"><h3>Registration fields</h3>'
-      +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below.</div>'
-      +'<div id="ec_field_rows">'+fieldRows+'</div>'
-      +addFieldBtn
-      +'</div>'
-
       +'<div class="fb-section"><h3>After registering</h3>'
       +'<label class="fb-lbl">Success title</label>'
       +'<input id="ec_success_title" class="fb-in" type="text" value="'+_escAttr(d.form_success_title||'')+'" placeholder="Thank you for registering!">'
@@ -7582,7 +7672,7 @@ function _ecRenderCreator(){
 
       +'<div class="fb-section"><h3>Notify on signup</h3>'
       +'<div class="fb-hint">Stored for when email delivery is wired up.</div>'
-      +'<div style="margin-bottom:10px">'+(emailChips||'<span style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">No recipients yet.</span>')+'</div>'
+      +'<div id="ec_notify_chips" style="margin-bottom:10px">'+emailChips+'</div>'
       +'<div class="fb-row">'
       +'<input id="ec_notify_new" class="fb-in" type="email" placeholder="simi@chabadchagrin.com" style="flex:1;margin-bottom:0">'
       +'<button class="fb-mini-btn" onclick="_ecAddNotifyEmail()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add</button>'
