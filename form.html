@@ -286,7 +286,12 @@ function render(form){
 
   if(formMode!=='free'){
     html+='<div class="pay-section"><p class="pay-label">Payment</p>'
-      +'<div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div>';
+      +'<label id="payLaterLabel" style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;margin-bottom:14px;padding:11px 13px;background:var(--surf2);border:1.5px solid var(--border);border-radius:9px;transition:border-color .14s" onclick="togglePayLater()">'
+      +'<input type="checkbox" id="payLaterChk" style="margin-top:2px;width:auto;accent-color:var(--accent)" onclick="event.stopPropagation();togglePayLater()">'
+      +'<div><div style="font-weight:600;font-size:.88rem;color:var(--txt)">Pay later</div>'
+      +'<div style="font-size:.72rem;color:var(--txt2);margin-top:1px">Submit payment by check, Venmo, or cash</div></div>'
+      +'</label>'
+      +'<div id="stripePaySection"><div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div></div>';
   } else if(freeAllowsDonation){
     // Payment element is hidden until they actually enter a donation amount.
     html+='<div class="pay-section" id="freePaySection" style="display:none"><p class="pay-label">Payment</p>'
@@ -418,6 +423,20 @@ function collectFields(){
   return ok?data:null;
 }
 
+function togglePayLater(){
+  const chk=document.getElementById('payLaterChk');
+  const sec=document.getElementById('stripePaySection');
+  const lbl=document.getElementById('payLaterLabel');
+  if(!chk||!sec)return;
+  // Sync checkbox state (handles both label-click and direct checkbox click)
+  const on=chk.checked;
+  sec.style.display=on?'none':'';
+  if(lbl){
+    lbl.style.borderColor=on?'var(--accent)':'var(--border)';
+    lbl.style.background=on?'var(--accent-soft)':'var(--surf2)';
+  }
+}
+
 async function onSubmit(){
   const msg=document.getElementById('payMsg');
   if(msg){msg.className='pay-msg';msg.textContent='';}
@@ -440,6 +459,31 @@ async function onSubmit(){
       const out=await res.json().catch(()=>({}));
       if(!res.ok){showMsg('err',out.error||'Could not submit your RSVP.');resetBtn();return;}
       if(out.already){ showThanks(true); } else { showThanks(); }
+    }catch(e){showMsg('err','Something went wrong. Please try again.');resetBtn();}
+    return;
+  }
+
+  // PAY LATER — event fee forms only: skip Stripe, register with pay_later flag.
+  const payLaterChk=document.getElementById('payLaterChk');
+  if(isEvent && formMode!=='free' && payLaterChk && payLaterChk.checked){
+    if(!selectedTier){flashAmount();return;}
+    const data=collectFields();
+    if(!data)return;
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=true;btn.textContent='Submitting...';
+    try{
+      const res=await fetch(EVENT_REGISTER_URL,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          slug:currentForm.slug,fields:data,
+          tier:{label:selectedTier.label,amount:Number(selectedTier.amount)||0},
+          amount:Number(selectedTier.amount)||0,
+          source:'pay_later'
+        })
+      });
+      const out=await res.json().catch(()=>({}));
+      if(!res.ok){showMsg('err',out.error||'Could not submit your registration.');resetBtn();return;}
+      if(out.already){showThanks(true);}else{showThanks();}
     }catch(e){showMsg('err','Something went wrong. Please try again.');resetBtn();}
     return;
   }
