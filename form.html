@@ -81,9 +81,10 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .total-row.no-break{border-top:none;padding-top:0;margin-top:0}
 .total-row .lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);font-weight:600}
 .total-row .amt{font-family:var(--font-mono);font-size:1.5rem;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
-/* Stripe Payment Element: give it the same bordered box as the rest of the form */
-#payment-element{margin-bottom:6px;padding:13px;border:1.5px solid var(--border);border-radius:9px;background:var(--surf);}
-#payment-element:empty,#payment-element:has(.pay-loading){border-style:dashed;}
+/* Stripe Payment Element: inner fields are bordered via Stripe appearance.rules,
+   so the outer container stays borderless (no box-in-a-box). Dashed only while loading. */
+#payment-element{margin-bottom:6px;}
+#payment-element:has(.pay-loading){padding:13px;border:1.5px dashed var(--border);border-radius:9px;background:var(--surf);}
 .state{text-align:center;padding:40px 20px;color:var(--txt2);font-size:.9rem;}
 .state .spin{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -347,9 +348,10 @@ function autoFor(key,type){
 
 // ── DONATION selection ──
 function pickPreset(btn,amt){
-  selectedAmount=amt;
+  const already=btn.classList.contains('sel');
   document.querySelectorAll('.preset').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
+  if(already){ selectedAmount=null; }   // clicking the selected one again clears it
+  else { selectedAmount=amt; btn.classList.add('sel'); }
   const ci=document.getElementById('customAmt');
   if(ci){ci.value='';ci.classList.remove('sel');}
   refreshPaymentElement();
@@ -369,16 +371,21 @@ function pickCustom(input){
 
 // ── EVENT tier + add-on selection ──
 function pickTier(btn,amt,i){
-  const cfg=parseMaybe(currentForm.stripe_config,{tiers:[]});
-  selectedTier=(cfg.tiers||[])[i]||{amount:amt,label:''};
+  const already=btn.classList.contains('sel');
   document.querySelectorAll('.tier').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
+  if(already){ selectedTier=null; }     // clicking the selected tier again clears it
+  else {
+    const cfg=parseMaybe(currentForm.stripe_config,{tiers:[]});
+    selectedTier=(cfg.tiers||[])[i]||{amount:amt,label:''};
+    btn.classList.add('sel');
+  }
   recomputeEventTotal();
 }
 function pickAddonPreset(btn,amt){
-  addonAmount=amt;
+  const already=btn.classList.contains('sel');
   document.querySelectorAll('.addon-preset').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
+  if(already){ addonAmount=0; }          // clicking the selected gift again clears it
+  else { addonAmount=amt; btn.classList.add('sel'); }
   const ci=document.getElementById('addonAmt');
   if(ci){ci.value='';ci.classList.remove('sel');}
   recomputeEventTotal();
@@ -459,7 +466,25 @@ function refreshPaymentElement(){
     mode:'payment',
     amount:Math.round(selectedAmount*100),
     currency,
-    appearance:{theme:'flat',variables:{colorPrimary:'#0f766e',colorBackground:'#ffffff',colorText:'#1c1917',colorDanger:'#b91c1c',fontFamily:'Inter, system-ui, sans-serif',borderRadius:'9px',spacingUnit:'4px'}}
+    appearance:{
+      theme:'flat',
+      variables:{
+        colorPrimary:'#0f766e',colorBackground:'#ffffff',colorText:'#1c1917',
+        colorTextSecondary:'#57534e',colorTextPlaceholder:'#a8a29e',
+        colorDanger:'#b91c1c',fontFamily:'Inter, system-ui, sans-serif',
+        fontSizeBase:'15px',borderRadius:'9px',spacingUnit:'4px',spacingGridRow:'12px'
+      },
+      rules:{
+        // Bordered boxes matching the rest of the form's inputs (--border / --accent / --red)
+        '.Input':{border:'1.5px solid #e9e5de',padding:'11px 13px',boxShadow:'none'},
+        '.Input:focus':{border:'1.5px solid #0f766e',boxShadow:'none',outline:'none'},
+        '.Input--invalid':{border:'1.5px solid #b91c1c',boxShadow:'none'},
+        '.Label':{fontWeight:'600',fontSize:'.72rem',color:'#57534e',marginBottom:'5px'},
+        '.Tab':{border:'1.5px solid #e9e5de',boxShadow:'none'},
+        '.Tab--selected':{border:'1.5px solid #0f766e',boxShadow:'none'},
+        '.Block':{border:'1.5px solid #e9e5de',boxShadow:'none'}
+      }
+    }
   });
   const paymentElement=elements.create('payment',{layout:'tabs'});
   paymentElement.mount('#payment-element');
