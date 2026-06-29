@@ -454,6 +454,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .cr-foot-r{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
 .cr-status{font-family:var(--font-ui);font-size:.7rem;color:var(--txt2);margin-right:auto}
 .cr-status.err{color:var(--red)}
+.fb-grip{display:inline-flex;align-items:center;color:var(--txt3);cursor:grab;flex-shrink:0;padding:2px;touch-action:none}
+.fb-grip:active{cursor:grabbing}
+.fb-row.ec-dragging,.ec-dragging{opacity:.5}
+.fb-row.ec-drop-target{box-shadow:0 -2px 0 var(--accent)}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
 .ct-wrap{flex:1;overflow:auto;padding:18px 24px}
 .ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -7683,15 +7687,28 @@ function _ecSetMode(m){
   document.getElementById('ec_sec_addon').style.display=m==='tiered_addon'?'':'none';
 }
 function _ecTierRowHtml(t,i,total){
-  const upBtn=i>0?'<button class="fb-x" onclick="_ecMoveTier('+i+',-1)" title="Move up" style="color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg></button>':'<span style="width:1.4em"></span>';
-  const dnBtn=i<total-1?'<button class="fb-x" onclick="_ecMoveTier('+i+',1)" title="Move down" style="color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>':'<span style="width:1.4em"></span>';
-  return '<div class="fb-row" id="ec_tier_row_'+i+'">'
+  const grip='<span class="fb-grip" title="Drag to reorder"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>';
+  return '<div class="fb-row" id="ec_tier_row_'+i+'" draggable="true" ondragstart="_ecTierDragStart(event,'+i+')" ondragover="_ecTierDragOver(event,'+i+')" ondragleave="_ecTierDragLeave(event,'+i+')" ondrop="_ecTierDrop(event,'+i+')" ondragend="_ecTierDragEnd(event)">'
+    +grip
     +'<input id="ec_tier_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(t.label||'')+'" placeholder="Single" style="flex:1">'
     +'<span style="color:var(--txt3);font-size:.8rem">$</span>'
     +'<input id="ec_tier_amt_'+i+'" class="fb-in" type="number" min="0" step="1" value="'+(t.amount||'')+'" placeholder="18" style="max-width:90px">'
-    +upBtn+dnBtn
     +'<button class="fb-x" onclick="_ecDelTier('+i+')" title="Remove"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
     +'</div>';
+}
+let _ecTierDragIdx=null;
+function _ecTierDragStart(e,i){ _ecTierDragIdx=i; e.dataTransfer.effectAllowed='move'; const r=document.getElementById('ec_tier_row_'+i); if(r)r.classList.add('ec-dragging'); }
+function _ecTierDragOver(e,i){ e.preventDefault(); e.dataTransfer.dropEffect='move'; const r=document.getElementById('ec_tier_row_'+i); if(r&&i!==_ecTierDragIdx)r.classList.add('ec-drop-target'); }
+function _ecTierDragLeave(e,i){ const r=document.getElementById('ec_tier_row_'+i); if(r)r.classList.remove('ec-drop-target'); }
+function _ecTierDragEnd(e){ (_ecDraft.tiers||[]).forEach((_,i)=>{ const r=document.getElementById('ec_tier_row_'+i); if(r){r.classList.remove('ec-dragging');r.classList.remove('ec-drop-target');} }); _ecTierDragIdx=null; }
+function _ecTierDrop(e,i){
+  e.preventDefault();
+  if(_ecTierDragIdx===null||_ecTierDragIdx===i){ _ecTierDragEnd(e); return; }
+  _ecSyncTiers();
+  const moved=_ecDraft.tiers.splice(_ecTierDragIdx,1)[0];
+  _ecDraft.tiers.splice(i,0,moved);
+  _ecTierDragIdx=null;
+  _ecRefreshTierRows();
 }
 function _ecRefreshTierRows(){
   const host=document.getElementById('ec_tier_rows');
@@ -7766,7 +7783,9 @@ function _ecDelDonPreset(i,ctx){
 
 function _ecFieldRowHtml(fld,i){
   const std=FB_STD_KEYS.includes(fld.key);
-  return '<div class="fb-row" id="ec_fld_row_'+i+'" draggable="true" ondragstart="_ecFldDragStart(event,'+i+')" ondragover="_ecFldDragOver(event,'+i+')" ondrop="_ecFldDrop(event,'+i+')" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--bg);cursor:grab">'
+  const grip='<span class="fb-grip" title="Drag to reorder" onmousedown="_ecFldGripDown('+i+')" ontouchstart="_ecFldGripDown('+i+')" style="align-self:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></span>';
+  return '<div class="fb-row" id="ec_fld_row_'+i+'" draggable="false" ondragstart="_ecFldDragStart(event,'+i+')" ondragover="_ecFldDragOver(event,'+i+')" ondragleave="_ecFldDragLeave(event,'+i+')" ondrop="_ecFldDrop(event,'+i+')" ondragend="_ecFldDragEnd(event)" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;background:var(--bg)">'
+    +grip
     +'<div style="display:flex;gap:6px;flex:1;min-width:0">'
     +'<input id="ec_fld_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(fld.label||'')+'" placeholder="Field label" style="flex:1;margin-bottom:0">'
     +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:110px;margin-bottom:0"'+(std?' disabled':'')+' onchange="_ecFieldTypeChanged('+i+')">'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
@@ -7778,6 +7797,15 @@ function _ecFieldRowHtml(fld,i){
     +'</div>'
     +(fld.type==='select'?'<input id="ec_fld_opts_'+i+'" class="fb-in" type="text" value="'+_escAttr((fld.options||[]).join(', '))+'" placeholder="Option A, Option B, Option C" style="width:100%;margin-bottom:0">':'')
     +'</div>';
+}
+// Grip enables dragging only while the grip is held, so inputs stay selectable.
+function _ecFldGripDown(i){
+  const r=document.getElementById('ec_fld_row_'+i);
+  if(!r)return;
+  r.setAttribute('draggable','true');
+  const off=()=>{ r.setAttribute('draggable','false'); document.removeEventListener('mouseup',off); document.removeEventListener('touchend',off); };
+  document.addEventListener('mouseup',off);
+  document.addEventListener('touchend',off);
 }
 
 function _ecSyncFields(){
@@ -7813,11 +7841,13 @@ function _ecFieldTypeChanged(i){
 }
 
 let _ecFldDragIdx=null;
-function _ecFldDragStart(e,i){ _ecFldDragIdx=i; e.dataTransfer.effectAllowed='move'; }
-function _ecFldDragOver(e,i){ e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function _ecFldDragStart(e,i){ _ecFldDragIdx=i; e.dataTransfer.effectAllowed='move'; const r=document.getElementById('ec_fld_row_'+i); if(r)r.classList.add('ec-dragging'); }
+function _ecFldDragOver(e,i){ e.preventDefault(); e.dataTransfer.dropEffect='move'; const r=document.getElementById('ec_fld_row_'+i); if(r&&i!==_ecFldDragIdx)r.classList.add('ec-drop-target'); }
+function _ecFldDragLeave(e,i){ const r=document.getElementById('ec_fld_row_'+i); if(r)r.classList.remove('ec-drop-target'); }
+function _ecFldDragEnd(e){ (_ecDraft.fields||[]).forEach((_,i)=>{ const r=document.getElementById('ec_fld_row_'+i); if(r){r.classList.remove('ec-dragging');r.classList.remove('ec-drop-target');r.setAttribute('draggable','false');} }); _ecFldDragIdx=null; }
 function _ecFldDrop(e,i){
   e.preventDefault();
-  if(_ecFldDragIdx===null||_ecFldDragIdx===i)return;
+  if(_ecFldDragIdx===null||_ecFldDragIdx===i){ _ecFldDragEnd(e); return; }
   _ecSyncFields();
   const moved=_ecDraft.fields.splice(_ecFldDragIdx,1)[0];
   _ecDraft.fields.splice(i,0,moved);
@@ -8296,7 +8326,11 @@ async function deleteEvent(id){
   if(!confirm('Delete event "'+(ev?ev.name:'')+'"? This cannot be undone.'))return;
   try{
     await sb('events?id=eq.'+id,{method:'DELETE'});
-    await _loadEvents(true);
+    // Clean up the linked public form row so it doesn't orphan in Supabase.
+    if(ev&&ev.form_slug){
+      try{ await sb('forms?slug=eq.'+encodeURIComponent(ev.form_slug),{method:'DELETE'}); }catch(e){}
+    }
+    await Promise.all([_loadEvents(true),_loadForms(true)]);
     _openEventId=null;
     _renderEventList();
   }catch(e){ alert('Delete failed: '+e.message); }
