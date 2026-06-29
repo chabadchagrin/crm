@@ -217,32 +217,12 @@ function render(form){
       html+='<div class="custom-row"><span class="dollar">$</span>'
         +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div>';
     }
-  } else if(formMode!=='free'){
-    // ── EVENT: pick-a-tier (+ optional add-on gift) ──
-    const tiers=cfg.tiers||[];
-    html+='<p class="amt-label">Select</p><div class="tiers">';
-    tiers.forEach((t,i)=>{
-      const amt=Number(t.amount)||0;
-      html+='<button type="button" class="tier" data-amt="'+amt+'" onclick="pickTier(this,'+amt+','+i+')">'
-        +'<span class="tier-lbl">'+esc(t.label||('Option '+(i+1)))+'</span>'
-        +'<span class="tier-amt">$'+amt.toLocaleString()+'</span></button>';
-    });
-    html+='</div>';
-    if(formMode==='tiered_addon'){
-      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>'
-        +'<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
-        +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="0" oninput="pickAddon(this)" autocomplete="off"></div></div>';
-    }
-  } else {
-    html+='<p class="amt-label" style="margin-bottom:14px">RSVP below'+(freeAllowsDonation?'':' — no payment needed')+'</p>';
   }
 
-  // ── custom + standard fields ──
+  // ── custom + standard fields (always before payment/tiers for event forms) ──
   fields.forEach(f=>{
     const t=f.type;
     if(t==='checkbox'){
-      // Checkbox: box + label on one line, label after the box. A required
-      // checkbox means "must be ticked" (consent / waiver / opt-in).
       html+='<div class="field check-field">'
         +'<label class="check-line"><input type="checkbox" id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'" data-checkbox="1">'
         +'<span>'+esc(f.label)+(f.required?'<span class="req">*</span>':'')+'</span></label>'
@@ -264,6 +244,26 @@ function render(form){
     }
     html+='<div class="field-err" id="err_'+esc(f.key)+'"></div></div>';
   });
+
+  if(isEvent && formMode!=='free'){
+    // ── EVENT: pick-a-tier (+ optional add-on gift) — after fields ──
+    const tiers=cfg.tiers||[];
+    html+='<p class="amt-label">Select</p><div class="tiers">';
+    tiers.forEach((t,i)=>{
+      const amt=Number(t.amount)||0;
+      html+='<button type="button" class="tier" data-amt="'+amt+'" onclick="pickTier(this,'+amt+','+i+')">'
+        +'<span class="tier-lbl">'+esc(t.label||('Option '+(i+1)))+'</span>'
+        +'<span class="tier-amt">$'+amt.toLocaleString()+'</span></button>';
+    });
+    html+='</div>';
+    if(formMode==='tiered_addon'){
+      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>'
+        +'<div class="custom-row" style="margin-bottom:0"><span class="dollar">$</span>'
+        +'<input type="text" inputmode="decimal" class="custom-amt" id="addonAmt" placeholder="0" oninput="pickAddon(this)" autocomplete="off"></div></div>';
+    }
+  } else if(isEvent && formMode==='free'){
+    html+='<p class="amt-label" style="margin-bottom:14px">RSVP below'+(freeAllowsDonation?'':' — no payment needed')+'</p>';
+  }
 
   // Free event with an optional donation: an amount box (presets if provided,
   // else just custom). Leaving it blank = free RSVP; any amount = a real gift.
