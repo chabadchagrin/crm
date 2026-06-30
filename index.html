@@ -4755,6 +4755,8 @@ async function saveContactEdit(){
 async function deleteContact(contactId, name, hIndex){
   if(!confirm(`Delete ${name}?
 
+This permanently deletes ALL of this contact's donation and interaction history along with the contact — this cannot be undone.
+
 If this is the only contact in the household, the household and all its property data will also be deleted.`))return;
   try{
     // Self-correct the index from the contact id in case it drifted
@@ -7482,6 +7484,12 @@ async function _ecPersist(){
     };
     if(d.notify_emails&&d.notify_emails.length)evPayload.notify_emails=d.notify_emails;
     if(d.allow_online&&(_ecSavedFormSlug||d.form_slug))evPayload.form_slug=(_ecSavedFormSlug||d.form_slug);
+    // If online reg was turned OFF on an event that had a form, unlink it and
+    // deactivate that form so no stale public form keeps accepting submissions.
+    if(!d.allow_online&&_ecSavedFormSlug){
+      evPayload.form_slug=null;
+      try{ await sb('forms?slug=eq.'+encodeURIComponent(_ecSavedFormSlug),{method:'PATCH',body:JSON.stringify({active:false})}); }catch(e){}
+    }
     try{
       if(_ecSavedEventId){
         await sb('events?id=eq.'+_ecSavedEventId,{method:'PATCH',body:JSON.stringify(evPayload)});
@@ -7494,8 +7502,13 @@ async function _ecPersist(){
   }
 
   // ---- FORM ROW (donation kind always; events only when online reg is on) ----
+  // For EVENTS, don't CREATE the form until the user has reached step 2 (where the
+  // slug field is) — otherwise step 1's "Save & next" would auto-create a form with
+  // a name-derived slug and lock it before they could choose one. Donations put the
+  // slug on step 1, so creating on first save is fine. Existing forms always PATCH.
   const buildForm=isDon||d.allow_online;
-  if(buildForm){
+  const mayCreateForm=isDon||_ecStep>=2;
+  if(buildForm&&(_ecSavedFormSlug||mayCreateForm)){
     const fp=_ecBuildFormPayload();
     if(fp.error){ _ecStatus(fp.error,true); return false; }
     try{
