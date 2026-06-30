@@ -618,6 +618,15 @@ async function onSubmit(){
   }
 
   // PAID (donation, event tier, OR free event + optional donation) — Stripe.
+  // Flush any pending debounced total so selectedAmount reflects the latest typed
+  // custom add-on before we read it for the charge (money accuracy). Only rebuild
+  // the Stripe element if the amount actually changed (avoid tearing down a ready one).
+  if(isEvent&&formMode!=='free'){
+    clearTimeout(_evtTimer);
+    const tier=selectedTier?(Number(selectedTier.amount)||0):0;
+    const fresh=tier+(addonAmount||0);
+    if(fresh!==selectedAmount){ selectedAmount=fresh; refreshPaymentElement(); }
+  }
   if(!selectedAmount||selectedAmount<=0){flashAmount();resetBtn();return;}
   if(isEvent&&formMode!=='free'&&!selectedTier){flashAmount();resetBtn();return;}
   const data=collectFields();
