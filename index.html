@@ -7052,8 +7052,7 @@ let _dashLoaded=false;
 const ENGINE_DEFAULTS={
   heatWeekdayFull:5,       // Heatmap: interactions that make a weekday "fully dark"
   heatSundayFull:3,        // Heatmap: interactions that make a Sunday "fully dark"
-  driftDays:90,            // Daily Five: days without contact before a high-value household counts as "drifting"
-  keepWarmMinAGC:40,       // Daily Five: minimum AGC score to qualify as a keep-warm target
+  driftDays:90,            // Daily Five: days without contact before a connection counts as a reconnect
   icebreakerHomeValue:500000, // Daily Five: minimum home value for never-contacted prospects
   coldFloorHomeValue:500000,  // Cold Floor: minimum home value to surface untouched households
   sriCapacityValue:750000, // SRI: home value threshold for the +40 capacity marker
@@ -7108,9 +7107,8 @@ function openEngineSettings(){
     ${numRow('Weekday "full" threshold','heatWeekdayFull',1,'Interactions for a weekday square to go fully dark')}
     ${numRow('Sunday "full" threshold','heatSundayFull',1,'Sundays get a lower bar')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five</div>
-    ${numRow('Drift threshold (days)','driftDays',5,'No contact for this many days = "drifting"')}
-    ${numRow('Min AGC for keep-warm','keepWarmMinAGC',5,'Only households scoring at least this qualify')}
-    ${numRow('Prospect home value ($)','icebreakerHomeValue',50000,'Never-contacted homes above this surface as prospects')}
+    ${numRow('Drift threshold (days)','driftDays',5,'No contact for this many days = surfaces as a reconnect')}
+    ${numRow('Prospect home value ($)','icebreakerHomeValue',50000,'Never-contacted homes above this surface as cold prospects')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor</div>
     ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the panel')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness</div>
@@ -7151,7 +7149,7 @@ function openEngineSettings(){
 
 async function applyEngineSettings(){
   const num=k=>{const v=parseFloat(document.getElementById('eng_'+k)?.value);return isNaN(v)?ENGINE_DEFAULTS[k]:v;};
-  ['heatWeekdayFull','heatSundayFull','driftDays','keepWarmMinAGC','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays'].forEach(k=>{ENGINE[k]=num(k);});
+  ['heatWeekdayFull','heatSundayFull','driftDays','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays'].forEach(k=>{ENGINE[k]=num(k);});
   const cad=(document.getElementById('eng_trackCadence')?.value||'').split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x)&&x>0);
   ENGINE.trackCadence=cad.length?cad:[...ENGINE_DEFAULTS.trackCadence];
   const landSel=document.getElementById('eng_landing');
@@ -9499,7 +9497,7 @@ async function openCallSheet(){
   if(!_dashLoaded){await loadEngineSettings();await loadOutreachTracks();}
   const cards=await _computeDailyQueue();
   const todayNice=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const BADGE={pinned:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> PINNED',keepwarm:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> DRIFTING',icebreaker:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19"/></svg> PROSPECT',activetrack:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> FOLLOW-UP'};
+  const BADGE={pinned:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> PINNED',keepwarm:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> RECONNECT',icebreaker:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19"/></svg> PROSPECT',activetrack:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> FOLLOW-UP'};
   const entries=cards.length?cards.map((card,i)=>{
     const h=card.item.h;
     const agc=getAGCScore(h);
@@ -9508,7 +9506,7 @@ async function openCallSheet(){
     const phones=_escHtml((h.members||[]).map(m=>m.phone?`${m.first_name}: ${m.phone}`:null).filter(Boolean).join(' · ')||'no phone on file');
     const emails=_escHtml((h.members||[]).map(m=>m.email).filter(Boolean).join(' · '));
     let why='';
-    if(card.type==='keepwarm')why=`No contact in ${card.daysSince!==null?card.daysSince:'90+'} days — strong relationship drifting`;
+    if(card.type==='keepwarm')why=`No contact in ${card.daysSince!==null?card.daysSince:'90+'} days — time to reconnect`;
     else if(card.type==='icebreaker')why=`${_fmtHomeVal(h.home_value)} home, never contacted — cold open`;
     else if(card.type==='activetrack')why=`Follow-up due — step ${card.item.t.step}, attempt ${card.item.t.attempts+1}`;
     else if(card.type==='carryover')why='Carried over from a previous day — still open';
@@ -9548,7 +9546,7 @@ async function openCallSheet(){
 // ── PANEL HELP — the ? icon in each panel header ──
 const PANEL_HELP={
   'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many touches you logged each day over the last two weeks — calls, texts, meetings, attendance, etc. Standing-info notes don't count. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} touches; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
-  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically from three buckets:<br><br><b>DRIFTING</b> — strong relationships (AGC ${ENGINE.keepWarmMinAGC}+, has giving history) with no contact in ${ENGINE.driftDays}+ days.<br><b>PROSPECT</b> — households with $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ homes you've never contacted.<br><b>FOLLOW-UP</b> — an outreach track that's due today.<br><br>You're in charge: use the search bar to <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top of the list (pin clears when you log an outcome), or snooze a suggestion for 7/30/90 days. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
+  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before (a gift, a call, or an event) with no contact in ${ENGINE.driftDays}+ days, most overdue first.<br><b>PROSPECT</b> — a household with a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted. At most one cold prospect per day.<br><br>The list favors warm reconnects and caps cold outreach at one — if there aren't enough good calls, it shows fewer rather than padding with hard cold calls. You're in charge: use the search bar to <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top of the list (pin clears when you log an outcome), or snooze a suggestion for 7/30/90 days. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
   'panel-coldfloor':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor',d:()=>`High-potential households sitting completely untouched: home worth $${Math.round(ENGINE.coldFloorHomeValue/1000)}k+, zero donations AND zero logged interactions — ever. Anyone you've met, called, or already queued in a track won't appear here. Sorted by home value. Use "Today" or "Tomorrow" to drop them into your call queue. The goal: no high-capacity family should sit on the books with no story.`},
   'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
@@ -10036,6 +10034,15 @@ async function _saveDailySet(){
   }catch(e){console.warn('daily_set save failed',e);}
 }
 
+// Discard today's frozen set and repick from scratch. Handy after logging a batch
+// of contacts or adding people — forces a fresh draw without waiting for a new day.
+async function rebuildDailyFive(){
+  if(!confirm('Rebuild today\u2019s list?\n\nThis clears the current set and picks a fresh five. Anything you already logged today stays logged; this only re-draws the open slots.'))return;
+  _dailySet=null;
+  try{await sbSetSetting('daily_set','');}catch(e){console.warn('daily_set clear failed',e);}
+  renderDailyFive();
+}
+
 // Mark a household as handled for today so it leaves the queue and won't carry over.
 async function _markDailyDone(hhId){
   if(!_dailySet)return;
@@ -10109,30 +10116,37 @@ async function _computeDailyQueue(){
   const lastInteraction={};
   recentRows.forEach(r=>{if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;});
 
-  // Map household → most recent interaction across all members
+  // Map household → most recent contact across all members. Event registrations
+  // count as contact too (an event signup/attendance is a real touch) — fold in
+  // reg_date so event attendance resets the drift clock, matching AGC's last-contact.
   const hhLastContact={};
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
+    (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{if(r.reg_date)dates.push(r.reg_date);}));
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
 
-  // ── Keep Warm: high AGC, has giving, no interaction in 90 days, not already tracked ──
+  // ── Reconnect: ANY connection (giving OR any logged contact incl. events),
+  //    gone quiet driftDays+, not snoozed, not already in an active track.
+  //    No giving requirement and no AGC floor — the goal is community connection,
+  //    not donor prospecting. If we've touched them and it's gone quiet, reconnect. ──
   const activeTrackHHIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
   const keepWarm=[];
   for(const h of households){
     if(_dailyPins.includes(h.id))continue; // pinned — already shown at top
     if(activeTrackHHIds.has(h.id))continue; // already in active track
-    const agc=getAGCScore(h);
-    if(agc.total<ENGINE.keepWarmMinAGC)continue;
-    const gs=getGivingStats(h);
-    if(!gs||gs.total===0)continue;
+    const lastContact=hhLastContact[h.id];
+    if(!lastContact)continue; // never touched — that's a cold PROSPECT, not a reconnect
     const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
     if(snoozed)continue;
-    const lastContact=hhLastContact[h.id];
-    const daysSince=lastContact?Math.floor((now-new Date(lastContact))/(1000*60*60*24)):999;
-    if(daysSince>=ENGINE.driftDays)keepWarm.push({h,agc,daysSince,idx:hIdx(h.id)});
+    const daysSince=Math.floor((now-new Date(lastContact))/(1000*60*60*24));
+    if(daysSince>=ENGINE.driftDays){
+      const agc=getAGCScore(h);
+      keepWarm.push({h,agc,daysSince,idx:hIdx(h.id)});
+    }
   }
-  keepWarm.sort((a,b)=>b.agc.total-a.agc.total);
+  // Most-overdue first; AGC breaks ties so stronger relationships edge ahead.
+  keepWarm.sort((a,b)=>(b.daysSince-a.daysSince)||(b.agc.total-a.agc.total));
 
   // ── Icebreaker: no donations, home value > 500k, not snoozed, not already tracked ──
   const icebreakers=[];
@@ -10153,20 +10167,67 @@ async function _computeDailyQueue(){
   const activeTracks=outreachTracks.filter(t=>t.status==='active'&&t.next_due&&t.next_due<=todayStr);
 
   // ── Build candidate pool (ordered by priority) + an id→card lookup so we can
-  //    reconstruct any frozen id back into a real card with its type/why data. ──
+  //    reconstruct any frozen id back into a real card with its type/why data.
+  //    Priority: active FOLLOW-UPs first (never drop a live thread), then warm
+  //    RECONNECTs (most-overdue first), then cold PROSPECTs (capped to 1/day below). ──
   const pool=[];
-  keepWarm.forEach(item=>pool.push({type:'keepwarm',item}));
-  icebreakers.forEach(item=>pool.push({type:'icebreaker',item}));
   activeTracks.forEach(t=>{
     if(_dailyPins.includes(t.household_id))return;
     const h=households.find(hh=>hh.id===t.household_id);
     if(h)pool.push({type:'activetrack',item:{h,t,idx:hIdx(h.id)}});
   });
+  keepWarm.forEach(item=>pool.push({type:'keepwarm',item}));
+  icebreakers.forEach(item=>pool.push({type:'icebreaker',item}));
   const poolById={};
   pool.forEach(c=>{if(!poolById[c.item.h.id])poolById[c.item.h.id]=c;});
 
   // ── Resolve today's FROZEN set. Frozen for the day, no backfill. ──
   // New day → carry over yesterday's un-done ids first, then top up to DAILY_TARGET.
+  //
+  // Cold-prospect rule: at most ONE cold per day, and GUARANTEED one only when there
+  // are 4+ reconnects available (so a cold call never crowds out warm calls on a thin
+  // day, but you still get a steady "one new face" on healthy days). Follow-ups are
+  // never bumped — the guaranteed cold takes a leftover slot, displacing only the
+  // lowest-priority reconnect (the ≥4 test ensures there's a reconnect to spare).
+  const reconnectAvail=pool.filter(c=>c.type==='keepwarm').length;
+  const coldAvail=pool.some(c=>c.type==='icebreaker');
+  const guaranteeCold=reconnectAvail>=4&&coldAvail;
+
+  // Fill `set.ids` up to DAILY_TARGET from `pool`, honoring pins, the 1-cold cap,
+  // and (when guaranteeCold) reserving the final slot for a cold prospect.
+  function _fillDailySet(set){
+    let changed=false;
+    let coldCount=set.ids.filter(id=>poolById[id]&&poolById[id].type==='icebreaker').length;
+    const has=id=>set.ids.includes(id)||_dailyPins.includes(id);
+    // Pass 1: fill non-cold (follow-ups + reconnects) first. If guaranteeing a cold,
+    // leave one slot open for it; otherwise fill all the way.
+    const warmCeiling=(guaranteeCold&&coldCount===0)?DAILY_TARGET-1:DAILY_TARGET;
+    for(const c of pool){
+      if(set.ids.length>=warmCeiling)break;
+      if(c.type==='icebreaker')continue;
+      if(has(c.item.h.id))continue;
+      set.ids.push(c.item.h.id);changed=true;
+    }
+    // Pass 2: add the one cold prospect (guaranteed slot, or filler if room remains).
+    if(coldCount<1){
+      for(const c of pool){
+        if(set.ids.length>=DAILY_TARGET)break;
+        if(c.type!=='icebreaker')continue;
+        if(has(c.item.h.id))continue;
+        set.ids.push(c.item.h.id);coldCount++;changed=true;break;
+      }
+    }
+    // Pass 3: if we reserved for a cold that didn't materialize and slots remain,
+    // top up with any remaining non-cold so we don't under-fill.
+    for(const c of pool){
+      if(set.ids.length>=DAILY_TARGET)break;
+      if(c.type==='icebreaker')continue;
+      if(has(c.item.h.id))continue;
+      set.ids.push(c.item.h.id);changed=true;
+    }
+    return changed;
+  }
+
   let setChanged=false;
   if(!_dailySet||_dailySet.date!==todayStr){
     const carry=(_dailySet&&Array.isArray(_dailySet.ids))
@@ -10175,27 +10236,13 @@ async function _computeDailyQueue(){
     // Only carry forward households that still exist
     const carried=carry.filter(id=>households.some(h=>h.id===id));
     _dailySet={date:todayStr,ids:carried.slice(),done:[]};
-    // Top up to DAILY_TARGET from the pool, skipping ones already carried/pinned
-    for(const c of pool){
-      if(_dailySet.ids.length>=DAILY_TARGET)break;
-      const hid=c.item.h.id;
-      if(_dailySet.ids.includes(hid))continue;
-      if(_dailyPins.includes(hid))continue;
-      _dailySet.ids.push(hid);
-    }
+    _fillDailySet(_dailySet);
     setChanged=true;
   } else {
-    // Same day: if a slot opened earlier via carryover edge cases and the set is
-    // under target with NOTHING done yet (e.g. first build of a fresh install), top up.
+    // Same day: only top up if the set is under target with NOTHING done yet
+    // (e.g. first build of a fresh install). Frozen otherwise — no backfill.
     if(_dailySet.ids.length<DAILY_TARGET&&(_dailySet.done||[]).length===0){
-      for(const c of pool){
-        if(_dailySet.ids.length>=DAILY_TARGET)break;
-        const hid=c.item.h.id;
-        if(_dailySet.ids.includes(hid))continue;
-        if(_dailyPins.includes(hid))continue;
-        _dailySet.ids.push(hid);
-        setChanged=true;
-      }
+      setChanged=_fillDailySet(_dailySet);
     }
   }
   if(setChanged)await _saveDailySet();
@@ -10237,10 +10284,11 @@ function _whyHTML(card){
   const row=(label,val)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">${label}</span><span style="color:var(--txt2);text-align:right">${val}</span></div>`;
   let criteria='';
   if(card.type==='keepwarm'){
+    const conn=(gs&&gs.total>0)?`Has giving history ($${Math.round(gs.total).toLocaleString()})`:'Connected before (event or interaction)';
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> AGC ${agc.total} ≥ ${ENGINE.keepWarmMinAGC} minimum<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Has giving history ($${Math.round(gs?gs.total:0).toLocaleString()})<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.daysSince!==null?card.daysSince:'999+'} days since contact ≥ ${ENGINE.driftDays}-day drift threshold</div>`;
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${conn}<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.daysSince!==null?card.daysSince:'999+'} days since contact ≥ ${ENGINE.driftDays}-day drift threshold<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Prospect score ${agc.total}</div>`;
   }else if(card.type==='icebreaker'){
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value ${_fmtHomeVal(h.home_value)} ≥ ${_fmtHomeVal(ENGINE.icebreakerHomeValue)} threshold<br>
@@ -10265,10 +10313,14 @@ function _whyHTML(card){
 async function _buildDailyFive(el){
   const cards=await _computeDailyQueue();
 
-  // Pin search bar — type a name, click to pin them into today's queue
-  const pinBar=`<div style="position:relative;margin-bottom:10px">
+  // Pin search bar — type a name, click to pin them into today's queue.
+  // Rebuild button re-draws the day's five from scratch.
+  const pinBar=`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
+    <div style="position:relative;flex:1">
     <input id="pinSearchInput" oninput="pinSearchFilter()" placeholder="Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--txt);font-family:var(--font-ui);font-size:.72rem;outline:none">
     <div id="pinSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--border2);border-radius:6px;margin-top:3px;z-index:50;max-height:220px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.25)"></div>
+    </div>
+    <button onclick="rebuildDailyFive()" title="Re-draw today's five from scratch" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--txt2);font-family:var(--font-ui);font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--txt2)'"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3M21 3v6h-6M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3M3 21v-6h6"/></svg> Rebuild</button>
   </div>`;
 
   if(!cards.length){el.innerHTML=pinBar+'<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg></div><p>No calls needed today — great work!</p></div>';return;}
@@ -10283,8 +10335,8 @@ async function _buildDailyFive(el){
       badge='PINNED';badgeColor='#7c3aed';
       whyNow='Manually pinned by you — stays here until you log an outcome or unpin';
     } else if(type==='keepwarm'){
-      badge='DRIFTING';badgeColor='#f97316';
-      whyNow=`High-value relationship — no contact in ${item.daysSince} days`;
+      badge='RECONNECT';badgeColor='#f97316';
+      whyNow=`Connected before — no contact in ${item.daysSince} days`;
     } else if(type==='icebreaker'){
       badge='PROSPECT';badgeColor='#6b7280';
       whyNow=`High-capacity household (${_fmtHomeVal(h.home_value)} home) — never contacted`;
@@ -11051,7 +11103,7 @@ function mShowD5Card(){
   if(!card){ mRenderD5(); return; }
   const h=card.item.h;
   const agc=getAGCScore(h);
-  const label={keepwarm:'Keep Warm',icebreaker:'Icebreaker',activetrack:'Active Track',pinned:'Pinned'}[card.type]||'';
+  const label={keepwarm:'Reconnect',icebreaker:'Prospect',activetrack:'Active Track',pinned:'Pinned'}[card.type]||'';
   const call=_mD5CallTarget(h);
   const reason=(typeof _whyHTML==='function')?_whyHTML(card):'';
   const sub=h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''));
