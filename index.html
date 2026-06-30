@@ -7148,14 +7148,28 @@ const _EC_DEFAULT_FIELDS=[
   {key:'email',     label:'Email',     type:'email',required:true},
   {key:'phone',     label:'Phone',     type:'tel', required:true}
 ];
-// Address block: four fields toggled together (kept out of the field editor list)
+// An 'address' type field expands to these four sub-keys (== households columns)
+// on the public form and on submit. The creator keeps it as ONE field row.
 const EC_ADDR_KEYS=['address','city','state','zip'];
-const EC_ADDR_FIELDS=[
-  {key:'address',label:'Street address',type:'text',required:true},
-  {key:'city',   label:'City',          type:'text',required:true},
-  {key:'state',  label:'State',         type:'text',required:true},
-  {key:'zip',    label:'ZIP',           type:'text',required:true}
-];
+
+// On edit, collapse a legacy 4-field address block (separate address/city/state/zip
+// rows from older forms) into a single 'address'-type field, preserving the
+// position of the first address sub-field and whether it was required.
+function _ecNormalizeAddressFields(fields){
+  const out=[]; let inserted=false;
+  for(const f of fields){
+    if(f.type==='address'){ out.push(f); continue; }
+    if(EC_ADDR_KEYS.includes(f.key)){
+      if(!inserted){
+        out.push({key:'address',label:'Mailing address',type:'address',required:!!f.required});
+        inserted=true;
+      }
+      continue; // drop the individual sub-field row
+    }
+    out.push(f);
+  }
+  return out;
+}
 
 async function _loadEvents(force){
   if(_eventsLoaded&&!force)return;
@@ -7246,7 +7260,10 @@ function _renderEventDetail(id){
     const tier=r.tier_label?' · '+_escHtml(r.tier_label):'';
     const cnt=(parseInt(r.attendee_count)||1);
     const noShow=!r.interaction_id;
-    const customBits=r.fields&&Object.keys(r.fields).length?Object.entries(r.fields).map(([k,v])=>`${_escHtml(k)}: ${_escHtml(String(v))}`).join(' · '):'';
+    // Optional gift (free RSVP + donation, or tier add-on) stashed in fields._gift_amount.
+    const giftAmt=r.fields&&r.fields._gift_amount?parseFloat(r.fields._gift_amount)||0:0;
+    const customBits=r.fields&&Object.keys(r.fields).length?Object.entries(r.fields).filter(([k])=>k!=='_gift_amount').map(([k,v])=>`${_escHtml(k)}: ${_escHtml(String(v))}`).join(' · '):'';
+    const giftBadge=giftAmt>0?`<div style="font-size:.6rem;color:var(--green);font-weight:600;white-space:nowrap">+ $${giftAmt.toLocaleString()} gift</div>`:'';
     return `<div class="ev-reg-row"${noShow?' style="opacity:.55"':''}>
       <div style="flex:1;min-width:0">
         <div style="font-size:.78rem;font-weight:600;color:var(--txt);cursor:pointer"${noShow?' ':''} onclick="_gotoContactFromReg('${r._household.id}')">${name}${noShow?' <span style="font-family:var(--font-ui);font-size:.54rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:1px">No-show</span>':''}</div>
@@ -7257,7 +7274,8 @@ function _renderEventDetail(id){
         <div>
           ${payLater
             ?`<div style="font-size:.65rem;font-weight:600;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:1px 5px;white-space:nowrap">Pay later${fee>0?' · $'+fee.toLocaleString():''}</div>`
-            :fee>0?`<div style="font-size:.72rem;color:var(--gold);font-weight:600">$${fee.toLocaleString()}</div>`:'<div style="font-size:.62rem;color:var(--txt3)">free</div>'}
+            :fee>0?`<div style="font-size:.72rem;color:var(--gold);font-weight:600">$${fee.toLocaleString()}</div>`:(giftAmt>0?'':'<div style="font-size:.62rem;color:var(--txt3)">free</div>')}
+          ${giftBadge}
           <div style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">${_fmtDate(r.reg_date)||''}</div>
         </div>
         <button onclick="toggleNoShow('${r.id}','${r._household.id}')" style="background:none;border:none;cursor:pointer;color:${noShow?'var(--green)':'var(--txt3)'};padding:2px 3px" title="${noShow?'Mark attended':'Mark no-show'}">${noShow
@@ -7328,9 +7346,7 @@ function _ecNew(kind){
       ?[{amount:36,label:'Chai x2'},{amount:100,label:''},{amount:180,label:'Double chai'}]
       :[{amount:18,label:''},{amount:36,label:''},{amount:72,label:''}],
     donation_allow_custom:true,
-    // address block toggle (donation forms; off by default)
-    collect_address:false,
-    // custom fields
+    // custom fields (add an 'address'-type field to collect a mailing address)
     fields:JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS))
   };
   _ecRenderCreator();
@@ -7348,7 +7364,6 @@ function _ecEdit(id){
   const allFields=lf&&lf.schema&&lf.schema.fields&&lf.schema.fields.length
     ?JSON.parse(JSON.stringify(lf.schema.fields))
     :JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS));
-  const hasAddr=allFields.some(f=>EC_ADDR_KEYS.includes(f.key));
   _ecDraft={
     kind:'event',
     name:ev.name||'', event_date:ev.event_date||'', location:ev.location||'',
@@ -7372,8 +7387,7 @@ function _ecEdit(id){
     allow_donation:!!c.allow_donation,
     donation_presets:(c.presets&&c.presets.length)?c.presets:[{amount:18,label:''},{amount:36,label:''},{amount:72,label:''}],
     donation_allow_custom:c.allow_custom!==false,
-    collect_address:hasAddr,
-    fields:allFields.filter(f=>!EC_ADDR_KEYS.includes(f.key))
+    fields:_ecNormalizeAddressFields(allFields)
   };
   _ecRenderCreator();
 }
@@ -7388,7 +7402,6 @@ function _ecEditForm(slug){
   const allFields=lf.schema&&lf.schema.fields&&lf.schema.fields.length
     ?JSON.parse(JSON.stringify(lf.schema.fields))
     :JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS));
-  const hasAddr=allFields.some(f=>EC_ADDR_KEYS.includes(f.key));
   _ecDraft={
     kind:'donation',
     name:lf.title||'', event_date:'', location:'', location_url:'',
@@ -7409,8 +7422,7 @@ function _ecEditForm(slug){
     allow_donation:false,
     donation_presets:(c.presets&&c.presets.length)?c.presets:[{amount:36,label:'Chai x2'},{amount:100,label:''},{amount:180,label:'Double chai'}],
     donation_allow_custom:c.allow_custom!==false,
-    collect_address:hasAddr,
-    fields:allFields.filter(f=>!EC_ADDR_KEYS.includes(f.key))
+    fields:_ecNormalizeAddressFields(allFields)
   };
   _ecRenderCreator();
 }
@@ -7577,8 +7589,6 @@ function _ecSync(){
   if(g('ec_form_show_desc'))d.form_show_description=g('ec_form_show_desc').checked;
   if(g('ec_success_title'))d.form_success_title=g('ec_success_title').value;
   if(g('ec_success_msg'))d.form_success_message=g('ec_success_msg').value;
-  // address toggle
-  if(g('ec_collect_address'))d.collect_address=g('ec_collect_address').checked;
   // pricing
   if(g('ec_paid'))d.paid=g('ec_paid').checked;
   _ecSyncTiers();
@@ -7637,11 +7647,14 @@ function _ecBuildFormPayload(){
   const sc=_ecBuildStripeConfig(d);
   if(!sc.ok)return {error:sc.error};
 
-  // Merge fields + optional address block, clean keys, dedupe.
-  let allFields=(d.fields||[]).slice();
-  if(d.collect_address)allFields=allFields.concat(JSON.parse(JSON.stringify(EC_ADDR_FIELDS)));
+  // Clean field keys, dedupe. An 'address'-type field is stored as ONE field
+  // with key 'address' (form.html expands it to street/city/state/zip at render).
+  const allFields=(d.fields||[]).slice();
   const usedKeys={};
   const cleanFields=allFields.map(f=>{
+    if(f.type==='address'){
+      return {key:'address',label:f.label||'Mailing address',type:'address',required:!!f.required};
+    }
     let key;
     if(FB_STD_KEYS.includes(f.key)||EC_ADDR_KEYS.includes(f.key)){key=f.key;}
     else if(f.key&&!f._isNew&&!/^custom_/.test(f.key)){key=f.key;}
@@ -8010,10 +8023,9 @@ function _ecStep2Html(){
       +'</div>';
   }
   h+='<div class="fb-section"><h3>'+(isDon?'Form fields':'Registration fields')+'</h3>'
-    +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below.</div>'
+    +'<div class="fb-hint">first_name, last_name, email, phone are standard \u2014 used to match/create contacts. Add custom fields below. Choose type <b>address</b> to collect a mailing address (saved to the contact\u2019s household).</div>'
     +'<div id="ec_field_rows">'+fieldRows+'</div>'
     +'<button class="fb-mini-btn" onclick="_ecAddField()" style="margin-top:4px">'+_ecIcons.plus+' Add field</button>'
-    +'<label class="fb-check" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)"><input type="checkbox" id="ec_collect_address"'+(d.collect_address?' checked':'')+' onchange="_ecDraft.collect_address=this.checked"> Collect mailing address (street, city, state, ZIP)</label>'
     +'</div>';
   return h;
 }
@@ -8212,12 +8224,24 @@ async function _logEventAttendance(reg,contactId,eventId){
 }
 
 // Remove the attendance interaction linked to a registration (no-show / delete).
+// Falls back to finding it by contact + type when interaction_id is missing or
+// stale (e.g. webhook/pay-later rows whose link wasn't hydrated in the cache),
+// so the row is actually removed from the DB and timeline — not just the UI.
 async function _unlogEventAttendance(reg){
-  if(!reg||!reg.interaction_id)return;
+  if(!reg)return;
+  let targetId=reg.interaction_id;
   try{
-    await sb('interactions?id=eq.'+reg.interaction_id,{method:'DELETE'});
-    await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:null})});
-  }catch(e){}
+    if(!targetId){
+      // Find the attendance interaction for this contact (best-effort match).
+      const rows=await sb('interactions?select=id,date&contact_id=eq.'+reg.contact_id
+        +'&type=eq.'+encodeURIComponent('Event attendance')+'&order=date.desc&limit=10');
+      if(rows&&rows.length)targetId=rows[0].id;
+    }
+    if(targetId){
+      await sb('interactions?id=eq.'+targetId,{method:'DELETE'});
+      await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:null})});
+    }
+  }catch(e){ console.warn('[DAAS] un-log attendance failed',e); throw e; }
   reg.interaction_id=null;
 }
 
@@ -8296,23 +8320,30 @@ async function toggleNoShow(rid,hhId){
   const found=_findRegById(rid);
   if(!found)return;
   const {r,m,h}=found;
-  if(r.interaction_id){
-    // Currently attending → mark no-show: delete the attendance interaction.
-    await _unlogEventAttendance(r);
-  }else{
-    // Currently no-show → restore: re-create the attendance interaction.
-    await _logEventAttendance(r,m.id,r.event_id);
-  }
+  try{
+    if(r.interaction_id){
+      // Currently attending → mark no-show: delete the attendance interaction.
+      await _unlogEventAttendance(r);
+    }else{
+      // Currently no-show → restore: re-create the attendance interaction.
+      await _logEventAttendance(r,m.id,r.event_id);
+    }
+  }catch(e){ alert('Could not update attendance: '+e.message); return; }
   _invHH(h);
   refreshAGCScore(h.id).then(()=>recolorAll()).catch(()=>{});
   if(_openEventId)_renderEventDetail(_openEventId);
+  // If a contact view for this household is open, refresh its activity tab too.
+  const idx=households.findIndex(x=>x.id===h.id);
+  if(idx>=0&&document.getElementById('interactions-list-'+idx))loadInteractionsTab(idx);
 }
 
 async function deleteRegistration(rid,hhId,idx){
-  if(!confirm('Delete this registration? This cannot be undone.'))return;
+  if(!confirm('Delete this registration? This cannot be undone. (Any payment/donation record is kept.)'))return;
   try{
     const found=_findRegById(rid);
-    if(found&&found.r.interaction_id)await _unlogEventAttendance(found.r); // remove linked attendance credit
+    // Always attempt to clear the linked attendance interaction — webhook/pay-later
+    // rows may carry a stale or missing interaction_id in the cache.
+    if(found)try{await _unlogEventAttendance(found.r);}catch(e){console.warn('[DAAS] unlog on delete',e);}
     await sb('registrations?id=eq.'+rid,{method:'DELETE'});
     if(found){found.m.registrations=(found.m.registrations||[]).filter(x=>x.id!==rid);_invHH(found.h);refreshAGCScore(found.h.id).then(()=>recolorAll()).catch(()=>{});}
     if(idx!=null&&households[idx])selectHousehold(idx);
@@ -8355,7 +8386,7 @@ let _forms=[];               // loaded form rows
 let _formsLoaded=false;
 let _fbEditingSlug=undefined;// undefined=list view, null=new form, string=editing slug
 let _fbDraft=null;           // working copy while editing
-const FB_FIELD_TYPES=['text','email','tel','number','select','checkbox'];
+const FB_FIELD_TYPES=['text','email','tel','number','select','checkbox','address'];
 const FB_STD_KEYS=['first_name','last_name','email','phone']; // matched by webhook
 
 async function _loadForms(force){
