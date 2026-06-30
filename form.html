@@ -134,6 +134,8 @@ let selectedAmount=null;   // donation amount, or selected tier amount
 let addonAmount=0;         // optional add-on gift on top of a tier
 let selectedTier=null;     // {amount,label} for event forms
 let stripe=null, elements=null, currentForm=null, paymentReady=false;
+let paymentElement=null;   // current Stripe Payment Element (destroyed before remount)
+let _submitting=false;     // in-flight guard for onSubmit (prevents double-submit)
 let formMode='donation';   // 'donation' | 'tiered' | 'tiered_addon' | 'free'
 let freeAllowsDonation=false; // free event that also accepts an optional gift
 
@@ -457,12 +459,15 @@ function refreshPaymentElement(){
   if(!mount)return;
   if(!selectedAmount||selectedAmount<=0){
     paymentReady=false;
+    if(paymentElement){ try{paymentElement.destroy();}catch(e){} paymentElement=null; }
     if(formMode!=='free')mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue...':'Choose an amount to continue...')+'</div>';
     else mount.innerHTML='';
     postHeight();return;
   }
   const cfg=parseMaybe(currentForm.stripe_config,{currency:'usd'});
   const currency=(cfg.currency||'usd').toLowerCase();
+  // Tear down any previous element/instance before mounting a fresh one (no leak).
+  if(paymentElement){ try{paymentElement.destroy();}catch(e){} paymentElement=null; }
   mount.innerHTML='';
   paymentReady=false;
   elements=stripe.elements({
@@ -489,7 +494,7 @@ function refreshPaymentElement(){
       }
     }
   });
-  const paymentElement=elements.create('payment',{layout:'tabs'});
+  paymentElement=elements.create('payment',{layout:'tabs'});
   paymentElement.mount('#payment-element');
   paymentElement.on('ready',()=>{paymentReady=true;postHeight();});
 }
@@ -539,6 +544,12 @@ function togglePayLater(){
 }
 
 async function onSubmit(){
+  // Lockout FIRST — before any validation or await — so rapid double-clicks
+  // can't slip a second request (or a duplicate PaymentIntent) through.
+  if(_submitting)return;
+  _submitting=true;
+  const _btn=document.getElementById('submitBtn');
+  if(_btn)_btn.disabled=true;
   const msg=document.getElementById('payMsg');
   if(msg){msg.className='pay-msg';msg.textContent='';}
   const isEvent=currentForm.type==='event';
@@ -549,7 +560,7 @@ async function onSubmit(){
   //    which sends event metadata so the webhook makes the registration + gift.
   if(formMode==='free' && !(freeAllowsDonation && selectedAmount>0)){
     const data=collectFields();
-    if(!data)return;
+    if(!data){resetBtn();return;}
     const btn=document.getElementById('submitBtn');
     btn.disabled=true;btn.textContent='Submitting...';
     try{
@@ -567,9 +578,9 @@ async function onSubmit(){
   // PAY LATER — event fee forms only: skip Stripe, register with pay_later flag.
   const payLaterChk=document.getElementById('payLaterChk');
   if(isEvent && formMode!=='free' && payLaterChk && payLaterChk.checked){
-    if(!selectedTier){flashAmount();return;}
+    if(!selectedTier){flashAmount();resetBtn();return;}
     const data=collectFields();
-    if(!data)return;
+    if(!data){resetBtn();return;}
     const btn=document.getElementById('submitBtn');
     btn.disabled=true;btn.textContent='Submitting...';
     try{
@@ -590,11 +601,11 @@ async function onSubmit(){
   }
 
   // PAID (donation, event tier, OR free event + optional donation) — Stripe.
-  if(!selectedAmount||selectedAmount<=0){flashAmount();return;}
-  if(isEvent&&formMode!=='free'&&!selectedTier){flashAmount();return;}
+  if(!selectedAmount||selectedAmount<=0){flashAmount();resetBtn();return;}
+  if(isEvent&&formMode!=='free'&&!selectedTier){flashAmount();resetBtn();return;}
   const data=collectFields();
-  if(!data)return;
-  if(!paymentReady||!elements){showMsg('err','Payment form still loading - one moment.');return;}
+  if(!data){resetBtn();return;}
+  if(!paymentReady||!elements){showMsg('err','Payment form still loading - one moment.');resetBtn();return;}
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='Processing...';
   try{
@@ -626,6 +637,7 @@ function showMsg(kind,text){
   msg.className='pay-msg show '+kind;msg.textContent=text;postHeight();
 }
 function resetBtn(){
+  _submitting=false;
   const btn=document.getElementById('submitBtn');
   if(btn){btn.disabled=false;btn.textContent=currentForm.type==='event'?(formMode==='free'?'RSVP':'Register'):'Donate';}
 }
