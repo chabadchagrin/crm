@@ -54,6 +54,9 @@ body{font-family:var(--font-ui);background:transparent;color:var(--txt);-webkit-
 .field input:focus,.field select:focus{border-color:var(--accent)}
 .field input.err,.field select.err{border-color:var(--red)}
 .field-err{color:var(--red);font-size:.7rem;margin-top:4px;display:none}
+.addr-field #f_address{margin-bottom:8px}
+.addr-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+@media(max-width:420px){.addr-grid{grid-template-columns:1fr 1fr;gap:8px}}
 .field-err.show{display:block}
 .check-line{display:flex !important;align-items:flex-start;gap:9px;cursor:pointer;font-size:.88rem;font-weight:500 !important;color:var(--txt) !important;margin-bottom:0 !important;line-height:1.4;}
 .check-line input[type=checkbox]{width:18px;height:18px;margin:1px 0 0;flex-shrink:0;accent-color:var(--accent);cursor:pointer;}
@@ -237,6 +240,20 @@ function render(form){
   // ── custom + standard fields (always before payment/tiers for event forms) ──
   fields.forEach(f=>{
     const t=f.type;
+    if(t==='address'){
+      const req=f.required?'1':'0';
+      const star=f.required?'<span class="req">*</span>':'';
+      html+='<div class="field addr-field"><label>'+esc(f.label||'Mailing address')+star+'</label>'
+        +'<input type="text" id="f_address" data-key="address" data-required="'+req+'" autocomplete="address-line1" placeholder="Street address">'
+        +'<div class="field-err" id="err_address"></div>'
+        +'<div class="addr-grid">'
+          +'<div><input type="text" id="f_city" data-key="city" data-required="'+req+'" autocomplete="address-level2" placeholder="City"><div class="field-err" id="err_city"></div></div>'
+          +'<div><input type="text" id="f_state" data-key="state" data-required="'+req+'" autocomplete="address-level1" placeholder="State"><div class="field-err" id="err_state"></div></div>'
+          +'<div><input type="text" id="f_zip" data-key="zip" data-required="'+req+'" inputmode="numeric" autocomplete="postal-code" placeholder="ZIP"><div class="field-err" id="err_zip"></div></div>'
+        +'</div>'
+      +'</div>';
+      return;
+    }
     if(t==='checkbox'){
       html+='<div class="field check-field">'
         +'<label class="check-line"><input type="checkbox" id="f_'+esc(f.key)+'" data-key="'+esc(f.key)+'" data-required="'+(f.required?'1':'0')+'" data-checkbox="1">'
