@@ -745,6 +745,33 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   </div>
 </div>
 
+<!-- SHARED PICKER MODAL (merge / move donation / move contact) -->
+<div class="modal-bg" id="pickerModal" style="display:none">
+  <div class="modal" style="width:460px">
+    <h2 id="picker_title" style="margin-bottom:4px">Select</h2>
+    <p id="picker_sub" style="margin-bottom:12px;color:var(--txt2)"></p>
+    <input type="text" id="picker_search" placeholder="Search by name or email…" oninput="_pickerSearch()" autocomplete="off" style="margin-bottom:0">
+    <div id="picker_results" style="border:1px solid var(--border2);border-radius:5px;background:var(--surf);max-height:300px;overflow-y:auto;margin-top:8px"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-sec" onclick="_pickerCancel()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MERGE CONTACTS MODAL (field-by-field chooser) -->
+<div class="modal-bg" id="mergeModal" style="display:none">
+  <div class="modal" style="width:620px">
+    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"></path></svg> Merge Contacts</h2>
+    <p style="margin-bottom:12px;color:var(--txt2)">Pick which value wins for each field. Donations, interactions, and event registrations from the duplicate move to the keeper, then the duplicate is removed.</p>
+    <div id="merge_body"></div>
+    <div id="merge_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-pri" id="merge_confirm_btn" onclick="_guardClick(this,_mergeConfirm)">Merge Contacts</button>
+      <button class="btn btn-sec" onclick="document.getElementById('mergeModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
 <div class="modal-bg" id="importModal" style="display:none">
   <div class="modal" style="width:580px">
@@ -2508,7 +2535,7 @@ function setProp(mode,h,result){
     <button onclick="byId('openFullPanel','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:28px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Full screen view"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
     <button onclick="byId('openPersonChat','${households[idx].id}',${idx})" style="position:absolute;top:8px;right:46px;background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:2px 4px;border-radius:4px" title="Chat about this person"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/></svg></button>
     <div class="crm-name" style="padding-right:56px">${_escHtml(h.displayName)}</div>
-    <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':(h.address||'')+', '+(h.city||'')+', OH '+(h.zip||'')}</div>
+    <div class="crm-addr" style="margin-bottom:4px">${h.noAddress?'<em style="color:var(--txt3)">No address on file</em>':_escHtml((h.address||'')+', '+(h.city||'')+', OH '+(h.zip||''))}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
       <span class="ctag ${tagClass}">${countyLabel}</span>
       ${(()=>{
@@ -2545,6 +2572,8 @@ function setProp(mode,h,result){
     <div style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);margin-top:2px">Contact #${m.daas_id||'—'}</div>
     <button onclick="deleteContactById('${m.id}',${idx})" style="position:absolute;top:9px;right:0;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Delete contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
     <button onclick="openEditContactById('${m.id}')" style="position:absolute;top:9px;right:22px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Edit contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+    <button onclick="moveContact('${m.id}')" style="position:absolute;top:9px;right:44px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Move to another household"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
+    <button onclick="mergeContact('${m.id}')" style="position:absolute;top:9px;right:66px;background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px 4px;border-radius:3px" title="Merge with another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v6M17 4v6M7 10a5 5 0 0 0 5 5 5 5 0 0 0 5-5M12 15v5"/></svg></button>
   </div>`).join('');
 
   // Giving tab
@@ -2569,6 +2598,7 @@ function setProp(mode,h,result){
         <div style="display:flex;align-items:center;gap:4px">
           <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap">${fd(d.date)}</div>
           <button onclick="editDonationNote('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Edit note"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          <button onclick="moveDonation('${d.id}')" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Reassign to another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
           <button onclick="deleteDonation('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
         </div>
       </div>
@@ -2829,7 +2859,7 @@ function placePinAt(i){
   const scoreColor=agcT.total>=70?'#15803d':agcT.total>=40?'#a16207':'#b91c1c';
   const tooltip=`<div style="font-family:var(--font-ui);min-width:180px">
     <div style="font-weight:600;font-size:.82rem;margin-bottom:3px">${_escHtml(h.displayName)}</div>
-    <div style="font-size:.7rem;color:#666;margin-bottom:4px">${h.address||''}, ${h.city||''}</div>
+    <div style="font-size:.7rem;color:#666;margin-bottom:4px">${_escHtml((h.address||'')+', '+(h.city||''))}</div>
     ${valStr?`<div style="font-size:.7rem;color:#15803d">${valStr}</div>`:''}
     ${givStr?`<div style="font-size:.7rem;color:#a16207">${givStr}</div>`:''}
     ${agcT.total>0?`<div style="font-size:.7rem;color:${scoreColor};margin-top:3px;font-family:var(--font-ui)">Score: ${agcT.total}/100</div>`:''}
@@ -2962,7 +2992,7 @@ function searchSpouse(){
   res.innerHTML=matches.map(h=>`
     <div onclick="selectSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
       <div style="font-weight:500">${_escHtml(h.displayName)}</div>
-      <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${_escHtml((h.address||'No address')+', '+(h.city||''))}</div>
     </div>`).join('');
 }
 
@@ -3035,7 +3065,7 @@ async function lookupByAddress(){
       <div style="background:var(--surf2);border-radius:6px;padding:14px">
         <div style="font-weight:700;font-size:.88rem;margin-bottom:6px">Property</div>
         <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
-          <b>Address:</b> ${r.address}, ${r.city}, OH ${r.zip}<br>
+          <b>Address:</b> ${_escHtml((r.address||'')+', '+(r.city||'')+', OH '+(r.zip||''))}<br>
           ${r.homeValue?`<b>Value:</b> $${Math.round(r.homeValue).toLocaleString()}<br>`:''}
         </div>
       </div>`;
@@ -3415,6 +3445,14 @@ function _profileStaleness(p, idx, newInteractions, newDonations){
 }
 
 function buildProfileDisplay(p, idx, newInteractions, newDonations, containerId){
+  // AI-generated profile prose can echo content from notes/web search; escape every
+  // free-text field once here so all render sites below are XSS-safe (defense in depth).
+  if(p&&typeof p==='object'){
+    const _TX=['approach','summary','capacity','affinityNotes','generosityNotes','capacityNotes','fedLevel','businessInfo','boardMemberships','philanthropy990','pressmentions'];
+    const _esc={...p};
+    _TX.forEach(k=>{ if(_esc[k]!=null)_esc[k]=_escHtml(String(_esc[k])); });
+    p=_esc;
+  }
   // Pull the live Prospect Score (AGC) — same number shown everywhere else in the app
   const _hh=(typeof households!=='undefined'&&households[idx])||null;
   const _agc=_hh&&typeof getAGCScore==='function'?getAGCScore(_hh):{total:0};
@@ -4114,7 +4152,15 @@ function openFullPanel(idx){
   const score=agc.total;
   const scoreColor=score>=70?'var(--green)':score>=40?'var(--gold)':'var(--red)';
   const data=h.property_data||{};
-  const profile=h.profile_data||null;
+  const _profileRaw=h.profile_data||null;
+  // AI-generated profile prose can echo content from notes/web search; escape every
+  // free-text field once here so all render sites below are XSS-safe (defense in depth).
+  const profile=_profileRaw?(()=>{
+    const _TX=['approach','summary','affinityNotes','generosityNotes','capacityNotes','fedLevel','businessInfo','boardMemberships','philanthropy990','pressmentions'];
+    const out={..._profileRaw};
+    _TX.forEach(k=>{ if(out[k]!=null)out[k]=_escHtml(String(out[k])); });
+    return out;
+  })():null;
   const fd=_fmtDate;
   const fa=a=>'$'+parseFloat(a).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 
@@ -4150,6 +4196,7 @@ function openFullPanel(idx){
             <div style="display:flex;align-items:center;gap:6px">
               <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap">${fd(t.date)}</div>
               <button onclick="editTimelineItem('${t.id}','${t.type}',this.dataset.text,'${t.date}',${idx})" data-text="${(t.text||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              ${t.type==='donation'?`<button onclick="moveDonation('${t.id}')" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Reassign to another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>`:''}
               <button onclick="deleteTimelineItem('${t.id}','${t.type}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>
           </div>
@@ -4174,7 +4221,7 @@ function openFullPanel(idx){
       </div>
       <div style="flex:1">
         <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:4px">${_escHtml(h.displayName)}</div>
-        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:8px">${h.address||''}, ${h.city||''}, OH ${h.zip||''}</div>
+        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:8px">${_escHtml((h.address||'')+', '+(h.city||'')+', OH '+(h.zip||''))}</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
           ${h.home_value?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Home Value</div><div style="font-size:.95rem;font-weight:700;color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</div></div>`:''}
           ${g?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Total Given</div><div style="font-size:.95rem;font-weight:700;color:var(--gold)">$${Math.round(g.total).toLocaleString()}</div></div>`:''}
@@ -4240,7 +4287,7 @@ function openFullPanel(idx){
         <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Household Notes</div>
         <button onclick="byId('saveHouseholdNotes','${households[idx].id}',${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
       </div>
-      <textarea id="fullpanel-notes-${idx}" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${h.notes||''}</textarea>
+      <textarea id="fullpanel-notes-${idx}" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${_escHtml(h.notes||'')}</textarea>
     </div>
 
     <!-- Contacts + Property -->
@@ -4252,6 +4299,8 @@ function openFullPanel(idx){
             <div style="font-weight:600;font-size:.82rem">${_escHtml((m.first_name||"")+" "+(m.last_name||""))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
             <div style="display:flex;gap:2px;flex-shrink:0">
             <button onclick="openEditContactById('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button onclick="moveContact('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Move to another household"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
+            <button onclick="mergeContact('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Merge with another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v6M17 4v6M7 10a5 5 0 0 0 5 5 5 5 0 0 0 5-5M12 15v5"/></svg></button>
             <button onclick="deleteContactById('${m.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Delete contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>
           </div>
@@ -4282,8 +4331,8 @@ function openFullPanel(idx){
           return kids.map(c=>{
             const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
             return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem">
-              <span style="font-weight:500">${c.name||'Unknown'}</span> — ~${age!==null?age+' yrs old':'age unknown'}
-              <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${c.basis||'—'})</span>
+              <span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span> — ~${age!==null?age+' yrs old':'age unknown'}
+              <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span>
             </div>`;
           }).join('');
         })()}
@@ -4407,7 +4456,7 @@ async function saveChildrenEdit(idx){
       display.innerHTML=kids.length
         ?kids.map(c=>{
           const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
-          return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem"><span style="font-weight:500">${c.name||'Unknown'}</span> — ~${age!==null?age+' yrs old':'age unknown'}<span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${c.basis||'—'})</span></div>`;
+          return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem"><span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span> — ~${age!==null?age+' yrs old':'age unknown'}<span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span></div>`;
         }).join('')
         :'<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
     }
@@ -4617,7 +4666,7 @@ function searchEditSpouse(){
   res.innerHTML=matches.map(h=>`
     <div onclick="selectEditSpouse('${h.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
       <div style="font-weight:500">${_escHtml(h.displayName)}</div>
-      <div style="font-size:.68rem;color:var(--txt3)">${h.address||'No address'}, ${h.city||''}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${_escHtml((h.address||'No address')+', '+(h.city||''))}</div>
     </div>`).join('');
 }
 
@@ -4626,7 +4675,7 @@ function selectEditSpouse(householdId){
   document.getElementById('edit_spouse_results').style.display='none';
   document.getElementById('edit_spouse_search').value='';
   document.getElementById('edit_spouse_selected').style.display='block';
-  document.getElementById('edit_spouse_selected').innerHTML=`<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Will merge with ${editLinkedHousehold.displayName}`;
+  document.getElementById('edit_spouse_selected').innerHTML=`<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Will merge with ${_escHtml(editLinkedHousehold.displayName)}`;
 }
 
 function clearEditSpouseLink(){
@@ -4660,6 +4709,14 @@ async function saveContactEdit(){
     if(editLinkedHousehold){
       // Move this contact to the linked household
       await sb(`contacts?id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({household_id:editLinkedHousehold.id})});
+      // Keep this contact's registrations' household_id in sync with the move
+      // (registrations carry their own household_id copy — same as the Move button).
+      try{
+        const _regs=await sb(`registrations?select=id&contact_id=eq.${contactId}`);
+        if(_regs&&_regs.length){
+          await sb(`registrations?contact_id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({household_id:editLinkedHousehold.id})});
+        }
+      }catch(_e){ /* non-fatal; roster attribution only */ }
       // Update joint name on target household
       const allContacts=await sb(`contacts?household_id=eq.${editLinkedHousehold.id}&select=first_name,last_name&order=created_at.asc`);
       const firsts=[...new Set(allContacts.map(c=>c.first_name))];
@@ -5885,8 +5942,8 @@ function captureContactFilter(){
   }
   if(!hits.length){dd.style.display='none';dd.innerHTML='';return;}
   dd.innerHTML=hits.map(({m,h})=>`<div onclick="captureContactPick('${m.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
-    <span style="font-weight:600">${(m.first_name||'')+' '+(m.last_name||'')}</span>
-    <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">${h.displayName||''}</span>
+    <span style="font-weight:600">${_escHtml((m.first_name||'')+' '+(m.last_name||''))}</span>
+    <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">${_escHtml(h.displayName||'')}</span>
   </div>`).join('');
   dd.style.display='block';
 }
@@ -8219,6 +8276,412 @@ function _pickRegContact(contactId,householdId,name){
 }
 function _clearRegContact(){ _addRegContact=null; document.getElementById('reg_selected').style.display='none'; document.getElementById('reg_search').focus(); }
 
+// ============================================================
+// MERGE CONTACTS / MOVE DONATION / MOVE CONTACT
+// ------------------------------------------------------------
+// Non-destructive tools for the two real situations the CASCADE on
+// donations.contact_id makes dangerous: duplicates (merge) and
+// misattributed records (move). Repoint-first, delete-last is the
+// safety order — money/interactions are repointed and verified before
+// any contact is deleted, so the CASCADE never fires on real history.
+// ============================================================
+
+// ── Shared picker (used by all three) ──────────────────────
+// One modal, two modes:
+//   'contact'   → onPick receives {contactId, householdId, contact, household}
+//   'household' → onPick receives {householdId, household}
+let _pickerMode='contact';      // 'contact' | 'household'
+let _pickerOnPick=null;         // callback
+let _pickerExcludeContact=null; // contact id to hide from results
+let _pickerExcludeHH=null;      // household id to hide from results
+
+function _openPicker(opts){
+  _pickerMode=opts.mode||'contact';
+  _pickerOnPick=opts.onPick||null;
+  _pickerExcludeContact=opts.excludeContactId||null;
+  _pickerExcludeHH=opts.excludeHouseholdId||null;
+  document.getElementById('picker_title').textContent=opts.title||(_pickerMode==='household'?'Select a household':'Select a contact');
+  document.getElementById('picker_sub').textContent=opts.subtitle||'';
+  const s=document.getElementById('picker_search');
+  s.value='';
+  document.getElementById('picker_results').innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Start typing to search…</div>';
+  document.getElementById('pickerModal').style.display='flex';
+  setTimeout(()=>s.focus(),30);
+}
+function _pickerCancel(){
+  document.getElementById('pickerModal').style.display='none';
+  _pickerOnPick=null;
+}
+function _pickerSearch(){
+  const q=document.getElementById('picker_search').value.toLowerCase().trim();
+  const res=document.getElementById('picker_results');
+  if(q.length<2){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Keep typing…</div>';return;}
+  if(_pickerMode==='household'){
+    const matches=households.filter(h=>{
+      if(_pickerExcludeHH&&h.id===_pickerExcludeHH)return false;
+      if(h.displayName.toLowerCase().includes(q))return true;
+      return (h.members||[]).some(m=>((m.first_name||'')+' '+(m.last_name||'')).toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q));
+    }).slice(0,12);
+    if(!matches.length){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
+    res.innerHTML=matches.map(h=>`
+      <div onclick="_pickerPickHousehold('${h.id}')" style="padding:9px 11px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600;font-size:.8rem;color:var(--txt)">${_escHtml(h.displayName)}</div>
+        <div style="font-size:.68rem;color:var(--txt3)">${_escHtml((h.address||'No address')+(h.city?', '+h.city:''))}</div>
+      </div>`).join('');
+  }else{
+    // contact mode — flatten members across all households
+    const rows=[];
+    households.forEach(h=>(h.members||[]).forEach(m=>{
+      if(_pickerExcludeContact&&m.id===_pickerExcludeContact)return;
+      const name=((m.first_name||'')+' '+(m.last_name||'')).trim();
+      if(name.toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q)||h.displayName.toLowerCase().includes(q)){
+        rows.push({m,h,name});
+      }
+    }));
+    const matches=rows.slice(0,12);
+    if(!matches.length){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
+    res.innerHTML=matches.map(({m,h,name})=>`
+      <div onclick="_pickerPickContact('${m.id}')" style="padding:9px 11px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600;font-size:.8rem;color:var(--txt)">${_escHtml(name||'(no name)')}${m.email?` <span style="font-weight:400;color:var(--txt3);font-size:.7rem">${_escHtml(m.email)}</span>`:''}</div>
+        <div style="font-size:.68rem;color:var(--txt3)">${_escHtml(h.displayName)}${h.address?' · '+_escHtml(h.address):''}</div>
+      </div>`).join('');
+  }
+}
+function _pickerPickContact(contactId){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){const cb=_pickerOnPick;_pickerCancel();if(cb)cb({contactId:m.id,householdId:h.id,contact:m,household:h});return;}
+  }
+}
+function _pickerPickHousehold(householdId){
+  const h=households.find(x=>x.id===householdId);
+  if(h){const cb=_pickerOnPick;_pickerCancel();if(cb)cb({householdId:h.id,household:h});}
+}
+
+// ── Shared refresh: rebuild derived data + open views for affected households ──
+// On the heavier paths a full loadAll() is the safe choice (donations/interactions
+// caches live deep on members[]); for the light single-donation move we patch
+// in-memory and refresh both households surgically.
+function _refreshHouseholds(ids){
+  const seen=new Set();
+  ids.filter(Boolean).forEach(id=>{if(seen.has(id))return;seen.add(id);const h=households.find(x=>x.id===id);if(h)_invHH(h);});
+  const tasks=[...seen].map(id=>refreshAGCScore(id).catch(()=>{}));
+  Promise.all(tasks).then(()=>{try{recolorAll();}catch(e){}});
+}
+// Re-render whatever view is currently showing one of the affected households.
+function _rerenderOpenViews(affectedIds){
+  try{renderList();}catch(e){}
+  try{const dv=document.getElementById('dashView');if(typeof renderAllPanels==='function'&&dv&&dv.style.display!=='none')renderAllPanels();}catch(e){}
+  const fp=document.getElementById('fullPanel');
+  if(fp&&fp.style.display!=='none'){
+    const openId=fp.dataset.hhid;
+    if(affectedIds.includes(openId)){
+      const i=hIdx(openId);
+      if(i>=0)openFullPanel(i); else closeFullPanel&&closeFullPanel();
+    }
+  }
+  if(typeof _openEventId!=='undefined'&&_openEventId&&typeof _renderEventDetail==='function'){try{_renderEventDetail(_openEventId);}catch(e){}}
+}
+
+// ── 1. MOVE A DONATION (reassign to a different contact) ────
+// Repoints donation.contact_id, refreshes BOTH old and new households.
+function moveDonation(donationId){
+  // Find the donation + its current owning household in memory.
+  let cur=null;
+  for(const h of households){for(const m of (h.members||[])){const d=(m.donations||[]).find(x=>x.id===donationId);if(d){cur={d,m,h};break;}}if(cur)break;}
+  if(!cur){alert('Donation not found — try reloading.');return;}
+  const amt='$'+parseFloat(cur.d.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  _openPicker({
+    mode:'contact',
+    title:'Reassign Donation',
+    subtitle:`Move the ${amt} gift (currently ${_escHtml((cur.m.first_name||'')+' '+(cur.m.last_name||'')).trim()||'unknown'}) to:`,
+    excludeContactId:cur.m.id,
+    onPick:async(sel)=>{
+      const oldHHId=cur.h.id, newHHId=sel.householdId;
+      try{
+        await sb('donations?id=eq.'+donationId,{method:'PATCH',body:JSON.stringify({contact_id:sel.contactId})});
+        // Patch in-memory: pull from old member, push onto new.
+        cur.m.donations=(cur.m.donations||[]).filter(x=>x.id!==donationId);
+        const nm=(sel.household.members||[]).find(x=>x.id===sel.contactId);
+        cur.d.contact_id=sel.contactId;
+        if(nm){if(!nm.donations)nm.donations=[];nm.donations.push(cur.d);}
+        _refreshHouseholds([oldHHId,newHHId]);
+        _rerenderOpenViews([oldHHId,newHHId]);
+      }catch(e){alert('Reassign failed: '+e.message);}
+    }
+  });
+}
+
+// ── 2. MOVE A CONTACT to another household ──────────────────
+// Repoints contact.household_id. Donations/interactions/registrations follow
+// automatically (they link to the contact). Offers to remove an emptied household.
+function moveContact(contactId){
+  let cur=null;
+  for(const h of households){const m=(h.members||[]).find(x=>x.id===contactId);if(m){cur={m,h};break;}}
+  if(!cur){alert('Contact not found — try reloading.');return;}
+  const name=((cur.m.first_name||'')+' '+(cur.m.last_name||'')).trim()||'this contact';
+  _openPicker({
+    mode:'household',
+    title:'Move Contact',
+    subtitle:`Move ${_escHtml(name)} (currently in ${_escHtml(cur.h.displayName)}) into:`,
+    excludeHouseholdId:cur.h.id,
+    onPick:async(sel)=>{
+      const oldHH=cur.h, newHHId=sel.householdId;
+      const willEmpty=(oldHH.members||[]).filter(m=>m.id!==contactId).length===0;
+      let removeOld=false;
+      if(willEmpty){
+        removeOld=confirm(`${_escHtml(oldHH.displayName)} will have no contacts left after this move.\n\nDelete the now-empty household (and its property/profile data)?\n\nOK = delete it · Cancel = keep the empty household.`);
+      }
+      try{
+        await sb('contacts?id=eq.'+contactId,{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
+        // registrations carry their own household_id — keep them consistent.
+        const regIds=(cur.m.registrations||[]).map(r=>r.id);
+        if(regIds.length){
+          await sb('registrations?id=in.('+regIds.join(',')+')',{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
+        }
+        if(removeOld){
+          await sb('households?id=eq.'+oldHH.id,{method:'DELETE'});
+        }
+        // In-memory: move the member object across, fix its registrations' hh id.
+        oldHH.members=(oldHH.members||[]).filter(m=>m.id!==contactId);
+        oldHH.contacts=(oldHH.contacts||[]).filter(c=>c.id!==contactId);
+        cur.m.household_id=newHHId;
+        (cur.m.registrations||[]).forEach(r=>{r.household_id=newHHId;});
+        const newHH=households.find(x=>x.id===newHHId);
+        if(newHH){if(!newHH.members)newHH.members=[];newHH.members.push(cur.m);if(!newHH.contacts)newHH.contacts=[];newHH.contacts.push(cur.m);}
+        if(removeOld){
+          households=households.filter(x=>x.id!==oldHH.id);
+          rebuildHIdxMap();
+        }
+        // Display names depend on membership — rebuild for both.
+        [oldHH,newHH].forEach(h=>{if(h&&!(removeOld&&h.id===oldHH.id))h.displayName=buildDisplayName(h);});
+        _refreshHouseholds(removeOld?[newHHId]:[oldHH.id,newHHId]);
+        const fp=document.getElementById('fullPanel');
+        if(removeOld&&fp&&fp.style.display!=='none'&&fp.dataset.hhid===oldHH.id){closeFullPanel&&closeFullPanel();}
+        _rerenderOpenViews([oldHH.id,newHHId]);
+      }catch(e){alert('Move failed: '+e.message);}
+    }
+  });
+}
+
+// ── 3. MERGE TWO CONTACTS ───────────────────────────────────
+// Field-by-field chooser; repoint-first, delete-last. State held here.
+let _merge=null; // {keeper:{m,h}, dup:{m,h}, fields:{}, householdId, removeDupHH}
+
+function mergeContact(contactId){
+  let cur=null;
+  for(const h of households){const m=(h.members||[]).find(x=>x.id===contactId);if(m){cur={m,h};break;}}
+  if(!cur){alert('Contact not found — try reloading.');return;}
+  _openPicker({
+    mode:'contact',
+    title:'Merge Contacts',
+    subtitle:`Merge ${_escHtml(((cur.m.first_name||'')+' '+(cur.m.last_name||'')).trim()||'this contact')} with:`,
+    excludeContactId:cur.m.id,
+    onPick:(sel)=>{
+      // The one we started from is the keeper by default; user can swap.
+      _openMergeChooser({m:cur.m,h:cur.h},{m:sel.contact,h:sel.household});
+    }
+  });
+}
+
+function _openMergeChooser(keeper,dup){
+  _merge={keeper,dup,fields:{},householdId:keeper.h.id};
+  _renderMergeChooser();
+  document.getElementById('merge_status').style.display='none';
+  document.getElementById('mergeModal').style.display='flex';
+}
+function _mergeSwapKeeper(){
+  if(!_merge)return;
+  const k=_merge.keeper;_merge.keeper=_merge.dup;_merge.dup=k;
+  _merge.householdId=_merge.keeper.h.id;
+  _renderMergeChooser();
+}
+function _mergeChooseHH(hhId){_merge.householdId=hhId;_renderMergeChooser();}
+
+function _renderMergeChooser(){
+  const k=_merge.keeper.m, d=_merge.dup.m;
+  const kh=_merge.keeper.h, dh=_merge.dup.h;
+  const fullName=m=>((m.first_name||'')+' '+(m.last_name||'')).trim()||'(no name)';
+  // Field rows: first_name, last_name, email, phone.
+  const fieldDefs=[
+    {key:'first_name',label:'First name'},
+    {key:'last_name',label:'Last name'},
+    {key:'email',label:'Email'},
+    {key:'phone',label:'Phone'}
+  ];
+  // Default each unset choice to keeper (or dup if keeper blank).
+  fieldDefs.forEach(f=>{
+    if(_merge.fields[f.key]===undefined){
+      _merge.fields[f.key]=(k[f.key]!=null&&String(k[f.key]).trim())?'keeper':((d[f.key]!=null&&String(d[f.key]).trim())?'dup':'keeper');
+    }
+  });
+  const cell=(f,which)=>{
+    const m=which==='keeper'?k:d;
+    const val=m[f.key]; const has=val!=null&&String(val).trim();
+    const sel=_merge.fields[f.key]===which;
+    return `<div onclick="_mergePick('${f.key}','${which}')" style="flex:1;cursor:pointer;border:1.5px solid ${sel?'var(--accent)':'var(--border2)'};background:${sel?'rgba(15,118,110,.08)':'var(--bg)'};border-radius:5px;padding:7px 9px;min-width:0">
+      <div style="font-size:.78rem;color:${has?'var(--txt)':'var(--txt3)'};font-style:${has?'normal':'italic'};word-break:break-word">${has?_escHtml(String(val)):'(empty)'}</div>
+    </div>`;
+  };
+  const rows=fieldDefs.map(f=>`
+    <div style="margin-bottom:10px">
+      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px">${f.label}</div>
+      <div style="display:flex;gap:8px">${cell(f,'keeper')}${cell(f,'dup')}</div>
+    </div>`).join('');
+  const diffHH=kh.id!==dh.id;
+  const hhBlock=diffHH?`
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px;margin-bottom:6px">
+      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Surviving household</div>
+      <div style="display:flex;gap:8px">
+        <div onclick="_mergeChooseHH('${kh.id}')" style="flex:1;cursor:pointer;border:1.5px solid ${_merge.householdId===kh.id?'var(--accent)':'var(--border2)'};background:${_merge.householdId===kh.id?'rgba(15,118,110,.08)':'var(--bg)'};border-radius:5px;padding:7px 9px;min-width:0">
+          <div style="font-size:.76rem;font-weight:600;color:var(--txt)">${_escHtml(kh.displayName)}</div>
+          <div style="font-size:.66rem;color:var(--txt3)">${_escHtml(kh.address||'No address')}</div>
+        </div>
+        <div onclick="_mergeChooseHH('${dh.id}')" style="flex:1;cursor:pointer;border:1.5px solid ${_merge.householdId===dh.id?'var(--accent)':'var(--border2)'};background:${_merge.householdId===dh.id?'rgba(15,118,110,.08)':'var(--bg)'};border-radius:5px;padding:7px 9px;min-width:0">
+          <div style="font-size:.76rem;font-weight:600;color:var(--txt)">${_escHtml(dh.displayName)}</div>
+          <div style="font-size:.66rem;color:var(--txt3)">${_escHtml(dh.address||'No address')}</div>
+        </div>
+      </div>
+    </div>`:'';
+  document.getElementById('merge_body').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:12px">
+      <div style="flex:1;background:rgba(15,118,110,.06);border:1px solid var(--accent);border-radius:6px;padding:8px 10px">
+        <div style="font-family:var(--font-ui);font-size:.52rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:2px">Keeper ✓</div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--txt)">${_escHtml(fullName(k))}</div>
+        <div style="font-size:.66rem;color:var(--txt3)">${_escHtml(kh.displayName)} · #${k.daas_id||'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <button onclick="_mergeSwapKeeper()" title="Swap keeper / duplicate" style="background:var(--surf2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--txt2);padding:6px 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4"/></svg></button>
+      </div>
+      <div style="flex:1;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+        <div style="font-family:var(--font-ui);font-size:.52rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px">Duplicate (removed)</div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--txt)">${_escHtml(fullName(d))}</div>
+        <div style="font-size:.66rem;color:var(--txt3)">${_escHtml(dh.displayName)} · #${d.daas_id||'—'}</div>
+      </div>
+    </div>
+    <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Choose each field — left = keeper, right = duplicate</div>
+    ${rows}
+    ${hhBlock}`;
+}
+function _mergePick(key,which){if(!_merge)return;_merge.fields[key]=which;_renderMergeChooser();}
+
+async function _mergeConfirm(){
+  if(!_merge)return;
+  const status=document.getElementById('merge_status');
+  const keeper=_merge.keeper.m, dup=_merge.dup.m;
+  const keeperHH=_merge.keeper.h, dupHH=_merge.dup.h;
+  const survivingHHId=_merge.householdId;
+  const keeperName=((keeper.first_name||'')+' '+(keeper.last_name||'')).trim();
+  const dupName=((dup.first_name||'')+' '+(dup.last_name||'')).trim();
+  if(!confirm(`Merge "${dupName||'duplicate'}" into "${keeperName||'keeper'}"?\n\nAll donations, interactions, and event registrations from the duplicate move to the keeper, then the duplicate contact is deleted. This cannot be undone.`))return;
+
+  const show=t=>{status.textContent=t;status.style.display='block';};
+  try{
+    // ── 1. Repoint donations ──
+    show('Moving donations…');
+    const dupDons=await sb('donations?select=id&contact_id=eq.'+dup.id);
+    if(dupDons&&dupDons.length){
+      await sb('donations?contact_id=eq.'+dup.id,{method:'PATCH',body:JSON.stringify({contact_id:keeper.id})});
+      const check=await sb('donations?select=id&contact_id=eq.'+dup.id+'&limit=1');
+      if(check&&check.length)throw new Error('Donations did not fully repoint — aborting before delete.');
+    }
+    // ── 2. Repoint interactions ──
+    show('Moving interactions…');
+    const dupInts=await sb('interactions?select=id&contact_id=eq.'+dup.id);
+    if(dupInts&&dupInts.length){
+      await sb('interactions?contact_id=eq.'+dup.id,{method:'PATCH',body:JSON.stringify({contact_id:keeper.id})});
+      const check=await sb('interactions?select=id&contact_id=eq.'+dup.id+'&limit=1');
+      if(check&&check.length)throw new Error('Interactions did not fully repoint — aborting before delete.');
+    }
+    // ── 3. Repoint registrations (+ household_id to surviving HH) ──
+    show('Moving registrations…');
+    const keeperRegs=await sb('registrations?select=*&contact_id=eq.'+keeper.id)||[];
+    const dupRegs=await sb('registrations?select=*&contact_id=eq.'+dup.id)||[];
+    // ── 4. De-dupe: keeper + dup both registered for same event → keep one ──
+    // Prefer the paid/attended one (tier_amount set OR interaction_id non-null).
+    const keeperByEvent={};
+    keeperRegs.forEach(r=>{keeperByEvent[r.event_id]=r;});
+    const score=r=>((r.tier_amount!=null&&Number(r.tier_amount)>0)?2:0)+(r.interaction_id?1:0);
+    for(const dr of dupRegs){
+      const kr=keeperByEvent[dr.event_id];
+      if(kr){
+        // Both registered for the same event — keep the better one, delete the other.
+        // On a TIE, keep the KEEPER's own registration (it's the keeper by default),
+        // so the loser is the duplicate's reg unless the duplicate's is strictly better.
+        const loser=score(kr)>=score(dr)?dr:kr;     // weaker one is removed; tie → drop dup's
+        const winner=loser===dr?kr:dr;
+        show('De-duplicating event registrations…');
+        // Clean the loser's attendance interaction, then delete the loser reg.
+        if(loser.interaction_id){try{await sb('interactions?id=eq.'+loser.interaction_id,{method:'DELETE'});}catch(e){}}
+        await sb('registrations?id=eq.'+loser.id,{method:'DELETE'});
+        // Make sure the surviving winner points at the keeper + surviving HH.
+        if(winner===dr){
+          await sb('registrations?id=eq.'+dr.id,{method:'PATCH',body:JSON.stringify({contact_id:keeper.id,household_id:survivingHHId})});
+          keeperByEvent[dr.event_id]=dr;
+        }else{
+          // keeper's reg survives — ensure its household is the surviving HH.
+          if(kr.household_id!==survivingHHId)await sb('registrations?id=eq.'+kr.id,{method:'PATCH',body:JSON.stringify({household_id:survivingHHId})});
+        }
+      }else{
+        // No conflict — just repoint this dup reg onto the keeper + surviving HH.
+        await sb('registrations?id=eq.'+dr.id,{method:'PATCH',body:JSON.stringify({contact_id:keeper.id,household_id:survivingHHId})});
+        keeperByEvent[dr.event_id]=dr;
+      }
+    }
+    // Make sure keeper's own pre-existing regs sit in the surviving household too.
+    for(const kr of keeperRegs){
+      if(kr.household_id!==survivingHHId){try{await sb('registrations?id=eq.'+kr.id,{method:'PATCH',body:JSON.stringify({household_id:survivingHHId})});}catch(e){}}
+    }
+    // Verify no dup registrations remain before deleting the contact.
+    const regCheck=await sb('registrations?select=id&contact_id=eq.'+dup.id+'&limit=1');
+    if(regCheck&&regCheck.length)throw new Error('Registrations did not fully repoint — aborting before delete.');
+
+    // ── 5. Apply chosen merged fields to the keeper ──
+    show('Applying merged fields…');
+    const patch={};
+    ['first_name','last_name','email','phone'].forEach(key=>{
+      const src=_merge.fields[key]==='dup'?dup:keeper;
+      const v=src[key];
+      patch[key]=(v!=null&&String(v).trim())?v:null;
+    });
+    // If keeper must land in a different surviving household, move it.
+    if(keeper.household_id!==survivingHHId)patch.household_id=survivingHHId;
+    await sb('contacts?id=eq.'+keeper.id,{method:'PATCH',body:JSON.stringify(patch)});
+
+    // ── 6. NOW delete the emptied duplicate contact ──
+    show('Removing duplicate…');
+    await sb('contacts?id=eq.'+dup.id,{method:'DELETE'});
+    // If the dup's household is now empty AND it's not the surviving HH, remove it.
+    let removedDupHH=false;
+    if(dupHH.id!==survivingHHId&&dupHH.id!==keeper.household_id){
+      const remain=await sb('contacts?select=id&household_id=eq.'+dupHH.id+'&limit=1');
+      if(!remain||!remain.length){
+        if(confirm(`${_escHtml(dupHH.displayName)} has no contacts left.\n\nDelete the now-empty household?\n\nOK = delete it · Cancel = keep it.`)){
+          await sb('households?id=eq.'+dupHH.id,{method:'DELETE'});
+          removedDupHH=true;
+        }
+      }
+    }
+
+    document.getElementById('mergeModal').style.display='none';
+    // Heavy path — reload everything so all deep caches rebuild cleanly.
+    const fpOpen=(()=>{const fp=document.getElementById('fullPanel');return fp&&fp.style.display!=='none'?fp.dataset.hhid:null;})();
+    await loadAll();
+    if(typeof loadAGCInteractionAggregates==='function'){try{await loadAGCInteractionAggregates();}catch(e){}}
+    const affected=[survivingHHId,keeperHH.id,dupHH.id].filter(Boolean);
+    affected.forEach(id=>refreshAGCScore(id).catch(()=>{}));
+    try{recolorAll();}catch(e){}
+    // Re-open the full panel on the surviving household if it was open on an affected one.
+    if(fpOpen&&[survivingHHId,keeperHH.id,dupHH.id].includes(fpOpen)){
+      const i=hIdx(survivingHHId);
+      if(i>=0)openFullPanel(i); else closeFullPanel&&closeFullPanel();
+    }
+    _merge=null;
+  }catch(e){
+    show('Error: '+e.message+' — no contact was deleted.');
+  }
+}
+
 // Create the persistent "Event attendance" interaction for a registration and
 // link it back via registrations.interaction_id. Dates the interaction to the
 // EVENT date (when attendance happens), falling back to today. Returns the new
@@ -8802,7 +9265,7 @@ const CT_PRESETS={
   outreach:['name','phone','lastContact','daysSince','agc']
 };
 const CT_COLS={
-  name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${h.displayName||''}</div><div class="ct-sub">${h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''))}</div>`},
+  name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${_escHtml(h.displayName||'')}</div><div class="ct-sub">${_escHtml(h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:'')))}</div>`},
   email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.email)}</div>`).join('')||'<span class="ct-sub">—</span>'},
   phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.phone)}</div>`).join('')||'<span class="ct-sub">—</span>'},
   agc:{label:'Prospect',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--gold)':'var(--red)';return `<span style="font-family:var(--font-ui);font-weight:700;color:${c}">${t}</span>`;}},
@@ -9050,7 +9513,7 @@ async function openCallSheet(){
     else if(card.type==='activetrack')why=`Follow-up due — step ${card.item.t.step}, attempt ${card.item.t.attempts+1}`;
     else if(card.type==='carryover')why='Carried over from a previous day — still open';
     else why='Pinned by you';
-    const talk=p.approach?p.approach.substring(0,220)+(p.approach.length>220?'…':''):'';
+    const talk=p.approach?_escHtml(p.approach.substring(0,220))+(p.approach.length>220?'…':''):'';
     return `<div style="border:1px solid #ccc;border-radius:8px;padding:12px 14px;margin-bottom:10px;page-break-inside:avoid">
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
         <span style="font-size:.62rem;font-weight:700;color:#555">${i+1}. ${BADGE[card.type]||''}</span>
@@ -9058,7 +9521,7 @@ async function openCallSheet(){
         <span style="font-size:.62rem;color:#777;margin-left:auto">Prospect ${agc.total} · ${h.home_value?_fmtHomeVal(h.home_value)+' home':''}</span>
       </div>
       <div style="font-size:.7rem;color:#333;margin-bottom:2px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> ${phones}${emails?' · <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> '+emails:''}</div>
-      <div style="font-size:.66rem;color:#555;margin-bottom:2px">${h.address||''}${h.city?', '+h.city:''}</div>
+      <div style="font-size:.66rem;color:#555;margin-bottom:2px">${_escHtml((h.address||'')+(h.city?', '+h.city:''))}</div>
       <div style="font-size:.66rem;color:#555;margin-bottom:2px">Giving: ${gs&&gs.total>0?'$'+Math.round(gs.total).toLocaleString()+' · '+gs.count+' gifts · last '+gs.lastDate:'none on file'} · Last contact: ${card.lastContact||'none recent'}</div>
       <div style="font-size:.68rem;color:#000;font-style:italic;margin-bottom:4px">Why today: ${why}</div>
       ${talk?`<div style="font-size:.66rem;color:#333;background:#f4f4f4;border-radius:5px;padding:6px 8px;margin-bottom:4px"><b>Talking points:</b> ${talk}</div>`:''}
