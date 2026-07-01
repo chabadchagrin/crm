@@ -409,6 +409,79 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 /* ── FORM BUILDER ── */
 .forms-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
 .forms-view.active{display:block}
+.email-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.email-view.active{display:block}
+.eg-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh-sm);transition:border-color .12s}
+.eg-card:hover{border-color:var(--border2)}
+.eg-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
+.eg-meta{font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px}
+.eg-mini-btn{background:var(--surf);border:1px solid var(--border2);color:var(--txt2);font-family:var(--font-ui);font-size:.62rem;padding:4px 9px;border-radius:5px;cursor:pointer;white-space:nowrap}
+.eg-mini-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.eg-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--border2);border-radius:14px;padding:3px 6px 3px 10px;font-family:var(--font-ui);font-size:.66rem;color:var(--txt);margin:0 5px 5px 0}
+.eg-chip button{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.9rem;line-height:1;padding:0 2px}
+.eg-chip button:hover{color:var(--red)}
+.eg-mrow{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border)}
+.eg-mrow:last-child{border-bottom:none}
+.eg-mrow .nm{flex:1;min-width:0;font-family:var(--font-ui);font-size:.78rem;color:var(--txt)}
+.eg-mrow .em{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3)}
+.eg-tabbar{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.eg-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px;font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);cursor:pointer;margin-bottom:-1px}
+.eg-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.eg-picker-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer}
+.eg-picker-row:hover{background:var(--surf2)}
+.eg-picker-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0;accent-color:var(--accent);margin:0}
+.eg-unsub{font-size:.58rem;color:var(--red);border:1px solid rgba(185,28,28,.3);background:rgba(185,28,28,.06);border-radius:4px;padding:1px 5px;font-family:var(--font-ui)}
+/* ── WYSIWYG canvas builder ── */
+.ebx-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.ebx-subject{flex:1;min-width:160px;font-family:var(--font-ui);font-size:.82rem;padding:8px 11px;border:1px solid var(--border2);border-radius:7px;background:var(--surf);color:var(--txt)}
+.ebx-modes{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden}
+.ebx-mode{background:var(--surf);border:none;padding:7px 14px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2);cursor:pointer}
+.ebx-mode.active{background:var(--accent);color:#fff}
+.ebx-body{display:flex;gap:16px;align-items:flex-start}
+.ebx-canvas-wrap{flex:1;min-width:0}
+.ebx-side{flex:0 0 300px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:14px;position:sticky;top:8px;max-height:calc(100vh - 120px);overflow-y:auto}
+@media(max-width:860px){.ebx-body{flex-direction:column}.ebx-side{flex:none;width:100%;position:static;max-height:none}}
+.ebx-page{padding:16px;border-radius:10px;border:1px solid var(--border)}
+.ebx-card{max-width:600px;margin:0 auto;border-radius:4px;overflow:hidden}
+.ebx-empty{padding:36px 16px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem}
+.ebx-blk{position:relative;outline:2px solid transparent;transition:outline-color .1s;cursor:pointer}
+.ebx-blk:hover{outline-color:var(--accent-soft)}
+.ebx-blk.sel{outline-color:var(--accent)}
+.ebx-blk-inner{position:relative}
+.ebx-blk-tools{position:absolute;top:2px;right:2px;display:none;gap:2px;z-index:5;background:var(--surf);border:1px solid var(--border2);border-radius:6px;padding:2px;box-shadow:var(--sh-sm)}
+.ebx-blk.sel .ebx-blk-tools,.ebx-blk:hover .ebx-blk-tools{display:flex}
+.ebx-blk-tools button{background:none;border:none;cursor:pointer;color:var(--txt2);font-size:.7rem;padding:3px 5px;border-radius:4px;line-height:1}
+.ebx-blk-tools button:hover{background:var(--surf2);color:var(--accent)}
+.ebx-ce{outline:none;cursor:text;min-height:1em}
+.ebx-ce:focus{background:rgba(15,118,110,.04);border-radius:3px}
+.ebx-cehint{font-size:.56rem;color:var(--txt3);font-family:var(--font-ui);margin-top:2px;opacity:0;transition:opacity .1s}
+.ebx-blk:hover .ebx-cehint,.ebx-blk.sel .ebx-cehint{opacity:1}
+.ebx-imgph{border:2px dashed var(--border2);border-radius:8px;padding:28px 16px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.74rem;cursor:pointer;background:var(--surf2)}
+.ebx-imgph:hover{border-color:var(--accent);color:var(--accent)}
+.ebx-btnprev{display:inline-block;padding:11px 28px;border-radius:6px;font-family:var(--font-ui);font-size:15px;font-weight:700}
+.ebx-btnprev .ebx-ce{color:inherit}
+.ebx-soc{display:inline-block;background:var(--surf2);border:1px solid var(--border2);border-radius:14px;padding:2px 10px;margin:0 3px;font-size:.66rem;font-family:var(--font-ui);color:var(--txt2)}
+.ebx-ins{height:0;position:relative;display:flex;justify-content:center;z-index:3}
+.ebx-ins-btn{position:absolute;top:-11px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--surf);color:var(--accent);font-size:.9rem;line-height:1;cursor:pointer;opacity:.35;transition:opacity .1s;display:flex;align-items:center;justify-content:center;padding:0}
+.ebx-ins:hover .ebx-ins-btn,.ebx-ins.open .ebx-ins-btn{opacity:1}
+.ebx-insmenu{position:absolute;top:16px;background:var(--surf);border:1px solid var(--border2);border-radius:8px;box-shadow:var(--sh);padding:5px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;z-index:20;width:280px}
+.ebx-insmenu button{display:flex;align-items:center;gap:5px;background:none;border:none;padding:6px 8px;border-radius:5px;font-family:var(--font-ui);font-size:.66rem;color:var(--txt2);cursor:pointer;white-space:nowrap}
+.ebx-insmenu button:hover{background:var(--accent-soft);color:var(--accent)}
+.ebx-side-head{font-family:var(--font-display);font-size:.85rem;font-weight:600;color:var(--txt);margin-bottom:10px}
+.ebx-prevlabel{font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.ebx-prevframe{width:100%;height:640px;border:1px solid var(--border);border-radius:10px;background:#faf9f7}
+.eb-f{display:block;margin-bottom:9px}
+.eb-f>span{display:block;font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-bottom:3px}
+.eb-f input[type=text],.eb-f input[type=number],.eb-f textarea,.eb-f select{width:100%;font-family:var(--font-ui);font-size:.76rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt);box-sizing:border-box}
+.eb-f input[type=color]{width:44px;height:30px;padding:2px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);cursor:pointer}
+.eb-check{display:flex;align-items:center;gap:7px;font-family:var(--font-ui);font-size:.7rem;color:var(--txt2);margin:8px 0}
+.eb-check input{accent-color:var(--accent)}
+.eb-hint{font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);margin:2px 0 8px;line-height:1.4}
+.eb-social-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.eb-social-row select{flex:0 0 100px;font-family:var(--font-ui);font-size:.7rem;padding:6px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)}
+.eb-social-row input{flex:1;min-width:0;font-family:var(--font-ui);font-size:.72rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)}
+.eb-block-del{background:none;border:none;color:var(--txt3);font-size:1.05rem;line-height:1;cursor:pointer;flex-shrink:0;padding:0 4px}
+.eb-block-del:hover{color:var(--red)}
 .fb-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:border-color .15s}
 .fb-card:hover{border-color:var(--accent)}
 .fb-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
@@ -816,6 +889,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" onclick="closeSidebar();switchView('contacts')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Contacts</button>
     <button class="sb-item" onclick="closeSidebar();switchView('events')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <button class="sb-item" onclick="closeSidebar();switchView('forms')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('email')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</button>
     <button class="sb-item" onclick="showHiddenView()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg> Hidden Contacts</button>
 
     <!-- DATA-- DATA section -->
@@ -994,6 +1068,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="dash-nav-btn" id="navDash" onclick="switchView('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14v4M12 9v9M17 5v13"></path></svg> Dashboard</button>
     <button class="dash-nav-btn" id="navEvents" onclick="switchView('events')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <button class="dash-nav-btn" id="navForms" onclick="switchView('forms')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
+    <button class="dash-nav-btn" id="navEmail" onclick="switchView('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg></button>
@@ -1093,6 +1168,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       <div class="spacer" style="flex:1"></div>
       <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off" oninput="_ctSearchDebounced()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:var(--font-ui);font-size:.72rem;border-radius:6px;outline:none;width:160px">
       <span id="ctCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)"></span>
+      <button class="btn btn-sec" onclick="_egBulkAddFromContacts()" style="font-size:.66rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Add to Group</button>
       <button class="btn btn-sec" onclick="exportContactsCSV()" style="font-size:.66rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Export CSV</button>
     </div>
     <div class="ct-wrap"><div class="ct-wrap-inner"><table class="ct-table" id="ctTable"></table></div></div>
@@ -1119,6 +1195,61 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <!-- FORMS VIEW (Form Builder) -->
   <div class="forms-view" id="formsView">
     <div id="formsViewInner"></div>
+  </div>
+
+  <!-- EMAIL VIEW -->
+  <div class="email-view" id="emailView">
+    <div id="emailViewInner"></div>
+  </div>
+</div>
+
+<!-- EMAIL GROUP · ADD CONTACTS PICKER -->
+<div class="modal-bg" id="egPickerModal" style="display:none">
+  <div class="modal" style="width:500px;max-width:95vw;display:flex;flex-direction:column;max-height:85vh">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg> Add Contacts to Group</h2>
+    <p style="margin-bottom:10px">Only contacts with an email on file are shown. Tap to select, then add.</p>
+    <input type="search" id="egPickerSearch" placeholder="Search name or email…" autocomplete="off" oninput="_egPickerRender()" style="margin-bottom:10px">
+    <div id="egPickerList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--surf)"></div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-pri" onclick="_egPickerAddSelected(this)">Add Selected</button>
+      <button class="btn btn-sec" onclick="_egPickerClose()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL GROUP · NAME INPUT (new / rename) -->
+<div class="modal-bg" id="egNameModal" style="display:none">
+  <div class="modal" style="width:400px;max-width:95vw">
+    <h2 id="egNameTitle">New Group</h2>
+    <input type="text" id="egNameInput" placeholder="Group name" autocomplete="off" style="margin-bottom:6px" onkeydown="if(event.key==='Enter')_egNameSave()">
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-pri" onclick="_egNameSave()">Save</button>
+      <button class="btn btn-sec" onclick="document.getElementById('egNameModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL GROUP · SELECT GROUP (bulk add from Contacts) -->
+<div class="modal-bg" id="egSelectModal" style="display:none">
+  <div class="modal" style="width:440px;max-width:95vw;display:flex;flex-direction:column;max-height:80vh">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Add to Group</h2>
+    <p id="egSelectSub" style="margin-bottom:10px"></p>
+    <div id="egSelectList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--surf)"></div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-sec" onclick="document.getElementById('egSelectModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL · GENERIC CONFIRM -->
+<div class="modal-bg" id="egConfirmModal" style="display:none">
+  <div class="modal" style="width:400px;max-width:95vw">
+    <h2 id="egConfirmTitle">Confirm</h2>
+    <p id="egConfirmMsg" style="margin-bottom:6px"></p>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn" id="egConfirmOk" style="background:var(--red);color:#fff;border-color:var(--red)">Delete</button>
+      <button class="btn btn-sec" onclick="document.getElementById('egConfirmModal').style.display='none'">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -9190,6 +9321,795 @@ function _copyEmbedCode(btn){
   catch(e){ document.execCommand('copy'); done(); }
 }
 
+// ═══════════════════════ MASS EMAIL — Step 1: Groups + Subscriptions ═══════
+// Data model (Supabase): email_groups, email_group_members, email_subscriptions.
+// Opt-OUT model: a contact is mailable unless email_subscriptions.status==='unsubscribed'.
+// This module is walled off from interactions / AGC (see SPEC-email.md §3).
+let _egGroups=[];              // [{id,name,description,created_at, _count}]
+let _egMembersByGroup={};      // group_id -> [contact_id,...]
+let _egUnsub=new Set();        // contact_ids with status='unsubscribed'
+let _egLoaded=false;
+let _egView='groups';          // 'groups' (list) | 'group' (one group detail)
+let _egOpenGroupId=null;
+let _egPickerOpen=false;
+
+async function _egLoad(force){
+  if(_egLoaded&&!force)return;
+  const [groups,members,subs]=await Promise.all([
+    sbAll('email_groups?select=*&order=name.asc'),
+    sbAll('email_group_members?select=group_id,contact_id'),
+    sbAll('email_subscriptions?select=contact_id,status')
+  ]);
+  _egGroups=groups||[];
+  _egMembersByGroup={};
+  (members||[]).forEach(m=>{ (_egMembersByGroup[m.group_id]||(_egMembersByGroup[m.group_id]=[])).push(m.contact_id); });
+  _egUnsub=new Set((subs||[]).filter(s=>s.status==='unsubscribed').map(s=>s.contact_id));
+  _egGroups.forEach(g=>{ g._count=(_egMembersByGroup[g.id]||[]).length; });
+  _egLoaded=true;
+}
+
+// Resolve a contact_id to a display {name,email,hhId} using the in-memory households.
+function _egContactInfo(cid){
+  for(const h of households){
+    for(const m of (h.members||[])){
+      if(m.id===cid)return {name:((m.first_name||'')+' '+(m.last_name||'')).trim()||'(no name)',email:m.email||'',hhId:h.id,hhName:h.displayName||''};
+    }
+  }
+  // hidden households too — a member could be there
+  for(const h of (hiddenHouseholds||[])){
+    for(const m of (h.members||[])){
+      if(m.id===cid)return {name:((m.first_name||'')+' '+(m.last_name||'')).trim()||'(no name)',email:m.email||'',hhId:h.id,hhName:h.displayName||'',hidden:true};
+    }
+  }
+  return {name:'(unknown contact)',email:'',hhId:null,hhName:''};
+}
+
+async function renderEmail(){
+  const host=document.getElementById('emailViewInner');
+  if(!host)return;
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading…</div>';
+  try{ await _egLoad(true); }
+  catch(e){ host.innerHTML='<div class="hint"><p>Could not load email groups. Have you run the Step 1 SQL yet?<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; }
+  if(_egView==='group'&&_egOpenGroupId)_egRenderGroupDetail();
+  else if(_egView==='builder')_ebRenderBuilder();
+  else _egRenderGroupList();
+}
+
+// Standalone builder surface (step 3). Implementation in the WYSIWYG UI module below.
+
+function _egTabBar(active){
+  return `<div class="eg-tabbar">
+    <button class="eg-tab ${active==='groups'?'active':''}" onclick="_egGoGroups()">Groups</button>
+    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Coming in a later step">Campaigns</button>
+    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Coming in a later step">Templates</button>
+  </div>`;
+}
+
+function _egGoGroups(){ _egView='groups'; _egOpenGroupId=null; _egRenderGroupList(); }
+
+function _egRenderGroupList(){
+  const host=document.getElementById('emailViewInner');
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</h2>
+      <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Recipient groups. Building &amp; sending arrives in later steps.</div>
+    </div>
+    <button class="btn btn-pri" onclick="_egNewGroup()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Group</button>
+  </div>`;
+  const designBtn=`<div style="margin-bottom:14px"><button class="btn btn-sec" onclick="_egGoBuilder()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586M11 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg> Try the Email Builder</button></div>`;
+  let body;
+  if(!_egGroups.length){
+    body=`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No groups yet. Create a group, then add contacts to it here or from the Contacts view.</div>`;
+  }else{
+    body=_egGroups.map(g=>{
+      const c=g._count||0;
+      return `<div class="eg-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="_egOpenGroup('${_escAttr(g.id)}')">
+            <div class="eg-name">${_escHtml(g.name)}</div>
+            <div class="eg-meta">${c} member${c===1?'':'s'}${g.description?' · '+_escHtml(g.description):''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+            <button class="eg-mini-btn" onclick="_egOpenGroup('${_escAttr(g.id)}')">Manage</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  host.innerHTML=_egTabBar('groups')+header+designBtn+body;
+}
+
+function _egRenderGroupDetail(){
+  const host=document.getElementById('emailViewInner');
+  const g=_egGroups.find(x=>x.id===_egOpenGroupId);
+  if(!g){ _egGoGroups(); return; }
+  const memberIds=_egMembersByGroup[g.id]||[];
+  const rows=memberIds.map(cid=>{
+    const info=_egContactInfo(cid);
+    const unsub=_egUnsub.has(cid);
+    return `<div class="eg-mrow">
+      <div class="nm">${_escHtml(info.name)}${unsub?' <span class="eg-unsub">unsubscribed</span>':''}<div class="em">${info.email?_escHtml(info.email):'<span style="color:var(--red)">no email on file</span>'}${info.hhName?' · '+_escHtml(info.hhName):''}</div></div>
+      <button class="eg-mini-btn" onclick="_egRemoveMember('${_escAttr(g.id)}','${_escAttr(cid)}')" title="Remove from group">Remove</button>
+    </div>`;
+  }).join('')||'<div style="padding:16px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.72rem">No members yet. Use “Add Contacts” to build this list.</div>';
+
+  const withEmail=memberIds.filter(cid=>_egContactInfo(cid).email).length;
+  const mailable=memberIds.filter(cid=>_egContactInfo(cid).email&&!_egUnsub.has(cid)).length;
+
+  host.innerHTML=_egTabBar('groups')+`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <button class="eg-mini-btn" onclick="_egGoGroups()">← All groups</button>
+    </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div style="flex:1;min-width:0">
+        <h2 style="font-family:var(--font-display);font-size:1.15rem;color:var(--txt);margin:0">${_escHtml(g.name)}</h2>
+        <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:4px">${memberIds.length} member${memberIds.length===1?'':'s'} · ${withEmail} with email · <b style="color:var(--green)">${mailable} mailable</b>${g.description?'<br>'+_escHtml(g.description):''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        <button class="eg-mini-btn" onclick="_egAddContactsPicker('${_escAttr(g.id)}')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> Add Contacts</button>
+        <button class="eg-mini-btn" onclick="_egRenameGroup('${_escAttr(g.id)}')">Rename</button>
+        <button class="eg-mini-btn" style="color:var(--red);border-color:rgba(185,28,28,.3)" onclick="_egDeleteGroup('${_escAttr(g.id)}')">Delete</button>
+      </div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:6px 12px">${rows}</div>`;
+}
+
+function _egOpenGroup(id){ _egView='group'; _egOpenGroupId=id; _egRenderGroupDetail(); }
+
+let _egNameMode=null;   // 'new' | {id} for rename
+function _egNewGroup(){
+  _egNameMode='new';
+  document.getElementById('egNameTitle').textContent='New Group';
+  const inp=document.getElementById('egNameInput'); inp.value='';
+  document.getElementById('egNameModal').style.display='flex';
+  setTimeout(()=>inp.focus(),50);
+}
+function _egRenameGroup(id){
+  const g=_egGroups.find(x=>x.id===id); if(!g)return;
+  _egNameMode={id};
+  document.getElementById('egNameTitle').textContent='Rename Group';
+  const inp=document.getElementById('egNameInput'); inp.value=g.name;
+  document.getElementById('egNameModal').style.display='flex';
+  setTimeout(()=>{inp.focus();inp.select();},50);
+}
+async function _egNameSave(){
+  const name=(document.getElementById('egNameInput').value||'').trim();
+  if(!name)return;
+  const modal=document.getElementById('egNameModal');
+  if(_egNameMode==='new'){
+    try{
+      const res=await sb('email_groups',{method:'POST',body:JSON.stringify({name})});
+      const g=Array.isArray(res)?res[0]:res;
+      g._count=0; _egGroups.push(g); _egGroups.sort((a,b)=>a.name.localeCompare(b.name));
+      modal.style.display='none';
+      _egOpenGroup(g.id);
+    }catch(e){ alert('Could not create group: '+e.message); }
+  }else if(_egNameMode&&_egNameMode.id){
+    const g=_egGroups.find(x=>x.id===_egNameMode.id); if(!g){modal.style.display='none';return;}
+    if(name===g.name){modal.style.display='none';return;}
+    try{
+      await sb('email_groups?id=eq.'+g.id,{method:'PATCH',body:JSON.stringify({name})});
+      g.name=name; _egGroups.sort((a,b)=>a.name.localeCompare(b.name));
+      modal.style.display='none';
+      _egRenderGroupDetail();
+    }catch(e){ alert('Could not rename: '+e.message); }
+  }
+}
+
+// Generic confirm modal. label = confirm button text.
+function _egConfirm(title,msg,onOk,label){
+  document.getElementById('egConfirmTitle').textContent=title;
+  document.getElementById('egConfirmMsg').textContent=msg;
+  const ok=document.getElementById('egConfirmOk');
+  ok.textContent=label||'Confirm';
+  const fresh=ok.cloneNode(true);           // drop any prior listener
+  ok.parentNode.replaceChild(fresh,ok);
+  fresh.addEventListener('click',async()=>{
+    document.getElementById('egConfirmModal').style.display='none';
+    await onOk();
+  });
+  document.getElementById('egConfirmModal').style.display='flex';
+}
+
+function _egDeleteGroup(id){
+  const g=_egGroups.find(x=>x.id===id); if(!g)return;
+  const c=g._count||0;
+  const msg='Delete group “'+g.name+'”?'+(c?' Its '+c+' membership link'+(c===1?'':'s')+' will be removed. Contacts themselves are NOT deleted.':'');
+  _egConfirm('Delete Group',msg,async()=>{
+    try{
+      await sb('email_groups?id=eq.'+id,{method:'DELETE'});   // cascade removes members
+      _egGroups=_egGroups.filter(x=>x.id!==id);
+      delete _egMembersByGroup[id];
+      _egGoGroups();
+    }catch(e){ alert('Could not delete: '+e.message); }
+  },'Delete');
+}
+
+async function _egRemoveMember(groupId,contactId){
+  try{
+    await sb('email_group_members?group_id=eq.'+groupId+'&contact_id=eq.'+contactId,{method:'DELETE'});
+    _egMembersByGroup[groupId]=(_egMembersByGroup[groupId]||[]).filter(x=>x!==contactId);
+    const g=_egGroups.find(x=>x.id===groupId); if(g)g._count=(_egMembersByGroup[groupId]||[]).length;
+    _egRenderGroupDetail();
+  }catch(e){ alert('Could not remove: '+e.message); }
+}
+
+// ── Add-contacts picker: modal listing all contacts w/ email, checkbox-add ──
+let _egPickerGroupId=null;
+function _egAddContactsPicker(groupId){
+  _egPickerGroupId=groupId;
+  document.getElementById('egPickerModal').style.display='flex';
+  document.getElementById('egPickerSearch').value='';
+  _egPickerRender();
+  setTimeout(()=>document.getElementById('egPickerSearch').focus(),50);
+}
+function _egPickerClose(){ document.getElementById('egPickerModal').style.display='none'; _egPickerGroupId=null; }
+function _egPickerRender(){
+  const q=(document.getElementById('egPickerSearch').value||'').trim().toLowerCase();
+  const inGroup=new Set(_egMembersByGroup[_egPickerGroupId]||[]);
+  // Flatten all contacts (non-hidden households) that have an email.
+  const cands=[];
+  households.forEach(h=>{
+    (h.members||[]).forEach(m=>{
+      if(!m.email)return; // only mailable candidates
+      const nm=((m.first_name||'')+' '+(m.last_name||'')).trim();
+      if(q&&!(nm.toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q)||(h.displayName||'').toLowerCase().includes(q)))return;
+      cands.push({cid:m.id,name:nm||'(no name)',email:m.email,hhName:h.displayName||''});
+    });
+  });
+  cands.sort((a,b)=>a.name.localeCompare(b.name));
+  const list=document.getElementById('egPickerList');
+  if(!cands.length){ list.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt3);font-size:.72rem">No matching contacts with an email.</div>'; return; }
+  list.innerHTML=cands.slice(0,300).map(c=>{
+    const already=inGroup.has(c.cid);
+    return `<div class="eg-picker-row" onclick="${already?'':'_egPickerToggle(this,\''+_escAttr(c.cid)+'\')'}" data-cid="${_escAttr(c.cid)}" style="${already?'opacity:.5':''}">
+      <input type="checkbox" ${already?'checked disabled':''} style="pointer-events:none" data-check="${_escAttr(c.cid)}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.86rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(c.name)}${already?' <span style="font-size:.6rem;font-weight:400;color:var(--txt3)">(in group)</span>':''}</div>
+        <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(c.email)}${c.hhName?' · '+_escHtml(c.hhName):''}</div>
+      </div>
+    </div>`;
+  }).join('')+(cands.length>300?'<div style="padding:8px;text-align:center;color:var(--txt3);font-size:.6rem">Showing first 300 — refine your search.</div>':'');
+}
+function _egPickerToggle(row,cid){
+  const cb=row.querySelector('input[type=checkbox]'); if(!cb||cb.disabled)return;
+  cb.checked=!cb.checked;
+  row.style.background=cb.checked?'var(--accent-soft)':'';
+}
+async function _egPickerAddSelected(btn){
+  const boxes=[...document.querySelectorAll('#egPickerList input[type=checkbox]:checked:not(:disabled)')];
+  const cids=boxes.map(b=>b.getAttribute('data-check')).filter(Boolean);
+  if(!cids.length){ _egPickerClose(); return; }
+  const gid=_egPickerGroupId;
+  btn.disabled=true; const o=btn.textContent; btn.textContent='Adding…';
+  try{
+    const rows=cids.map(cid=>({group_id:gid,contact_id:cid}));
+    // POST with on-conflict ignore so re-adds don't error on the unique constraint.
+    await sb('email_group_members?on_conflict=group_id,contact_id',{method:'POST',headers:{'Prefer':'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(rows)});
+    const cur=new Set(_egMembersByGroup[gid]||[]);
+    cids.forEach(c=>cur.add(c));
+    _egMembersByGroup[gid]=[...cur];
+    const g=_egGroups.find(x=>x.id===gid); if(g)g._count=_egMembersByGroup[gid].length;
+    _egPickerClose();
+    _egRenderGroupDetail();
+  }catch(e){ alert('Could not add contacts: '+e.message); btn.disabled=false; btn.textContent=o; }
+}
+
+// ── Bulk add from Contacts view: add all currently-filtered households' emailed
+//    contacts to a chosen group. Surfaced as a button in the Contacts toolbar. ──
+let _egBulkCids=[];
+async function _egBulkAddFromContacts(){
+  try{ await _egLoad(false); }catch(e){ alert('Load groups first: '+e.message); return; }
+  if(!_egGroups.length){ _egConfirm('No Groups Yet','You have no groups yet. Create one now?',()=>{ switchView('email'); setTimeout(_egNewGroup,150); },'Create'); return; }
+  const rows=(typeof _ctSorted==='function')?_ctSorted():filtered;
+  const cids=[];
+  rows.forEach(h=>{ (h.members||[]).forEach(m=>{ if(m.email)cids.push(m.id); }); });
+  if(!cids.length){ alert('No contacts with an email in the current filter.'); return; }
+  _egBulkCids=cids;
+  document.getElementById('egSelectSub').textContent='Add '+cids.length+' emailed contact'+(cids.length===1?'':'s')+' (from current filter) to:';
+  const list=document.getElementById('egSelectList');
+  list.innerHTML=_egGroups.map(g=>`<div class="eg-picker-row" onclick="_egBulkAddTo('${_escAttr(g.id)}',this)">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.86rem;font-weight:500;color:var(--txt)">${_escHtml(g.name)}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${g._count||0} member${(g._count||0)===1?'':'s'}</div>
+    </div>
+    <svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+  </div>`).join('');
+  document.getElementById('egSelectModal').style.display='flex';
+}
+async function _egBulkAddTo(gid,row){
+  const g=_egGroups.find(x=>x.id===gid); if(!g)return;
+  const cids=_egBulkCids;
+  if(row){row.style.pointerEvents='none';row.style.opacity='.5';}
+  try{
+    const payload=cids.map(cid=>({group_id:g.id,contact_id:cid}));
+    await sb('email_group_members?on_conflict=group_id,contact_id',{method:'POST',headers:{'Prefer':'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(payload)});
+    const cur=new Set(_egMembersByGroup[g.id]||[]);
+    cids.forEach(c=>cur.add(c));
+    _egMembersByGroup[g.id]=[...cur]; g._count=_egMembersByGroup[g.id].length;
+    document.getElementById('egSelectModal').style.display='none';
+    alert('Added to “'+g.name+'”. Group now has '+g._count+' member'+(g._count===1?'':'s')+'.');
+  }catch(e){ alert('Could not add: '+e.message); if(row){row.style.pointerEvents='';row.style.opacity='';} }
+}
+
+// ═══════════════════════ EMAIL BLOCK BUILDER (step 3) ══════════════════════
+// Hand-rolled email-safe HTML renderer for a FIXED, FLAT set of block types.
+// No external library. Same bulletproof techniques (tables, inline styles,
+// MSO/VML for Outlook buttons) scoped to our blocks. Pure render fns are
+// unit-testable and reused verbatim at send time.
+//
+// Block object shape: { id, type, ...typeSpecificProps }
+// Types: header | heading | text | image | button | divider | spacer | social | footer
+//
+// Email theme defaults (email-safe hex, NOT app CSS vars — emails can't use vars):
+const EB_THEME={
+  accent:'#0f766e', accentText:'#ffffff', text:'#1c1917', muted:'#78716c',
+  bg:'#faf9f7', card:'#ffffff', border:'#e9e5de', link:'#0f766e',
+  fontBody:"-apple-system,BlackBerry,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  fontHead:"Georgia,'Times New Roman',serif",
+  maxWidth:600
+};
+// Curated cross-platform email-safe font stacks. key = label shown in UI.
+const EB_FONTS={
+  'Georgia':"Georgia,'Times New Roman',Times,serif",
+  'Times New Roman':"'Times New Roman',Times,Georgia,serif",
+  'Palatino':"'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif",
+  'Book Antiqua':"'Book Antiqua',Palatino,'Palatino Linotype',Georgia,serif",
+  'Garamond':"Garamond,'Hoefler Text','Times New Roman',serif",
+  'Cambria':"Cambria,Georgia,'Times New Roman',serif",
+  'Lucida Bright':"'Lucida Bright',Georgia,serif",
+  'Arial':"Arial,Helvetica,sans-serif",
+  'Helvetica':"Helvetica,Arial,sans-serif",
+  'Verdana':"Verdana,Geneva,sans-serif",
+  'Tahoma':"Tahoma,Verdana,Geneva,sans-serif",
+  'Trebuchet MS':"'Trebuchet MS','Lucida Grande',Tahoma,sans-serif",
+  'Geneva':"Geneva,Tahoma,Verdana,sans-serif",
+  'Century Gothic':"'Century Gothic',AppleGothic,sans-serif",
+  'Lucida Sans':"'Lucida Sans','Lucida Sans Unicode','Lucida Grande',sans-serif",
+  'Segoe UI':"'Segoe UI',Tahoma,Geneva,Verdana,sans-serif",
+  'Franklin Gothic':"'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif",
+  'System Default':"-apple-system,BlackBerry,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  'Courier New':"'Courier New',Courier,monospace",
+  'Consolas':"Consolas,'Courier New',monospace"
+};
+function _ebFont(name,fallback){ return EB_FONTS[name]||fallback||EB_THEME.fontBody; }
+// Org defaults (footer) persisted in app_settings.key='email_org_defaults'
+let _ebOrg={ name:'Chabad at the Falls', address:'', phone:'', email:'', website:'' };
+
+// ── HTML-escape for email content (own copy; _escHtml exists app-side too) ──
+function _ebEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Minimal inline formatting for text blocks: **bold**, [label](url), newlines.
+function _ebInline(s){
+  let t=_ebEsc(s);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,lbl,url)=>{
+    const safe=/^(https?:|mailto:|tel:)/i.test(url)?url:'#';
+    return '<a href="'+_ebEsc(safe)+'" style="color:'+EB_THEME.link+';text-decoration:underline">'+lbl+'</a>';
+  });
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+function _ebSafeUrl(u){
+  u=String(u||'').trim();
+  if(/^\s*(javascript|data|vbscript):/i.test(u)) return '#';   // reject dangerous schemes
+  if(/^(https?:|mailto:|tel:)/i.test(u)) return u;
+  return 'https://'+u.replace(/^\/+/,'');
+}
+
+// ── Per-block renderers → email-safe HTML (each returns a full-width row) ──
+function _ebRenderBlock(b){
+  switch(b.type){
+    case 'header':   return _ebRHeader(b);
+    case 'heading':  return _ebRHeading(b);
+    case 'text':     return _ebRText(b);
+    case 'image':    return _ebRImage(b);
+    case 'button':   return _ebRButton(b);
+    case 'divider':  return _ebRDivider(b);
+    case 'spacer':   return _ebRSpacer(b);
+    case 'social':   return _ebRSocial(b);
+    case 'footer':   return _ebRFooter(b);
+    default: return '';
+  }
+}
+function _ebPad(b){ // uniform side padding, per-block vertical
+  const t=(b.padTop!=null?b.padTop:16), bo=(b.padBottom!=null?b.padBottom:16);
+  return 'padding:'+t+'px 24px '+bo+'px 24px';
+}
+function _ebRHeader(b){
+  const bgc=b.bg||EB_THEME.card;
+  let inner='';
+  if(b.logo){ inner+='<img src="'+_ebEsc(_ebSafeUrl(b.logo))+'" alt="'+_ebEsc(b.name||'')+'" width="'+(b.logoWidth||140)+'" style="display:block;margin:0 auto;border:0;max-width:'+(b.logoWidth||140)+'px;height:auto">'; }
+  if(b.name&&b.showName!==false){ inner+='<div style="font-family:'+EB_THEME.fontHead+';font-size:20px;color:'+EB_THEME.text+';text-align:center;margin-top:'+(b.logo?'10px':'0')+'">'+_ebEsc(b.name)+'</div>'; }
+  return '<tr><td align="center" style="'+_ebPad(b)+';background:'+bgc+'">'+inner+'</td></tr>';
+}
+function _ebRHeading(b){
+  const align=b.align||'left';
+  return '<tr><td style="'+_ebPad(b)+'"><div style="font-family:'+_ebFont(b.font,EB_THEME.fontHead)+';font-size:'+(b.size||24)+'px;font-weight:700;color:'+(b.color||EB_THEME.text)+';text-align:'+align+';line-height:1.3">'+_ebEsc(b.text||'')+'</div></td></tr>';
+}
+function _ebRText(b){
+  const align=b.align||'left';
+  return '<tr><td style="'+_ebPad(b)+'"><div style="font-family:'+_ebFont(b.font,EB_THEME.fontBody)+';font-size:'+(b.size||16)+'px;color:'+(b.color||EB_THEME.text)+';line-height:1.6;text-align:'+align+'">'+_ebInline(b.text||'')+'</div></td></tr>';
+}
+function _ebRImage(b){
+  const w=b.width||EB_THEME.maxWidth-48;
+  let img='<img src="'+_ebEsc(_ebSafeUrl(b.src||''))+'" alt="'+_ebEsc(b.alt||'')+'" width="'+w+'" style="display:block;border:0;width:100%;max-width:'+w+'px;height:auto;margin:0 auto">';
+  if(b.link) img='<a href="'+_ebEsc(_ebSafeUrl(b.link))+'" style="text-decoration:none">'+img+'</a>';
+  return '<tr><td align="center" style="'+_ebPad(b)+'">'+img+'</td></tr>';
+}
+function _ebRButton(b){
+  const label=_ebEsc(b.label||'Click here');
+  const url=_ebEsc(_ebSafeUrl(b.url||'#'));
+  const bg=b.color||EB_THEME.accent, fg=b.textColor||EB_THEME.accentText;
+  const align=b.align||'center';
+  // MSO/VML fallback so Outlook renders a real button, not a broken link.
+  const vml='<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="'+url+'" style="height:44px;v-text-anchor:middle;width:220px;" arcsize="12%" fillcolor="'+bg+'"><w:anchorlock/><center style="color:'+fg+';font-family:'+EB_THEME.fontBody+';font-size:16px;font-weight:bold;">'+label+'</center></v:roundrect><![endif]-->';
+  const real='<!--[if !mso]><!-- --><a href="'+url+'" style="background:'+bg+';color:'+fg+';display:inline-block;font-family:'+EB_THEME.fontBody+';font-size:16px;font-weight:bold;line-height:44px;text-align:center;text-decoration:none;padding:0 28px;border-radius:6px;-webkit-text-size-adjust:none">'+label+'</a><!--<![endif]-->';
+  return '<tr><td align="'+align+'" style="'+_ebPad(b)+'">'+vml+real+'</td></tr>';
+}
+function _ebRDivider(b){
+  const col=b.color||EB_THEME.border;
+  return '<tr><td style="padding:'+(b.padTop!=null?b.padTop:8)+'px 24px '+(b.padBottom!=null?b.padBottom:8)+'px 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr><td style="border-top:'+(b.thickness||1)+'px solid '+col+';font-size:0;line-height:0">&nbsp;</td></tr></table></td></tr>';
+}
+function _ebRSpacer(b){
+  const h=b.height||24;
+  return '<tr><td style="font-size:0;line-height:0;height:'+h+'px">&nbsp;</td></tr>';
+}
+function _ebRSocial(b){
+  const links=b.links||[]; // [{network,url}]
+  if(!links.length) return '';
+  const size=b.iconSize||32;
+  const style=b.iconStyle||'color'; // 'color' | 'dark' | 'gray'
+  // Colored PNG icons hosted on a stable CDN (PNG renders in all email clients;
+  // SVG does not). Icons8 serves per-network colored PNGs at fixed sizes.
+  const icon=(net)=>{
+    const n=(net||'website').toLowerCase();
+    const map={facebook:'facebook-new',instagram:'instagram-new',whatsapp:'whatsapp',youtube:'youtube-play',twitter:'twitterx',x:'twitterx',tiktok:'tiktok',linkedin:'linkedin',website:'domain',email:'new-post'};
+    const slug=map[n]||'domain';
+    const variant=style==='dark'?'ios-filled':(style==='gray'?'ios-glyphs':'color');
+    return 'https://img.icons8.com/'+variant+'/96/'+slug+'.png';
+  };
+  const items=links.filter(l=>l.url).map(l=>{
+    const nm=_ebEsc((l.network||'link'));
+    return '<a href="'+_ebEsc(_ebSafeUrl(l.url))+'" style="display:inline-block;margin:0 6px;text-decoration:none"><img src="'+icon(l.network)+'" alt="'+nm+'" width="'+size+'" height="'+size+'" style="display:inline-block;border:0;width:'+size+'px;height:'+size+'px"></a>';
+  }).join('');
+  return '<tr><td align="'+(b.align||'center')+'" style="'+_ebPad(b)+'">'+items+'</td></tr>';
+}
+function _ebRFooter(b){
+  const o=Object.assign({},_ebOrg,b.org||{});
+  const parts=[];
+  if(o.name) parts.push('<strong>'+_ebEsc(o.name)+'</strong>');
+  if(o.address) parts.push(_ebEsc(o.address));
+  const line2=[];
+  if(o.phone) line2.push(_ebEsc(o.phone));
+  if(o.email) line2.push('<a href="mailto:'+_ebEsc(o.email)+'" style="color:'+EB_THEME.muted+'">'+_ebEsc(o.email)+'</a>');
+  if(o.website) line2.push('<a href="'+_ebEsc(_ebSafeUrl(o.website))+'" style="color:'+EB_THEME.muted+'">'+_ebEsc(o.website.replace(/^https?:\/\//,''))+'</a>');
+  let html='<div style="font-family:'+EB_THEME.fontBody+';font-size:12px;color:'+EB_THEME.muted+';line-height:1.6;text-align:center">';
+  html+=parts.join('<br>');
+  if(line2.length) html+='<br>'+line2.join(' · ');
+  // Unsubscribe is a PER-RECIPIENT merge placeholder, filled at send time.
+  if(b.showUnsub!==false){
+    html+='<br><br><a href="%unsubscribe_url%" style="color:'+EB_THEME.muted+';text-decoration:underline">Unsubscribe</a> from these emails.';
+  }
+  html+='</div>';
+  return '<tr><td style="'+_ebPad(b)+';background:'+(b.bg||EB_THEME.bg)+'">'+html+'</td></tr>';
+}
+
+// ── Compile full block list → complete email document ──
+// sect: { outerBg, cardBg } optional global section styling
+function _ebCompile(blocks,opts){
+  opts=opts||{};
+  const sect=opts.section||_ebSection||{};
+  const outerBg=sect.outerBg||EB_THEME.bg;
+  const cardBg=sect.cardBg||EB_THEME.card;
+  const rows=(blocks||[]).map(_ebRenderBlock).join('');
+  const pre=opts.preheader?('<div style="display:none;max-height:0;overflow:hidden;opacity:0">'+_ebEsc(opts.preheader)+'</div>'):'';
+  return '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]--><title>'+_ebEsc(opts.subject||'')+'</title></head>'
+    +'<body style="margin:0;padding:0;background:'+outerBg+'">'+pre
+    +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:'+outerBg+'"><tr><td align="center" style="padding:16px">'
+    +'<table role="presentation" width="'+EB_THEME.maxWidth+'" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:'+EB_THEME.maxWidth+'px;width:100%;background:'+cardBg+'">'
+    +rows
+    +'</table></td></tr></table></body></html>';
+}
+
+// ═══════════════════════ BUILDER STATE + WYSIWYG CANVAS UI ═════════════════
+// Renderer above stays authoritative for final email HTML. This layer is the
+// editor: click-to-insert blocks, in-canvas content editing, side style panel,
+// separate pixel-exact Preview (iframe). Renderer reused verbatim at send time.
+let _ebBlocks=[];          // block list
+let _ebSel=null;           // selected block id
+let _ebDirty=false;
+let _ebSection={ outerBg:EB_THEME.bg, cardBg:EB_THEME.card };
+let _ebMode='edit';        // 'edit' | 'preview'
+let _ebInsertAt=null;      // index where insert menu is open, or null
+
+function _ebUid(){ return 'b'+Math.random().toString(36).slice(2,9); }
+const EB_PALETTE=[
+  ['heading','Heading','M6 4v16M18 4v16M6 12h12'],
+  ['text','Text','M4 6h16M4 12h16M4 18h10'],
+  ['image','Image','M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6'],
+  ['button','Button','M3 9h18v6H3zM7 12h10'],
+  ['divider','Divider','M3 12h18'],
+  ['spacer','Spacer','M8 4v16M16 4v16'],
+  ['social','Social','M12 8a3 3 0 100-6 3 3 0 000 6zM6 20a3 3 0 100-6 3 3 0 000 6zM18 20a3 3 0 100-6 3 3 0 000 6zM9 11l6 4M15 11l-6 4'],
+  ['header','Header','M3 5h18v5H3zM6 14h12M6 18h8'],
+  ['footer','Footer','M6 6h12M6 10h8M3 15h18v4H3z']
+];
+function _ebNewBlock(type){
+  const base={id:_ebUid(),type};
+  const d={
+    header:{name:_ebOrg.name,logo:'',logoWidth:140,showName:true,bg:''},
+    heading:{text:'Your heading here',size:24,align:'left',color:EB_THEME.text,font:'Georgia'},
+    text:{text:'Write your message here. Use the toolbar for **bold** and links.',size:16,align:'left',color:EB_THEME.text,font:'System Default'},
+    image:{src:'',alt:'',link:'',width:EB_THEME.maxWidth-48},
+    button:{label:'Donate',url:'',color:EB_THEME.accent,textColor:'#ffffff',align:'center'},
+    divider:{color:EB_THEME.border,thickness:1},
+    spacer:{height:24},
+    social:{links:[{network:'facebook',url:''},{network:'instagram',url:''}],iconSize:32,iconStyle:'color',align:'center'},
+    footer:{org:Object.assign({},_ebOrg),showUnsub:true,bg:''}
+  }[type]||{};
+  return Object.assign(base,d);
+}
+
+// ── entry ──
+function _egGoBuilder(){
+  _egView='builder';
+  _ebLoadOrg().then(()=>{
+    if(!_ebBlocks.length) _ebBlocks=[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')];
+    _ebRenderBuilder();
+  });
+}
+function _ebRenderBuilder(){
+  const host=document.getElementById('emailViewInner');
+  host.innerHTML=`
+    <div class="ebx-top">
+      <button class="eg-mini-btn" onclick="_egGoGroups()">← Back</button>
+      <input type="text" id="ebSubject" placeholder="Email subject…" class="ebx-subject" oninput="_ebTouch()">
+      <div class="ebx-modes">
+        <button class="ebx-mode ${_ebMode==='edit'?'active':''}" onclick="_ebSetMode('edit')">Edit</button>
+        <button class="ebx-mode ${_ebMode==='preview'?'active':''}" onclick="_ebSetMode('preview')">Preview</button>
+      </div>
+    </div>
+    <div class="ebx-body">
+      <div class="ebx-canvas-wrap" id="ebCanvasWrap"></div>
+      <div class="ebx-side" id="ebSide"></div>
+    </div>`;
+  _ebRenderCanvas();
+  _ebRenderSide();
+}
+function _ebSetMode(m){ _ebMode=m; _ebRenderBuilder(); }
+function _ebTouch(){ _ebDirty=true; }
+
+// ── CANVAS (edit mode: editable DOM; preview mode: iframe) ──
+function _ebRenderCanvas(){
+  const wrap=document.getElementById('ebCanvasWrap'); if(!wrap)return;
+  if(_ebMode==='preview'){
+    const html=_ebCompile(_ebBlocks,{subject:(document.getElementById('ebSubject')||{}).value||'',section:_ebSection});
+    wrap.innerHTML='<div class="ebx-prevlabel">Exactly as recipients will see it</div><iframe class="ebx-prevframe" id="ebPreview" title="Preview"></iframe>';
+    const fr=document.getElementById('ebPreview');
+    try{ fr.srcdoc=html; }catch(e){ const d=fr.contentDocument; d.open(); d.write(html); d.close(); }
+    return;
+  }
+  // edit mode — render each block as an editable card inside a page frame
+  const inner=_ebBlocks.map((b,i)=>_ebCanvasBlock(b,i)).join('')||'';
+  wrap.innerHTML='<div class="ebx-page" style="background:'+_ebSection.outerBg+'">'
+    +'<div class="ebx-card" style="background:'+_ebSection.cardBg+'">'
+    +_ebInsertPoint(0)
+    +_ebBlocks.map((b,i)=>_ebCanvasBlock(b,i)+_ebInsertPoint(i+1)).join('')
+    +(_ebBlocks.length?'':'<div class="ebx-empty">Empty email. Click + to add your first block.</div>')
+    +'</div></div>';
+  _ebBindEditable();
+}
+// the "+" insert line between blocks
+function _ebInsertPoint(idx){
+  const open=(_ebInsertAt===idx);
+  let menu='';
+  if(open){
+    menu='<div class="ebx-insmenu">'+EB_PALETTE.map(p=>'<button onclick="_ebInsert('+idx+',\''+p[0]+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+p[2]+'"></path></svg>'+p[1]+'</button>').join('')+'</div>';
+  }
+  return '<div class="ebx-ins'+(open?' open':'')+'"><button class="ebx-ins-btn" onclick="_ebToggleInsert('+idx+')" title="Add block here">+</button>'+menu+'</div>';
+}
+function _ebToggleInsert(idx){ _ebInsertAt=(_ebInsertAt===idx?null:idx); _ebRenderCanvas(); }
+function _ebInsert(idx,type){
+  if(type==='footer'&&_ebBlocks.some(b=>b.type==='footer')){ alert('This email already has a footer.'); _ebInsertAt=null; _ebRenderCanvas(); return; }
+  const blk=_ebNewBlock(type);
+  _ebBlocks.splice(idx,0,blk);
+  _ebInsertAt=null; _ebSel=blk.id; _ebDirty=true;
+  _ebRenderCanvas(); _ebRenderSide();
+}
+
+// one editable block card on the canvas
+function _ebCanvasBlock(b,i){
+  const sel=(_ebSel===b.id);
+  let body='';
+  switch(b.type){
+    case 'header':
+      body='<div style="text-align:center">'
+        +(b.logo?'<img src="'+_ebEsc(_ebSafeUrl(b.logo))+'" style="max-width:'+(b.logoWidth||140)+'px;height:auto;display:inline-block">':'<div class="ebx-imgph" onclick="_ebPickImage(\''+b.id+'\',\'logo\')">Click to add logo</div>')
+        +(b.showName!==false?'<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="name" style="font-family:'+_ebFont(null,EB_THEME.fontHead)+';font-size:20px;margin-top:8px">'+_ebEsc(b.name||'')+'</div>':'')
+        +'</div>';
+      break;
+    case 'heading':
+      body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+_ebFont(b.font,EB_THEME.fontHead)+';font-size:'+(b.size||24)+'px;font-weight:700;color:'+(b.color||EB_THEME.text)+';text-align:'+(b.align||'left')+';line-height:1.3">'+_ebEsc(b.text||'')+'</div>';
+      break;
+    case 'text':
+      body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+_ebFont(b.font,EB_THEME.fontBody)+';font-size:'+(b.size||16)+'px;color:'+(b.color||EB_THEME.text)+';text-align:'+(b.align||'left')+';line-height:1.6">'+_ebInline(b.text||'')+'</div><div class="ebx-cehint">Type here · **bold** · [link](url)</div>';
+      break;
+    case 'image':
+      body=b.src?'<img src="'+_ebEsc(_ebSafeUrl(b.src))+'" style="max-width:100%;display:block;margin:0 auto">':'<div class="ebx-imgph" onclick="_ebPickImage(\''+b.id+'\',\'src\')">Click to add image</div>';
+      break;
+    case 'button':
+      body='<div style="text-align:'+(b.align||'center')+'"><span class="ebx-btnprev" style="background:'+(b.color||EB_THEME.accent)+';color:'+(b.textColor||'#fff')+'"><span contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="label">'+_ebEsc(b.label||'Button')+'</span></span></div>';
+      break;
+    case 'divider':
+      body='<div style="border-top:'+(b.thickness||1)+'px solid '+(b.color||EB_THEME.border)+'"></div>';
+      break;
+    case 'spacer':
+      body='<div style="height:'+(b.height||24)+'px;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(0,0,0,.03) 6px,rgba(0,0,0,.03) 12px)"></div>';
+      break;
+    case 'social':
+      body='<div style="text-align:'+(b.align||'center')+'">'+((b.links||[]).filter(l=>l.url).length?(b.links||[]).filter(l=>l.url).map(l=>'<span class="ebx-soc">'+_ebEsc(l.network||'')+'</span>').join(''):'<span class="ebx-cehint">Add social links in the panel →</span>')+'</div>';
+      break;
+    case 'footer':
+      const o=Object.assign({},_ebOrg,b.org||{});
+      body='<div style="font-size:12px;color:'+EB_THEME.muted+';text-align:center;line-height:1.6"><strong>'+_ebEsc(o.name||'')+'</strong>'+(o.address?'<br>'+_ebEsc(o.address):'')+(b.showUnsub!==false?'<br><br><span style="text-decoration:underline">Unsubscribe</span>':'')+'</div>';
+      break;
+  }
+  return '<div class="ebx-blk'+(sel?' sel':'')+'" data-blk="'+b.id+'" onclick="_ebSelectBlk(event,\''+b.id+'\')">'
+    +'<div class="ebx-blk-tools">'
+      +'<button title="Move up" onclick="_ebMove(event,\''+b.id+'\',-1)">▲</button>'
+      +'<button title="Move down" onclick="_ebMove(event,\''+b.id+'\',1)">▼</button>'
+      +'<button title="Duplicate" onclick="_ebDup(event,\''+b.id+'\')">⧉</button>'
+      +'<button title="Delete" onclick="_ebDel(event,\''+b.id+'\')">×</button>'
+    +'</div>'
+    +'<div class="ebx-blk-inner" style="padding:'+((b.padTop!=null?b.padTop:16))+'px 24px '+((b.padBottom!=null?b.padBottom:16))+'px">'+body+'</div>'
+    +'</div>';
+}
+
+// contenteditable → model sync
+function _ebBindEditable(){
+  document.querySelectorAll('#ebCanvasWrap .ebx-ce').forEach(el=>{
+    el.addEventListener('blur',()=>{
+      const id=el.getAttribute('data-id'), key=el.getAttribute('data-key');
+      const b=_ebBlocks.find(x=>x.id===id); if(!b)return;
+      // store plain text (renderer re-applies **bold**/[links] markup on its own)
+      const val=(key==='text')? _ebFromHtml(el) : el.textContent;
+      b[key]=val; _ebDirty=true;
+    });
+    el.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&(el.getAttribute('data-key')==='label'||el.getAttribute('data-key')==='name')){ e.preventDefault(); el.blur(); } });
+  });
+}
+// convert contenteditable innerHTML back to our markdown-ish text
+function _ebFromHtml(el){
+  let h=el.innerHTML;
+  h=h.replace(/<div>/gi,'\n').replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'');
+  h=h.replace(/<b>|<strong>/gi,'**').replace(/<\/b>|<\/strong>/gi,'**');
+  h=h.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi,'[$2]($1)');
+  h=h.replace(/<[^>]+>/g,''); // strip anything else
+  const tmp=document.createElement('textarea'); tmp.innerHTML=h; return tmp.value.trim();
+}
+
+// selection + block ops
+function _ebSelectBlk(e,id){ if(e&&e.target&&e.target.classList&&e.target.classList.contains('ebx-ce'))return; _ebSel=id; _ebRenderCanvas(); _ebRenderSide(); }
+function _ebMove(e,id,dir){ e.stopPropagation(); const i=_ebBlocks.findIndex(b=>b.id===id); const j=i+dir; if(i<0||j<0||j>=_ebBlocks.length)return; const t=_ebBlocks[i];_ebBlocks[i]=_ebBlocks[j];_ebBlocks[j]=t; _ebDirty=true; _ebRenderCanvas(); }
+function _ebDup(e,id){ e.stopPropagation(); const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return; if(_ebBlocks[i].type==='footer'){alert('Only one footer allowed.');return;} const copy=JSON.parse(JSON.stringify(_ebBlocks[i])); copy.id=_ebUid(); _ebBlocks.splice(i+1,0,copy); _ebDirty=true; _ebRenderCanvas(); }
+function _ebDel(e,id){ e.stopPropagation(); _ebBlocks=_ebBlocks.filter(b=>b.id!==id); if(_ebSel===id)_ebSel=null; _ebDirty=true; _ebRenderCanvas(); _ebRenderSide(); }
+
+// ── SIDE PANEL (style for selected block, or section styles) ──
+function _ebRenderSide(){
+  const side=document.getElementById('ebSide'); if(!side)return;
+  const b=_ebBlocks.find(x=>x.id===_ebSel);
+  if(!b){ side.innerHTML=_ebSectionPanel(); return; }
+  const label=(EB_PALETTE.find(p=>p[0]===b.type)||['',b.type])[1];
+  side.innerHTML='<div class="ebx-side-head">'+_ebEsc(label)+' settings</div>'+_ebBlockPanel(b)+'<div style="margin-top:14px"><button class="eg-mini-btn" onclick="_ebSel=null;_ebRenderCanvas();_ebRenderSide()">Section settings →</button></div>';
+}
+function _ebSectionPanel(){
+  const c=(label,val,on)=>'<label class="eb-f"><span>'+label+'</span><span style="display:flex;align-items:center;gap:8px"><input type="color" value="'+val+'" oninput="'+on+'"><code style="font-size:.62rem;color:var(--txt3)">'+val+'</code></span></label>';
+  return '<div class="ebx-side-head">Section</div>'
+    +'<div class="eb-hint">Click any block on the canvas to style it. These control the overall email background.</div>'
+    +c('Outer background',_ebSection.outerBg,"_ebSection.outerBg=this.value;_ebDirty=true;_ebRenderCanvas()")
+    +c('Content background',_ebSection.cardBg,"_ebSection.cardBg=this.value;_ebDirty=true;_ebRenderCanvas()");
+}
+function _ebFontSelect(b){
+  return '<label class="eb-f"><span>Font</span><select onchange="_ebSet(\''+b.id+'\',\'font\',this.value)">'+Object.keys(EB_FONTS).map(f=>'<option value="'+f+'"'+((b.font||'')===f?' selected':'')+'>'+f+'</option>').join('')+'</select></label>';
+}
+function _ebBlockPanel(b){
+  const id=b.id;
+  const row=(l,inner)=>'<label class="eb-f"><span>'+l+'</span>'+inner+'</label>';
+  const num=(k,def)=>'<input type="number" value="'+(b[k]!=null?b[k]:def)+'" oninput="_ebSetNum(\''+id+'\',\''+k+'\',this.value,'+def+')">';
+  const color=(k,def)=>'<input type="color" value="'+(b[k]||def)+'" oninput="_ebSet(\''+id+'\',\''+k+'\',this.value)">';
+  const align=(k)=>'<select onchange="_ebSet(\''+id+'\',\''+k+'\',this.value)">'+['left','center','right'].map(a=>'<option value="'+a+'"'+((b[k]||'left')===a?' selected':'')+'>'+a+'</option>').join('')+'</select>';
+  const txt=(k,ph)=>'<input type="text" value="'+_ebEsc(b[k]||'')+'" placeholder="'+_ebEsc(ph||'')+'" oninput="_ebSet(\''+id+'\',\''+k+'\',this.value)">';
+  const pad='<div style="display:flex;gap:8px"><label class="eb-f" style="flex:1"><span>Pad top</span>'+num('padTop',16)+'</label><label class="eb-f" style="flex:1"><span>Pad bottom</span>'+num('padBottom',16)+'</label></div>';
+  switch(b.type){
+    case 'header':
+      return row('Logo width',num('logoWidth',140))
+        +'<label class="eb-check"><input type="checkbox" '+(b.showName!==false?'checked':'')+' onchange="_ebSet(\''+id+'\',\'showName\',this.checked)"> Show org name</label>'
+        +row('Background',color('bg',EB_THEME.card))+pad
+        +'<div class="eb-hint">Click the logo area on the canvas to upload.</div>';
+    case 'heading':
+      return _ebFontSelect(b)+row('Size',num('size',24))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+pad;
+    case 'text':
+      return _ebFontSelect(b)+row('Size',num('size',16))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+pad
+        +'<div class="eb-hint">Edit the words directly on the canvas.</div>';
+    case 'image':
+      return row('Alt text',txt('alt'))+row('Link when clicked',txt('link','https://'))+row('Width',num('width',EB_THEME.maxWidth-48))+pad
+        +'<div class="eb-hint">Click the image on the canvas to replace it.</div>';
+    case 'button':
+      return row('Link URL',txt('url','https://'))+row('Button color',color('color',EB_THEME.accent))+row('Text color',color('textColor','#ffffff'))+row('Align',align('align'))+pad
+        +'<div class="eb-hint">Edit the label directly on the canvas.</div>';
+    case 'divider':
+      return row('Color',color('color',EB_THEME.border))+row('Thickness',num('thickness',1))+pad;
+    case 'spacer':
+      return row('Height',num('height',24));
+    case 'social':
+      return _ebSocialPanel(b)+row('Icon size',num('iconSize',32))
+        +row('Icon style','<select onchange="_ebSet(\''+id+'\',\'iconStyle\',this.value)">'+['color','dark','gray'].map(s=>'<option value="'+s+'"'+((b.iconStyle||'color')===s?' selected':'')+'>'+s+'</option>').join('')+'</select>')
+        +row('Align',align('align'))+pad;
+    case 'footer':
+      return _ebFooterPanel(b);
+    default: return '';
+  }
+}
+function _ebSet(id,key,val){ const b=_ebBlocks.find(x=>x.id===id); if(!b)return; b[key]=val; _ebDirty=true; _ebRenderCanvas(); }
+function _ebSetNum(id,key,val,def){ const n=parseInt(val,10); _ebSet(id,key,isNaN(n)?def:n); }
+
+function _ebSocialPanel(b){
+  const links=b.links||[];
+  let h='<div class="eb-hint">Blank links are skipped.</div>';
+  h+=links.map((l,i)=>'<div class="eb-social-row">'
+    +'<select onchange="_ebSocSet(\''+b.id+'\','+i+',\'network\',this.value)">'+['facebook','instagram','whatsapp','youtube','twitter','tiktok','linkedin','website','email'].map(n=>'<option value="'+n+'"'+((l.network||'')===n?' selected':'')+'>'+n+'</option>').join('')+'</select>'
+    +'<input type="text" value="'+_ebEsc(l.url||'')+'" placeholder="https://…" oninput="_ebSocSet(\''+b.id+'\','+i+',\'url\',this.value)">'
+    +'<button class="eb-block-del" type="button" onclick="_ebSocDel(\''+b.id+'\','+i+')">×</button></div>').join('');
+  h+='<button class="eg-mini-btn" type="button" onclick="_ebSocAdd(\''+b.id+'\')">+ Add link</button>';
+  return h;
+}
+function _ebSocSet(id,i,k,v){ const b=_ebBlocks.find(x=>x.id===id); if(!b||!b.links[i])return; b.links[i][k]=v; _ebDirty=true; _ebRenderCanvas(); }
+function _ebSocAdd(id){ const b=_ebBlocks.find(x=>x.id===id); if(!b)return; (b.links=b.links||[]).push({network:'facebook',url:''}); _ebDirty=true; _ebRenderSide(); }
+function _ebSocDel(id,i){ const b=_ebBlocks.find(x=>x.id===id); if(!b)return; b.links.splice(i,1); _ebDirty=true; _ebRenderSide(); _ebRenderCanvas(); }
+
+function _ebFooterPanel(b){
+  const o=b.org||(b.org=Object.assign({},_ebOrg));
+  const set=(k)=>'oninput="(function(el){var bb=_ebBlocks.find(x=>x.id===\''+b.id+'\');bb.org=bb.org||{};bb.org.'+k+'=el.value;_ebDirty=true;_ebRenderCanvas();})(this)"';
+  const f=(l,k,ph)=>'<label class="eb-f"><span>'+l+'</span><input type="text" value="'+_ebEsc(o[k]||'')+'" placeholder="'+_ebEsc(ph||'')+'" '+set(k)+'></label>';
+  return f('Org name','name')+f('Address','address','123 Main St, Chagrin Falls, OH')+f('Phone','phone')+f('Email','email')+f('Website','website','jewishchagrinfalls.com')
+    +'<label class="eb-check"><input type="checkbox" '+(b.showUnsub!==false?'checked':'')+' onchange="_ebSet(\''+b.id+'\',\'showUnsub\',this.checked)"> Include unsubscribe (required)</label>'
+    +'<div class="eb-hint">Unsubscribe is personalized per recipient at send time.</div>'
+    +'<button class="eg-mini-btn" type="button" onclick="_ebSaveOrgDefaults(\''+b.id+'\')">Save as my defaults</button>';
+}
+async function _ebSaveOrgDefaults(id){
+  const b=_ebBlocks.find(x=>x.id===id); if(!b||!b.org)return;
+  _ebOrg=Object.assign({},_ebOrg,b.org);
+  try{ await sb('app_settings?on_conflict=key',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'email_org_defaults',value:_ebOrg})}); alert('Saved as your default footer details.'); }
+  catch(e){ alert('Could not save: '+e.message); }
+}
+
+// ── image upload to Supabase Storage ──
+function _ebPickImage(id,key){
+  let inp=document.getElementById('ebFilePick');
+  if(!inp){ inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.id='ebFilePick'; inp.style.display='none'; document.body.appendChild(inp); }
+  inp.onchange=async()=>{
+    const file=inp.files&&inp.files[0]; if(!file)return;
+    const b=_ebBlocks.find(x=>x.id===id); if(!b)return;
+    try{ const url=await _ebPutToStorage(file); b[key]=url; _ebDirty=true; _ebRenderCanvas(); }
+    catch(e){ alert('Upload failed: '+e.message); }
+    inp.value='';
+  };
+  inp.click();
+}
+async function _ebPutToStorage(file){
+  const ext=(file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const path='campaigns/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext;
+  const base=(typeof SB_URL!=='undefined')?SB_URL:(window.SB_URL||'');
+  const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:(window.SB_KEY||'');
+  const res=await fetch(base+'/storage/v1/object/email-images/'+path,{method:'POST',headers:{'Authorization':'Bearer '+keyv,'apikey':keyv,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},body:file});
+  if(!res.ok){ const t=await res.text().catch(()=>''); throw new Error('storage '+res.status+' '+t.slice(0,140)); }
+  return base+'/storage/v1/object/public/email-images/'+path;
+}
+
+async function _ebLoadOrg(){
+  try{ const r=await sbAll('app_settings?key=eq.email_org_defaults&select=value'); if(r&&r[0]&&r[0].value)_ebOrg=Object.assign(_ebOrg,r[0].value); }catch(e){}
+}
+
 function switchView(view){
   document.getElementById('appLoading')?.remove();
   const crm=document.getElementById('crmView');
@@ -9197,6 +10117,7 @@ function switchView(view){
   const contacts=document.getElementById('contactsView');
   const events=document.getElementById('eventsView');
   const forms=document.getElementById('formsView');
+  const email=document.getElementById('emailView');
   const strip=document.getElementById('filterStrip');
   const mapCtrl=document.getElementById('mapControls');
   // Reset all
@@ -9205,8 +10126,9 @@ function switchView(view){
   contacts.classList.remove('active');
   if(events)events.classList.remove('active');
   if(forms)forms.classList.remove('active');
+  if(email)email.classList.remove('active');
   const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
-  ['navCRM','navContacts','navDash','navEvents','navForms'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  ['navCRM','navContacts','navDash','navEvents','navForms','navEmail'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   if(view==='dash'){
     dash.classList.add('active');
     document.getElementById('navDash').classList.add('active');
@@ -9235,6 +10157,13 @@ function switchView(view){
     if(mapCtrl)mapCtrl.style.display='none';
     _fbEditingSlug=undefined; // land on the list
     renderForms();
+  } else if(view==='email'){
+    if(email)email.classList.add('active');
+    document.getElementById('navEmail')?.classList.add('active');
+    if(strip)strip.style.display='none';
+    if(mapCtrl)mapCtrl.style.display='none';
+    _egView='groups'; _egOpenGroupId=null; // land on the groups list
+    renderEmail();
   } else {
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
