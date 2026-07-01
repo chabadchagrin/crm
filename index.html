@@ -9418,14 +9418,7 @@ async function initDashboard(){
   _dashLoaded=true;
   // Load engine settings + pinned contacts first so panels render with correct thresholds
   await loadEngineSettings();
-  try{
-    const pinRows=await sb('app_settings?key=eq.daily_pins&limit=1');
-    if(pinRows&&pinRows.length&&pinRows[0].value)_dailyPins=JSON.parse(pinRows[0].value)||[];
-  }catch(e){console.warn('[DAAS] daily_pins load failed',e);}
-  try{
-    const setRows=await sb('app_settings?key=eq.daily_set&limit=1');
-    if(setRows&&setRows.length&&setRows[0].value)_dailySet=JSON.parse(setRows[0].value)||null;
-  }catch(e){console.warn('[DAAS] daily_set load failed',e);}
+  await _loadDailyState();
   // Load saved layout — but only use it if it has ALL current panels
   let layout=DASH_DEFAULT_LAYOUT;
   try{
@@ -10034,6 +10027,22 @@ async function _saveDailySet(){
   }catch(e){console.warn('daily_set save failed',e);}
 }
 
+// Load daily_set + daily_pins from DB into memory. Shared by desktop's
+// initDashboard and mobile's mBoot so both paths hydrate before any compute
+// runs — otherwise mobile boots with _dailySet=null, rebuilds fresh with no
+// carryover, and clobbers the DB copy that desktop is showing.
+// Idempotent: safe to call more than once.
+async function _loadDailyState(){
+  try{
+    const pinRows=await sb('app_settings?key=eq.daily_pins&limit=1');
+    if(pinRows&&pinRows.length&&pinRows[0].value)_dailyPins=JSON.parse(pinRows[0].value)||[];
+  }catch(e){console.warn('[DAAS] daily_pins load failed',e);}
+  try{
+    const setRows=await sb('app_settings?key=eq.daily_set&limit=1');
+    if(setRows&&setRows.length&&setRows[0].value)_dailySet=JSON.parse(setRows[0].value)||null;
+  }catch(e){console.warn('[DAAS] daily_set load failed',e);}
+}
+
 // Discard today's frozen set and repick from scratch. Handy after logging a batch
 // of contacts or adding people — forces a fresh draw without waiting for a new day.
 async function rebuildDailyFive(){
@@ -10044,8 +10053,18 @@ async function rebuildDailyFive(){
 }
 
 // Mark a household as handled for today so it leaves the queue and won't carry over.
+// Cross-device safe: re-read the freshest _dailySet from DB before appending so a
+// concurrent mark-done from the other device isn't lost when we save.
 async function _markDailyDone(hhId){
+  try{
+    const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
+    if(fresh&&fresh.length&&fresh[0].value){
+      const parsed=JSON.parse(fresh[0].value);
+      if(parsed&&parsed.ids)_dailySet=parsed;
+    }
+  }catch(e){console.warn('[DAAS] daily_set re-read (markDone) failed',e);}
   if(!_dailySet)return;
+  if(!Array.isArray(_dailySet.done))_dailySet.done=[];
   if(_dailySet.ids.includes(hhId)&&!_dailySet.done.includes(hhId)){
     _dailySet.done.push(hhId);
     await _saveDailySet();
@@ -10229,6 +10248,24 @@ async function _computeDailyQueue(){
   }
 
   let setChanged=false;
+  if(!_dailySet||_dailySet.date!==todayStr){
+    // ── CROSS-DEVICE SAFETY NET ──
+    // Before rebuilding, re-read DB in case another device (or an earlier tab)
+    // already built today's set. If it did, use theirs — don't clobber with a
+    // fresh rebuild. This closes the race where two devices both wake up on
+    // a fresh day, both see yesterday's set locally, and both rebuild
+    // independently, with the later write winning and destroying the earlier
+    // device's progress (marked-done ids, carryover, etc.).
+    try{
+      const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
+      if(fresh&&fresh.length&&fresh[0].value){
+        const parsed=JSON.parse(fresh[0].value);
+        if(parsed&&parsed.date===todayStr){
+          _dailySet=parsed;
+        }
+      }
+    }catch(e){console.warn('[DAAS] daily_set re-check failed',e);}
+  }
   if(!_dailySet||_dailySet.date!==todayStr){
     const carry=(_dailySet&&Array.isArray(_dailySet.ids))
       ? _dailySet.ids.filter(id=>!(_dailySet.done||[]).includes(id))
@@ -11000,9 +11037,12 @@ function mCloseChatRail(){
 }
 
 /* ---- Boot: called from showApp after data loads ---- */
-function mBoot(){
+async function mBoot(){
   if(!isMobile()) return;
   document.body.style.overflow='hidden';
+  // Hydrate _dailySet/_dailyPins from DB before mRenderD5 runs — otherwise
+  // mobile computes with _dailySet=null and clobbers desktop's set on save.
+  try{ if(typeof _loadDailyState==='function') await _loadDailyState(); }catch(e){ console.warn('[DAAS] mobile daily state load failed',e); }
   try{ mRenderD5(); }catch(e){ console.error('mRenderD5',e); }
   // enrich count hint
   try{
