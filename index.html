@@ -434,24 +434,65 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 /* ── WYSIWYG canvas builder ── */
 .ebx-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
 .ebx-subject{flex:1;min-width:160px;font-family:var(--font-ui);font-size:.82rem;padding:8px 11px;border:1px solid var(--border2);border-radius:7px;background:var(--surf);color:var(--txt)}
+/* ── campaign compose + report ── */
+.ec-compose-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.ec-fields{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.ec-fields .eb-f{flex:1;min-width:180px;margin-bottom:0}
+.ec-stats{display:flex;gap:10px;flex-wrap:wrap}
+.ec-stat{flex:1;min-width:110px;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
+.ec-stat .v{font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--accent)}
+.ec-stat .l{font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);margin-top:2px}
 .ebx-modes{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden}
 .ebx-mode{background:var(--surf);border:none;padding:7px 14px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2);cursor:pointer}
 .ebx-mode.active{background:var(--accent);color:#fff}
 .ebx-body{display:flex;gap:16px;align-items:flex-start}
 .ebx-canvas-wrap{flex:1;min-width:0}
-.ebx-side{flex:0 0 300px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:14px;position:sticky;top:8px;max-height:calc(100vh - 120px);overflow-y:auto}
-@media(max-width:860px){.ebx-body{flex-direction:column}.ebx-side{flex:none;width:100%;position:static;max-height:none}}
-.ebx-page{padding:16px;border-radius:10px;border:1px solid var(--border)}
-.ebx-card{max-width:600px;margin:0 auto;border-radius:4px;overflow:hidden}
+.ebx-side{flex:0 0 296px;background:var(--surf2);border:1px solid var(--border);border-radius:10px;position:sticky;top:8px;max-height:calc(100vh - 120px);overflow-y:auto;overflow-x:hidden}
+.ebx-tabs{display:flex;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surf2);z-index:4}
+.ebx-tab{flex:1;background:none;border:none;padding:10px 4px;font-family:var(--font-ui);font-size:.72rem;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.04em}
+.ebx-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.ebx-side-body{padding:14px}
+.ebx-pal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ebx-pal-card{background:var(--surf);border:1px solid var(--border2);border-radius:8px;padding:0;cursor:pointer;overflow:hidden;text-align:center;transition:border-color .1s, box-shadow .1s}
+.ebx-pal-card:hover{border-color:var(--accent);box-shadow:var(--sh-sm)}
+.ebx-pal-prev{height:52px;display:flex;align-items:center;justify-content:center;background:#faf9f7;border-bottom:1px solid var(--border);padding:6px;pointer-events:none}
+.ebx-pal-name{font-family:var(--font-ui);font-size:.64rem;font-weight:600;color:var(--txt2);padding:5px 4px}
+.ebx-pal-card:hover .ebx-pal-name{color:var(--accent)}
+@media(max-width:860px){.ebx-body{flex-direction:column-reverse}.ebx-side{flex:none;width:100%;position:static;max-height:44vh}}
+.ebx-page{border-radius:10px;border:1px solid var(--border);overflow:hidden;padding:12px 0}
+.ebx-bandin{max-width:600px;margin:0 auto}
 .ebx-empty{padding:36px 16px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem}
 .ebx-blk{position:relative;outline:2px solid transparent;transition:outline-color .1s;cursor:pointer}
 .ebx-blk:hover{outline-color:var(--accent-soft)}
 .ebx-blk.sel{outline-color:var(--accent)}
+.ebx-blk.dragging{opacity:.35}
 .ebx-blk-inner{position:relative}
-.ebx-blk-tools{position:absolute;top:2px;right:2px;display:none;gap:2px;z-index:5;background:var(--surf);border:1px solid var(--border2);border-radius:6px;padding:2px;box-shadow:var(--sh-sm)}
+.ebx-blk-tools{position:absolute;top:50%;transform:translateY(-50%);right:8px;display:none;flex-direction:column;gap:4px;z-index:6;background:var(--surf);border:1px solid var(--border2);border-radius:9px;padding:4px;box-shadow:var(--sh)}
 .ebx-blk.sel .ebx-blk-tools,.ebx-blk:hover .ebx-blk-tools{display:flex}
-.ebx-blk-tools button{background:none;border:none;cursor:pointer;color:var(--txt2);font-size:.7rem;padding:3px 5px;border-radius:4px;line-height:1}
-.ebx-blk-tools button:hover{background:var(--surf2);color:var(--accent)}
+.ebx-blk-tools button{background:none;border:none;cursor:pointer;color:var(--txt2);width:30px;height:30px;border-radius:6px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
+.ebx-blk-tools button:hover{background:var(--accent-soft);color:var(--accent)}
+.ebx-blk-tools button.ebx-grab{cursor:grab;touch-action:none}
+.ebx-blk-tools button.ebx-grab:active{cursor:grabbing}
+.ebx-blk-tools button.ebx-trash:hover{background:#fde8e8;color:#c0392b}
+.ebx-typechip{position:absolute;top:-1px;left:-1px;background:var(--accent);color:#fff;font-family:var(--font-ui);font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:0 0 6px 0;z-index:6;display:none;pointer-events:none}
+.ebx-blk.sel .ebx-typechip{display:block}
+.ebx-dropbar{height:3px;background:var(--accent);border-radius:2px;margin:1px 8px;box-shadow:0 0 0 2px var(--accent-soft)}
+.ebx-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--txt);color:#fff;font-family:var(--font-ui);font-size:.76rem;padding:10px 16px;border-radius:9px;box-shadow:var(--sh);z-index:9999;display:flex;align-items:center;gap:12px}
+.ebx-toast button{background:none;border:none;color:#7dd3c8;font-weight:700;font-size:.76rem;cursor:pointer;padding:0}
+.ebx-presets{display:flex;gap:4px}
+.ebx-preset{flex:1;background:var(--surf);border:1px solid var(--border2);border-radius:6px;padding:5px 2px;font-family:var(--font-ui);font-size:.62rem;font-weight:600;color:var(--txt2);cursor:pointer}
+.ebx-preset:hover{border-color:var(--accent);color:var(--accent)}
+.ebx-preset.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ebx-fmtbar{position:fixed;z-index:10000;background:#2b2b2b;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.35);display:none;align-items:center;gap:2px;padding:4px}
+.ebx-fmtbar.show{display:flex}
+.ebx-fmtbar button{background:none;border:none;color:#eee;width:32px;height:30px;border-radius:5px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif}
+.ebx-fmtbar button:hover{background:#444}
+.ebx-fmtbar .ebx-fmt-sep{width:1px;height:20px;background:#555;margin:0 3px}
+.ebx-fmtbar input{background:#1c1c1c;border:1px solid #555;border-radius:5px;color:#eee;font-family:var(--font-ui);font-size:.72rem;padding:5px 8px;width:210px;outline:none}
+.ebx-fmtbar .ebx-fmt-apply{width:auto;padding:0 10px;font-family:var(--font-ui);font-size:.68rem;font-weight:700;color:#7dd3c8}
+.ebx-tokmenu{position:absolute;top:38px;right:0;background:#2b2b2b;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.35);padding:4px;min-width:210px;z-index:10001}
+.ebx-tokmenu button{width:100%;justify-content:space-between;display:flex;align-items:center;gap:10px;padding:7px 10px;font-family:var(--font-ui);font-size:.7rem;height:auto}
+.ebx-tokmenu button code{color:#7dd3c8;font-size:.62rem}
 .ebx-ce{outline:none;cursor:text;min-height:1em}
 .ebx-ce:focus{background:rgba(15,118,110,.04);border-radius:3px}
 .ebx-cehint{font-size:.56rem;color:var(--txt3);font-family:var(--font-ui);margin-top:2px;opacity:0;transition:opacity .1s}
@@ -461,12 +502,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .ebx-btnprev{display:inline-block;padding:11px 28px;border-radius:6px;font-family:var(--font-ui);font-size:15px;font-weight:700}
 .ebx-btnprev .ebx-ce{color:inherit}
 .ebx-soc{display:inline-block;background:var(--surf2);border:1px solid var(--border2);border-radius:14px;padding:2px 10px;margin:0 3px;font-size:.66rem;font-family:var(--font-ui);color:var(--txt2)}
-.ebx-ins{height:0;position:relative;display:flex;justify-content:center;z-index:3}
-.ebx-ins-btn{position:absolute;top:-11px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--surf);color:var(--accent);font-size:.9rem;line-height:1;cursor:pointer;opacity:.35;transition:opacity .1s;display:flex;align-items:center;justify-content:center;padding:0}
-.ebx-ins:hover .ebx-ins-btn,.ebx-ins.open .ebx-ins-btn{opacity:1}
-.ebx-insmenu{position:absolute;top:16px;background:var(--surf);border:1px solid var(--border2);border-radius:8px;box-shadow:var(--sh);padding:5px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;z-index:20;width:280px}
-.ebx-insmenu button{display:flex;align-items:center;gap:5px;background:none;border:none;padding:6px 8px;border-radius:5px;font-family:var(--font-ui);font-size:.66rem;color:var(--txt2);cursor:pointer;white-space:nowrap}
-.ebx-insmenu button:hover{background:var(--accent-soft);color:var(--accent)}
 .ebx-side-head{font-family:var(--font-display);font-size:.85rem;font-weight:600;color:var(--txt);margin-bottom:10px}
 .ebx-prevlabel{font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
 .ebx-prevframe{width:100%;height:640px;border:1px solid var(--border);border-radius:10px;background:#faf9f7}
@@ -1200,6 +1235,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <!-- EMAIL VIEW -->
   <div class="email-view" id="emailView">
     <div id="emailViewInner"></div>
+  </div>
+</div>
+
+<!-- EMAIL CAMPAIGN · SEND / SCHEDULE -->
+<div class="modal-bg" id="ecSendModal" style="display:none">
+  <div class="modal" style="width:440px;max-width:95vw">
+    <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg> Send Campaign</h2>
+    <div id="ecSendBody"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-pri" id="ecSendOk" onclick="_ecConfirmSend(this)">Send</button>
+      <button class="btn btn-sec" onclick="document.getElementById('ecSendModal').style.display='none'">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -9372,6 +9419,9 @@ async function renderEmail(){
   catch(e){ host.innerHTML='<div class="hint"><p>Could not load email groups. Have you run the Step 1 SQL yet?<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; }
   if(_egView==='group'&&_egOpenGroupId)_egRenderGroupDetail();
   else if(_egView==='builder')_ebRenderBuilder();
+  else if(_egView==='campaigns'){ try{ await _ecLoad(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load campaigns. Have you run the Step 3/4 SQL?<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; } _ecRenderList(); }
+  else if(_egView==='compose')_ecRenderCompose();
+  else if(_egView==='report'){ /* report renders itself via _ecReport */ }
   else _egRenderGroupList();
 }
 
@@ -9380,8 +9430,8 @@ async function renderEmail(){
 function _egTabBar(active){
   return `<div class="eg-tabbar">
     <button class="eg-tab ${active==='groups'?'active':''}" onclick="_egGoGroups()">Groups</button>
-    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Coming in a later step">Campaigns</button>
-    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Coming in a later step">Templates</button>
+    <button class="eg-tab ${active==='campaigns'?'active':''}" onclick="_ecGoCampaigns()">Campaigns</button>
+    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Duplicate a past campaign to reuse it as a template">Templates</button>
   </div>`;
 }
 
@@ -9392,11 +9442,11 @@ function _egRenderGroupList(){
   const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
     <div>
       <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</h2>
-      <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Recipient groups. Building &amp; sending arrives in later steps.</div>
+      <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Recipient groups for your campaigns.</div>
     </div>
     <button class="btn btn-pri" onclick="_egNewGroup()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Group</button>
   </div>`;
-  const designBtn=`<div style="margin-bottom:14px"><button class="btn btn-sec" onclick="_egGoBuilder()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586M11 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg> Try the Email Builder</button></div>`;
+  const designBtn=`<div style="margin-bottom:14px"><button class="btn btn-sec" onclick="_ecGoCampaigns()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg> Go to Campaigns →</button></div>`;
   let body;
   if(!_egGroups.length){
     body=`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No groups yet. Create a group, then add contacts to it here or from the Contacts view.</div>`;
@@ -9682,8 +9732,9 @@ function _ebEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/<
 function _ebInline(s){
   let t=_ebEsc(s);
   t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
   t=t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,lbl,url)=>{
-    const safe=/^(https?:|mailto:|tel:)/i.test(url)?url:'#';
+    const safe=/^(https?:|mailto:|tel:)/i.test(url)?url:(url==='{unsubscribe}'?url:'#');
     return '<a href="'+_ebEsc(safe)+'" style="color:'+EB_THEME.link+';text-decoration:underline">'+lbl+'</a>';
   });
   t=t.replace(/\n/g,'<br>');
@@ -9716,11 +9767,10 @@ function _ebPad(b){ // uniform side padding, per-block vertical
   return 'padding:'+t+'px 24px '+bo+'px 24px';
 }
 function _ebRHeader(b){
-  const bgc=b.bg||EB_THEME.card;
   let inner='';
   if(b.logo){ inner+='<img src="'+_ebEsc(_ebSafeUrl(b.logo))+'" alt="'+_ebEsc(b.name||'')+'" width="'+(b.logoWidth||140)+'" style="display:block;margin:0 auto;border:0;max-width:'+(b.logoWidth||140)+'px;height:auto">'; }
   if(b.name&&b.showName!==false){ inner+='<div style="font-family:'+EB_THEME.fontHead+';font-size:20px;color:'+EB_THEME.text+';text-align:center;margin-top:'+(b.logo?'10px':'0')+'">'+_ebEsc(b.name)+'</div>'; }
-  return '<tr><td align="center" style="'+_ebPad(b)+';background:'+bgc+'">'+inner+'</td></tr>';
+  return '<tr><td align="center" style="'+_ebPad(b)+'">'+inner+'</td></tr>';
 }
 function _ebRHeading(b){
   const align=b.align||'left';
@@ -9775,6 +9825,12 @@ function _ebRSocial(b){
   return '<tr><td align="'+(b.align||'center')+'" style="'+_ebPad(b)+'">'+items+'</td></tr>';
 }
 function _ebRFooter(b){
+  // New-style footer: freely edited text (like a text block), small + muted.
+  // The unsubscribe link lives IN the text as [label]({unsubscribe}).
+  if(b.text!=null){
+    return '<tr><td style="'+_ebPad(b)+'"><div style="font-family:'+EB_THEME.fontBody+';font-size:'+(b.size||12)+'px;color:'+(b.color||EB_THEME.muted)+';line-height:1.6;text-align:'+(b.align||'center')+'">'+_ebInline(b.text||'')+'</div></td></tr>';
+  }
+  // Legacy footer (org-field based) — kept for older saved designs
   const o=Object.assign({},_ebOrg,b.org||{});
   const parts=[];
   if(o.name) parts.push('<strong>'+_ebEsc(o.name)+'</strong>');
@@ -9791,7 +9847,7 @@ function _ebRFooter(b){
     html+='<br><br><a href="%unsubscribe_url%" style="color:'+EB_THEME.muted+';text-decoration:underline">Unsubscribe</a> from these emails.';
   }
   html+='</div>';
-  return '<tr><td style="'+_ebPad(b)+';background:'+(b.bg||EB_THEME.bg)+'">'+html+'</td></tr>';
+  return '<tr><td style="'+_ebPad(b)+'">'+html+'</td></tr>';
 }
 
 // ── Compile full block list → complete email document ──
@@ -9801,14 +9857,28 @@ function _ebCompile(blocks,opts){
   const sect=opts.section||_ebSection||{};
   const outerBg=sect.outerBg||EB_THEME.bg;
   const cardBg=sect.cardBg||EB_THEME.card;
-  const rows=(blocks||[]).map(_ebRenderBlock).join('');
+  // each block is its own full-width band: outside bg + 600px content bg,
+  // so colors can differ per block (or inherit the email-wide defaults)
+  const band=(b,row,first,last)=>{
+    const ob=b.outerBg||outerBg;
+    const ib=b.bg||(b.type==='footer'?EB_THEME.bg:cardBg);
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:'+ob+'"><tr><td align="center" style="padding:'+(first?16:0)+'px 16px '+(last?16:0)+'px 16px">'
+      +'<table role="presentation" width="'+EB_THEME.maxWidth+'" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:'+EB_THEME.maxWidth+'px;width:100%;background:'+ib+'">'+row+'</table>'
+      +'</td></tr></table>';
+  };
+  const list=(blocks||[]);
+  let bands=list.map((b,i)=>band(b,_ebRenderBlock(b),i===0,i===list.length-1)).join('');
+  // CAN-SPAM safeguard: an unsubscribe link must always exist
+  if(!/\{unsubscribe\}|%unsubscribe_url%/.test(bands)){
+    const fb={type:'footer',padTop:12,padBottom:16};
+    bands+=band(fb,'<tr><td style="'+_ebPad(fb)+'"><div style="font-family:'+EB_THEME.fontBody+';font-size:12px;color:'+EB_THEME.muted+';text-align:center"><a href="{unsubscribe}" style="color:'+EB_THEME.muted+';text-decoration:underline">Unsubscribe</a> from these emails.</div></td></tr>',!list.length,true);
+  }
   const pre=opts.preheader?('<div style="display:none;max-height:0;overflow:hidden;opacity:0">'+_ebEsc(opts.preheader)+'</div>'):'';
-  return '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]--><title>'+_ebEsc(opts.subject||'')+'</title></head>'
-    +'<body style="margin:0;padding:0;background:'+outerBg+'">'+pre
-    +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:'+outerBg+'"><tr><td align="center" style="padding:16px">'
-    +'<table role="presentation" width="'+EB_THEME.maxWidth+'" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:'+EB_THEME.maxWidth+'px;width:100%;background:'+cardBg+'">'
-    +rows
-    +'</table></td></tr></table></body></html>';
+  let out='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]--><title>'+_ebEsc(opts.subject||'')+'</title></head>'
+    +'<body style="margin:0;padding:0;background:'+outerBg+'">'+pre+bands+'</body></html>';
+  // personalization tokens → Mailgun recipient variables (filled per recipient at send)
+  out=out.replace(/\{(first_name|last_name|joint_name|email|unsubscribe)\}/g,(m,k)=>({first_name:'%recipient.first_name%',last_name:'%recipient.last_name%',joint_name:'%recipient.joint_name%',email:'%recipient.email%',unsubscribe:'%unsubscribe_url%'})[k]);
+  return out;
 }
 
 // ═══════════════════════ BUILDER STATE + WYSIWYG CANVAS UI ═════════════════
@@ -9820,7 +9890,11 @@ let _ebSel=null;           // selected block id
 let _ebDirty=false;
 let _ebSection={ outerBg:EB_THEME.bg, cardBg:EB_THEME.card };
 let _ebMode='edit';        // 'edit' | 'preview'
-let _ebInsertAt=null;      // index where insert menu is open, or null
+let _ebTab='blocks';       // left sidebar tab: 'blocks' | 'settings'
+let _ebDrag=null;          // {id, dropIdx} while dragging a block
+let _ebLastDel=null;       // {block, idx} for undo
+let _ebSubjectV='';        // subject line
+let _ebPreheaderV='';      // inbox preview text (preheader)
 
 function _ebUid(){ return 'b'+Math.random().toString(36).slice(2,9); }
 const EB_PALETTE=[
@@ -9845,9 +9919,24 @@ function _ebNewBlock(type){
     divider:{color:EB_THEME.border,thickness:1},
     spacer:{height:24},
     social:{links:[{network:'facebook',url:''},{network:'instagram',url:''}],iconSize:32,iconStyle:'color',align:'center'},
-    footer:{org:Object.assign({},_ebOrg),showUnsub:true,bg:''}
+    footer:{text:_ebFooterDefaultText(),size:12,color:EB_THEME.muted,align:'center',bg:EB_THEME.bg}
   }[type]||{};
   return Object.assign(base,d);
+}
+// default footer wording: saved custom default if one exists, else built from org info
+function _ebFooterDefaultText(){
+  if(_ebOrg&&_ebOrg.footerText)return _ebOrg.footerText;
+  const o=_ebOrg||{}; const L=[];
+  if(o.name)L.push('**'+o.name+'**');
+  if(o.address)L.push(o.address);
+  const l2=[];
+  if(o.phone)l2.push(o.phone);
+  if(o.email)l2.push(o.email);
+  if(o.website)l2.push(o.website.replace(/^https?:\/\//,''));
+  if(l2.length)L.push(l2.join(' · '));
+  L.push('');
+  L.push('[Unsubscribe]({unsubscribe}) from these emails.');
+  return L.join('\n');
 }
 
 // ── entry ──
@@ -9863,15 +9952,16 @@ function _ebRenderBuilder(){
   host.innerHTML=`
     <div class="ebx-top">
       <button class="eg-mini-btn" onclick="_egGoGroups()">← Back</button>
-      <input type="text" id="ebSubject" placeholder="Email subject…" class="ebx-subject" oninput="_ebTouch()">
+      <input type="text" id="ebSubject" placeholder="Email subject…" class="ebx-subject" value="${_ebEsc(_ebSubjectV)}" oninput="_ebSubjectV=this.value;_ebDirty=true">
+      <input type="text" id="ebPreheader" placeholder="Inbox preview text (shows after the subject)…" class="ebx-subject" value="${_ebEsc(_ebPreheaderV)}" oninput="_ebPreheaderV=this.value;_ebDirty=true">
       <div class="ebx-modes">
         <button class="ebx-mode ${_ebMode==='edit'?'active':''}" onclick="_ebSetMode('edit')">Edit</button>
         <button class="ebx-mode ${_ebMode==='preview'?'active':''}" onclick="_ebSetMode('preview')">Preview</button>
       </div>
     </div>
     <div class="ebx-body">
+      ${_ebMode==='edit'?'<div class="ebx-side" id="ebSide"></div>':''}
       <div class="ebx-canvas-wrap" id="ebCanvasWrap"></div>
-      <div class="ebx-side" id="ebSide"></div>
     </div>`;
   _ebRenderCanvas();
   _ebRenderSide();
@@ -9883,38 +9973,86 @@ function _ebTouch(){ _ebDirty=true; }
 function _ebRenderCanvas(){
   const wrap=document.getElementById('ebCanvasWrap'); if(!wrap)return;
   if(_ebMode==='preview'){
-    const html=_ebCompile(_ebBlocks,{subject:(document.getElementById('ebSubject')||{}).value||'',section:_ebSection});
+    const html=_ebCompile(_ebBlocks,{subject:_ebSubjectV,preheader:_ebPreheaderV,section:_ebSection});
     wrap.innerHTML='<div class="ebx-prevlabel">Exactly as recipients will see it</div><iframe class="ebx-prevframe" id="ebPreview" title="Preview"></iframe>';
     const fr=document.getElementById('ebPreview');
     try{ fr.srcdoc=html; }catch(e){ const d=fr.contentDocument; d.open(); d.write(html); d.close(); }
     return;
   }
-  // edit mode — render each block as an editable card inside a page frame
-  const inner=_ebBlocks.map((b,i)=>_ebCanvasBlock(b,i)).join('')||'';
+  // edit mode — each block is a full-width band (outside bg) with a 600px content strip (block bg), mirroring the sent email
+  const drop=(idx)=>(_ebDrag&&_ebDrag.dropIdx===idx)?'<div class="ebx-dropbar"></div>':'';
   wrap.innerHTML='<div class="ebx-page" style="background:'+_ebSection.outerBg+'">'
-    +'<div class="ebx-card" style="background:'+_ebSection.cardBg+'">'
-    +_ebInsertPoint(0)
-    +_ebBlocks.map((b,i)=>_ebCanvasBlock(b,i)+_ebInsertPoint(i+1)).join('')
-    +(_ebBlocks.length?'':'<div class="ebx-empty">Empty email. Click + to add your first block.</div>')
+    +'<div id="ebCard">'
+    +drop(0)
+    +_ebBlocks.map((b,i)=>_ebCanvasBlock(b,i)+drop(i+1)).join('')
+    +(_ebBlocks.length?'':'<div class="ebx-empty">Empty email. Click a block on the left to add it.</div>')
     +'</div></div>';
   _ebBindEditable();
 }
-// the "+" insert line between blocks
-function _ebInsertPoint(idx){
-  const open=(_ebInsertAt===idx);
-  let menu='';
-  if(open){
-    menu='<div class="ebx-insmenu">'+EB_PALETTE.map(p=>'<button onclick="_ebInsert('+idx+',\''+p[0]+'\')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+p[2]+'"></path></svg>'+p[1]+'</button>').join('')+'</div>';
-  }
-  return '<div class="ebx-ins'+(open?' open':'')+'"><button class="ebx-ins-btn" onclick="_ebToggleInsert('+idx+')" title="Add block here">+</button>'+menu+'</div>';
-}
-function _ebToggleInsert(idx){ _ebInsertAt=(_ebInsertAt===idx?null:idx); _ebRenderCanvas(); }
-function _ebInsert(idx,type){
-  if(type==='footer'&&_ebBlocks.some(b=>b.type==='footer')){ alert('This email already has a footer.'); _ebInsertAt=null; _ebRenderCanvas(); return; }
+// insert from the left palette: after selected block, else at end (above footer)
+function _ebPaletteInsert(type){
+  if(type==='footer'&&_ebBlocks.some(b=>b.type==='footer')){ _ebToastMsg('This email already has a footer.'); return; }
   const blk=_ebNewBlock(type);
+  let idx=_ebBlocks.length;
+  const selIdx=_ebBlocks.findIndex(b=>b.id===_ebSel);
+  if(selIdx>=0) idx=selIdx+1;
+  else{
+    const fIdx=_ebBlocks.findIndex(b=>b.type==='footer');
+    if(fIdx>=0&&type!=='footer') idx=fIdx;
+  }
   _ebBlocks.splice(idx,0,blk);
-  _ebInsertAt=null; _ebSel=blk.id; _ebDirty=true;
-  _ebRenderCanvas(); _ebRenderSide();
+  _ebSel=blk.id; _ebDirty=true;
+  _ebRenderCanvas(); _ebRenderSide();   // stays on Blocks tab
+  const el=document.querySelector('#ebCanvasWrap [data-blk="'+blk.id+'"]');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ── drag-to-reorder (pointer-based, from the ⠿ handle) ──
+function _ebDragStart(e,id){
+  e.preventDefault(); e.stopPropagation();
+  const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return;
+  _ebDrag={id,dropIdx:null};
+  const blkEl=document.querySelector('#ebCanvasWrap [data-blk="'+id+'"]');
+  if(blkEl)blkEl.classList.add('dragging');
+  document.body.style.userSelect='none';
+  const move=(ev)=>{
+    const y=(ev.touches?ev.touches[0].clientY:ev.clientY);
+    const els=[...document.querySelectorAll('#ebCanvasWrap .ebx-blk')];
+    let idx=els.length;
+    for(let k=0;k<els.length;k++){
+      const r=els[k].getBoundingClientRect();
+      if(y<r.top+r.height/2){ idx=k; break; }
+    }
+    if(_ebDrag&&_ebDrag.dropIdx!==idx){ _ebDrag.dropIdx=idx; _ebRenderCanvas(); const d=document.querySelector('#ebCanvasWrap [data-blk="'+id+'"]'); if(d)d.classList.add('dragging'); }
+  };
+  const up=()=>{
+    document.removeEventListener('pointermove',move);
+    document.removeEventListener('pointerup',up);
+    document.body.style.userSelect='';
+    if(_ebDrag&&_ebDrag.dropIdx!=null){
+      const from=_ebBlocks.findIndex(b=>b.id===_ebDrag.id);
+      let to=_ebDrag.dropIdx;
+      if(from>=0){
+        const [blk]=_ebBlocks.splice(from,1);
+        if(to>from)to--;
+        _ebBlocks.splice(to,0,blk);
+        _ebDirty=true;
+      }
+    }
+    _ebDrag=null; _ebRenderCanvas();
+  };
+  document.addEventListener('pointermove',move);
+  document.addEventListener('pointerup',up);
+}
+
+// ── delete with undo toast ──
+function _ebToastMsg(msg,undoFn){
+  document.querySelectorAll('.ebx-toast').forEach(t=>t.remove());
+  const t=document.createElement('div'); t.className='ebx-toast';
+  t.innerHTML=_ebEsc(msg)+(undoFn?'<button type="button">Undo</button>':'');
+  if(undoFn)t.querySelector('button').onclick=()=>{ undoFn(); t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(()=>{ if(t.parentNode)t.remove(); },6000);
 }
 
 // one editable block card on the canvas
@@ -9932,10 +10070,10 @@ function _ebCanvasBlock(b,i){
       body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+_ebFont(b.font,EB_THEME.fontHead)+';font-size:'+(b.size||24)+'px;font-weight:700;color:'+(b.color||EB_THEME.text)+';text-align:'+(b.align||'left')+';line-height:1.3">'+_ebEsc(b.text||'')+'</div>';
       break;
     case 'text':
-      body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+_ebFont(b.font,EB_THEME.fontBody)+';font-size:'+(b.size||16)+'px;color:'+(b.color||EB_THEME.text)+';text-align:'+(b.align||'left')+';line-height:1.6">'+_ebInline(b.text||'')+'</div><div class="ebx-cehint">Type here · **bold** · [link](url)</div>';
+      body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+_ebFont(b.font,EB_THEME.fontBody)+';font-size:'+(b.size||16)+'px;color:'+(b.color||EB_THEME.text)+';text-align:'+(b.align||'left')+';line-height:1.6">'+_ebInline(b.text||'')+'</div><div class="ebx-cehint">Click to type · select text for Bold / Italic / Link</div>';
       break;
     case 'image':
-      body=b.src?'<img src="'+_ebEsc(_ebSafeUrl(b.src))+'" style="max-width:100%;display:block;margin:0 auto">':'<div class="ebx-imgph" onclick="_ebPickImage(\''+b.id+'\',\'src\')">Click to add image</div>';
+      body=b.src?'<img src="'+_ebEsc(_ebSafeUrl(b.src))+'" style="width:100%;max-width:'+((b.width!=null?b.width:EB_THEME.maxWidth-48))+'px;display:block;margin:0 auto">':'<div class="ebx-imgph" onclick="_ebPickImage(\''+b.id+'\',\'src\')">Click to add image</div>';
       break;
     case 'button':
       body='<div style="text-align:'+(b.align||'center')+'"><span class="ebx-btnprev" style="background:'+(b.color||EB_THEME.accent)+';color:'+(b.textColor||'#fff')+'"><span contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="label">'+_ebEsc(b.label||'Button')+'</span></span></div>';
@@ -9950,18 +10088,22 @@ function _ebCanvasBlock(b,i){
       body='<div style="text-align:'+(b.align||'center')+'">'+((b.links||[]).filter(l=>l.url).length?(b.links||[]).filter(l=>l.url).map(l=>'<span class="ebx-soc">'+_ebEsc(l.network||'')+'</span>').join(''):'<span class="ebx-cehint">Add social links in the panel →</span>')+'</div>';
       break;
     case 'footer':
-      const o=Object.assign({},_ebOrg,b.org||{});
-      body='<div style="font-size:12px;color:'+EB_THEME.muted+';text-align:center;line-height:1.6"><strong>'+_ebEsc(o.name||'')+'</strong>'+(o.address?'<br>'+_ebEsc(o.address):'')+(b.showUnsub!==false?'<br><br><span style="text-decoration:underline">Unsubscribe</span>':'')+'</div>';
+      if(b.text==null){ b.text=_ebFooterDefaultText(); } // migrate legacy footers on first touch
+      body='<div contenteditable="true" class="ebx-ce" data-id="'+b.id+'" data-key="text" style="font-family:'+EB_THEME.fontBody+';font-size:'+(b.size||12)+'px;color:'+(b.color||EB_THEME.muted)+';line-height:1.6;text-align:'+(b.align||'center')+'">'+_ebInline(b.text||'')+'</div><div class="ebx-cehint">Edit freely — the unsubscribe link must stay (auto-added at send if missing)</div>';
       break;
   }
-  return '<div class="ebx-blk'+(sel?' sel':'')+'" data-blk="'+b.id+'" onclick="_ebSelectBlk(event,\''+b.id+'\')">'
+  const label=(EB_PALETTE.find(p=>p[0]===b.type)||['',b.type])[1];
+  const innerBg=b.bg||(b.type==='footer'?EB_THEME.bg:_ebSection.cardBg);
+  const outerBgB=b.outerBg||_ebSection.outerBg;
+  const ic=(d)=>'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+d+'"></path></svg>';
+  return '<div class="ebx-blk'+(sel?' sel':'')+'" data-blk="'+b.id+'" style="background:'+outerBgB+'" onclick="_ebSelectBlk(event,\''+b.id+'\')">'
+    +'<div class="ebx-typechip">'+_ebEsc(label)+'</div>'
     +'<div class="ebx-blk-tools">'
-      +'<button title="Move up" onclick="_ebMove(event,\''+b.id+'\',-1)">▲</button>'
-      +'<button title="Move down" onclick="_ebMove(event,\''+b.id+'\',1)">▼</button>'
-      +'<button title="Duplicate" onclick="_ebDup(event,\''+b.id+'\')">⧉</button>'
-      +'<button title="Delete" onclick="_ebDel(event,\''+b.id+'\')">×</button>'
+      +'<button class="ebx-grab" title="Drag to reorder" onpointerdown="_ebDragStart(event,\''+b.id+'\')">'+ic('M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01')+'</button>'
+      +'<button title="Duplicate" onclick="_ebDup(event,\''+b.id+'\')">'+ic('M8 8h12v12H8zM16 8V4H4v12h4')+'</button>'
+      +'<button class="ebx-trash" title="Delete" onclick="_ebDel(event,\''+b.id+'\')">'+ic('M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6')+'</button>'
     +'</div>'
-    +'<div class="ebx-blk-inner" style="padding:'+((b.padTop!=null?b.padTop:16))+'px 24px '+((b.padBottom!=null?b.padBottom:16))+'px">'+body+'</div>'
+    +'<div class="ebx-bandin" style="background:'+innerBg+'"><div class="ebx-blk-inner" style="padding:'+((b.padTop!=null?b.padTop:16))+'px 24px '+((b.padBottom!=null?b.padBottom:16))+'px">'+body+'</div></div>'
     +'</div>';
 }
 
@@ -9976,36 +10118,156 @@ function _ebBindEditable(){
       b[key]=val; _ebDirty=true;
     });
     el.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&(el.getAttribute('data-key')==='label'||el.getAttribute('data-key')==='name')){ e.preventDefault(); el.blur(); } });
+    if(el.getAttribute('data-key')==='text'){
+      el.addEventListener('focus',()=>_ebBarShow(el));
+      el.addEventListener('blur',()=>_ebBarHideSoon());
+    }
   });
+}
+
+// ── floating format bar (bold / italic / link) for text blocks ──
+let _ebBarEl=null, _ebBarTarget=null, _ebBarTimer=null, _ebSavedRange=null;
+function _ebEnsureBar(){
+  if(_ebBarEl)return _ebBarEl;
+  const bar=document.createElement('div');
+  bar.className='ebx-fmtbar'; bar.id='ebFmtBar';
+  bar.innerHTML='<button type="button" title="Bold" data-cmd="bold" style="font-weight:700">B</button>'
+    +'<button type="button" title="Italic" data-cmd="italic" style="font-style:italic">I</button>'
+    +'<span class="ebx-fmt-sep"></span>'
+    +'<button type="button" title="Add link" data-cmd="linkstart">&#128279;</button>'
+    +'<button type="button" title="Remove link" data-cmd="unlink">&#10005;</button>'
+    +'<span class="ebx-fmt-sep"></span>'
+    +'<button type="button" title="Insert personalization" data-cmd="tokens" class="ebx-fmt-apply" style="color:#eee">Tokens ▾</button>'
+    +'<div id="ebFmtTokMenu" class="ebx-tokmenu" style="display:none">'
+      +[['First name','{first_name}'],['Last name','{last_name}'],['Joint name','{joint_name}'],['Email','{email}'],['Unsubscribe link','[Unsubscribe]({unsubscribe})']].map(t=>'<button type="button" data-tok="'+_ebEsc(t[1])+'">'+t[0]+' <code>'+_ebEsc(t[1])+'</code></button>').join('')
+    +'</div>'
+    +'<span id="ebFmtLink" style="display:none;align-items:center;gap:4px"><input type="text" id="ebFmtUrl" placeholder="https://…"><button type="button" class="ebx-fmt-apply" data-cmd="linkapply">Apply</button></span>';
+  // keep selection: don't let toolbar clicks steal focus (except the URL input)
+  bar.addEventListener('pointerdown',(e)=>{ if(e.target.id!=='ebFmtUrl')e.preventDefault(); });
+  bar.addEventListener('click',(e)=>{
+    const tok=e.target.closest&&e.target.closest('[data-tok]');
+    if(tok){ document.getElementById('ebFmtTokMenu').style.display='none'; document.execCommand('insertText',false,tok.getAttribute('data-tok')); _ebDirty=true; return; }
+    const cmd=e.target.getAttribute('data-cmd'); if(!cmd)return;
+    if(cmd==='bold'||cmd==='italic'){ document.execCommand(cmd); _ebDirty=true; }
+    else if(cmd==='unlink'){ document.execCommand('unlink'); _ebDirty=true; }
+    else if(cmd==='tokens'){ const m=document.getElementById('ebFmtTokMenu'); m.style.display=(m.style.display==='none'?'block':'none'); }
+    else if(cmd==='linkstart'){
+      const sel=window.getSelection();
+      if(!sel.rangeCount||sel.isCollapsed){ _ebToastMsg('Select some text first, then click the link button.'); return; }
+      _ebSavedRange=sel.getRangeAt(0).cloneRange();
+      document.getElementById('ebFmtLink').style.display='flex';
+      const inp=document.getElementById('ebFmtUrl'); inp.value=''; inp.focus();
+    }
+    else if(cmd==='linkapply'){ _ebBarApplyLink(); }
+  });
+  bar.querySelector('#ebFmtUrl').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); _ebBarApplyLink(); } if(e.key==='Escape'){ document.getElementById('ebFmtLink').style.display='none'; } });
+  document.body.appendChild(bar);
+  window.addEventListener('scroll',()=>{ if(_ebBarTarget)_ebBarPos(); },true);
+  window.addEventListener('resize',()=>{ if(_ebBarTarget)_ebBarPos(); });
+  _ebBarEl=bar; return bar;
+}
+function _ebBarApplyLink(){
+  let url=(document.getElementById('ebFmtUrl').value||'').trim();
+  if(url&&!/^(https?:|mailto:|tel:)/i.test(url))url='https://'+url;
+  document.getElementById('ebFmtLink').style.display='none';
+  if(!url||!_ebSavedRange)return;
+  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(_ebSavedRange);
+  document.execCommand('createLink',false,url);
+  _ebSavedRange=null; _ebDirty=true;
+  if(_ebBarTarget)_ebBarTarget.focus();
+}
+function _ebBarShow(el){
+  clearTimeout(_ebBarTimer);
+  _ebBarTarget=el;
+  const bar=_ebEnsureBar();
+  document.getElementById('ebFmtLink').style.display='none';
+  const tm=document.getElementById('ebFmtTokMenu'); if(tm)tm.style.display='none';
+  bar.classList.add('show');
+  _ebBarPos();
+}
+function _ebBarPos(){
+  if(!_ebBarEl||!_ebBarTarget)return;
+  const r=_ebBarTarget.getBoundingClientRect();
+  const bw=_ebBarEl.offsetWidth||160;
+  let top=r.top-44; if(top<6)top=r.bottom+8;
+  let left=r.left+(r.width-bw)/2; if(left<6)left=6;
+  if(left+bw>window.innerWidth-6)left=window.innerWidth-bw-6;
+  _ebBarEl.style.top=top+'px'; _ebBarEl.style.left=left+'px';
+}
+function _ebBarHideSoon(){
+  clearTimeout(_ebBarTimer);
+  _ebBarTimer=setTimeout(()=>{
+    const bar=_ebBarEl; if(!bar)return;
+    if(bar.contains(document.activeElement))return; // typing a URL
+    bar.classList.remove('show'); _ebBarTarget=null;
+  },180);
 }
 // convert contenteditable innerHTML back to our markdown-ish text
 function _ebFromHtml(el){
   let h=el.innerHTML;
   h=h.replace(/<div>/gi,'\n').replace(/<br\s*\/?>/gi,'\n').replace(/<\/div>/gi,'');
   h=h.replace(/<b>|<strong>/gi,'**').replace(/<\/b>|<\/strong>/gi,'**');
+  h=h.replace(/<i>|<em>/gi,'*').replace(/<\/i>|<\/em>/gi,'*');
   h=h.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi,'[$2]($1)');
   h=h.replace(/<[^>]+>/g,''); // strip anything else
   const tmp=document.createElement('textarea'); tmp.innerHTML=h; return tmp.value.trim();
 }
 
 // selection + block ops
-function _ebSelectBlk(e,id){ if(e&&e.target&&e.target.classList&&e.target.classList.contains('ebx-ce'))return; _ebSel=id; _ebRenderCanvas(); _ebRenderSide(); }
-function _ebMove(e,id,dir){ e.stopPropagation(); const i=_ebBlocks.findIndex(b=>b.id===id); const j=i+dir; if(i<0||j<0||j>=_ebBlocks.length)return; const t=_ebBlocks[i];_ebBlocks[i]=_ebBlocks[j];_ebBlocks[j]=t; _ebDirty=true; _ebRenderCanvas(); }
-function _ebDup(e,id){ e.stopPropagation(); const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return; if(_ebBlocks[i].type==='footer'){alert('Only one footer allowed.');return;} const copy=JSON.parse(JSON.stringify(_ebBlocks[i])); copy.id=_ebUid(); _ebBlocks.splice(i+1,0,copy); _ebDirty=true; _ebRenderCanvas(); }
-function _ebDel(e,id){ e.stopPropagation(); _ebBlocks=_ebBlocks.filter(b=>b.id!==id); if(_ebSel===id)_ebSel=null; _ebDirty=true; _ebRenderCanvas(); _ebRenderSide(); }
+function _ebSelectBlk(e,id){ if(e&&e.target&&e.target.classList&&e.target.classList.contains('ebx-ce'))return; _ebSel=id; _ebTab='settings'; _ebRenderCanvas(); _ebRenderSide(); }
+function _ebDup(e,id){ e.stopPropagation(); const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return; if(_ebBlocks[i].type==='footer'){_ebToastMsg('Only one footer allowed.');return;} const copy=JSON.parse(JSON.stringify(_ebBlocks[i])); copy.id=_ebUid(); _ebBlocks.splice(i+1,0,copy); _ebDirty=true; _ebRenderCanvas(); }
+function _ebDel(e,id){
+  e.stopPropagation();
+  const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return;
+  const removed=_ebBlocks[i];
+  _ebBlocks.splice(i,1);
+  if(_ebSel===id){ _ebSel=null; _ebTab='blocks'; }
+  _ebDirty=true; _ebRenderCanvas(); _ebRenderSide();
+  const label=(EB_PALETTE.find(p=>p[0]===removed.type)||['',removed.type])[1];
+  _ebToastMsg(label+' block deleted',()=>{
+    const at=Math.min(i,_ebBlocks.length);
+    _ebBlocks.splice(at,0,removed);
+    _ebSel=removed.id; _ebDirty=true; _ebRenderCanvas(); _ebRenderSide();
+  });
+}
 
 // ── SIDE PANEL (style for selected block, or section styles) ──
 function _ebRenderSide(){
   const side=document.getElementById('ebSide'); if(!side)return;
-  const b=_ebBlocks.find(x=>x.id===_ebSel);
-  if(!b){ side.innerHTML=_ebSectionPanel(); return; }
-  const label=(EB_PALETTE.find(p=>p[0]===b.type)||['',b.type])[1];
-  side.innerHTML='<div class="ebx-side-head">'+_ebEsc(label)+' settings</div>'+_ebBlockPanel(b)+'<div style="margin-top:14px"><button class="eg-mini-btn" onclick="_ebSel=null;_ebRenderCanvas();_ebRenderSide()">Section settings →</button></div>';
+  const tab=(k,lbl)=>'<button class="ebx-tab'+(_ebTab===k?' active':'')+'" onclick="_ebTab=\''+k+'\';_ebRenderSide()">'+lbl+'</button>';
+  let body='';
+  if(_ebTab==='blocks'){
+    body='<div class="eb-hint" style="margin-bottom:10px">Click a block to add it to your email.</div><div class="ebx-pal">'+EB_PALETTE.map(p=>_ebPalCard(p[0],p[1])).join('')+'</div>';
+  }else{
+    const b=_ebBlocks.find(x=>x.id===_ebSel);
+    if(!b){ body=_ebSectionPanel(); }
+    else{
+      const label=(EB_PALETTE.find(p=>p[0]===b.type)||['',b.type])[1];
+      body='<div class="ebx-side-head">'+_ebEsc(label)+' settings</div>'+_ebBlockPanel(b)+'<div style="margin-top:14px"><button class="eg-mini-btn" onclick="_ebSel=null;_ebRenderCanvas();_ebRenderSide()">Section settings →</button></div>';
+    }
+  }
+  side.innerHTML='<div class="ebx-tabs">'+tab('blocks','Blocks')+tab('settings','Settings')+'</div><div class="ebx-side-body">'+body+'</div>';
+}
+// mini visual preview card for each palette block type
+function _ebPalCard(type,name){
+  const g='#c9c4b8', g2='#8a8578', acc=EB_THEME.accent;
+  const previews={
+    header:'<div style="text-align:center;width:100%"><div style="width:26px;height:18px;border:1.5px solid '+g2+';border-radius:3px;margin:0 auto 3px"></div><div style="height:4px;width:46px;background:'+g+';border-radius:2px;margin:0 auto"></div></div>',
+    heading:'<div style="font-family:Georgia,serif;font-weight:700;font-size:15px;color:#57534a">Heading</div>',
+    text:'<div style="width:82%"><div style="height:4px;background:'+g+';border-radius:2px;margin:3px 0"></div><div style="height:4px;background:'+g+';border-radius:2px;margin:3px 0"></div><div style="height:4px;width:60%;background:'+g+';border-radius:2px;margin:3px 0"></div></div>',
+    image:'<div style="width:70%;height:34px;background:'+g+';border-radius:4px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><path d="M3 15l5-5 4 4 3-3 6 6M8 9a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path></svg></div>',
+    button:'<span style="background:'+acc+';color:#fff;font-family:var(--font-ui);font-size:.6rem;font-weight:700;padding:5px 14px;border-radius:5px">Button</span>',
+    divider:'<div style="width:80%;border-top:2px solid '+g2+'"></div>',
+    spacer:'<div style="width:70%;height:22px;border:1.5px dashed '+g+';border-radius:4px"></div>',
+    social:'<div style="display:flex;gap:5px">'+['#3b5998','#111','#dd2a7b'].map(c=>'<span style="width:14px;height:14px;border-radius:50%;background:'+c+';display:inline-block"></span>').join('')+'</div>',
+    footer:'<div style="text-align:center;width:100%"><div style="height:3.5px;width:56%;background:'+g+';border-radius:2px;margin:3px auto"></div><div style="height:3.5px;width:40%;background:'+g+';border-radius:2px;margin:3px auto"></div><div style="height:3.5px;width:30%;background:'+g2+';border-radius:2px;margin:3px auto"></div></div>'
+  };
+  return '<button class="ebx-pal-card" onclick="_ebPaletteInsert(\''+type+'\')" title="Add '+_ebEsc(name)+'"><div class="ebx-pal-prev">'+(previews[type]||'')+'</div><div class="ebx-pal-name">'+_ebEsc(name)+'</div></button>';
 }
 function _ebSectionPanel(){
   const c=(label,val,on)=>'<label class="eb-f"><span>'+label+'</span><span style="display:flex;align-items:center;gap:8px"><input type="color" value="'+val+'" oninput="'+on+'"><code style="font-size:.62rem;color:var(--txt3)">'+val+'</code></span></label>';
-  return '<div class="ebx-side-head">Section</div>'
-    +'<div class="eb-hint">Click any block on the canvas to style it. These control the overall email background.</div>'
+  return '<div class="ebx-side-head">Email defaults</div>'
+    +'<div class="eb-hint">Default colors for the whole email. Any block can override both in its own settings.</div>'
     +c('Outer background',_ebSection.outerBg,"_ebSection.outerBg=this.value;_ebDirty=true;_ebRenderCanvas()")
     +c('Content background',_ebSection.cardBg,"_ebSection.cardBg=this.value;_ebDirty=true;_ebRenderCanvas()");
 }
@@ -10020,33 +10282,39 @@ function _ebBlockPanel(b){
   const align=(k)=>'<select onchange="_ebSet(\''+id+'\',\''+k+'\',this.value)">'+['left','center','right'].map(a=>'<option value="'+a+'"'+((b[k]||'left')===a?' selected':'')+'>'+a+'</option>').join('')+'</select>';
   const txt=(k,ph)=>'<input type="text" value="'+_ebEsc(b[k]||'')+'" placeholder="'+_ebEsc(ph||'')+'" oninput="_ebSet(\''+id+'\',\''+k+'\',this.value)">';
   const pad='<div style="display:flex;gap:8px"><label class="eb-f" style="flex:1"><span>Pad top</span>'+num('padTop',16)+'</label><label class="eb-f" style="flex:1"><span>Pad bottom</span>'+num('padBottom',16)+'</label></div>';
+  const bgRows='<div style="display:flex;gap:8px"><label class="eb-f" style="flex:1"><span>Block bg</span>'+color('bg',(b.type==='footer'?EB_THEME.bg:_ebSection.cardBg))+'</label><label class="eb-f" style="flex:1"><span>Outside bg</span>'+color('outerBg',_ebSection.outerBg)+'</label></div>';
   switch(b.type){
     case 'header':
       return row('Logo width',num('logoWidth',140))
         +'<label class="eb-check"><input type="checkbox" '+(b.showName!==false?'checked':'')+' onchange="_ebSet(\''+id+'\',\'showName\',this.checked)"> Show org name</label>'
-        +row('Background',color('bg',EB_THEME.card))+pad
+        +bgRows+pad
         +'<div class="eb-hint">Click the logo area on the canvas to upload.</div>';
     case 'heading':
-      return _ebFontSelect(b)+row('Size',num('size',24))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+pad;
+      return _ebFontSelect(b)+row('Size',num('size',24))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+bgRows+pad;
     case 'text':
-      return _ebFontSelect(b)+row('Size',num('size',16))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+pad
+      return _ebFontSelect(b)+row('Size',num('size',16))+row('Align',align('align'))+row('Color',color('color',EB_THEME.text))+bgRows+pad
         +'<div class="eb-hint">Edit the words directly on the canvas.</div>';
-    case 'image':
-      return row('Alt text',txt('alt'))+row('Link when clicked',txt('link','https://'))+row('Width',num('width',EB_THEME.maxWidth-48))+pad
-        +'<div class="eb-hint">Click the image on the canvas to replace it.</div>';
+    case 'image':{
+      const full=EB_THEME.maxWidth-48;
+      const presets=[['Small',180],['Medium',320],['Large',460],['Full',full]];
+      const cur=b.width!=null?b.width:full;
+      const preRow='<label class="eb-f"><span>Size</span><div class="ebx-presets">'+presets.map(p=>'<button type="button" class="ebx-preset'+(cur===p[1]?' active':'')+'" onclick="_ebSetNum(\''+id+'\',\'width\','+p[1]+','+full+');_ebRenderSide()">'+p[0]+'</button>').join('')+'</div></label>';
+      return preRow+row('Exact width (px)',num('width',full))+row('Alt text',txt('alt'))+row('Link when clicked',txt('link','https://'))+bgRows+pad
+        +'<div class="eb-hint">Small = logo · Medium = event pic · Full = flyer. Click the image on the canvas to replace it.</div>';
+    }
     case 'button':
-      return row('Link URL',txt('url','https://'))+row('Button color',color('color',EB_THEME.accent))+row('Text color',color('textColor','#ffffff'))+row('Align',align('align'))+pad
+      return row('Link URL',txt('url','https://'))+row('Button color',color('color',EB_THEME.accent))+row('Text color',color('textColor','#ffffff'))+row('Align',align('align'))+bgRows+pad
         +'<div class="eb-hint">Edit the label directly on the canvas.</div>';
     case 'divider':
-      return row('Color',color('color',EB_THEME.border))+row('Thickness',num('thickness',1))+pad;
+      return row('Color',color('color',EB_THEME.border))+row('Thickness',num('thickness',1))+bgRows+pad;
     case 'spacer':
-      return row('Height',num('height',24));
+      return row('Height',num('height',24))+bgRows;
     case 'social':
       return _ebSocialPanel(b)+row('Icon size',num('iconSize',32))
         +row('Icon style','<select onchange="_ebSet(\''+id+'\',\'iconStyle\',this.value)">'+['color','dark','gray'].map(s=>'<option value="'+s+'"'+((b.iconStyle||'color')===s?' selected':'')+'>'+s+'</option>').join('')+'</select>')
-        +row('Align',align('align'))+pad;
+        +row('Align',align('align'))+bgRows+pad;
     case 'footer':
-      return _ebFooterPanel(b);
+      return _ebFooterPanel(b)+bgRows+pad;
     default: return '';
   }
 }
@@ -10068,19 +10336,36 @@ function _ebSocAdd(id){ const b=_ebBlocks.find(x=>x.id===id); if(!b)return; (b.l
 function _ebSocDel(id,i){ const b=_ebBlocks.find(x=>x.id===id); if(!b)return; b.links.splice(i,1); _ebDirty=true; _ebRenderSide(); _ebRenderCanvas(); }
 
 function _ebFooterPanel(b){
-  const o=b.org||(b.org=Object.assign({},_ebOrg));
-  const set=(k)=>'oninput="(function(el){var bb=_ebBlocks.find(x=>x.id===\''+b.id+'\');bb.org=bb.org||{};bb.org.'+k+'=el.value;_ebDirty=true;_ebRenderCanvas();})(this)"';
-  const f=(l,k,ph)=>'<label class="eb-f"><span>'+l+'</span><input type="text" value="'+_ebEsc(o[k]||'')+'" placeholder="'+_ebEsc(ph||'')+'" '+set(k)+'></label>';
-  return f('Org name','name')+f('Address','address','123 Main St, Chagrin Falls, OH')+f('Phone','phone')+f('Email','email')+f('Website','website','jewishchagrinfalls.com')
-    +'<label class="eb-check"><input type="checkbox" '+(b.showUnsub!==false?'checked':'')+' onchange="_ebSet(\''+b.id+'\',\'showUnsub\',this.checked)"> Include unsubscribe (required)</label>'
-    +'<div class="eb-hint">Unsubscribe is personalized per recipient at send time.</div>'
-    +'<button class="eg-mini-btn" type="button" onclick="_ebSaveOrgDefaults(\''+b.id+'\')">Save as my defaults</button>';
+  const row=(l,inner)=>'<label class="eb-f"><span>'+l+'</span>'+inner+'</label>';
+  const num=(k,def)=>'<input type="number" value="'+(b[k]!=null?b[k]:def)+'" oninput="_ebSetNum(\''+b.id+'\',\''+k+'\','+'this.value'+','+def+')">';
+  const color=(k,def)=>'<input type="color" value="'+(b[k]||def)+'" oninput="_ebSet(\''+b.id+'\',\''+k+'\',this.value)">';
+  const align='<select onchange="_ebSet(\''+b.id+'\',\'align\',this.value)">'+['left','center','right'].map(a=>'<option value="'+a+'"'+((b.align||'center')===a?' selected':'')+'>'+a+'</option>').join('')+'</select>';
+  return '<div class="eb-hint">Edit the footer text directly on the canvas — lines, wording, everything. The unsubscribe link is required; if you delete it, a plain one is auto-added at send time.</div>'
+    +row('Size',num('size',12))+row('Color',color('color',EB_THEME.muted))+row('Align',align)
+    +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'
+    +'<button class="eg-mini-btn" type="button" onclick="_ebSaveFooterDefault(\''+b.id+'\')">Save as my default footer</button>'
+    +'<button class="eg-mini-btn" type="button" onclick="_ebResetFooter(\''+b.id+'\')">Reset from org info</button>'
+    +'</div>';
 }
+async function _ebSaveFooterDefault(id){
+  const b=_ebBlocks.find(x=>x.id===id); if(!b||b.text==null)return;
+  _ebOrg.footerText=b.text;
+  try{ await sb('app_settings?on_conflict=key',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'email_org_defaults',value:_ebOrg})}); _ebToastMsg('Saved — new emails will start with this footer.'); }
+  catch(e){ _ebToastMsg('Could not save: '+e.message); }
+}
+function _ebResetFooter(id){
+  const b=_ebBlocks.find(x=>x.id===id); if(!b)return;
+  const saved=_ebOrg.footerText; _ebOrg.footerText=null;
+  b.text=_ebFooterDefaultText();
+  _ebOrg.footerText=saved;
+  _ebDirty=true; _ebRenderCanvas();
+}
+// legacy org-defaults saver kept for compatibility
 async function _ebSaveOrgDefaults(id){
   const b=_ebBlocks.find(x=>x.id===id); if(!b||!b.org)return;
   _ebOrg=Object.assign({},_ebOrg,b.org);
-  try{ await sb('app_settings?on_conflict=key',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'email_org_defaults',value:_ebOrg})}); alert('Saved as your default footer details.'); }
-  catch(e){ alert('Could not save: '+e.message); }
+  try{ await sb('app_settings?on_conflict=key',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'email_org_defaults',value:_ebOrg})}); _ebToastMsg('Saved as your default footer details.'); }
+  catch(e){ _ebToastMsg('Could not save: '+e.message); }
 }
 
 // ── image upload to Supabase Storage ──
@@ -10108,6 +10393,262 @@ async function _ebPutToStorage(file){
 
 async function _ebLoadOrg(){
   try{ const r=await sbAll('app_settings?key=eq.email_org_defaults&select=value'); if(r&&r[0]&&r[0].value)_ebOrg=Object.assign(_ebOrg,r[0].value); }catch(e){}
+}
+
+// ═══════════════════════ CAMPAIGNS (Step 4) ════════════════════════════════
+// A campaign ties: designed blocks (mjml=JSON) + subject + preheader + from
+// identity + recipient group. Builder becomes the design step of a campaign.
+// Sending is done by the 'email-send' Edge Function (Mailgun batch API).
+let _ecCampaigns=[];       // list of campaigns (metadata; html/mjml loaded on edit)
+let _ecFromList=[];        // [{name,address}] send identities
+let _ecCur=null;           // current campaign being composed (full row) or null
+let _ecLoaded=false;
+
+async function _ecLoad(force){
+  if(_ecLoaded&&!force)return;
+  const [camps,fromRows]=await Promise.all([
+    sbAll('email_campaigns?select=id,name,subject,from_name,from_address,group_id,status,scheduled_for,sent_at,stats,updated_at&order=updated_at.desc'),
+    sbAll('app_settings?key=eq.email_from_addresses&select=value')
+  ]);
+  _ecCampaigns=camps||[];
+  _ecFromList=(fromRows&&fromRows[0]&&Array.isArray(fromRows[0].value))?fromRows[0].value:[];
+  _ecLoaded=true;
+}
+
+function _ecGoCampaigns(){ _egView='campaigns'; renderEmail(); }
+function _ecStatusBadge(s){
+  const m={draft:['Draft','#78716c'],scheduled:['Scheduled','#a16207'],sending:['Sending…','#0f766e'],sent:['Sent','#15803d'],failed:['Failed','#b91c1c']};
+  const x=m[s]||[s,'#78716c'];
+  return '<span style="font-family:var(--font-ui);font-size:.58rem;font-weight:600;color:'+x[1]+';border:1px solid '+x[1]+'44;background:'+x[1]+'11;border-radius:4px;padding:1px 6px">'+x[0]+'</span>';
+}
+function _ecGroupName(gid){ const g=_egGroups.find(x=>x.id===gid); return g?g.name:'—'; }
+
+function _ecRenderList(){
+  const host=document.getElementById('emailViewInner');
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0">Campaigns</h2>
+      <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Design, send, and track your mass emails.</div>
+    </div>
+    <button class="btn btn-pri" onclick="_ecNew()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Campaign</button>
+  </div>`;
+  let body;
+  if(!_ecCampaigns.length){
+    body='<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No campaigns yet. Create one to design and send an email.</div>';
+  }else{
+    body=_ecCampaigns.map(c=>{
+      const st=c.stats||{};
+      const sent=(c.status==='sent');
+      const metrics=sent?`<div class="eg-meta">${st.recipients||0} sent · ${st.opened||0} opened · ${st.clicked||0} clicked</div>`
+        :`<div class="eg-meta">${_ecGroupName(c.group_id)}${c.scheduled_for?' · scheduled '+_ecFmtDate(c.scheduled_for):''}</div>`;
+      return `<div class="eg-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="_ecOpen('${_escAttr(c.id)}')">
+            <div class="eg-name">${_escHtml(c.name||'(untitled)')} &nbsp;${_ecStatusBadge(c.status)}</div>
+            <div class="eg-meta" style="margin-top:2px">${_escHtml(c.subject||'')}</div>
+            ${metrics}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+            ${sent?`<button class="eg-mini-btn" onclick="_ecReport('${_escAttr(c.id)}')">Report</button>`
+                  :`<button class="eg-mini-btn" onclick="_ecOpen('${_escAttr(c.id)}')">Edit</button>`}
+            <button class="eg-mini-btn" onclick="_ecDuplicate('${_escAttr(c.id)}')" title="Duplicate">Copy</button>
+            <button class="eg-mini-btn" style="color:var(--red);border-color:rgba(185,28,28,.3)" onclick="_ecDelete('${_escAttr(c.id)}')">Del</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  host.innerHTML=_egTabBar('campaigns')+header+body;
+}
+function _ecFmtDate(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return iso; } }
+
+// ── new / open / duplicate / delete ──
+async function _ecNew(){
+  _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null, status:'draft',
+    blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+  _ecOpenCompose();
+}
+async function _ecOpen(id){
+  const host=document.getElementById('emailViewInner');
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading…</div>';
+  try{
+    const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*');
+    const c=rows&&rows[0]; if(!c){ _ecGoCampaigns(); return; }
+    if(c.status==='sent'){ _ecReport(id); return; }
+    let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
+    _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null, status:c.status,
+      blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+    _ecOpenCompose();
+  }catch(e){ alert('Could not open campaign: '+e.message); _ecGoCampaigns(); }
+}
+async function _ecDuplicate(id){
+  try{
+    const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c)return;
+    const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, mjml:c.mjml, section:c.section, status:'draft' };
+    await sb('email_campaigns',{method:'POST',body:JSON.stringify(dup)});
+    await _ecLoad(true); _ecRenderList();
+  }catch(e){ alert('Could not duplicate: '+e.message); }
+}
+function _ecDelete(id){
+  const c=_ecCampaigns.find(x=>x.id===id); if(!c)return;
+  _egConfirm('Delete Campaign','Delete “'+(c.name||'untitled')+'”? This cannot be undone.'+(c.status==='sent'?' Its send history and stats will also be removed.':''),async()=>{
+    try{ await sb('email_campaigns?id=eq.'+id,{method:'DELETE'}); await _ecLoad(true); _ecRenderList(); }
+    catch(e){ alert('Could not delete: '+e.message); }
+  },'Delete');
+}
+
+// ── compose: header form + the builder canvas ──
+function _ecOpenCompose(){ _egView='compose'; _ebMode='edit'; _ecRenderCompose(); }
+function _ecRenderCompose(){
+  const host=document.getElementById('emailViewInner');
+  // sync builder state from the campaign
+  _ebBlocks=_ecCur.blocks; _ebSubjectV=_ecCur.subject; _ebPreheaderV=_ecCur.preheader;
+  _ebSection=_ecCur.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card}; _ebSel=null;
+  const fromOpts=_ecFromList.map((f,i)=>{
+    const val=i; const selected=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
+    return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' <'+_escHtml(f.address)+'></option>';
+  }).join('');
+  const grpOpts='<option value="">— choose group —</option>'+_egGroups.map(g=>'<option value="'+_escAttr(g.id)+'"'+(_ecCur.group_id===g.id?' selected':'')+'>'+_escHtml(g.name)+' ('+(g._count||0)+')</option>').join('');
+  host.innerHTML=`
+    <div class="ec-compose-head">
+      <button class="eg-mini-btn" onclick="_ecBackToList()">← Campaigns</button>
+      <div style="flex:1"></div>
+      <span id="ecSaveState" style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)"></span>
+      <button class="eg-mini-btn" onclick="_ecSaveDraft(true)">Save draft</button>
+      <button class="btn btn-pri" style="font-size:.68rem;padding:6px 14px" onclick="_ecOpenSend()">Send / Schedule…</button>
+    </div>
+    <div class="ec-fields">
+      <label class="eb-f"><span>Mailing name (internal)</span><input type="text" id="ecName" value="${_ebEsc(_ecCur.name)}" placeholder="e.g. Weekly Update — Jan 3" oninput="_ecCur.name=this.value;_ecMark()"></label>
+      <label class="eb-f"><span>From</span><select id="ecFrom" onchange="_ecSetFrom(this.value)">${fromOpts}</select></label>
+      <label class="eb-f"><span>Recipient group</span><select id="ecGroup" onchange="_ecCur.group_id=this.value||null;_ecMark()">${grpOpts}</select></label>
+    </div>
+    <div class="ebx-top" style="margin-top:4px">
+      <input type="text" id="ebSubject" placeholder="Subject line…" class="ebx-subject" value="${_ebEsc(_ecCur.subject)}" oninput="_ebSubjectV=this.value;_ecCur.subject=this.value;_ecMark()">
+      <input type="text" id="ebPreheader" placeholder="Inbox preview text…" class="ebx-subject" value="${_ebEsc(_ecCur.preheader)}" oninput="_ebPreheaderV=this.value;_ecCur.preheader=this.value;_ecMark()">
+      <div class="ebx-modes">
+        <button class="ebx-mode ${_ebMode==='edit'?'active':''}" onclick="_ebSetMode('edit')">Edit</button>
+        <button class="ebx-mode ${_ebMode==='preview'?'active':''}" onclick="_ebSetMode('preview')">Preview</button>
+      </div>
+    </div>
+    <div class="ebx-body">
+      ${_ebMode==='edit'?'<div class="ebx-side" id="ebSide"></div>':''}
+      <div class="ebx-canvas-wrap" id="ebCanvasWrap"></div>
+    </div>`;
+  _ebRenderCanvas(); _ebRenderSide();
+}
+function _ecBackToList(){ _ecSyncFromBuilder(); _ecSaveDraft(false).then(()=>_ecGoCampaigns()); }
+function _ecSetFrom(i){ const f=_ecFromList[i]; if(f){ _ecCur.from_name=f.name; _ecCur.from_address=f.address; _ecMark(); } }
+function _ecMark(){ _ecCur._dirty=true; const el=document.getElementById('ecSaveState'); if(el)el.textContent='Unsaved changes'; }
+// pull latest builder state back into the campaign object
+function _ecSyncFromBuilder(){ if(!_ecCur)return; _ecCur.blocks=_ebBlocks; _ecCur.subject=_ebSubjectV; _ecCur.preheader=_ebPreheaderV; _ecCur.section=_ebSection; }
+
+async function _ecSaveDraft(explicit){
+  if(!_ecCur)return;
+  _ecSyncFromBuilder();
+  const html=_ebCompile(_ebBlocks,{subject:_ecCur.subject,preheader:_ecCur.preheader,section:_ecCur.section});
+  const payload={ name:_ecCur.name||'(untitled)', subject:_ecCur.subject||'(no subject)', preheader:_ecCur.preheader||null,
+    from_name:_ecCur.from_name||null, from_address:_ecCur.from_address||_ecFromList[0]?.address||'', group_id:_ecCur.group_id||null,
+    mjml:JSON.stringify(_ebBlocks), html:html, section:_ecCur.section||null };
+  try{
+    if(_ecCur.id){
+      await sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify(payload)});
+    }else{
+      const res=await sb('email_campaigns',{method:'POST',body:JSON.stringify(Object.assign({status:'draft'},payload))});
+      const row=Array.isArray(res)?res[0]:res; if(row&&row.id)_ecCur.id=row.id;
+    }
+    _ecCur._dirty=false;
+    const el=document.getElementById('ecSaveState'); if(el)el.textContent='Saved';
+    if(explicit){ const el2=document.getElementById('ecSaveState'); if(el2){el2.textContent='Saved ✓'; setTimeout(()=>{if(el2)el2.textContent='';},1500);} }
+  }catch(e){ if(explicit)alert('Could not save: '+e.message); }
+}
+
+// ── send / schedule modal ──
+function _ecOpenSend(){
+  _ecSyncFromBuilder();
+  // validation
+  const problems=[];
+  if(!_ecCur.subject||_ecCur.subject==='(no subject)')problems.push('Add a subject line.');
+  if(!_ecCur.from_address)problems.push('Choose a From address.');
+  if(!_ecCur.group_id)problems.push('Choose a recipient group.');
+  if(!_ebBlocks.some(b=>b.type==='footer'&&/\{unsubscribe\}/.test(b.text||'')))problems.push('Your footer must contain an {unsubscribe} link (legally required).');
+  const g=_egGroups.find(x=>x.id===_ecCur.group_id);
+  const mailable=g?(_egMembersByGroup[g.id]||[]).filter(cid=>{ const info=_egContactInfo(cid); return info.email&&!_egUnsub.has(cid); }).length:0;
+  if(g&&mailable===0)problems.push('That group has no mailable recipients (need an email and not unsubscribed).');
+  document.getElementById('ecSendBody').innerHTML=problems.length
+    ? '<div class="eb-hint" style="color:var(--red);font-size:.72rem">Fix these first:</div><ul style="margin:6px 0 0;padding-left:18px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul>'
+    : `<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
+         Sending <b>“${_escHtml(_ecCur.subject)}”</b><br>
+         to group <b>${_escHtml(g.name)}</b> — <b>${mailable}</b> mailable recipient${mailable===1?'':'s'}<br>
+         from <b>${_escHtml(_ecCur.from_name)} &lt;${_escHtml(_ecCur.from_address)}&gt;</b>
+       </div>
+       <div style="margin-top:14px">
+         <label class="eb-check"><input type="radio" name="ecWhen" value="now" checked onchange="document.getElementById('ecSchedRow').style.display='none'"> Send now</label>
+         <label class="eb-check"><input type="radio" name="ecWhen" value="later" onchange="document.getElementById('ecSchedRow').style.display='block'"> Schedule for later</label>
+         <div id="ecSchedRow" style="display:none;margin-top:6px"><input type="datetime-local" id="ecSchedAt" style="width:100%;font-family:var(--font-ui);font-size:.76rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)"></div>
+       </div>`;
+  document.getElementById('ecSendOk').style.display=problems.length?'none':'inline-block';
+  document.getElementById('ecSendModal').style.display='flex';
+}
+async function _ecConfirmSend(btn){
+  const when=(document.querySelector('input[name="ecWhen"]:checked')||{}).value||'now';
+  let scheduledFor=null;
+  if(when==='later'){
+    const v=document.getElementById('ecSchedAt').value;
+    if(!v){ alert('Pick a date/time to schedule.'); return; }
+    scheduledFor=new Date(v).toISOString();
+    if(new Date(scheduledFor)<=new Date()){ alert('Scheduled time must be in the future.'); return; }
+  }
+  btn.disabled=true; const o=btn.textContent; btn.textContent='Working…';
+  try{
+    await _ecSaveDraft(false); // ensure saved + has id + fresh html
+    if(when==='later'){
+      await sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify({status:'scheduled',scheduled_for:scheduledFor})});
+      document.getElementById('ecSendModal').style.display='none';
+      alert('Scheduled for '+_ecFmtDate(scheduledFor)+'.');
+      _ecGoCampaigns();
+    }else{
+      // invoke the email-send Edge Function
+      const r=await _ecInvokeSend(_ecCur.id);
+      document.getElementById('ecSendModal').style.display='none';
+      alert('Sent! '+(r&&r.recipients!=null?r.recipients+' recipient(s).':''));
+      await _ecLoad(true); _ecGoCampaigns();
+    }
+  }catch(e){ alert('Send failed: '+e.message); btn.disabled=false; btn.textContent=o; }
+}
+async function _ecInvokeSend(campaignId){
+  const base=(typeof SB_URL!=='undefined')?SB_URL:'';
+  const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:'';
+  const res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'Authorization':'Bearer '+keyv,'Content-Type':'application/json'},body:JSON.stringify({campaign_id:campaignId})});
+  const txt=await res.text(); let j={}; try{ j=JSON.parse(txt); }catch(e){}
+  if(!res.ok) throw new Error(j.error||txt||('HTTP '+res.status));
+  return j;
+}
+
+// ── campaign report (sent campaigns) ──
+async function _ecReport(id){
+  _egView='report';
+  const host=document.getElementById('emailViewInner');
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading report…</div>';
+  try{
+    const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c){ _ecGoCampaigns(); return; }
+    const sends=await sbAll('email_sends?campaign_id=eq.'+id+'&select=contact_id,email,status,opened_at,clicked_at,open_count,click_count&order=email.asc');
+    const st=c.stats||{}; const n=sends.length;
+    const opened=sends.filter(s=>s.opened_at).length, clicked=sends.filter(s=>s.clicked_at).length, bounced=sends.filter(s=>s.status==='bounced').length;
+    const pct=(x)=>n?Math.round(x/n*100):0;
+    const rowsHtml=sends.map(s=>`<div class="eg-mrow"><div class="nm">${_escHtml(s.email)}<div class="em">${s.status}${s.opened_at?' · opened':''}${s.clicked_at?' · clicked ('+s.click_count+')':''}</div></div></div>`).join('')||'<div style="padding:14px;text-align:center;color:var(--txt3);font-size:.72rem">No send rows.</div>';
+    host.innerHTML=_egTabBar('campaigns')+`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><button class="eg-mini-btn" onclick="_ecGoCampaigns()">← Campaigns</button></div>
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;margin:0 0 2px">${_escHtml(c.name||'')}</h2>
+      <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:14px">${_escHtml(c.subject||'')} · sent ${c.sent_at?_ecFmtDate(c.sent_at):''}</div>
+      <div class="ec-stats">
+        <div class="ec-stat"><div class="v">${n}</div><div class="l">Recipients</div></div>
+        <div class="ec-stat"><div class="v">${opened}</div><div class="l">Opened · ${pct(opened)}%</div></div>
+        <div class="ec-stat"><div class="v">${clicked}</div><div class="l">Clicked · ${pct(clicked)}%</div></div>
+        <div class="ec-stat"><div class="v">${bounced}</div><div class="l">Bounced</div></div>
+      </div>
+      <div class="eb-hint" style="margin-top:8px">Opens are approximate — some mail apps (e.g. Apple Mail) pre-load images, which can inflate open counts. Refresh to pull the latest.</div>
+      <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:6px 12px;margin-top:10px">${rowsHtml}</div>`;
+  }catch(e){ host.innerHTML='<div class="hint"><p>Could not load report: '+_escHtml(e.message)+'</p></div>'; }
 }
 
 function switchView(view){
