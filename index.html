@@ -10345,7 +10345,7 @@ function _ebCompile(blocks,opts){
   let out='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]--><title>'+_ebEsc(opts.subject||'')+'</title></head>'
     +'<body style="margin:0;padding:0;background:'+outerBg+'">'+pre+bands+'</body></html>';
   // personalization tokens → Mailgun recipient variables (filled per recipient at send)
-  out=out.replace(/\{(first_name|last_name|joint_name|email|unsubscribe)\}/g,(m,k)=>({first_name:'%recipient.first_name%',last_name:'%recipient.last_name%',joint_name:'%recipient.joint_name%',email:'%recipient.email%',unsubscribe:'%unsubscribe_url%'})[k]);
+  out=out.replace(/\{(first_name|last_name|joint_name|first_names|email|unsubscribe)\}/g,(m,k)=>({first_name:'%recipient.first_name%',last_name:'%recipient.last_name%',joint_name:'%recipient.joint_name%',first_names:'%recipient.first_names%',email:'%recipient.email%',unsubscribe:'%unsubscribe_url%'})[k]);
   return out;
 }
 
@@ -10798,7 +10798,7 @@ function _ebEnsureBar(){
     +'<span class="ebx-fmt-sep"></span>'
     +'<button type="button" title="Insert personalization" data-cmd="tokens" class="ebx-fmt-apply" style="color:#eee">Tokens ▾</button>'
     +'<div id="ebFmtTokMenu" class="ebx-tokmenu" style="display:none">'
-      +[['First name','{first_name}'],['Last name','{last_name}'],['Joint name','{joint_name}'],['Email','{email}'],['Unsubscribe link','[Unsubscribe]({unsubscribe})']].map(t=>'<button type="button" data-tok="'+_ebEsc(t[1])+'">'+t[0]+' <code>'+_ebEsc(t[1])+'</code></button>').join('')
+      +[['First name','{first_name}'],['Last name','{last_name}'],['Joint name','{joint_name}'],['First names','{first_names}'],['Email','{email}'],['Unsubscribe link','[Unsubscribe]({unsubscribe})']].map(t=>'<button type="button" data-tok="'+_ebEsc(t[1])+'">'+t[0]+' <code>'+_ebEsc(t[1])+'</code></button>').join('')
     +'</div>'
     +'<span id="ebFmtLink" style="display:none;align-items:center;gap:4px"><input type="text" id="ebFmtUrl" placeholder="https://…"><button type="button" class="ebx-fmt-apply" data-cmd="linkapply">Apply</button></span>';
   // keep selection: don't let toolbar clicks steal focus (except the URL input)
@@ -11480,6 +11480,7 @@ async function _ecSendTest(){
     html=html.replace(/%recipient\.first_name%/g,'Sample')
              .replace(/%recipient\.last_name%/g,'Recipient')
              .replace(/%recipient\.joint_name%/g,'Sample &amp; Test Recipient')
+             .replace(/%recipient\.first_names%/g,'Sample &amp; Test')
              .replace(/%recipient\.email%/g,_ebEsc(_ecLastTestTo))
              .replace(/%unsubscribe_url%/g,'#test-unsubscribe-link');
     try{
@@ -11675,6 +11676,7 @@ function _ecViewEmail(){
     .replace(/%recipient\.first_name%|\{first_name\}/g,'‹First Name›')
     .replace(/%recipient\.last_name%|\{last_name\}/g,'‹Last Name›')
     .replace(/%recipient\.joint_name%|\{joint_name\}/g,'‹Household Name›')
+    .replace(/%recipient\.first_names%|\{first_names\}/g,'‹First Names›')
     .replace(/%recipient\.email%|\{email\}/g,'‹recipient email›')
     .replace(/%recipient\.unsubscribe_url%|%unsubscribe_url%|\{unsubscribe\}/g,'#unsubscribe-link');
   document.getElementById('ecViewEmailBg')?.remove();
