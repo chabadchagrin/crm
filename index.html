@@ -443,6 +443,24 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .ec-sticky .ec-compose-head{margin-bottom:0}
 .ec-fields{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}
 .ec-fields .eb-f{flex:1;min-width:180px;margin-bottom:0}
+.ec-setup{max-width:960px;margin:12px auto 40px;padding:0 4px}
+.ec-setup-h{font-family:var(--font-head);font-size:1.05rem;color:var(--txt);margin:4px 0 14px}
+.ec-aud-chip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surf)}
+.ec-aud-chip-txt{font-family:var(--font-ui);font-size:.74rem;color:var(--txt);flex:1;min-width:120px}
+.ec-aud-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+@media(max-width:760px){.ec-aud-grid{grid-template-columns:1fr}}
+.ec-aud-col{border:1px solid var(--border);border-radius:10px;background:var(--surf);overflow:hidden;display:flex;flex-direction:column}
+.ec-aud-title{font-family:var(--font-ui);font-size:.66rem;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+.ec-aud-hint{font-weight:400;text-transform:none;letter-spacing:0;color:var(--txt3)}
+.ec-aud-list{max-height:280px;overflow:auto;padding:4px}
+.ec-aud-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.76rem;color:var(--txt)}
+.ec-aud-row:hover{background:var(--bg)}
+.ec-aud-row input{margin:0;flex-shrink:0}
+.ec-aud-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ec-aud-count{font-size:.66rem;color:var(--txt3);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px;flex-shrink:0}
+.ec-aud-empty{font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);padding:12px}
+.ec-aud-tally{margin-top:18px;padding:12px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--surf);font-family:var(--font-ui);font-size:.82rem;color:var(--txt)}
+.ec-aud-tally.warn{color:var(--red);border-color:rgba(185,28,28,.3);background:rgba(185,28,28,.05)}
 .ec-stats{display:flex;gap:10px;flex-wrap:wrap}
 .ec-stat{flex:1;min-width:110px;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
 .ec-stat .v{font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--accent)}
@@ -9480,6 +9498,7 @@ async function renderEmail(){
   else if(_egView==='builder')_ebRenderBuilder();
   else if(_egView==='campaigns'){ try{ await _ecLoad(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load campaigns. Have you run the Step 3/4 SQL?<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; } _ecRenderList(); }
   else if(_egView==='compose')_ecRenderCompose();
+  else if(_egView==='setup')_ecRenderSetup();
   else if(_egView==='templates'){ try{ await _etLoad(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load templates.<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; } _etRenderList(); }
   else if(_egView==='report'){ /* report renders itself via _ecReport */ }
   else _egRenderGroupList();
@@ -11197,7 +11216,7 @@ let _ecLoaded=false;
 async function _ecLoad(force){
   if(_ecLoaded&&!force)return;
   const [camps,fromRows]=await Promise.all([
-    sbAll('email_campaigns?select=id,name,subject,from_name,from_address,group_id,status,scheduled_for,sent_at,stats,updated_at&order=updated_at.desc'),
+    sbAll('email_campaigns?select=id,name,subject,from_name,from_address,group_id,audience,status,scheduled_for,sent_at,stats,updated_at&order=updated_at.desc'),
     sbAll('app_settings?key=eq.email_from_addresses&select=value')
   ]);
   _ecCampaigns=camps||[];
@@ -11232,7 +11251,7 @@ function _ecRenderList(){
       const st=c.stats||{};
       const sent=(c.status==='sent');
       const metrics=sent?`<div class="eg-meta">Sent ${c.sent_at?_ecFmtDate(c.sent_at):'—'} · ${st.recipients||0} recipients · ${st.opened||0} opened · ${st.clicked||0} clicked</div>`
-        :`<div class="eg-meta">${_ecGroupName(c.group_id)}${c.scheduled_for?' · scheduled for '+_ecFmtDate(c.scheduled_for):''}${c.updated_at?' · edited '+_ecFmtDate(c.updated_at):''}</div>`;
+        :`<div class="eg-meta">${_escHtml(_ecAudienceSummary(c.audience,c.group_id))}${c.scheduled_for?' · scheduled for '+_ecFmtDate(c.scheduled_for):''}${c.updated_at?' · edited '+_ecFmtDate(c.updated_at):''}</div>`;
       return `<div class="eg-card">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
           <div style="flex:1;min-width:0;cursor:pointer" onclick="_ecOpen('${_escAttr(c.id)}')">
@@ -11254,11 +11273,171 @@ function _ecRenderList(){
 }
 function _ecFmtDate(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return iso; } }
 
+// ── audience model + resolver ──────────────────────────────────────
+// A campaign's audience is stored as { include_groups:[gid], exclude_groups:[gid], exclude_campaigns:[cid] }.
+// Backward-compat: if a campaign has no audience but a legacy group_id, treat it as { include_groups:[group_id] }.
+function _ecNormAudience(a, legacyGroupId){
+  a=a&&typeof a==='object'?a:{};
+  let inc=Array.isArray(a.include_groups)?a.include_groups.slice():[];
+  const exg=Array.isArray(a.exclude_groups)?a.exclude_groups.slice():[];
+  const exc=Array.isArray(a.exclude_campaigns)?a.exclude_campaigns.slice():[];
+  if(!inc.length&&legacyGroupId)inc=[legacyGroupId];
+  return { include_groups:inc, exclude_groups:exg, exclude_campaigns:exc };
+}
+// Cache of contact_ids sent per past campaign (for exclusion). Lazily filled.
+let _ecSentByCampaign={};   // campaign_id -> Set(contact_id)
+async function _ecEnsureSentCache(campaignIds){
+  const need=(campaignIds||[]).filter(id=>id&&!(id in _ecSentByCampaign));
+  if(!need.length)return;
+  try{
+    const inList=need.map(encodeURIComponent).join(',');
+    const rows=await sbAll('email_sends?campaign_id=in.('+inList+')&select=campaign_id,contact_id');
+    need.forEach(id=>{ _ecSentByCampaign[id]=new Set(); });
+    (rows||[]).forEach(r=>{ if(r.contact_id){ (_ecSentByCampaign[r.campaign_id]||(_ecSentByCampaign[r.campaign_id]=new Set())).add(r.contact_id); } });
+  }catch(e){ need.forEach(id=>{ if(!(id in _ecSentByCampaign))_ecSentByCampaign[id]=new Set(); }); }
+}
+// Resolve an audience object to a de-duped list of mailable contact_ids.
+// Pure set math over already-loaded group members; mirrors the Edge Function.
+// Requires _ecEnsureSentCache() to have been awaited for any exclude_campaigns first.
+function _ecResolveAudience(aud){
+  const a=_ecNormAudience(aud);
+  const incl=new Set();
+  a.include_groups.forEach(gid=>{ (_egMembersByGroup[gid]||[]).forEach(cid=>incl.add(cid)); });
+  a.exclude_groups.forEach(gid=>{ (_egMembersByGroup[gid]||[]).forEach(cid=>incl.delete(cid)); });
+  a.exclude_campaigns.forEach(cid=>{ const s=_ecSentByCampaign[cid]; if(s)s.forEach(x=>incl.delete(x)); });
+  // dedupe by email + drop no-email / unsubscribed
+  const out=[]; const seenEmail=new Set();
+  incl.forEach(cid=>{
+    if(_egUnsub.has(cid))return;
+    const info=_egContactInfo(cid);
+    const email=(info&&info.email||'').trim().toLowerCase();
+    if(!email)return;
+    if(seenEmail.has(email))return;
+    seenEmail.add(email); out.push(cid);
+  });
+  return out;
+}
+// Human summary of an audience (for the compose header chip + campaign list).
+function _ecAudienceSummary(aud, legacyGroupId){
+  const a=_ecNormAudience(aud, legacyGroupId);
+  const nm=gid=>{ const g=_egGroups.find(x=>x.id===gid); return g?g.name:'?'; };
+  const parts=[];
+  if(a.include_groups.length)parts.push(a.include_groups.map(nm).join(' + '));
+  else parts.push('no groups');
+  if(a.exclude_groups.length)parts.push('minus '+a.exclude_groups.map(nm).join(', '));
+  if(a.exclude_campaigns.length)parts.push('minus '+a.exclude_campaigns.length+' past mailing'+(a.exclude_campaigns.length===1?'':'s'));
+  return parts.join(' · ');
+}
+
+// ── setup screen (choose audience + basics) before the builder ──────
+function _ecOpenSetup(){ _egView='setup'; _ecRenderSetup(); }
+async function _ecRenderSetup(){
+  const host=document.getElementById('emailViewInner');
+  host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);padding:20px">Loading…</div>';
+  // ensure sent-cache for any pre-selected exclude campaigns (editing case)
+  const aud=_ecNormAudience(_ecCur.audience, _ecCur.group_id);
+  await _ecEnsureSentCache(aud.exclude_campaigns);
+  const fromOpts=_ecFromList.map((f,i)=>{
+    const selected=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
+    return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' &lt;'+_escHtml(f.address)+'&gt;</option>';
+  }).join('');
+  const incSet=new Set(aud.include_groups), exgSet=new Set(aud.exclude_groups), excSet=new Set(aud.exclude_campaigns);
+  const grpRow=(g,kind)=>{
+    const on=(kind==='inc'?incSet:exgSet).has(g.id);
+    return '<label class="ec-aud-row"><input type="checkbox" '+(on?'checked':'')+' onchange="_ecSetupToggle(\''+kind+'\',\''+_escAttr(g.id)+'\',this.checked)"> <span class="ec-aud-name">'+_escHtml(g.name)+'</span> <span class="ec-aud-count">'+(g._count||0)+'</span></label>';
+  };
+  const incHtml=_egGroups.length?_egGroups.map(g=>grpRow(g,'inc')).join(''):'<div class="ec-aud-empty">No groups yet. Create one on the Groups tab.</div>';
+  const exgHtml=_egGroups.length?_egGroups.map(g=>grpRow(g,'exg')).join(''):'';
+  // sent campaigns available for exclusion
+  const sentCamps=_ecCampaigns.filter(c=>c.status==='sent');
+  const campHtml=sentCamps.length?sentCamps.map(c=>{
+    const on=excSet.has(c.id);
+    return '<label class="ec-aud-row"><input type="checkbox" '+(on?'checked':'')+' onchange="_ecSetupToggleCamp(\''+_escAttr(c.id)+'\',this.checked)"> <span class="ec-aud-name">'+_escHtml(c.name||'(untitled)')+'</span> <span class="ec-aud-count">'+((c.stats||{}).recipients||'')+'</span></label>';
+  }).join(''):'<div class="ec-aud-empty">No sent campaigns yet to exclude.</div>';
+  host.innerHTML=`
+    <div class="ec-sticky">
+      <div class="ec-compose-head">
+        <button class="eg-mini-btn" onclick="_ecSetupBack()">← Campaigns</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-pri" style="font-size:.68rem;padding:6px 14px" onclick="_ecSetupContinue()">Continue to builder →</button>
+      </div>
+    </div>
+    <div class="ec-setup">
+      <h3 class="ec-setup-h">Campaign setup</h3>
+      <div class="ec-fields">
+        <label class="eb-f"><span>Mailing name (internal)</span><input type="text" id="ecsName" value="${_ebEsc(_ecCur.name)}" placeholder="e.g. Weekly Update — Jan 3" oninput="_ecCur.name=this.value"></label>
+        <label class="eb-f"><span>From</span><select id="ecsFrom" onchange="_ecSetFrom(this.value)">${fromOpts}</select></label>
+      </div>
+      <div class="ec-fields" style="margin-top:0">
+        <label class="eb-f" style="flex:1 1 100%"><span>Subject line</span><input type="text" id="ecsSubject" value="${_ebEsc(_ecCur.subject)}" placeholder="Subject line…" oninput="_ecCur.subject=this.value"></label>
+      </div>
+      <div class="ec-fields" style="margin-top:0">
+        <label class="eb-f" style="flex:1 1 100%"><span>Inbox preview text (optional)</span><input type="text" id="ecsPre" value="${_ebEsc(_ecCur.preheader||'')}" placeholder="Shown after the subject in most inboxes" oninput="_ecCur.preheader=this.value"></label>
+      </div>
+
+      <div class="ec-aud-grid">
+        <div class="ec-aud-col">
+          <div class="ec-aud-title">Send to <span class="ec-aud-hint">(groups combined)</span></div>
+          <div class="ec-aud-list">${incHtml}</div>
+        </div>
+        <div class="ec-aud-col">
+          <div class="ec-aud-title">Exclude groups <span class="ec-aud-hint">(optional)</span></div>
+          <div class="ec-aud-list">${exgHtml||'<div class="ec-aud-empty">No groups.</div>'}</div>
+        </div>
+        <div class="ec-aud-col">
+          <div class="ec-aud-title">Exclude past mailings <span class="ec-aud-hint">(don’t resend)</span></div>
+          <div class="ec-aud-list">${campHtml}</div>
+        </div>
+      </div>
+
+      <div class="ec-aud-tally" id="ecsTally">—</div>
+    </div>`;
+  _ecSetupUpdateTally();
+}
+function _ecSetupAud(){ return _ecCur.audience=_ecNormAudience(_ecCur.audience,_ecCur.group_id); }
+function _ecSetupToggle(kind, gid, on){
+  const a=_ecSetupAud();
+  const arr=kind==='inc'?a.include_groups:a.exclude_groups;
+  const i=arr.indexOf(gid);
+  if(on&&i<0)arr.push(gid);
+  if(!on&&i>=0)arr.splice(i,1);
+  _ecCur.group_id=null; // once audience is set explicitly, legacy field no longer authoritative
+  _ecSetupUpdateTally();
+}
+async function _ecSetupToggleCamp(cid, on){
+  const a=_ecSetupAud();
+  const i=a.exclude_campaigns.indexOf(cid);
+  if(on&&i<0)a.exclude_campaigns.push(cid);
+  if(!on&&i>=0)a.exclude_campaigns.splice(i,1);
+  if(on)await _ecEnsureSentCache([cid]);
+  _ecSetupUpdateTally();
+}
+function _ecSetupUpdateTally(){
+  const el=document.getElementById('ecsTally'); if(!el)return;
+  const a=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
+  if(!a.include_groups.length){ el.textContent='Choose at least one group to send to.'; el.className='ec-aud-tally warn'; return; }
+  const n=_ecResolveAudience(a).length;
+  el.innerHTML='<b>'+n+'</b> mailable recipient'+(n===1?'':'s')+' <span style="color:var(--txt3);font-weight:400">(has email · not unsubscribed · de-duped)</span>';
+  el.className='ec-aud-tally'+(n===0?' warn':'');
+}
+function _ecSetupBack(){ _ecGoCampaigns(); }
+function _ecSetupContinue(){
+  // pull latest field values (in case oninput missed the last keystroke on mobile)
+  const g=id=>{ const e=document.getElementById(id); return e?e.value:''; };
+  _ecCur.name=g('ecsName')||_ecCur.name;
+  _ecCur.subject=g('ecsSubject')||_ecCur.subject;
+  _ecCur.preheader=g('ecsPre');
+  _ecSetupAud();
+  if(!_ecCur.audience.include_groups.length){ _ebToastMsg('Pick at least one group to send to.'); return; }
+  _ecOpenCompose();
+}
+
 // ── new / open / duplicate / delete ──
 async function _ecNew(){
-  _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null, status:'draft',
+  _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
+    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
     blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
-  _ecOpenCompose();
+  _ecOpenSetup();
 }
 async function _ecOpen(id){
   const host=document.getElementById('emailViewInner');
@@ -11268,7 +11447,8 @@ async function _ecOpen(id){
     const c=rows&&rows[0]; if(!c){ _ecGoCampaigns(); return; }
     if(c.status==='sent'){ _ecReport(id); return; }
     let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
-    _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null, status:c.status,
+    _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
+      audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
       blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _ecOpenCompose();
   }catch(e){ alert('Could not open campaign: '+e.message); _ecGoCampaigns(); }
@@ -11276,7 +11456,7 @@ async function _ecOpen(id){
 async function _ecDuplicate(id){
   try{
     const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c)return;
-    const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, mjml:c.mjml, section:c.section, status:'draft' };
+    const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, audience:c.audience||null, mjml:c.mjml, section:c.section, status:'draft' };
     await sb('email_campaigns',{method:'POST',body:JSON.stringify(dup)});
     await _ecLoad(true); _ecRenderList();
   }catch(e){ alert('Could not duplicate: '+e.message); }
@@ -11291,6 +11471,7 @@ function _ecDelete(id){
 
 // ── compose: header form + the builder canvas ──
 function _ecOpenCompose(){ _egView='compose'; _ebMode='edit'; _ebHistReset(); _ecRenderCompose(); }
+function _ecEditAudience(){ _ecSyncFromBuilder(); _ecOpenSetup(); }
 function _ecRenderCompose(){
   const host=document.getElementById('emailViewInner');
   // sync builder state from the campaign
@@ -11298,15 +11479,10 @@ function _ecRenderCompose(){
   _ebSection=_ecCur.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card};
   if(!_ebSection.style)_ebSection.style={headingFont:'Georgia',headingColor:EB_THEME.text,textFont:'System Default',textColor:EB_THEME.text,textSize:16,linkColor:EB_THEME.accent,buttonColor:EB_THEME.accent,buttonTextColor:'#ffffff'};
   _ebSel=null;
-  const fromOpts=_ecFromList.map((f,i)=>{
-    const val=i; const selected=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
-    return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' &lt;'+_escHtml(f.address)+'&gt;</option>';
-  }).join('');
-  const grpOpts='<option value="">— choose group —</option>'+_egGroups.map(g=>'<option value="'+_escAttr(g.id)+'"'+(_ecCur.group_id===g.id?' selected':'')+'>'+_escHtml(g.name)+' ('+(g._count||0)+')</option>').join('');
   host.innerHTML=`
     <div class="ec-sticky">
       <div class="ec-compose-head">
-        <button class="eg-mini-btn" onclick="_ecBackToList()">← Campaigns</button>
+        <button class="eg-mini-btn" onclick="_ecBackToSetup()">← Back to setup</button>
         <div style="flex:1"></div>
         <span id="ecSaveState" style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)"></span>
         ${_ebHistBtnsHtml()}
@@ -11320,22 +11496,13 @@ function _ecRenderCompose(){
         <button class="btn btn-pri" style="font-size:.68rem;padding:6px 14px" onclick="_ecOpenSend()">Send / Schedule…</button>
       </div>
     </div>
-    <div class="ec-fields">
-      <label class="eb-f"><span>Mailing name (internal)</span><input type="text" id="ecName" value="${_ebEsc(_ecCur.name)}" placeholder="e.g. Weekly Update — Jan 3" oninput="_ecCur.name=this.value;_ecMark()"></label>
-      <label class="eb-f"><span>From</span><select id="ecFrom" onchange="_ecSetFrom(this.value)">${fromOpts}</select></label>
-      <label class="eb-f"><span>Recipient group</span><select id="ecGroup" onchange="_ecCur.group_id=this.value||null;_ecMark()">${grpOpts}</select></label>
-    </div>
-    <div class="ebx-top" style="margin-top:4px">
-      <input type="text" id="ebSubject" placeholder="Subject line…" class="ebx-subject" value="${_ebEsc(_ecCur.subject)}" oninput="_ebSubjectV=this.value;_ecCur.subject=this.value;_ecMark()">
-      <input type="text" id="ebPreheader" placeholder="Inbox preview text…" class="ebx-subject" value="${_ebEsc(_ecCur.preheader)}" oninput="_ebPreheaderV=this.value;_ecCur.preheader=this.value;_ecMark()">
-    </div>
     <div class="ebx-body">
       ${_ebMode==='edit'?'<div class="ebx-side" id="ebSide"></div>':''}
       <div class="ebx-canvas-wrap" id="ebCanvasWrap"></div>
     </div>`;
   _ebRenderCanvas(); _ebRenderSide();
 }
-function _ecBackToList(){ _ecSyncFromBuilder(); _ecSaveDraft(false).then(()=>_ecGoCampaigns()); }
+function _ecBackToSetup(){ _ecSyncFromBuilder(); _ecSaveDraft(false); _ecOpenSetup(); }
 function _ecSetFrom(i){ const f=_ecFromList[i]; if(f){ _ecCur.from_name=f.name; _ecCur.from_address=f.address; _ecMark(); } }
 function _ecMark(){ _ecCur._dirty=true; const el=document.getElementById('ecSaveState'); if(el)el.textContent='Unsaved changes'; }
 // pull latest builder state back into the campaign object
@@ -11347,6 +11514,7 @@ async function _ecSaveDraft(explicit){
   const html=_ebCompile(_ebBlocks,{subject:_ecCur.subject,preheader:_ecCur.preheader,section:_ecCur.section});
   const payload={ name:_ecCur.name||'(untitled)', subject:_ecCur.subject||'(no subject)', preheader:_ecCur.preheader||null,
     from_name:_ecCur.from_name||null, from_address:_ecCur.from_address||_ecFromList[0]?.address||'', group_id:_ecCur.group_id||null,
+    audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id),
     mjml:JSON.stringify(_ebBlocks), html:html, section:_ecCur.section||null };
   try{
     if(_ecCur.id){
@@ -11364,52 +11532,56 @@ async function _ecSaveDraft(explicit){
 // ── send / schedule modal ──
 function _ecOpenSend(){
   _ecSyncFromBuilder();
-  // validation
-  const problems=[];
-  if(!_ecCur.subject||_ecCur.subject==='(no subject)')problems.push('Add a subject line.');
-  if(!_ecCur.from_address)problems.push('Choose a From address.');
-  if(!_ecCur.group_id)problems.push('Choose a recipient group.');
-  if(!_ebBlocks.some(b=>b.type==='footer'&&/\{unsubscribe\}/.test(b.text||'')))problems.push('Your footer must contain an {unsubscribe} link (legally required).');
-  const g=_egGroups.find(x=>x.id===_ecCur.group_id);
-  const mailable=g?(_egMembersByGroup[g.id]||[]).filter(cid=>{ const info=_egContactInfo(cid); return info.email&&!_egUnsub.has(cid); }).length:0;
-  if(g&&mailable===0)problems.push('That group has no mailable recipients (need an email and not unsubscribed).');
-  // Default the scheduler to "tomorrow at 9:00 AM local", the most common choice.
-  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
-  const pad=n=>(n<10?'0':'')+n;
-  const defDate=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  const defTime=pad(d.getHours())+':'+pad(d.getMinutes());
-  document.getElementById('ecSendBody').innerHTML=problems.length
-    ? '<div class="eb-hint" style="color:var(--red);font-size:.72rem">Fix these first:</div><ul style="margin:6px 0 0;padding-left:18px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul>'
-    : `<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
-         Sending <b>“${_escHtml(_ecCur.subject)}”</b><br>
-         to group <b>${_escHtml(g.name)}</b> — <b>${mailable}</b> mailable recipient${mailable===1?'':'s'}<br>
-         from <b>${_escHtml(_ecCur.from_name)} &lt;${_escHtml(_ecCur.from_address)}&gt;</b>
-       </div>
-       <div style="margin-top:14px">
-         <label class="eb-check"><input type="radio" name="ecWhen" value="now" checked onchange="_ecToggleSched(false)"> Send now</label>
-         <label class="eb-check"><input type="radio" name="ecWhen" value="later" onchange="_ecToggleSched(true)"> Schedule for later</label>
-         <div id="ecSchedRow" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
-           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-             <label style="display:flex;flex-direction:column;flex:1;min-width:130px">
-               <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Date</span>
-               <input type="date" id="ecSchedDate" value="${defDate}" min="${defDate.slice(0,4)}-01-01" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
-             </label>
-             <label style="display:flex;flex-direction:column;flex:1;min-width:100px">
-               <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Time</span>
-               <input type="time" id="ecSchedTime" value="${defTime}" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
-             </label>
-           </div>
-           <div id="ecSchedPreview" style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:8px"></div>
+  const aud=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
+  // make sure exclusion cache is present, then validate + count
+  _ecEnsureSentCache(aud.exclude_campaigns).then(()=>{
+    // validation
+    const problems=[];
+    if(!_ecCur.subject||_ecCur.subject==='(no subject)')problems.push('Add a subject line.');
+    if(!_ecCur.from_address)problems.push('Choose a From address.');
+    if(!aud.include_groups.length)problems.push('Choose at least one group to send to.');
+    if(!_ebBlocks.some(b=>b.type==='footer'&&/\{unsubscribe\}/.test(b.text||'')))problems.push('Your footer must contain an {unsubscribe} link (legally required).');
+    const mailable=aud.include_groups.length?_ecResolveAudience(aud).length:0;
+    if(aud.include_groups.length&&mailable===0)problems.push('This audience has no mailable recipients (need an email, not unsubscribed, after exclusions).');
+    const audLabel=_ecAudienceSummary(aud,_ecCur.group_id);
+    // Default the scheduler to "tomorrow at 9:00 AM local", the most common choice.
+    const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
+    const pad=n=>(n<10?'0':'')+n;
+    const defDate=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    const defTime=pad(d.getHours())+':'+pad(d.getMinutes());
+    document.getElementById('ecSendBody').innerHTML=problems.length
+      ? '<div class="eb-hint" style="color:var(--red);font-size:.72rem">Fix these first:</div><ul style="margin:6px 0 0;padding-left:18px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul>'
+      : `<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
+           Sending <b>“${_escHtml(_ecCur.subject)}”</b><br>
+           to <b>${_escHtml(audLabel)}</b> — <b>${mailable}</b> mailable recipient${mailable===1?'':'s'}<br>
+           from <b>${_escHtml(_ecCur.from_name)} &lt;${_escHtml(_ecCur.from_address)}&gt;</b>
          </div>
-         <div id="ecSendErr" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.3);border-radius:6px;color:var(--red);font-family:var(--font-ui);font-size:.72rem"></div>
-       </div>`;
-  document.getElementById('ecSendOk').style.display=problems.length?'none':'inline-block';
-  document.getElementById('ecSendModal').style.display='flex';
-  // wire up the live preview once inputs exist
-  if(!problems.length){
-    const upd=()=>{ try{ const dt=_ecSchedComposeDate(); const el=document.getElementById('ecSchedPreview'); if(dt&&el){ el.textContent='Will send '+_ecFmtDate(dt.toISOString())+(dt<=new Date()?' — that\u2019s in the past':''); el.style.color=dt<=new Date()?'var(--red)':'var(--txt3)'; } }catch(e){} };
-    ['ecSchedDate','ecSchedTime'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input',upd); el.addEventListener('change',upd); }});
-  }
+         <div style="margin-top:14px">
+           <label class="eb-check"><input type="radio" name="ecWhen" value="now" checked onchange="_ecToggleSched(false)"> Send now</label>
+           <label class="eb-check"><input type="radio" name="ecWhen" value="later" onchange="_ecToggleSched(true)"> Schedule for later</label>
+           <div id="ecSchedRow" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+               <label style="display:flex;flex-direction:column;flex:1;min-width:130px">
+                 <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Date</span>
+                 <input type="date" id="ecSchedDate" value="${defDate}" min="${defDate.slice(0,4)}-01-01" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
+               </label>
+               <label style="display:flex;flex-direction:column;flex:1;min-width:100px">
+                 <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Time</span>
+                 <input type="time" id="ecSchedTime" value="${defTime}" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
+               </label>
+             </div>
+             <div id="ecSchedPreview" style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:8px"></div>
+           </div>
+           <div id="ecSendErr" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.3);border-radius:6px;color:var(--red);font-family:var(--font-ui);font-size:.72rem"></div>
+         </div>`;
+    document.getElementById('ecSendOk').style.display=problems.length?'none':'inline-block';
+    document.getElementById('ecSendModal').style.display='flex';
+    // wire up the live preview once inputs exist
+    if(!problems.length){
+      const upd=()=>{ try{ const dt=_ecSchedComposeDate(); const el=document.getElementById('ecSchedPreview'); if(dt&&el){ el.textContent='Will send '+_ecFmtDate(dt.toISOString())+(dt<=new Date()?' — that\u2019s in the past':''); el.style.color=dt<=new Date()?'var(--red)':'var(--txt3)'; } }catch(e){} };
+      ['ecSchedDate','ecSchedTime'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input',upd); el.addEventListener('change',upd); }});
+    }
+  });
 }
 function _ecToggleSched(show){
   const row=document.getElementById('ecSchedRow'); if(row)row.style.display=show?'block':'none';
@@ -11653,7 +11825,7 @@ function _ecRepRender(){
       <button class="eg-mini-btn" onclick="_ecReport('${_escAttr(c.id)}')" title="Refresh"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg> Refresh</button>
     </div>
     <h2 style="font-family:var(--font-display);font-size:1.1rem;margin:0 0 2px">${_escHtml(c.name||'')}</h2>
-    <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:14px">${_escHtml(c.subject||'')} · sent ${c.sent_at?_ecFmtDate(c.sent_at):''} · to ${_escHtml(_ecGroupName(c.group_id))}</div>
+    <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:14px">${_escHtml(c.subject||'')} · sent ${c.sent_at?_ecFmtDate(c.sent_at):''} · to ${_escHtml(_ecAudienceSummary(c.audience,c.group_id))}</div>
     <div class="ec-stats" style="flex-wrap:wrap">
       ${tile('delivered',delivered+' <span style="font-size:.6em;color:var(--txt3)">/ '+n+'</span>','Delivered · '+pct(delivered,n)+'%','of '+n+' recipients')}
       ${tile('opened',openedU,'Unique opens · '+pct(openedU,delivered||n)+'%',openedT+' total opens')}
@@ -11785,10 +11957,11 @@ async function _etUse(id){
     const parsed=_etParse(t);
     if(!parsed.blocks.length){ alert('This template has no design blocks saved.'); return; }
     _ecCur={ id:null, name:(t.name||'Campaign'), subject:t.subject||'', preheader:parsed.preheader||'',
-      from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null, status:'draft',
+      from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
+      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
       blocks:JSON.parse(JSON.stringify(parsed.blocks)),
       section:parsed.section?JSON.parse(JSON.stringify(parsed.section)):{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
-    _ecOpenCompose();
+    _ecOpenSetup();
   }catch(e){ alert('Could not open template: '+e.message); }
 }
 async function _etRename(id){
