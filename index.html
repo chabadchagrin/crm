@@ -7811,22 +7811,20 @@ async function _ecSaveAndClose(){
 }
 
 // Deactivate (recommended) or permanently delete a donation form. The user
-// confirms the destructive choice themselves via prompt.
+// confirms the destructive choice themselves via an in-app modal (no browser popups).
 async function _ecDeleteForm(){
   const slug=_ecSavedFormSlug;
   if(!slug){ _ecStatus('Save the form first.',true); return; }
-  const choice=prompt('Type "deactivate" to hide this form (recommended), or "delete" to permanently remove it.','deactivate');
-  if(choice===null)return;
-  const c=choice.trim().toLowerCase();
-  try{
-    if(c==='delete'){
-      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
-    } else if(c==='deactivate'){
-      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
-    } else { _ecStatus('Cancelled — type exactly "deactivate" or "delete".',true); return; }
-    await _loadForms(true);
-    _ecBackToList();
-  }catch(e){ _ecStatus('Error: '+e.message,true); }
+  _daasPrompt('Deactivate or Delete Form','deactivate or delete','deactivate',async(choice)=>{
+    const c=choice.toLowerCase();
+    if(c!=='delete'&&c!=='deactivate')return 'Type exactly "deactivate" or "delete".';
+    try{
+      if(c==='delete') await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
+      else await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
+      await _loadForms(true);
+      _ecBackToList();
+    }catch(e){ return 'Error: '+e.message; }
+  },'Confirm','Type "deactivate" to hide this form (recommended) or "delete" to permanently remove it.');
 }
 
 // Save & publish (final step) — persist, refresh caches, show embed if there's a form.
@@ -9356,18 +9354,16 @@ async function _fbDelete(){
   if(_fbEditingSlug===null||!_fbDraft)return;
   const slug=_fbEditingSlug;
   // Soft delete = deactivate (keeps any historical references intact). Offer hard delete too.
-  const choice=prompt('Type "deactivate" to hide this form (recommended), or "delete" to permanently remove it.','deactivate');
-  if(choice===null)return;
-  const status=document.getElementById('fb_status');
-  try{
-    if(choice.toLowerCase()==='delete'){
-      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
-    } else if(choice.toLowerCase()==='deactivate'){
-      await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
-    } else { if(status){status.textContent='Cancelled — type exactly "deactivate" or "delete".';status.style.display='block';} return; }
-    await _loadForms(true);
-    _fbBackToList();
-  }catch(e){ if(status){status.textContent='Error: '+e.message;status.style.display='block';status.style.color='var(--red)';} }
+  _daasPrompt('Deactivate or Delete Form','deactivate or delete','deactivate',async(choice)=>{
+    const c=choice.toLowerCase();
+    if(c!=='delete'&&c!=='deactivate')return 'Type exactly "deactivate" or "delete".';
+    try{
+      if(c==='delete') await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'DELETE'});
+      else await sb('forms?slug=eq.'+encodeURIComponent(slug),{method:'PATCH',body:JSON.stringify({active:false})});
+      await _loadForms(true);
+      _fbBackToList();
+    }catch(e){ return 'Error: '+e.message; }
+  },'Confirm','Type "deactivate" to hide this form (recommended) or "delete" to permanently remove it.');
 }
 
 // ── EMBED CODE (auto-height iframe) ──
@@ -9465,8 +9461,8 @@ async function renderEmail(){
 
 function _egTabBar(active){
   return `<div class="eg-tabbar">
-    <button class="eg-tab ${active==='groups'?'active':''}" onclick="_egGoGroups()">Groups</button>
     <button class="eg-tab ${active==='campaigns'?'active':''}" onclick="_ecGoCampaigns()">Campaigns</button>
+    <button class="eg-tab ${active==='groups'?'active':''}" onclick="_egGoGroups()">Groups</button>
     <button class="eg-tab ${active==='templates'?'active':''}" onclick="_etGoTemplates()">Templates</button>
   </div>`;
 }
@@ -9482,7 +9478,6 @@ function _egRenderGroupList(){
     </div>
     <button class="btn btn-pri" onclick="_egNewGroup()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Group</button>
   </div>`;
-  const designBtn=`<div style="margin-bottom:14px"><button class="btn btn-sec" onclick="_ecGoCampaigns()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg> Go to Campaigns →</button></div>`;
   let body;
   if(!_egGroups.length){
     body=`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No groups yet. Create a group, then add contacts to it here or from the Contacts view.</div>`;
@@ -9502,7 +9497,7 @@ function _egRenderGroupList(){
       </div>`;
     }).join('');
   }
-  host.innerHTML=_egTabBar('groups')+header+designBtn+body;
+  host.innerHTML=_egTabBar('groups')+header+body;
 }
 
 function _egRenderGroupDetail(){
@@ -9595,6 +9590,47 @@ function _egConfirm(title,msg,onOk,label){
     await onOk();
   });
   document.getElementById('egConfirmModal').style.display='flex';
+}
+
+// ── generic in-app text prompt (NO browser popups) ──
+// _daasPrompt(title, placeholder, defaultVal, onOk(value), okLabel, hint)
+function _daasPrompt(title,placeholder,defaultVal,onOk,okLabel,hint){
+  document.getElementById('daasPromptBg')?.remove();
+  const bg=document.createElement('div');
+  bg.id='daasPromptBg'; bg.className='modal-bg'; bg.style.display='flex';
+  bg.addEventListener('click',e=>{ if(e.target===bg)bg.remove(); });
+  const card=document.createElement('div');
+  card.className='modal'; card.style.cssText='width:400px;max-width:95vw';
+  const h=document.createElement('h2'); h.textContent=title;
+  const inp=document.createElement('input');
+  inp.type='text'; inp.autocomplete='off'; inp.placeholder=placeholder||'';
+  inp.value=defaultVal||''; inp.style.marginBottom='6px';
+  const hintEl=document.createElement('div');
+  hintEl.style.cssText='font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-top:2px';
+  if(hint)hintEl.textContent=hint;
+  const err=document.createElement('div');
+  err.style.cssText='font-family:var(--font-ui);font-size:.64rem;color:var(--red);margin-top:4px;display:none';
+  const btns=document.createElement('div');
+  btns.className='modal-btns'; btns.style.marginTop='14px';
+  const okBtn=document.createElement('button');
+  okBtn.className='btn btn-pri'; okBtn.textContent=okLabel||'Save';
+  const cancel=document.createElement('button');
+  cancel.className='btn btn-sec'; cancel.textContent='Cancel';
+  cancel.onclick=()=>bg.remove();
+  const go=async()=>{
+    const v=(inp.value||'').trim();
+    if(!v){ err.textContent='Please enter a value.'; err.style.display='block'; inp.focus(); return; }
+    const res=await onOk(v);              // onOk may return an error string to keep the modal open
+    if(typeof res==='string'&&res){ err.textContent=res; err.style.display='block'; inp.focus(); return; }
+    bg.remove();
+  };
+  okBtn.onclick=go;
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();go();} if(e.key==='Escape')bg.remove(); });
+  btns.appendChild(okBtn); btns.appendChild(cancel);
+  card.appendChild(h); card.appendChild(inp); if(hint)card.appendChild(hintEl); card.appendChild(err); card.appendChild(btns);
+  bg.appendChild(card);
+  document.body.appendChild(bg);
+  setTimeout(()=>{ inp.focus(); if(defaultVal)inp.select(); },50);
 }
 
 function _egDeleteGroup(id){
@@ -10073,6 +10109,7 @@ function _ebRenderBuilder(){
   _ebRenderSide();
 }
 function _ebSetMode(m){
+  _ebCommitFocused();   // preserve in-progress typing across mode switches
   _ebMode=m;
   if(typeof _egView!=='undefined'&&_egView==='compose'&&typeof _ecCur!=='undefined'&&_ecCur){ _ecSyncFromBuilder(); _ecRenderCompose(); }
   else _ebRenderBuilder();
@@ -10106,6 +10143,7 @@ function _ebRenderCanvas(){
 function _ebCanvasBgClick(e){
   if(e.target.closest&&e.target.closest('.ebx-blk'))return; // block clicks are handled by the block itself
   if(!_ebSel&&_ebScope==='email')return; // nothing to change
+  _ebCommitFocused();   // never re-render over uncommitted typing
   _ebSel=null; _ebScope='email'; _ebTab='settings';
   _ebRenderCanvas(); _ebRenderSide();
 }
@@ -10113,6 +10151,7 @@ function _ebCanvasBgClick(e){
 function _ebPaletteInsert(type){
   if(_ebPalSquelch){ return; } // a drag-insert just happened; ignore the trailing click
   if(type==='footer'&&_ebBlocks.some(b=>b.type==='footer')){ _ebToastMsg('This email already has a footer.'); return; }
+  _ebCommitFocused();
   _ebSnap();
   const blk=_ebNewBlock(type);
   let idx=_ebBlocks.length;
@@ -10238,6 +10277,7 @@ function _ebPalDrag(e,type){
     _ebPalSquelch=true; setTimeout(()=>{_ebPalSquelch=false;},250); // eat the click that follows a drag
     if(dropIdx==null)return; // dropped outside the canvas → cancel
     if(type==='footer'&&_ebBlocks.some(b=>b.type==='footer')){ _ebToastMsg('This email already has a footer.'); return; }
+    _ebCommitFocused();
     _ebSnap();
     const blk=_ebNewBlock(type);
     // keep the footer last: clamp drops below it
@@ -10316,16 +10356,29 @@ function _ebCanvasBlock(b,i){
 }
 
 // contenteditable → model sync
+// Commit one editable's DOM content back into the block model.
+function _ebCommitEl(el){
+  if(!el)return;
+  const id=el.getAttribute&&el.getAttribute('data-id'), key=el.getAttribute&&el.getAttribute('data-key');
+  if(!id||!key)return;
+  const b=_ebBlocks.find(x=>x.id===id); if(!b)return;
+  // store plain text (renderer re-applies **bold**/[links] markup on its own)
+  const val=(key==='text')? _ebFromHtml(el) : el.textContent;
+  if(val!==(b[key]||''))_ebSnap();
+  b[key]=val; _ebDirty=true;
+}
+// SAFETY NET: if an editable is focused with uncommitted typing, commit it NOW.
+// Called before every canvas re-render trigger — a re-render destroys the focused
+// element WITHOUT firing blur, which used to silently throw the typing away.
+function _ebCommitFocused(){
+  try{
+    const ae=document.activeElement;
+    if(ae&&ae.classList&&ae.classList.contains('ebx-ce')&&ae.closest&&ae.closest('#ebCanvasWrap'))_ebCommitEl(ae);
+  }catch(e){}
+}
 function _ebBindEditable(){
   document.querySelectorAll('#ebCanvasWrap .ebx-ce').forEach(el=>{
-    el.addEventListener('blur',()=>{
-      const id=el.getAttribute('data-id'), key=el.getAttribute('data-key');
-      const b=_ebBlocks.find(x=>x.id===id); if(!b)return;
-      // store plain text (renderer re-applies **bold**/[links] markup on its own)
-      const val=(key==='text')? _ebFromHtml(el) : el.textContent;
-      if(val!==(b[key]||''))_ebSnap();
-      b[key]=val; _ebDirty=true;
-    });
+    el.addEventListener('blur',()=>{ _ebCommitEl(el); });
     el.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&(el.getAttribute('data-key')==='label'||el.getAttribute('data-key')==='name')){ e.preventDefault(); el.blur(); } });
     if(el.getAttribute('data-key')==='text'){
       el.addEventListener('focus',()=>_ebBarShow(el));
@@ -10424,11 +10477,15 @@ function _ebFromHtml(el){
 
 // selection + block ops
 function _ebSelectBlk(e,id){
-  const onEditable=(e&&e.target&&e.target.classList&&e.target.classList.contains('ebx-ce'));
+  // closest() — a click on <b>/<i>/<a> INSIDE the editable is still "on the
+  // editable". The old classList check on e.target misread those clicks as
+  // outside, re-rendered the canvas mid-edit, and silently lost the typing.
+  const onEditable=!!(e&&e.target&&e.target.closest&&e.target.closest('.ebx-ce'));
   if(_ebSel===id){
     // already selected: if they clicked editable text, just let them type (no re-render)
     if(onEditable)return;
   }
+  _ebCommitFocused();   // never re-render over uncommitted typing
   _ebSel=id; _ebTab='settings'; _ebScope='block';
   if(onEditable){
     // update the side panel to this block WITHOUT re-rendering the canvas (would blur/lose cursor)
@@ -10777,8 +10834,8 @@ function _ecRenderList(){
     body=_ecCampaigns.map(c=>{
       const st=c.stats||{};
       const sent=(c.status==='sent');
-      const metrics=sent?`<div class="eg-meta">${st.recipients||0} sent · ${st.opened||0} opened · ${st.clicked||0} clicked</div>`
-        :`<div class="eg-meta">${_ecGroupName(c.group_id)}${c.scheduled_for?' · scheduled '+_ecFmtDate(c.scheduled_for):''}</div>`;
+      const metrics=sent?`<div class="eg-meta">Sent ${c.sent_at?_ecFmtDate(c.sent_at):'—'} · ${st.recipients||0} recipients · ${st.opened||0} opened · ${st.clicked||0} clicked</div>`
+        :`<div class="eg-meta">${_ecGroupName(c.group_id)}${c.scheduled_for?' · scheduled for '+_ecFmtDate(c.scheduled_for):''}${c.updated_at?' · edited '+_ecFmtDate(c.updated_at):''}</div>`;
       return `<div class="eg-card">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
           <div style="flex:1;min-width:0;cursor:pointer" onclick="_ecOpen('${_escAttr(c.id)}')">
@@ -10885,7 +10942,7 @@ function _ecBackToList(){ _ecSyncFromBuilder(); _ecSaveDraft(false).then(()=>_ec
 function _ecSetFrom(i){ const f=_ecFromList[i]; if(f){ _ecCur.from_name=f.name; _ecCur.from_address=f.address; _ecMark(); } }
 function _ecMark(){ _ecCur._dirty=true; const el=document.getElementById('ecSaveState'); if(el)el.textContent='Unsaved changes'; }
 // pull latest builder state back into the campaign object
-function _ecSyncFromBuilder(){ if(!_ecCur)return; _ecCur.blocks=_ebBlocks; _ecCur.subject=_ebSubjectV; _ecCur.preheader=_ebPreheaderV; _ecCur.section=_ebSection; }
+function _ecSyncFromBuilder(){ if(!_ecCur)return; _ebCommitFocused(); _ecCur.blocks=_ebBlocks; _ecCur.subject=_ebSubjectV; _ecCur.preheader=_ebPreheaderV; _ecCur.section=_ebSection; }
 
 async function _ecSaveDraft(explicit){
   if(!_ecCur)return;
@@ -10975,30 +11032,29 @@ async function _ecInvokeSend(campaignId){
 let _ecLastTestTo='';
 async function _ecSendTest(){
   if(!_ecCur)return;
+  _ebCommitFocused();
   _ecSyncFromBuilder();
-  if(!_ecCur.from_address){ alert('Choose a From address first.'); return; }
-  const to=prompt('Send a test of this email to:', _ecLastTestTo||_ecCur.from_address||'');
-  if(!to||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to.trim())){ if(to)alert('That doesn\'t look like an email address.'); return; }
-  _ecLastTestTo=to.trim();
-  let html=_ebCompile(_ebBlocks,{subject:_ecCur.subject,preheader:_ecCur.preheader,section:_ecCur.section});
-  // fill per-recipient merge fields with sample values so the test reads naturally
-  html=html.replace(/%recipient\.first_name%/g,'Sample')
-           .replace(/%recipient\.last_name%/g,'Recipient')
-           .replace(/%recipient\.joint_name%/g,'Sample &amp; Test Recipient')
-           .replace(/%recipient\.email%/g,_ebEsc(_ecLastTestTo))
-           .replace(/%unsubscribe_url%/g,'#test-unsubscribe-link');
-  const btn=document.activeElement; if(btn&&btn.tagName==='BUTTON'){btn.disabled=true;}
-  try{
-    const base=(typeof SB_URL!=='undefined')?SB_URL:'';
-    const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:'';
-    const res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'Authorization':'Bearer '+keyv,'Content-Type':'application/json'},
-      body:JSON.stringify({test_to:_ecLastTestTo,subject:'[TEST] '+(_ecCur.subject||'(no subject)'),html:html,from_name:_ecCur.from_name||'',from_address:_ecCur.from_address})});
-    const txt=await res.text(); let j={}; try{ j=JSON.parse(txt); }catch(e){}
-    if(!res.ok) throw new Error(j.error||txt||('HTTP '+res.status));
-    _ebToastMsg('Test sent to '+_ecLastTestTo);
-  }catch(e){
-    alert('Test send failed: '+e.message+'\n\nIf the error mentions a missing campaign_id, the email-send Edge Function needs a small update to handle test sends (a "test_to" payload).');
-  }finally{ if(btn&&btn.tagName==='BUTTON'){btn.disabled=false;} }
+  if(!_ecCur.from_address){ _ebToastMsg('Choose a From address first.'); return; }
+  _daasPrompt('Send Test Email','you@example.com',_ecLastTestTo||_ecCur.from_address||'',async(to)=>{
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return 'That doesn\u2019t look like an email address.';
+    _ecLastTestTo=to;
+    let html=_ebCompile(_ebBlocks,{subject:_ecCur.subject,preheader:_ecCur.preheader,section:_ecCur.section});
+    // fill per-recipient merge fields with sample values so the test reads naturally
+    html=html.replace(/%recipient\.first_name%/g,'Sample')
+             .replace(/%recipient\.last_name%/g,'Recipient')
+             .replace(/%recipient\.joint_name%/g,'Sample &amp; Test Recipient')
+             .replace(/%recipient\.email%/g,_ebEsc(_ecLastTestTo))
+             .replace(/%unsubscribe_url%/g,'#test-unsubscribe-link');
+    try{
+      const base=(typeof SB_URL!=='undefined')?SB_URL:'';
+      const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:'';
+      const res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'Authorization':'Bearer '+keyv,'Content-Type':'application/json'},
+        body:JSON.stringify({test_to:_ecLastTestTo,subject:'[TEST] '+(_ecCur.subject||'(no subject)'),html:html,from_name:_ecCur.from_name||'',from_address:_ecCur.from_address})});
+      const txt=await res.text(); let j={}; try{ j=JSON.parse(txt); }catch(e){}
+      if(!res.ok) return 'Test send failed: '+(j.error||txt||('HTTP '+res.status));
+      _ebToastMsg('Test sent to '+_ecLastTestTo);
+    }catch(e){ return 'Test send failed: '+e.message; }
+  },'Send test','Merge fields are filled with sample values. Tracking is off for tests.');
 }
 
 // ── campaign report (sent campaigns) — full dashboard (Feature 8) ──
@@ -11196,16 +11252,17 @@ function _etRenderList(){
 }
 async function _ecSaveAsTemplate(){
   if(!_ecCur)return;
+  _ebCommitFocused();
   _ecSyncFromBuilder();
-  const name=prompt('Template name:',_ecCur.name||'');
-  if(!name||!name.trim())return;
-  try{
-    const payload={ name:name.trim(), subject:_ecCur.subject||null,
-      mjml:JSON.stringify({v:2,blocks:_ebBlocks,section:_ebSection||null,preheader:_ecCur.preheader||''}) };
-    await sb('email_templates',{method:'POST',body:JSON.stringify(payload)});
-    _etLoaded=false;
-    _ebToastMsg('Saved as template “'+name.trim()+'”');
-  }catch(e){ alert('Could not save template: '+e.message); }
+  _daasPrompt('Save as Template','Template name',_ecCur.name||'',async(name)=>{
+    try{
+      const payload={ name:name, subject:_ecCur.subject||null,
+        mjml:JSON.stringify({v:2,blocks:_ebBlocks,section:_ebSection||null,preheader:_ecCur.preheader||''}) };
+      await sb('email_templates',{method:'POST',body:JSON.stringify(payload)});
+      _etLoaded=false;
+      _ebToastMsg('Saved as template “'+name+'”');
+    }catch(e){ return 'Could not save: '+e.message; }
+  },'Save template','The design, subject, and preheader are saved for reuse.');
 }
 async function _etUse(id){
   try{
@@ -11222,9 +11279,10 @@ async function _etUse(id){
 }
 async function _etRename(id){
   const t=_etList.find(x=>x.id===id); if(!t)return;
-  const name=prompt('Template name:',t.name||''); if(!name||!name.trim())return;
-  try{ await sb('email_templates?id=eq.'+id,{method:'PATCH',body:JSON.stringify({name:name.trim(),updated_at:new Date().toISOString()})}); await _etLoad(true); _etRenderList(); }
-  catch(e){ alert('Could not rename: '+e.message); }
+  _daasPrompt('Rename Template','Template name',t.name||'',async(name)=>{
+    try{ await sb('email_templates?id=eq.'+id,{method:'PATCH',body:JSON.stringify({name:name,updated_at:new Date().toISOString()})}); await _etLoad(true); _etRenderList(); }
+    catch(e){ return 'Could not rename: '+e.message; }
+  },'Rename');
 }
 function _etDelete(id){
   const t=_etList.find(x=>x.id===id); if(!t)return;
@@ -11398,7 +11456,7 @@ function switchView(view){
     document.getElementById('navEmail')?.classList.add('active');
     if(strip)strip.style.display='none';
     if(mapCtrl)mapCtrl.style.display='none';
-    _egView='groups'; _egOpenGroupId=null; // land on the groups list
+    _egView='campaigns'; _egOpenGroupId=null; // land on Campaigns (primary tab)
     renderEmail();
   } else {
     crm.classList.remove('hidden');
