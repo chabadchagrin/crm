@@ -886,7 +886,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- MERGE CONTACTS MODAL (field-by-field chooser) -->
 <div class="modal-bg" id="mergeModal" style="display:none">
   <div class="modal" style="width:620px">
-    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"/></svg> Merge Contacts</h2>
+    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"></path></svg> Merge Contacts</h2>
     <p style="margin-bottom:12px;color:var(--txt2)">Pick which value wins for each field. Donations, interactions, and event registrations from the duplicate move to the keeper, then the duplicate is removed.</p>
     <div id="merge_body"></div>
     <div id="merge_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
@@ -2092,9 +2092,21 @@ function buildDisplayName(h){
   if(h.joint_name)return h.joint_name;
   const contacts=h.contacts||[];
   if(!contacts.length)return'Unknown';
-  if(contacts.length===1)return contacts[0].first_name+' '+contacts[0].last_name;
-  const firsts=contacts.map(c=>c.first_name).join(' & ');
-  return firsts+' '+contacts[0].last_name;
+  if(contacts.length===1){
+    const c=contacts[0];
+    const nm=((c.first_name||'')+' '+(c.last_name||'')).trim();
+    // Fall back to email when there's no name (email-only imports).
+    return nm||c.email||'Unknown';
+  }
+  // Multi-contact household: join whatever first names exist; if none have first names,
+  // fall back to the list of emails.
+  const withFirst=contacts.filter(c=>c.first_name);
+  if(withFirst.length){
+    const firsts=withFirst.map(c=>c.first_name).join(' & ');
+    const last=(contacts.find(c=>c.last_name)||{}).last_name||'';
+    return (firsts+' '+last).trim();
+  }
+  return contacts.map(c=>c.email||'').filter(Boolean).join(' & ')||'Unknown';
 }
 
 // ── GIVING STATS ──
@@ -2759,7 +2771,7 @@ function setProp(mode,h,result){
   const seenIds=new Set();
   const uniqueMembers=(h.members||[]).filter(m=>{if(seenIds.has(m.id))return false;seenIds.add(m.id);return true;});
   const contactsHtml=uniqueMembers.map(m=>`<div style="padding:9px 0;border-bottom:1px solid var(--border);position:relative">
-    <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${_escHtml((m.first_name||"")+" "+(m.last_name||""))}</div>
+    <div style="font-weight:600;font-size:.82rem;color:var(--txt);padding-right:24px">${_escHtml(_daasDisplayName(m))}</div>
     ${m.phone?`<div style="font-size:.72rem;margin-top:3px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> ${_escHtml(m.phone)}</a></div>`:''}
     ${m.email?`<div style="font-size:.72rem;margin-top:2px"><a href="mailto:${encodeURIComponent(m.email)}" style="color:var(--accent);text-decoration:none"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> ${_escHtml(m.email)}</a></div>`:'<div style="font-size:.67rem;color:var(--txt3);margin-top:2px;font-style:italic">No email on file</div>'}
     ${m.dob?`<div style="font-size:.68rem;margin-top:2px;color:var(--txt3)">Age ${calcAge(m.dob)}</div>`:
@@ -3539,7 +3551,7 @@ function showAddDonation(idx){
   document.getElementById('add_don_name').textContent = h.displayName;
   // Populate contact selector
   const sel = document.getElementById('don_contact');
-  sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${_escHtml(m.first_name+' '+m.last_name)}</option>`).join('');
+  sel.innerHTML = (h.members||[]).map(m=>`<option value="${m.id}">${_escHtml(_daasDisplayName(m))}</option>`).join('');
   // Default date to today
   document.getElementById('don_date').value = localToday();
   document.getElementById('don_amount').value = '';
@@ -4187,7 +4199,7 @@ function openLogInteraction(idx){
   document.getElementById('li_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
       <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
-      ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
+      ${_escHtml(_daasDisplayName(m))}
     </label>`
   ).join('');
   document.getElementById('logInteractionModal').style.display='flex';
@@ -4284,7 +4296,7 @@ function openAddNote(idx){
   document.getElementById('note_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
       <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
-      ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
+      ${_escHtml(_daasDisplayName(m))}
     </label>`
   ).join('');
   document.getElementById('addNoteModal').style.display='flex';
@@ -4491,7 +4503,7 @@ function openFullPanel(idx){
         <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 5a3.5 3.5 0 0 1 0 7M16 14a7 7 0 0 1 6 7"/></svg> People</div>
         ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-weight:600;font-size:.82rem">${_escHtml((m.first_name||"")+" "+(m.last_name||""))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
+            <div style="font-weight:600;font-size:.82rem">${_escHtml(_daasDisplayName(m))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
             <div style="display:flex;gap:2px;flex-shrink:0">
             <button onclick="openEditContactById('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
             <button onclick="moveContact('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Move to another household"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
@@ -4561,7 +4573,7 @@ function openFullPanel(idx){
         if(!regs.length)return '<div style="font-size:.76rem;color:var(--txt3);font-style:italic">No event registrations yet.</div>';
         const evName=rid=>{const ev=(_events||[]).find(e=>e.id===rid);return ev?ev.name:'Event';};
         return regs.map(r=>{
-          const who=(()=>{const m=(h.members||[]).find(x=>x.id===r.contact_id);return m?_escHtml((m.first_name||'')+' '+(m.last_name||'')).trim():'';})();
+          const who=(()=>{const m=(h.members||[]).find(x=>x.id===r.contact_id);return m?_escHtml(_daasDisplayName(m)):'';})();
           const fee=r._fee?parseFloat(r._fee.amount||0):(parseFloat(r.tier_amount||0)||0);
           const cnt=parseInt(r.attendee_count)||1;
           const tier=r.tier_label?' · '+_escHtml(r.tier_label):'';
@@ -4707,7 +4719,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       addDonHouseholdIdx=idx;
       // Populate fields
       const sel=document.getElementById('don_contact');
-      sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${_escHtml(m.first_name+' '+m.last_name)}</option>`).join('');
+      sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${_escHtml(_daasDisplayName(m))}</option>`).join('');
       document.getElementById('don_amount').value=d.amount||'';
       document.getElementById('don_date').value=d.date||'';
       document.getElementById('don_notes').value=d.notes||'';
@@ -4734,7 +4746,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       document.getElementById('li_contacts').innerHTML=members.map(m=>
         `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
           <input type="checkbox" value="${m.id}"${m.id===r.contact_id?' checked':''} style="accent-color:var(--accent)">
-          ${_escHtml((m.first_name||'')+' '+(m.last_name||''))}
+          ${_escHtml(_daasDisplayName(m))}
         </label>`
       ).join('');
       document.getElementById('logInteractionModal').style.display='flex';
@@ -6147,7 +6159,7 @@ function captureContactFilter(){
   }
   if(!hits.length){dd.style.display='none';dd.innerHTML='';return;}
   dd.innerHTML=hits.map(({m,h})=>`<div onclick="captureContactPick('${m.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
-    <span style="font-weight:600">${_escHtml((m.first_name||'')+' '+(m.last_name||''))}</span>
+    <span style="font-weight:600">${_escHtml(_daasDisplayName(m))}</span>
     <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">${_escHtml(h.displayName||'')}</span>
   </div>`).join('');
   dd.style.display='block';
@@ -6293,7 +6305,7 @@ function _captureRenderProposals(parsed){
   households.forEach(h=>{
     hopts+='<option value="'+h.id+'">'+_enrichEsc(h.displayName||'(unnamed household)')+(h.city?' — '+_enrichEsc(h.city):'')+'</option>';
     (h.members||[]).forEach(m=>{
-      copts+='<option value="'+m.id+'" data-household="'+h.id+'">'+_enrichEsc(m.first_name+' '+m.last_name)+'</option>';
+      copts+='<option value="'+m.id+'" data-household="'+h.id+'">'+_enrichEsc(_daasDisplayName(m))+'</option>';
     });
   });
 
@@ -7028,7 +7040,7 @@ function _enrichRenderDumpChunks(idx,chunks,members){
       html+='<select id="dump-person-'+i+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
       members.forEach(m=>{
         const sel=(m.id===c.person_id)?' selected':'';
-        html+='<option value="'+m.id+'"'+sel+'>'+_enrichEsc(m.first_name+' '+m.last_name)+'</option>';
+        html+='<option value="'+m.id+'"'+sel+'>'+_enrichEsc(_daasDisplayName(m))+'</option>';
       });
       html+='</select></div>';
     }
@@ -7527,7 +7539,7 @@ function _renderEventDetail(id){
   const st=_eventStats(id);
   const dateStr=ev.event_date?_fmtDate(ev.event_date):'Date TBD';
   const regRows=st.regs.length?st.regs.map(r=>{
-    const name=_escHtml((r._contact.first_name||'')+' '+(r._contact.last_name||'')).trim()||'Unknown';
+    const name=_escHtml(_daasDisplayName(r._contact))||'Unknown';
     const fee=r._fee?parseFloat(r._fee.amount||0):(parseFloat(r.tier_amount||0)||0);
     const payLater=r.source==='pay_later';
     const tier=r.tier_label?' · '+_escHtml(r.tier_label):'';
@@ -9428,18 +9440,34 @@ async function _egLoad(force){
 
 // Resolve a contact_id to a display {name,email,hhId} using the in-memory households.
 function _egContactInfo(cid){
+  // When first+last are both empty, use email as the display name (import
+  // fills only email for many contacts). Keeps merge-tag {first_name}
+  // fallbacks working since the underlying DB fields stay null.
+  const nameOrEmail=(m)=>{
+    const nm=((m.first_name||'')+' '+(m.last_name||'')).trim();
+    if(nm)return nm;
+    if(m.email)return m.email;
+    return '(no name)';
+  };
   for(const h of households){
     for(const m of (h.members||[])){
-      if(m.id===cid)return {name:((m.first_name||'')+' '+(m.last_name||'')).trim()||'(no name)',email:m.email||'',hhId:h.id,hhName:h.displayName||''};
+      if(m.id===cid)return {name:nameOrEmail(m),email:m.email||'',hhId:h.id,hhName:h.displayName||''};
     }
   }
   // hidden households too — a member could be there
   for(const h of (hiddenHouseholds||[])){
     for(const m of (h.members||[])){
-      if(m.id===cid)return {name:((m.first_name||'')+' '+(m.last_name||'')).trim()||'(no name)',email:m.email||'',hhId:h.id,hhName:h.displayName||'',hidden:true};
+      if(m.id===cid)return {name:nameOrEmail(m),email:m.email||'',hhId:h.id,hhName:h.displayName||'',hidden:true};
     }
   }
   return {name:'(unknown contact)',email:'',hhId:null,hhName:''};
+}
+// Public helper for anywhere else in DAAS that needs the display name for a
+// contact-shaped object. Non-invasive — call it wherever needed.
+function _daasDisplayName(m){
+  if(!m)return '';
+  const nm=((m.first_name||'')+' '+(m.last_name||'')).trim();
+  return nm||m.email||'';
 }
 
 async function renderEmail(){
@@ -9476,7 +9504,10 @@ function _egRenderGroupList(){
       <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</h2>
       <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Recipient groups for your campaigns.</div>
     </div>
-    <button class="btn btn-pri" onclick="_egNewGroup()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Group</button>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="btn btn-sec" onclick="_egImportOpen()" style="font-size:.7rem;padding:6px 14px" title="Paste a list of emails to match against contacts and add to a group"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Import</button>
+      <button class="btn btn-pri" onclick="_egNewGroup()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Group</button>
+    </div>
   </div>`;
   let body;
   if(!_egGroups.length){
@@ -9536,6 +9567,372 @@ function _egRenderGroupDetail(){
 }
 
 function _egOpenGroup(id){ _egView='group'; _egOpenGroupId=id; _egRenderGroupDetail(); }
+
+// ═════════════════════════ IMPORT EMAILS ═══════════════════════════════════
+// Paste emails (+ optional names) → match against contacts → add matched to
+// group; create new contacts for unmatched with the parsed columns. Header
+// detection is flexible: accepts email-only lines, comma-separated, or
+// tab-separated (Excel/Google Sheets copy).
+let _egImp={
+  step:'input',    // 'input' | 'preview' | 'committing' | 'done'
+  raw:'',
+  parsed:[],       // [{email, first_name, last_name, matchedContactId, matchedHhId, note}]
+  target:'existing', // 'existing' | 'new'
+  targetGroupId:'',
+  newGroupName:'',
+  // What to do with each bucket on commit (all on by default).
+  incMatched:true,
+  incNewNamed:true,
+  incNewEmailOnly:true,
+  result:null      // {added, created, skipped, groupName}
+};
+
+function _egImportOpen(){
+  _egImp={step:'input',raw:'',parsed:[],target:'existing',targetGroupId:(_egGroups[0]||{}).id||'',newGroupName:'',incMatched:true,incNewNamed:true,incNewEmailOnly:true,result:null};
+  _egImportRender();
+}
+
+function _egImportClose(){
+  document.getElementById('egImportBg')?.remove();
+}
+
+function _egImportRender(){
+  document.getElementById('egImportBg')?.remove();
+  const bg=document.createElement('div');
+  bg.id='egImportBg'; bg.className='modal-bg'; bg.style.display='flex';
+  bg.addEventListener('click',e=>{ if(e.target===bg&&_egImp.step!=='committing')_egImportClose(); });
+  const card=document.createElement('div');
+  card.className='modal'; card.style.cssText='width:640px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column';
+
+  if(_egImp.step==='input')      card.innerHTML=_egImportRenderInput();
+  else if(_egImp.step==='preview')card.innerHTML=_egImportRenderPreview();
+  else if(_egImp.step==='committing')card.innerHTML=_egImportRenderCommitting();
+  else                            card.innerHTML=_egImportRenderDone();
+
+  bg.appendChild(card);
+  document.body.appendChild(bg);
+  if(_egImp.step==='input'){
+    setTimeout(()=>{ const ta=document.getElementById('egImpTA'); if(ta)ta.focus(); },50);
+  }
+}
+
+function _egImportRenderInput(){
+  return `<h2>Import Email List</h2>
+    <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:10px;line-height:1.5">
+      Paste one email per line. To include names, use <b>commas or tabs</b> in the order <code style="font-family:monospace;color:var(--txt2)">email, first_name, last_name</code>. You can add a header row like <code style="font-family:monospace;color:var(--txt2)">email,first_name,last_name</code> — or skip it, and DAAS will assume that order. (Pasting from Excel or Google Sheets works — those use tabs automatically.)
+    </div>
+    <textarea id="egImpTA" placeholder="alice@example.com&#10;bob@example.com,Bob&#10;carol@example.com,Carol,Levine&#10;&#10;— or with a header —&#10;&#10;email,first_name,last_name&#10;alice@example.com,Alice,Cohen&#10;bob@example.com,Bob,Levine" style="width:100%;height:220px;font-family:monospace;font-size:.78rem;padding:10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--txt);resize:vertical;box-sizing:border-box">${_escHtml(_egImp.raw)}</textarea>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-pri" onclick="_egImportParse()">Next: preview matches</button>
+      <button class="btn btn-sec" onclick="_egImportClose()">Cancel</button>
+    </div>`;
+}
+
+// ── parser: extract email + optional first_name + last_name from freeform text
+function _egImpParse(raw){
+  const lines=(raw||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length)return {rows:[],dupes:0,invalid:0};
+  const splitLine=l=>l.split(/[\t,;]/).map(s=>s.trim());
+  const emailRe=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  // Header detection: only treat row 1 as a header when it looks like one —
+  // i.e. it has a column whose name matches an email/name keyword AND none of
+  // its cells is itself a valid email address. Real header rows never contain
+  // "@" in a cell, so an @ in row 1 is the tell that it's actually data.
+  const firstCells=splitLine(lines[0]);
+  const firstTokens=firstCells.map(t=>t.toLowerCase());
+  const looksLikeHeaderKw=firstTokens.some(t=>{
+    const k=t.replace(/[_\s-]/g,'');
+    return k==='email'||k==='emailaddress'||k==='emailaddr'||k==='emailmail'||k==='firstname'||k==='first'||k==='fname'||k==='givenname'||k==='lastname'||k==='last'||k==='lname'||k==='surname'||k==='familyname';
+  });
+  const anyCellIsEmail=firstCells.some(c=>emailRe.test(c));
+  const hasHeader=looksLikeHeaderKw&&!anyCellIsEmail;
+  // Column mapping. Default (no header): assume order is email, first_name, last_name.
+  let colE=0, colF=1, colL=2;
+  let dataLines=lines;
+  if(hasHeader){
+    dataLines=lines.slice(1);
+    // reset to -1 so we only set columns the header explicitly names
+    colE=0; colF=-1; colL=-1;
+    firstTokens.forEach((tok,i)=>{
+      const t=tok.replace(/[_\s-]/g,'');
+      if(t==='email'||t==='emailaddress'||t==='emailaddr'||t==='e-mail'||t==='emailmail')colE=i;
+      else if(t==='firstname'||t==='first'||t==='fname'||t==='givenname')colF=i;
+      else if(t==='lastname'||t==='last'||t==='lname'||t==='surname'||t==='familyname')colL=i;
+    });
+  }
+  const seen=new Set();
+  const rows=[];
+  let dupes=0, invalid=0;
+  for(const line of dataLines){
+    const parts=splitLine(line);
+    // Handle single-column "email only" rows even when the file also has
+    // multi-column rows: if column 0 looks like an email, take it; otherwise
+    // scan for any cell that's a valid email.
+    let email=(parts[colE]||'').toLowerCase();
+    if(!emailRe.test(email)){
+      const scan=parts.map(x=>(x||'').toLowerCase()).find(x=>emailRe.test(x));
+      if(scan)email=scan;
+    }
+    if(!emailRe.test(email)){ invalid++; continue; }
+    if(seen.has(email)){ dupes++; continue; }
+    seen.add(email);
+    rows.push({
+      email,
+      first_name:(colF>=0?(parts[colF]||''):'').trim(),
+      last_name:(colL>=0?(parts[colL]||''):'').trim(),
+    });
+  }
+  return {rows,dupes,invalid};
+}
+
+// ── match against local households/contacts
+function _egImpMatch(rows){
+  // Build one lowercase email → contactId lookup from local state.
+  const byEmail=new Map();
+  const push=(list)=>{
+    (list||[]).forEach(h=>{
+      (h.members||[]).forEach(m=>{
+        if(m.email){
+          const k=m.email.trim().toLowerCase();
+          if(!byEmail.has(k))byEmail.set(k,{contactId:m.id,hhId:h.id,firstName:m.first_name||'',lastName:m.last_name||''});
+        }
+      });
+    });
+  };
+  push(households);
+  push(hiddenHouseholds);
+  return rows.map(r=>{
+    const hit=byEmail.get(r.email);
+    return hit?{...r,matchedContactId:hit.contactId,matchedHhId:hit.hhId,matchedName:((hit.firstName+' '+hit.lastName).trim()||r.email)}:{...r};
+  });
+}
+
+function _egImportParse(){
+  const ta=document.getElementById('egImpTA');
+  const raw=ta?ta.value:'';
+  _egImp.raw=raw;
+  const {rows,dupes,invalid}=_egImpParse(raw);
+  if(!rows.length){
+    alert('No valid emails found. Please paste at least one email address.');
+    return;
+  }
+  _egImp.parsed=_egImpMatch(rows);
+  _egImp.step='preview';
+  _egImp._dupes=dupes; _egImp._invalid=invalid;
+  _egImportRender();
+}
+
+function _egImportRenderPreview(){
+  const p=_egImp.parsed;
+  const total=p.length;
+  const matched=p.filter(x=>x.matchedContactId);
+  const newWithName=p.filter(x=>!x.matchedContactId&&(x.first_name||x.last_name));
+  const newEmailOnly=p.filter(x=>!x.matchedContactId&&!x.first_name&&!x.last_name);
+  const targetOptions=_egGroups.map(g=>`<option value="${_escAttr(g.id)}"${g.id===_egImp.targetGroupId?' selected':''}>${_escHtml(g.name)} (${g._count||0})</option>`).join('');
+  const sampleList=(arr,limit)=>arr.slice(0,limit).map(x=>{
+    const label=x.matchedName||((x.first_name||x.last_name)?((x.first_name||'')+' '+(x.last_name||'')).trim():x.email);
+    return `<div style="padding:3px 8px;font-size:.7rem;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${_escHtml(x.email)}</b>${label!==x.email?' <span style="color:var(--txt3)">→ '+_escHtml(label)+'</span>':''}</div>`;
+  }).join('')+(arr.length>limit?`<div style="padding:3px 8px;font-size:.66rem;color:var(--txt3);font-style:italic">…and ${arr.length-limit} more</div>`:'');
+  const dupeLine=(_egImp._dupes||_egImp._invalid)?`<div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-top:4px">${_egImp._dupes?_egImp._dupes+' duplicate'+(_egImp._dupes===1?'':'s')+' removed. ':''}${_egImp._invalid?_egImp._invalid+' invalid line'+(_egImp._invalid===1?'':'s')+' skipped.':''}</div>`:'';
+  // Bucket-header checkbox — clicking anywhere on it stops propagation so we
+  // don't accidentally toggle the whole card. `onchange` re-renders to update
+  // the commit count + button state.
+  const bucketHdr=(key,color,icon,count,label)=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.7rem;color:var(--${color});font-weight:600;margin-bottom:5px"><input type="checkbox" ${_egImp[key]?'checked':''} onchange="_egImp.${key}=this.checked;_egImportRender()" style="accent-color:var(--accent);cursor:pointer"> ${icon} ${count} ${label}</label>`;
+  // Commit count is the sum of selected buckets.
+  const commitCount=(_egImp.incMatched?matched.length:0)+(_egImp.incNewNamed?newWithName.length:0)+(_egImp.incNewEmailOnly?newEmailOnly.length:0);
+  return `<h2>Import Preview</h2>
+    <div style="font-family:var(--font-ui);font-size:.72rem;color:var(--txt2);margin-bottom:14px">${total} email${total===1?'':'s'} found · uncheck a section to skip it</div>
+    <div style="flex:1;overflow-y:auto;max-height:44vh">
+      <div style="display:grid;grid-template-columns:1fr;gap:10px">
+        <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--surf);opacity:${_egImp.incMatched?'1':'0.55'}">
+          ${bucketHdr('incMatched','green','✓',matched.length,'matched — will be added to group')}
+          <div style="max-height:110px;overflow-y:auto">${matched.length?sampleList(matched,12):'<div style="padding:3px 8px;font-size:.66rem;color:var(--txt3);font-style:italic">None</div>'}</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--surf);opacity:${_egImp.incNewNamed?'1':'0.55'}">
+          ${bucketHdr('incNewNamed','gold','＋',newWithName.length,'new (with names) — will create contact + household using names')}
+          <div style="max-height:110px;overflow-y:auto">${newWithName.length?sampleList(newWithName,12):'<div style="padding:3px 8px;font-size:.66rem;color:var(--txt3);font-style:italic">None</div>'}</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--surf);opacity:${_egImp.incNewEmailOnly?'1':'0.55'}">
+          ${bucketHdr('incNewEmailOnly','gold','＋',newEmailOnly.length,'new (email only) — will create contact, shown as email until you add a name')}
+          <div style="max-height:110px;overflow-y:auto">${newEmailOnly.length?sampleList(newEmailOnly,12):'<div style="padding:3px 8px;font-size:.66rem;color:var(--txt3);font-style:italic">None</div>'}</div>
+        </div>
+      </div>
+      ${dupeLine}
+    </div>
+    <div style="margin-top:14px;padding:12px;background:var(--surf);border:1px solid var(--border);border-radius:8px">
+      <div style="font-family:var(--font-ui);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:8px">Add all to which group?</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:.76rem;margin-bottom:6px;cursor:pointer">
+        <input type="radio" name="egImpTarget" value="existing" ${_egImp.target==='existing'?'checked':''} onchange="_egImp.target='existing';_egImportRender()">
+        Existing group:
+        <select id="egImpTargetSel" ${_egImp.target!=='existing'?'disabled':''} onchange="_egImp.targetGroupId=this.value" style="flex:1;font-family:var(--font-ui);font-size:.74rem;padding:4px 8px;border:1px solid var(--border2);border-radius:5px;background:var(--bg);color:var(--txt)">
+          ${targetOptions||'<option value="">No groups yet</option>'}
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:.76rem;cursor:pointer">
+        <input type="radio" name="egImpTarget" value="new" ${_egImp.target==='new'?'checked':''} onchange="_egImp.target='new';_egImportRender()">
+        New group:
+        <input type="text" id="egImpNewName" placeholder="Group name" value="${_escAttr(_egImp.newGroupName)}" ${_egImp.target!=='new'?'disabled':''} oninput="_egImp.newGroupName=this.value" style="flex:1;font-family:var(--font-ui);font-size:.74rem;padding:4px 8px;border:1px solid var(--border2);border-radius:5px;background:var(--bg);color:var(--txt)">
+      </label>
+    </div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-pri" onclick="_egImportCommit()" ${commitCount?'':'disabled style="opacity:.5;cursor:not-allowed"'}>${commitCount?('Commit — process '+commitCount):'Nothing selected'}</button>
+      <button class="btn btn-sec" onclick="_egImp.step='input';_egImportRender()">← Back</button>
+      <button class="btn btn-sec" onclick="_egImportClose()">Cancel</button>
+    </div>`;
+}
+
+function _egImportRenderCommitting(){
+  return `<h2>Importing…</h2>
+    <div id="egImpProgress" style="font-family:var(--font-ui);font-size:.76rem;color:var(--txt2);padding:20px 0;text-align:center;line-height:1.7">
+      <div style="width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
+      <div id="egImpStatus">Preparing…</div>
+    </div>`;
+}
+
+function _egImportRenderDone(){
+  const r=_egImp.result||{};
+  return `<h2>Import Complete</h2>
+    <div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.8;padding:8px 0 16px">
+      <div>✓ Added <b>${r.added||0}</b> contact${(r.added||0)===1?'':'s'} to <b>${_escHtml(r.groupName||'')}</b></div>
+      ${r.created?`<div>✓ Created <b>${r.created}</b> new contact${r.created===1?'':'s'}</div>`:''}
+      ${r.skipped?`<div style="color:var(--txt3)">↷ Skipped <b>${r.skipped}</b> (already in group or errored)</div>`:''}
+      ${r.errors&&r.errors.length?`<div style="color:var(--red);margin-top:8px;font-size:.72rem"><b>Errors:</b><ul style="margin:4px 0 0;padding-left:18px">${r.errors.slice(0,5).map(e=>'<li>'+_escHtml(e)+'</li>').join('')}${r.errors.length>5?'<li>…and '+(r.errors.length-5)+' more</li>':''}</ul></div>`:''}
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-pri" onclick="_egImportClose();_egOpenGroup('${_escAttr(r.groupId||'')}')">Open group</button>
+      <button class="btn btn-sec" onclick="_egImportClose();_egGoGroups()">Done</button>
+    </div>`;
+}
+
+async function _egImportCommit(){
+  const p=_egImp.parsed; if(!p.length)return;
+  // Bail out early if the user unchecked all buckets.
+  if(!_egImp.incMatched&&!_egImp.incNewNamed&&!_egImp.incNewEmailOnly){ alert('Nothing selected — check at least one bucket.'); return; }
+  // Resolve/create target group first
+  let groupId=null, groupName='';
+  if(_egImp.target==='existing'){
+    if(!_egImp.targetGroupId){ alert('Choose a group.'); return; }
+    groupId=_egImp.targetGroupId;
+    groupName=(_egGroups.find(g=>g.id===groupId)||{}).name||'';
+  }else{
+    const nm=(_egImp.newGroupName||'').trim();
+    if(!nm){ alert('Type a name for the new group.'); return; }
+    if(_egGroups.some(g=>g.name.toLowerCase()===nm.toLowerCase())){ alert('A group with that name already exists. Pick "Existing group" or choose a different name.'); return; }
+    groupName=nm;
+  }
+
+  _egImp.step='committing';
+  _egImportRender();
+  const status=(msg)=>{ const el=document.getElementById('egImpStatus'); if(el)el.textContent=msg; };
+  const errors=[];
+  let added=0, created=0, skipped=0;
+
+  try{
+    // 1. Create the new group if needed
+    if(_egImp.target==='new'){
+      status('Creating group…');
+      const res=await sb('email_groups',{method:'POST',body:JSON.stringify({name:groupName})});
+      const g=Array.isArray(res)?res[0]:res;
+      groupId=g.id;
+      g._count=0; _egGroups.push(g); _egGroups.sort((a,b)=>a.name.localeCompare(b.name));
+    }
+
+    // 2. Get existing group members so we don't double-insert
+    const existingIds=new Set((_egMembersByGroup[groupId]||[]));
+    if(!existingIds.size){
+      try{
+        const rows=await sbAll(`email_group_members?group_id=eq.${groupId}&select=contact_id`);
+        (rows||[]).forEach(r=>existingIds.add(r.contact_id));
+      }catch(e){ /* first time for group */ }
+    }
+
+    // 3. Create new contacts — but only for the buckets the user opted into.
+    // Bucket A: new (with names) — filter respecting incNewNamed
+    // Bucket B: new (email only) — filter respecting incNewEmailOnly
+    const toCreateNamed = _egImp.incNewNamed
+      ? p.filter(x=>!x.matchedContactId&&(x.first_name||x.last_name))
+      : [];
+    const toCreateEmailOnly = _egImp.incNewEmailOnly
+      ? p.filter(x=>!x.matchedContactId&&!x.first_name&&!x.last_name)
+      : [];
+    const toCreate=[...toCreateNamed,...toCreateEmailOnly];
+    // Count anyone skipped by unchecking so the final tally is honest.
+    const skippedByChoice = p.filter(x=>{
+      if(x.matchedContactId)return !_egImp.incMatched;
+      const named=(x.first_name||x.last_name);
+      return named ? !_egImp.incNewNamed : !_egImp.incNewEmailOnly;
+    }).length;
+    skipped += skippedByChoice;
+
+    if(toCreate.length)status('Creating '+toCreate.length+' new contact'+(toCreate.length===1?'':'s')+'…');
+    for(let i=0;i<toCreate.length;i++){
+      const r=toCreate[i];
+      try{
+        // joint_name rule per spec: only set when BOTH first + last are present.
+        // First-only, last-only, and email-only all leave joint_name null so
+        // merge-tag fallbacks work naturally.
+        const jointName=(r.first_name&&r.last_name) ? (r.first_name+' '+r.last_name) : null;
+        const hhRes=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,date_added:localToday()})});
+        const hh=Array.isArray(hhRes)?hhRes[0]:hhRes;
+        const cRes=await sb('contacts',{method:'POST',body:JSON.stringify({
+          household_id:hh.id,
+          first_name:r.first_name||null,
+          last_name:r.last_name||null,
+          email:r.email
+        })});
+        const c=Array.isArray(cRes)?cRes[0]:cRes;
+        r.matchedContactId=c.id;
+        r.matchedHhId=hh.id;
+        created++;
+        if(i>0&&i%25===0)status('Creating contacts… '+i+' / '+toCreate.length);
+      }catch(e){
+        errors.push(r.email+': '+e.message);
+      }
+    }
+
+    // 4. Add resolved contacts to the group — respecting bucket toggles.
+    status('Adding to group…');
+    const rowsToInsert=[];
+    p.forEach(r=>{
+      if(!r.matchedContactId)return; // wasn't created (bucket skipped or errored)
+      // Which bucket is this row in? Re-check because .matchedContactId is now set for newly created too.
+      const wasMatch = !!r.matchedName; // matchedName only exists on originally-matched
+      // For originally-matched rows, honor incMatched. For newly created, they only exist
+      // if their bucket was already opted in, so no additional check needed.
+      if(wasMatch && !_egImp.incMatched){ return; } // user unchecked matched
+      if(existingIds.has(r.matchedContactId)){ skipped++; return; }
+      existingIds.add(r.matchedContactId);
+      rowsToInsert.push({group_id:groupId, contact_id:r.matchedContactId});
+    });
+    if(rowsToInsert.length){
+      const CH=200;
+      for(let i=0;i<rowsToInsert.length;i+=CH){
+        const chunk=rowsToInsert.slice(i,i+CH);
+        try{
+          await sb('email_group_members',{method:'POST',body:JSON.stringify(chunk)});
+          added+=chunk.length;
+        }catch(e){ errors.push('Add-to-group batch '+i+': '+e.message); skipped+=chunk.length; }
+      }
+    }
+
+    // 5. Refresh local state so imports appear immediately
+    if(created){
+      status('Refreshing…');
+      try{ await loadAll(); }catch(e){ /* not fatal */ }
+    }
+    _egMembersByGroup[groupId]=[...existingIds];
+    const g=_egGroups.find(x=>x.id===groupId); if(g)g._count=(existingIds).size;
+
+    _egImp.result={added,created,skipped,groupName,groupId,errors};
+    _egImp.step='done';
+    _egImportRender();
+  }catch(e){
+    errors.push('Fatal: '+e.message);
+    _egImp.result={added,created,skipped,groupName,groupId,errors};
+    _egImp.step='done';
+    _egImportRender();
+  }
+}
 
 let _egNameMode=null;   // 'new' | {id} for rename
 function _egNewGroup(){
