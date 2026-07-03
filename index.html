@@ -886,7 +886,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- MERGE CONTACTS MODAL (field-by-field chooser) -->
 <div class="modal-bg" id="mergeModal" style="display:none">
   <div class="modal" style="width:620px">
-    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"/></svg> Merge Contacts</h2>
+    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"></path></svg> Merge Contacts</h2>
     <p style="margin-bottom:12px;color:var(--txt2)">Pick which value wins for each field. Donations, interactions, and event registrations from the duplicate move to the keeper, then the duplicate is removed.</p>
     <div id="merge_body"></div>
     <div id="merge_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
@@ -4584,11 +4584,21 @@ function openFullPanel(idx){
           </div>`;
         }).join('');
       })()}
+    </div>
+
+    <!-- Email History (campaign sends — read-only, never touches interactions/AGC) -->
+    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email History</div>
+        <button class="eg-mini-btn" onclick="_hhEmailLoad('${h.id}',${idx},0)" title="Refresh" style="font-size:.6rem;padding:2px 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg></button>
+      </div>
+      <div id="hh-email-${idx}"><div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3)">Loading email history…</div></div>
     </div>`;
 
     document.getElementById('fullPanelContent').innerHTML=html;
     document.getElementById('fullPanel').style.display='flex';
     window.scrollTo(0,0);
+    _hhEmailLoad(h.id,idx,0); // async — fills the Email History section
   };
 
   // Load interactions async then render
@@ -7257,7 +7267,10 @@ const ENGINE_DEFAULTS={
   sriGapMaxMonths:18,      // SRI: giving-gap window end
   trackMaxAttempts:3,      // Tracks: unsuccessful attempts before closing as unresponsive
   trackSnoozeDays:180,     // Tracks: rest period after closing unresponsive
-  trackCadence:[3,5,7]     // Tracks: business days between attempts (step 1, 2, 3+)
+  trackCadence:[3,5,7],    // Tracks: business days between attempts (step 1, 2, 3+)
+  emailEngOpens:3,         // Email Engagement panel: opens threshold to surface a contact
+  emailEngClicks:3,        // Email Engagement panel: clicks threshold to surface a contact
+  emailEngWindow:5         // Email Engagement panel: how many most-recent mailings to scan
 };
 let ENGINE={...ENGINE_DEFAULTS};
 
@@ -7322,6 +7335,10 @@ function openEngineSettings(){
       </div>
       <input type="text" id="eng_trackCadence" value="${ENGINE.trackCadence.join(',')}" style="width:95px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 8px;color:var(--txt);font-family:var(--font-ui);font-size:.72rem;outline:none;text-align:right">
     </div>
+    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement</div>
+    ${numRow('Opens threshold','emailEngOpens',1,'Surface anyone with this many opens of one mailing')}
+    ${numRow('Clicks threshold','emailEngClicks',1,'…or this many clicks (clicks are the honest signal)')}
+    ${numRow('Mailings to scan','emailEngWindow',1,'Look across this many most-recent mailings')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg> App</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <div style="flex:1">
@@ -7344,7 +7361,7 @@ function openEngineSettings(){
 
 async function applyEngineSettings(){
   const num=k=>{const v=parseFloat(document.getElementById('eng_'+k)?.value);return isNaN(v)?ENGINE_DEFAULTS[k]:v;};
-  ['heatWeekdayFull','heatSundayFull','driftDays','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays'].forEach(k=>{ENGINE[k]=num(k);});
+  ['heatWeekdayFull','heatSundayFull','driftDays','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
   const cad=(document.getElementById('eng_trackCadence')?.value||'').split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x)&&x>0);
   ENGINE.trackCadence=cad.length?cad:[...ENGINE_DEFAULTS.trackCadence];
   const landSel=document.getElementById('eng_landing');
@@ -7366,7 +7383,7 @@ async function resetEngineSettings(){
 // Bump this whenever DASH_DEFAULT_LAYOUT panels are added/removed/renamed.
 // Saved layouts with a different version are ignored on load (prevents the
 // "doubled panels" bug where stale saved coords clash with new defaults).
-const DASH_LAYOUT_VERSION=5;
+const DASH_LAYOUT_VERSION=6;
 const DASH_DEFAULT_LAYOUT=[
   {id:'panel-heatmap',    x:0, y:0,  w:12, h:3,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',           fn:'renderHeatmap'},
   {id:'panel-activity',   x:0, y:20, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',            fn:'renderRecentActivity'},
@@ -7376,6 +7393,7 @@ const DASH_DEFAULT_LAYOUT=[
   {id:'panel-gifts',      x:0, y:11, w:6,  h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',               fn:'renderRecentGifts'},
   {id:'panel-sri',        x:6, y:11, w:6,  h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',     fn:'renderSRI'},
   {id:'panel-tracks',     x:0, y:16, w:12, h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',              fn:'renderActiveTracks'},
+  {id:'panel-emailengage',x:0, y:25, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',           fn:'renderEmailEngage'},
 ];
 
 // ════════════════════════════════════════════════════════════════════════
@@ -9438,6 +9456,7 @@ async function renderEmail(){
   else if(_egView==='builder')_ebRenderBuilder();
   else if(_egView==='campaigns'){ try{ await _ecLoad(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load campaigns. Have you run the Step 3/4 SQL?<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; } _ecRenderList(); }
   else if(_egView==='compose')_ecRenderCompose();
+  else if(_egView==='templates'){ try{ await _etLoad(true); }catch(e){ host.innerHTML='<div class="hint"><p>Could not load templates.<br><span style="font-size:.7rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>'; return; } _etRenderList(); }
   else if(_egView==='report'){ /* report renders itself via _ecReport */ }
   else _egRenderGroupList();
 }
@@ -9448,7 +9467,7 @@ function _egTabBar(active){
   return `<div class="eg-tabbar">
     <button class="eg-tab ${active==='groups'?'active':''}" onclick="_egGoGroups()">Groups</button>
     <button class="eg-tab ${active==='campaigns'?'active':''}" onclick="_ecGoCampaigns()">Campaigns</button>
-    <button class="eg-tab" disabled style="opacity:.4;cursor:default" title="Duplicate a past campaign to reuse it as a template">Templates</button>
+    <button class="eg-tab ${active==='templates'?'active':''}" onclick="_etGoTemplates()">Templates</button>
   </div>`;
 }
 
@@ -10827,7 +10846,7 @@ function _ecRenderCompose(){
   _ebSel=null;
   const fromOpts=_ecFromList.map((f,i)=>{
     const val=i; const selected=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
-    return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' <'+_escHtml(f.address)+'></option>';
+    return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' &lt;'+_escHtml(f.address)+'&gt;</option>';
   }).join('');
   const grpOpts='<option value="">— choose group —</option>'+_egGroups.map(g=>'<option value="'+_escAttr(g.id)+'"'+(_ecCur.group_id===g.id?' selected':'')+'>'+_escHtml(g.name)+' ('+(g._count||0)+')</option>').join('');
   host.innerHTML=`
@@ -10842,6 +10861,7 @@ function _ecRenderCompose(){
           <button class="ebx-mode ${_ebMode==='preview'?'active':''}" onclick="_ebSetMode('preview')">Preview</button>
         </div>
         <button class="eg-mini-btn" onclick="_ecSaveDraft(true)">Save draft</button>
+        <button class="eg-mini-btn" onclick="_ecSaveAsTemplate()" title="Save this design as a reusable template">Save as template…</button>
         <button class="eg-mini-btn" onclick="_ecSendTest()" title="Email yourself a test copy">Send test…</button>
         <button class="btn btn-pri" style="font-size:.68rem;padding:6px 14px" onclick="_ecOpenSend()">Send / Schedule…</button>
       </div>
@@ -10981,31 +11001,349 @@ async function _ecSendTest(){
   }finally{ if(btn&&btn.tagName==='BUTTON'){btn.disabled=false;} }
 }
 
-// ── campaign report (sent campaigns) ──
+// ── campaign report (sent campaigns) — full dashboard (Feature 8) ──
+// Data sources: email_sends (per-recipient rollups) + email_events_log
+// (append-only truth, used for unsubscribes/complaints). Read-only: this
+// report NEVER writes to interactions.
+let _ecRep=null; // {c, sends, events, view}
 async function _ecReport(id){
   _egView='report';
   const host=document.getElementById('emailViewInner');
   host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3)">Loading report…</div>';
   try{
     const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c){ _ecGoCampaigns(); return; }
-    const sends=await sbAll('email_sends?campaign_id=eq.'+id+'&select=contact_id,email,status,opened_at,clicked_at,open_count,click_count&order=email.asc');
-    const st=c.stats||{}; const n=sends.length;
-    const opened=sends.filter(s=>s.opened_at).length, clicked=sends.filter(s=>s.clicked_at).length, bounced=sends.filter(s=>s.status==='bounced').length;
-    const pct=(x)=>n?Math.round(x/n*100):0;
-    const rowsHtml=sends.map(s=>`<div class="eg-mrow"><div class="nm">${_escHtml(s.email)}<div class="em">${s.status}${s.opened_at?' · opened':''}${s.clicked_at?' · clicked ('+s.click_count+')':''}</div></div></div>`).join('')||'<div style="padding:14px;text-align:center;color:var(--txt3);font-size:.72rem">No send rows.</div>';
-    host.innerHTML=_egTabBar('campaigns')+`
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><button class="eg-mini-btn" onclick="_ecGoCampaigns()">← Campaigns</button></div>
-      <h2 style="font-family:var(--font-display);font-size:1.1rem;margin:0 0 2px">${_escHtml(c.name||'')}</h2>
-      <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:14px">${_escHtml(c.subject||'')} · sent ${c.sent_at?_ecFmtDate(c.sent_at):''}</div>
-      <div class="ec-stats">
-        <div class="ec-stat"><div class="v">${n}</div><div class="l">Recipients</div></div>
-        <div class="ec-stat"><div class="v">${opened}</div><div class="l">Opened · ${pct(opened)}%</div></div>
-        <div class="ec-stat"><div class="v">${clicked}</div><div class="l">Clicked · ${pct(clicked)}%</div></div>
-        <div class="ec-stat"><div class="v">${bounced}</div><div class="l">Bounced</div></div>
-      </div>
-      <div class="eb-hint" style="margin-top:8px">Opens are approximate — some mail apps (e.g. Apple Mail) pre-load images, which can inflate open counts. Refresh to pull the latest.</div>
-      <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:6px 12px;margin-top:10px">${rowsHtml}</div>`;
+    const sends=await sbAll('email_sends?campaign_id=eq.'+id+'&select=id,contact_id,email,status,opened_at,clicked_at,open_count,click_count,error&order=email.asc,id.asc');
+    let events=[];
+    try{ events=await sbAll('email_events_log?campaign_id=eq.'+id+'&select=contact_id,send_id,event_type,url,event_at&order=event_at.desc,id.asc'); }catch(e){ events=[]; }
+    _ecRep={c,sends:sends||[],events:events||[],view:'opened'};
+    _ecRepRender();
   }catch(e){ host.innerHTML='<div class="hint"><p>Could not load report: '+_escHtml(e.message)+'</p></div>'; }
+}
+function _ecRepName(cid,email){
+  if(cid){ const info=_egContactInfo(cid); if(info&&info.name!=='(unknown contact)')return info.name; }
+  return email||'—';
+}
+function _ecRepHH(cid){ if(!cid)return null; const info=_egContactInfo(cid); return info&&info.hhId?info.hhId:null; }
+function _ecRepTime(iso){ if(!iso)return ''; try{ return new Date(iso).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+function _ecRepSetView(v){ if(_ecRep){ _ecRep.view=v; _ecRepRender(); } }
+function _ecRepRender(){
+  const host=document.getElementById('emailViewInner');
+  if(!host||!_ecRep)return;
+  const {c,sends,events}=_ecRep;
+  const n=sends.length;
+  const delivered=sends.filter(s=>s.status==='delivered'||s.opened_at||s.clicked_at).length;
+  const openedU=sends.filter(s=>s.opened_at).length;
+  const openedT=sends.reduce((a,s)=>a+(s.open_count||0),0);
+  const clickedU=sends.filter(s=>s.clicked_at).length;
+  const clickedT=sends.reduce((a,s)=>a+(s.click_count||0),0);
+  const multi=sends.filter(s=>(s.open_count||0)>=2).length;
+  const bounced=sends.filter(s=>s.status==='bounced').length;
+  const unsubEvents=events.filter(e=>e.event_type==='unsubscribed'||e.event_type==='complained');
+  const unsubbed=new Set(unsubEvents.map(e=>e.contact_id||e.send_id)).size;
+  const pct=(x,d)=>d?(Math.round(x/d*1000)/10):0;
+  const v=_ecRep.view;
+  const tile=(key,val,label,sub)=>`<div class="ec-stat" onclick="_ecRepSetView('${key}')" style="cursor:pointer${v===key?';border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset':''}"><div class="v">${val}</div><div class="l">${label}</div>${sub?`<div style="font-family:var(--font-ui);font-size:.55rem;color:var(--txt3);margin-top:2px">${sub}</div>`:''}</div>`;
+
+  // ── the WHO list for the selected metric ──
+  const row=(name,hhId,line2,right)=>`<div class="eg-mrow"${hhId?` style="cursor:pointer" onclick="_eeOpenHH('${_escAttr(hhId)}')"`:''}><div class="nm">${_escHtml(name)}<div class="em">${line2}</div></div><div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt2);text-align:right;flex-shrink:0">${right}</div></div>`;
+  let listTitle='',listHtml='';
+  const empty=(m)=>'<div style="padding:14px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.72rem">'+m+'</div>';
+  if(v==='opened'){
+    listTitle='Who opened ('+openedU+')';
+    const rs=sends.filter(s=>s.opened_at).sort((a,b)=>(b.open_count||0)-(a.open_count||0));
+    listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email)+' · first opened '+_ecRepTime(s.opened_at),(s.open_count||1)+' open'+((s.open_count||1)===1?'':'s')+((s.click_count||0)?' · '+s.click_count+' click'+(s.click_count===1?'':'s'):''))).join('')||empty('No opens yet.');
+  }else if(v==='clicked'){
+    listTitle='Who clicked ('+clickedU+')';
+    const rs=sends.filter(s=>s.clicked_at).sort((a,b)=>(b.click_count||0)-(a.click_count||0));
+    listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email)+' · first clicked '+_ecRepTime(s.clicked_at),(s.click_count||1)+' click'+((s.click_count||1)===1?'':'s')+' · '+(s.open_count||0)+' opens')).join('')||empty('No clicks yet.');
+  }else if(v==='multi'){
+    listTitle='Opened 2+ times ('+multi+')';
+    const rs=sends.filter(s=>(s.open_count||0)>=2).sort((a,b)=>(b.open_count||0)-(a.open_count||0));
+    listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email)+' · first opened '+_ecRepTime(s.opened_at),s.open_count+' opens'+((s.click_count||0)?' · '+s.click_count+' clicks':''))).join('')||empty('Nobody has opened this more than once yet.');
+  }else if(v==='delivered'){
+    listTitle='Delivered ('+delivered+' of '+n+')';
+    const rs=sends.filter(s=>s.status==='delivered'||s.opened_at||s.clicked_at);
+    listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email),s.opened_at?'opened':'delivered')).join('')||empty('No delivery confirmations yet.');
+  }else if(v==='bounced'){
+    listTitle='Bounced ('+bounced+')';
+    const rs=sends.filter(s=>s.status==='bounced');
+    listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email),_escHtml((s.error||'bounced').slice(0,60)))).join('')||empty('No bounces — clean send.');
+  }else if(v==='unsub'){
+    listTitle='Unsubscribed / complained ('+unsubbed+')';
+    listHtml=unsubEvents.map(e=>{
+      const s=e.send_id?sends.find(x=>x.id===e.send_id):null;
+      const cid=e.contact_id||(s&&s.contact_id);
+      return row(_ecRepName(cid,s&&s.email),_ecRepHH(cid),(s?_escHtml(s.email)+' · ':'')+e.event_type,_ecRepTime(e.event_at));
+    }).join('')||empty('No unsubscribes — nice.');
+  }
+
+  host.innerHTML=_egTabBar('campaigns')+`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="eg-mini-btn" onclick="_ecGoCampaigns()">← Campaigns</button>
+      <div style="flex:1"></div>
+      <button class="eg-mini-btn" onclick="_ecViewEmail()" title="See the email exactly as it went out"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> View email</button>
+      <button class="eg-mini-btn" onclick="_ecReport('${_escAttr(c.id)}')" title="Refresh"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg> Refresh</button>
+    </div>
+    <h2 style="font-family:var(--font-display);font-size:1.1rem;margin:0 0 2px">${_escHtml(c.name||'')}</h2>
+    <div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);margin-bottom:14px">${_escHtml(c.subject||'')} · sent ${c.sent_at?_ecFmtDate(c.sent_at):''} · to ${_escHtml(_ecGroupName(c.group_id))}</div>
+    <div class="ec-stats" style="flex-wrap:wrap">
+      ${tile('delivered',delivered+' <span style="font-size:.6em;color:var(--txt3)">/ '+n+'</span>','Delivered · '+pct(delivered,n)+'%','of '+n+' recipients')}
+      ${tile('opened',openedU,'Unique opens · '+pct(openedU,delivered||n)+'%',openedT+' total opens')}
+      ${tile('clicked',clickedU,'Unique clicks · '+pct(clickedU,delivered||n)+'%',clickedT+' total · CTR of opens '+pct(clickedU,openedU)+'%')}
+      ${tile('multi',multi,'Opened 2+ times','repeat readers')}
+      ${tile('bounced',bounced,'Bounced · '+pct(bounced,n)+'%','')}
+      ${tile('unsub',unsubbed,'Unsubscribed','incl. complaints')}
+    </div>
+    <div class="eb-hint" style="margin-top:8px">Click any tile to see exactly who. Opens are approximate — some mail apps (e.g. Apple Mail) pre-load images, which inflates opens; clicks are the honest signal of intent.</div>
+    <div style="font-family:var(--font-ui);font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:14px 0 6px">${listTitle}</div>
+    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:6px 12px;max-height:420px;overflow-y:auto">${listHtml}</div>`;
+}
+
+// ── "View email" — the live email exactly as it was sent (stored compiled html) ──
+function _ecViewEmail(){
+  const c=_ecRep&&_ecRep.c;
+  if(!c||!c.html){ alert('No stored copy of this email was found.'); return; }
+  let html=c.html
+    .replace(/%recipient\.first_name%|\{first_name\}/g,'‹First Name›')
+    .replace(/%recipient\.last_name%|\{last_name\}/g,'‹Last Name›')
+    .replace(/%recipient\.joint_name%|\{joint_name\}/g,'‹Household Name›')
+    .replace(/%recipient\.email%|\{email\}/g,'‹recipient email›')
+    .replace(/%recipient\.unsubscribe_url%|%unsubscribe_url%|\{unsubscribe\}/g,'#unsubscribe-link');
+  document.getElementById('ecViewEmailBg')?.remove();
+  const bg=document.createElement('div');
+  bg.id='ecViewEmailBg';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  bg.onclick=e=>{ if(e.target===bg)bg.remove(); };
+  const card=document.createElement('div');
+  card.style.cssText='background:var(--surf);border:1px solid var(--border);border-radius:12px;width:720px;max-width:96vw;height:88vh;display:flex;flex-direction:column;overflow:hidden';
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)';
+  const ttl=document.createElement('div');
+  ttl.style.cssText='flex:1;min-width:0;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  ttl.textContent=(c.subject||'(no subject)');
+  const note=document.createElement('div');
+  note.style.cssText='font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);flex-shrink:0';
+  note.textContent='as sent · merge fields shown as placeholders';
+  const x=document.createElement('button');
+  x.textContent='✕';
+  x.style.cssText='background:none;border:none;color:var(--txt3);font-size:1rem;cursor:pointer;flex-shrink:0';
+  x.onclick=()=>bg.remove();
+  hdr.appendChild(ttl); hdr.appendChild(note); hdr.appendChild(x);
+  const frame=document.createElement('iframe');
+  frame.style.cssText='flex:1;width:100%;border:none;background:#fff';
+  frame.setAttribute('sandbox','allow-same-origin'); // no scripts, no navigation
+  frame.srcdoc=html;
+  card.appendChild(hdr); card.appendChild(frame);
+  bg.appendChild(card);
+  document.body.appendChild(bg);
+}
+
+// Open a household full profile from anywhere (report rows, dashboard widgets).
+function _eeOpenHH(hid){ const i=hIdx(hid); if(i>=0){ try{ openFullPanel(i); }catch(e){ console.warn('open household failed',e); } } }
+
+// ═══════════════════════ TEMPLATES (Feature 6) ═════════════════════════════
+// email_templates has ONLY (name, subject, mjml). The builder's real source of
+// truth for a design is blocks (campaign.mjml) + section (campaign.section) +
+// preheader — so templates store a JSON ENVELOPE in the mjml column:
+//   {"v":2,"blocks":[...],"section":{...},"preheader":"..."}
+// A bare array is tolerated on read (legacy). html is recompiled at "use" time.
+let _etList=[]; let _etLoaded=false;
+async function _etLoad(force){
+  if(_etLoaded&&!force)return;
+  _etList=await sbAll('email_templates?select=id,name,subject,mjml,created_at,updated_at&order=updated_at.desc')||[];
+  _etLoaded=true;
+}
+function _etGoTemplates(){ _egView='templates'; renderEmail(); }
+function _etParse(t){
+  try{
+    const v=JSON.parse(t.mjml||'null');
+    if(Array.isArray(v))return {blocks:v,section:null,preheader:''};
+    if(v&&Array.isArray(v.blocks))return {blocks:v.blocks,section:v.section||null,preheader:v.preheader||''};
+  }catch(e){}
+  return {blocks:[],section:null,preheader:''};
+}
+function _etRenderList(){
+  const host=document.getElementById('emailViewInner');
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0">Templates</h2>
+      <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3);margin-top:3px">Reusable designs. Save one from any campaign with “Save as template…” in the composer.</div>
+    </div>
+  </div>`;
+  let body;
+  if(!_etList.length){
+    body='<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No templates yet. Open a campaign and click “Save as template…” to keep its design here.</div>';
+  }else{
+    body=_etList.map(t=>{
+      const parsed=_etParse(t);
+      const nBlocks=parsed.blocks.length;
+      return `<div class="eg-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="_etUse('${_escAttr(t.id)}')">
+            <div class="eg-name">${_escHtml(t.name||'(untitled template)')}</div>
+            <div class="eg-meta" style="margin-top:2px">${t.subject?_escHtml(t.subject)+' · ':''}${nBlocks} block${nBlocks===1?'':'s'} · saved ${_ecFmtDate(t.updated_at||t.created_at)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+            <button class="btn btn-pri" style="font-size:.64rem;padding:4px 12px" onclick="_etUse('${_escAttr(t.id)}')">New campaign</button>
+            <button class="eg-mini-btn" onclick="_etRename('${_escAttr(t.id)}')">Rename</button>
+            <button class="eg-mini-btn" style="color:var(--red);border-color:rgba(185,28,28,.3)" onclick="_etDelete('${_escAttr(t.id)}')">Del</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  host.innerHTML=_egTabBar('templates')+header+body;
+}
+async function _ecSaveAsTemplate(){
+  if(!_ecCur)return;
+  _ecSyncFromBuilder();
+  const name=prompt('Template name:',_ecCur.name||'');
+  if(!name||!name.trim())return;
+  try{
+    const payload={ name:name.trim(), subject:_ecCur.subject||null,
+      mjml:JSON.stringify({v:2,blocks:_ebBlocks,section:_ebSection||null,preheader:_ecCur.preheader||''}) };
+    await sb('email_templates',{method:'POST',body:JSON.stringify(payload)});
+    _etLoaded=false;
+    _ebToastMsg('Saved as template “'+name.trim()+'”');
+  }catch(e){ alert('Could not save template: '+e.message); }
+}
+async function _etUse(id){
+  try{
+    await _ecLoad(false); // need from-identities
+    const rows=await sbAll('email_templates?id=eq.'+id+'&select=*'); const t=rows&&rows[0]; if(!t)return;
+    const parsed=_etParse(t);
+    if(!parsed.blocks.length){ alert('This template has no design blocks saved.'); return; }
+    _ecCur={ id:null, name:(t.name||'Campaign'), subject:t.subject||'', preheader:parsed.preheader||'',
+      from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null, status:'draft',
+      blocks:JSON.parse(JSON.stringify(parsed.blocks)),
+      section:parsed.section?JSON.parse(JSON.stringify(parsed.section)):{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+    _ecOpenCompose();
+  }catch(e){ alert('Could not open template: '+e.message); }
+}
+async function _etRename(id){
+  const t=_etList.find(x=>x.id===id); if(!t)return;
+  const name=prompt('Template name:',t.name||''); if(!name||!name.trim())return;
+  try{ await sb('email_templates?id=eq.'+id,{method:'PATCH',body:JSON.stringify({name:name.trim(),updated_at:new Date().toISOString()})}); await _etLoad(true); _etRenderList(); }
+  catch(e){ alert('Could not rename: '+e.message); }
+}
+function _etDelete(id){
+  const t=_etList.find(x=>x.id===id); if(!t)return;
+  _egConfirm('Delete Template','Delete template “'+(t.name||'untitled')+'”? Campaigns already made from it are not affected.',async()=>{
+    try{ await sb('email_templates?id=eq.'+id,{method:'DELETE'}); await _etLoad(true); _etRenderList(); }
+    catch(e){ alert('Could not delete: '+e.message); }
+  },'Delete');
+}
+
+// ═══════════════ CONTACT-PAGE EMAIL WIDGET (Feature 9 / Step 6) ═════════════
+// Renders inside the household full profile. READS email_sends/email_campaigns
+// only — never writes to interactions, never touches AGC or Daily Five.
+let _hhEmailPage={}; // household id -> current page (0-based)
+async function _hhEmailLoad(hid,idx,page){
+  const el=document.getElementById('hh-email-'+idx);
+  if(!el)return;
+  _hhEmailPage[hid]=page||0;
+  const i=hIdx(hid); const h=(i>=0?households[i]:null)||households[idx];
+  if(!h){ el.innerHTML=''; return; }
+  const ids=(h.members||[]).map(m=>m.id);
+  if(!ids.length){ el.innerHTML='<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No contacts in this household.</div>'; return; }
+  el.innerHTML='<div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3)">Loading email history…</div>';
+  try{
+    const inList=ids.map(x=>'"'+x+'"').join(',');
+    const off=(page||0)*10;
+    // fetch 11 to know whether a next page exists; display 10
+    const sends=await sb(`email_sends?contact_id=in.(${inList})&select=contact_id,campaign_id,email,status,opened_at,clicked_at,open_count,click_count,created_at&order=created_at.desc,id.asc&limit=11&offset=${off}`)||[];
+    const hasNext=sends.length>10;
+    const pageRows=sends.slice(0,10);
+    if(!pageRows.length&&!(page>0)){
+      el.innerHTML='<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No campaign emails have been sent to this household yet.</div>';
+      return;
+    }
+    // resolve campaign names
+    const cids=[...new Set(pageRows.map(s=>s.campaign_id).filter(Boolean))];
+    let campById={};
+    if(cids.length){
+      const camps=await sb(`email_campaigns?id=in.(${cids.map(x=>'"'+x+'"').join(',')})&select=id,name,subject,sent_at`)||[];
+      camps.forEach(cc=>campById[cc.id]=cc);
+    }
+    const memberName=cid=>{ const m=(h.members||[]).find(x=>x.id===cid); return m?(m.first_name||''):''; };
+    // top-line health read (from this page's rows — the most recent history)
+    const opened=pageRows.filter(s=>s.opened_at).length;
+    const health=(page||0)>0?'' :(()=>{
+      const nn=pageRows.length;
+      if(!nn)return '';
+      const good=opened/nn>=0.5, some=opened>0;
+      const color=good?'var(--green)':(some?'var(--gold)':'var(--red)');
+      const txt=good?'Engaged reader — opened '+opened+' of the last '+nn
+        :(some?'Occasional reader — opened '+opened+' of the last '+nn
+        :'Opened 0 of the last '+nn+' — address may be dormant or landing in spam');
+      return `<div style="font-family:var(--font-ui);font-size:.66rem;color:${color};margin-bottom:8px;font-weight:600">${txt}</div>`;
+    })();
+    const rowsHtml=pageRows.map(s=>{
+      const camp=campById[s.campaign_id]||{};
+      const st=s.status==='bounced'?'<span style="color:var(--red)">bounced</span>'
+        :(s.status==='complained'?'<span style="color:var(--red)">complained</span>'
+        :(s.opened_at||s.clicked_at||s.status==='delivered')?'delivered':_escHtml(s.status||'sent'));
+      const who=memberName(s.contact_id);
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.76rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${_escAttr(camp.subject||'')}">${_escHtml(camp.name||camp.subject||'(campaign)')}</div>
+          <div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${who?_escHtml(who)+' · ':''}${camp.sent_at?_ecFmtDate(camp.sent_at):(s.created_at?_ecFmtDate(s.created_at):'')} · ${st}</div>
+        </div>
+        <div style="flex-shrink:0;font-family:var(--font-ui);font-size:.64rem;color:var(--txt2);text-align:right;white-space:nowrap">
+          ${(s.open_count||0)} open${(s.open_count||0)===1?'':'s'}<br>
+          <span style="color:${(s.click_count||0)?'var(--green)':'var(--txt3)'}">${(s.click_count||0)} click${(s.click_count||0)===1?'':'s'}</span>
+        </div>
+      </div>`;
+    }).join('')||'<div style="font-size:.72rem;color:var(--txt3);padding:8px 0">No more history.</div>';
+    const nav=`<div style="display:flex;justify-content:space-between;margin-top:8px">
+      <button class="eg-mini-btn" ${page>0?'':'disabled style="opacity:.4;cursor:default"'} onclick="_hhEmailLoad('${_escAttr(hid)}',${idx},${(page||0)-1})">← Newer</button>
+      <span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);align-self:center">page ${(page||0)+1}</span>
+      <button class="eg-mini-btn" ${hasNext?'':'disabled style="opacity:.4;cursor:default"'} onclick="_hhEmailLoad('${_escAttr(hid)}',${idx},${(page||0)+1})">Older →</button>
+    </div>`;
+    el.innerHTML=health+rowsHtml+(((page||0)>0||hasNext)?nav:'');
+  }catch(e){
+    el.innerHTML='<div style="font-size:.72rem;color:var(--txt3)">Could not load email history: '+_escHtml(e.message)+'</div>';
+  }
+}
+
+// ═══════════════ DASHBOARD EMAIL ENGAGEMENT WIDGET (Feature 10) ═════════════
+// One row per (contact × recent email) that crossed the engagement threshold.
+// Opens and clicks shown SEPARATELY (Apple Mail inflates opens — clicks are the
+// honest intent signal). Thresholds + window live in ENGINE settings.
+// READ-ONLY: never writes to interactions.
+async function renderEmailEngage(){
+  const el=document.getElementById('body-panel-emailengage');
+  if(!el)return;
+  try{
+    const win=Math.max(1,parseInt(ENGINE.emailEngWindow)||5);
+    const oThr=Math.max(1,parseInt(ENGINE.emailEngOpens)||3);
+    const cThr=Math.max(1,parseInt(ENGINE.emailEngClicks)||3);
+    const camps=await sb(`email_campaigns?status=eq.sent&order=sent_at.desc&select=id,name,subject,sent_at&limit=${win}`)||[];
+    if(!camps.length){ el.innerHTML='<div class="hint"><p>No sent campaigns yet — engagement will appear here after your first mailing.</p></div>'; return; }
+    const campById={}; camps.forEach(c=>campById[c.id]=c);
+    const cids=camps.map(c=>'"'+c.id+'"').join(',');
+    const rows=await sbAll(`email_sends?campaign_id=in.(${cids})&or=(open_count.gte.${oThr},click_count.gte.${cThr})&select=id,contact_id,campaign_id,email,open_count,click_count&order=click_count.desc,open_count.desc,id.asc`);
+    if(!rows||!rows.length){
+      el.innerHTML=`<div class="hint"><p>Nobody has hit ${oThr}+ opens or ${cThr}+ clicks across the last ${camps.length} mailing${camps.length===1?'':'s'} yet.<br><span style="font-size:.62rem;color:var(--txt3)">Thresholds are tunable in Engine settings.</span></p></div>`;
+      return;
+    }
+    const hdr=`<div style="display:grid;grid-template-columns:1fr 1fr 52px 52px;gap:8px;font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:2px 4px 6px;border-bottom:1px solid var(--border)"><div>Contact</div><div>Mailing</div><div style="text-align:right">Opens</div><div style="text-align:right">Clicks</div></div>`;
+    const body=rows.slice(0,60).map(r=>{
+      const info=r.contact_id?_egContactInfo(r.contact_id):null;
+      const name=(info&&info.name!=='(unknown contact)')?info.name:(r.email||'—');
+      const hh=info&&info.hhId?info.hhId:null;
+      const camp=campById[r.campaign_id]||{};
+      return `<div style="display:grid;grid-template-columns:1fr 1fr 52px 52px;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);font-size:.74rem${hh?';cursor:pointer':''}"${hh?` onclick="_eeOpenHH('${_escAttr(hh)}')"`:''}>
+        <div style="font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(name)}</div>
+        <div style="color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.68rem" title="${_escAttr(camp.subject||'')}">${_escHtml(camp.name||camp.subject||'—')}</div>
+        <div style="text-align:right;font-family:var(--font-ui);color:var(--txt2)">${r.open_count||0}</div>
+        <div style="text-align:right;font-family:var(--font-ui);font-weight:700;color:${(r.click_count||0)>=cThr?'var(--green)':'var(--txt2)'}">${r.click_count||0}</div>
+      </div>`;
+    }).join('');
+    el.innerHTML=hdr+body;
+  }catch(e){
+    el.innerHTML='<div class="hint"><p>Could not load email engagement.<br><span style="font-size:.62rem;color:var(--txt3)">'+_escHtml(e.message)+'</span></p></div>';
+  }
 }
 
 function switchView(view){
@@ -11372,7 +11710,8 @@ const PANEL_HELP={
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
   'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
-  'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`}
+  'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
+  'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',d:()=>`Who's actually reading your mailings. One row per contact per recent email they engaged with — anyone hitting <b>${ENGINE.emailEngOpens}+ opens</b> or <b>${ENGINE.emailEngClicks}+ clicks</b> across your <b>${ENGINE.emailEngWindow} most recent mailings</b>. Opens and clicks are shown separately on purpose: Apple Mail pre-loads images and inflates opens, so clicks are the honest signal of real interest. Click a row to open the household and follow up personally. This panel only reads email data — it never creates interactions or affects Prospect scores or the Daily Five. Thresholds are tunable in Engine settings.`}
 };
 
 function showPanelHelp(panelId){
@@ -11422,6 +11761,7 @@ async function renderAllPanels(){
   await renderWins();
   await renderRecentActivity();
   await renderActiveTracks();
+  await renderEmailEngage();
 }
 
 async function saveDashLayout(){
