@@ -10976,6 +10976,11 @@ function _ecOpenSend(){
   const g=_egGroups.find(x=>x.id===_ecCur.group_id);
   const mailable=g?(_egMembersByGroup[g.id]||[]).filter(cid=>{ const info=_egContactInfo(cid); return info.email&&!_egUnsub.has(cid); }).length:0;
   if(g&&mailable===0)problems.push('That group has no mailable recipients (need an email and not unsubscribed).');
+  // Default the scheduler to "tomorrow at 9:00 AM local", the most common choice.
+  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
+  const pad=n=>(n<10?'0':'')+n;
+  const defDate=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const defTime=pad(d.getHours())+':'+pad(d.getMinutes());
   document.getElementById('ecSendBody').innerHTML=problems.length
     ? '<div class="eb-hint" style="color:var(--red);font-size:.72rem">Fix these first:</div><ul style="margin:6px 0 0;padding-left:18px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul>'
     : `<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
@@ -10984,21 +10989,56 @@ function _ecOpenSend(){
          from <b>${_escHtml(_ecCur.from_name)} &lt;${_escHtml(_ecCur.from_address)}&gt;</b>
        </div>
        <div style="margin-top:14px">
-         <label class="eb-check"><input type="radio" name="ecWhen" value="now" checked onchange="document.getElementById('ecSchedRow').style.display='none'"> Send now</label>
-         <label class="eb-check"><input type="radio" name="ecWhen" value="later" onchange="document.getElementById('ecSchedRow').style.display='block'"> Schedule for later</label>
-         <div id="ecSchedRow" style="display:none;margin-top:6px"><input type="datetime-local" id="ecSchedAt" style="width:100%;font-family:var(--font-ui);font-size:.76rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)"></div>
+         <label class="eb-check"><input type="radio" name="ecWhen" value="now" checked onchange="_ecToggleSched(false)"> Send now</label>
+         <label class="eb-check"><input type="radio" name="ecWhen" value="later" onchange="_ecToggleSched(true)"> Schedule for later</label>
+         <div id="ecSchedRow" style="display:none;margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">
+           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+             <label style="display:flex;flex-direction:column;flex:1;min-width:130px">
+               <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Date</span>
+               <input type="date" id="ecSchedDate" value="${defDate}" min="${defDate.slice(0,4)}-01-01" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
+             </label>
+             <label style="display:flex;flex-direction:column;flex:1;min-width:100px">
+               <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Time</span>
+               <input type="time" id="ecSchedTime" value="${defTime}" style="font-family:var(--font-ui);font-size:.78rem;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surf);color:var(--txt)">
+             </label>
+           </div>
+           <div id="ecSchedPreview" style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:8px"></div>
+         </div>
+         <div id="ecSendErr" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.3);border-radius:6px;color:var(--red);font-family:var(--font-ui);font-size:.72rem"></div>
        </div>`;
   document.getElementById('ecSendOk').style.display=problems.length?'none':'inline-block';
   document.getElementById('ecSendModal').style.display='flex';
+  // wire up the live preview once inputs exist
+  if(!problems.length){
+    const upd=()=>{ try{ const dt=_ecSchedComposeDate(); const el=document.getElementById('ecSchedPreview'); if(dt&&el){ el.textContent='Will send '+_ecFmtDate(dt.toISOString())+(dt<=new Date()?' — that\u2019s in the past':''); el.style.color=dt<=new Date()?'var(--red)':'var(--txt3)'; } }catch(e){} };
+    ['ecSchedDate','ecSchedTime'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input',upd); el.addEventListener('change',upd); }});
+  }
+}
+function _ecToggleSched(show){
+  const row=document.getElementById('ecSchedRow'); if(row)row.style.display=show?'block':'none';
+  const err=document.getElementById('ecSendErr'); if(err)err.style.display='none';
+  if(show){
+    try{ const dt=_ecSchedComposeDate(); const el=document.getElementById('ecSchedPreview'); if(dt&&el)el.textContent='Will send '+_ecFmtDate(dt.toISOString()); }catch(e){}
+  }
+}
+function _ecSchedComposeDate(){
+  const d=document.getElementById('ecSchedDate'); const t=document.getElementById('ecSchedTime');
+  if(!d||!t||!d.value||!t.value)return null;
+  return new Date(d.value+'T'+t.value);   // local time, converted to UTC by toISOString()
+}
+function _ecSendShowErr(msg){
+  const el=document.getElementById('ecSendErr');
+  if(!el)return;
+  el.textContent=msg; el.style.display='block';
 }
 async function _ecConfirmSend(btn){
   const when=(document.querySelector('input[name="ecWhen"]:checked')||{}).value||'now';
   let scheduledFor=null;
   if(when==='later'){
-    const v=document.getElementById('ecSchedAt').value;
-    if(!v){ alert('Pick a date/time to schedule.'); return; }
-    scheduledFor=new Date(v).toISOString();
-    if(new Date(scheduledFor)<=new Date()){ alert('Scheduled time must be in the future.'); return; }
+    const dt=_ecSchedComposeDate();
+    if(!dt){ _ecSendShowErr('Pick a date and time to schedule.'); return; }
+    if(dt<=new Date()){ _ecSendShowErr('Scheduled time must be in the future.'); return; }
+    scheduledFor=dt.toISOString();
   }
   btn.disabled=true; const o=btn.textContent; btn.textContent='Working…';
   try{
@@ -11006,16 +11046,16 @@ async function _ecConfirmSend(btn){
     if(when==='later'){
       await sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify({status:'scheduled',scheduled_for:scheduledFor})});
       document.getElementById('ecSendModal').style.display='none';
-      alert('Scheduled for '+_ecFmtDate(scheduledFor)+'.');
+      _ebToastMsg('Scheduled for '+_ecFmtDate(scheduledFor));
       _ecGoCampaigns();
     }else{
       // invoke the email-send Edge Function
       const r=await _ecInvokeSend(_ecCur.id);
       document.getElementById('ecSendModal').style.display='none';
-      alert('Sent! '+(r&&r.recipients!=null?r.recipients+' recipient(s).':''));
+      _ebToastMsg('Sent'+(r&&r.recipients!=null?' — '+r.recipients+' recipient'+(r.recipients===1?'':'s'):''));
       await _ecLoad(true); _ecGoCampaigns();
     }
-  }catch(e){ alert('Send failed: '+e.message); btn.disabled=false; btn.textContent=o; }
+  }catch(e){ _ecSendShowErr('Send failed: '+e.message); btn.disabled=false; btn.textContent=o; }
 }
 async function _ecInvokeSend(campaignId){
   const base=(typeof SB_URL!=='undefined')?SB_URL:'';
@@ -11071,7 +11111,24 @@ async function _ecReport(id){
     const sends=await sbAll('email_sends?campaign_id=eq.'+id+'&select=id,contact_id,email,status,opened_at,clicked_at,open_count,click_count,error&order=email.asc,id.asc');
     let events=[];
     try{ events=await sbAll('email_events_log?campaign_id=eq.'+id+'&select=contact_id,send_id,event_type,url,event_at&order=event_at.desc,id.asc'); }catch(e){ events=[]; }
-    _ecRep={c,sends:sends||[],events:events||[],view:'opened'};
+    // Cross-reference email_subscriptions: catches unsubs from the static page that
+    // never went through Mailgun (and thus never appeared in email_events_log).
+    // Any contact who received this campaign AND is currently unsubscribed with
+    // unsubscribed_at AFTER the send is counted here.
+    let subUnsubs=[];
+    try{
+      const contactIds=[...new Set((sends||[]).map(s=>s.contact_id).filter(Boolean))];
+      if(contactIds.length && c.sent_at){
+        const inList=contactIds.map(x=>'"'+x+'"').join(',');
+        const CHUNK=100;
+        for(let i=0;i<contactIds.length;i+=CHUNK){
+          const chunk=contactIds.slice(i,i+CHUNK).map(x=>'"'+x+'"').join(',');
+          const rows=await sb(`email_subscriptions?contact_id=in.(${chunk})&status=eq.unsubscribed&unsubscribed_at=gte.${encodeURIComponent(c.sent_at)}&select=contact_id,unsubscribed_at`);
+          if(rows)subUnsubs.push(...rows);
+        }
+      }
+    }catch(e){ /* subs cross-check is best-effort */ }
+    _ecRep={c,sends:sends||[],events:events||[],subUnsubs,view:'opened'};
     _ecRepRender();
   }catch(e){ host.innerHTML='<div class="hint"><p>Could not load report: '+_escHtml(e.message)+'</p></div>'; }
 }
@@ -11085,7 +11142,7 @@ function _ecRepSetView(v){ if(_ecRep){ _ecRep.view=v; _ecRepRender(); } }
 function _ecRepRender(){
   const host=document.getElementById('emailViewInner');
   if(!host||!_ecRep)return;
-  const {c,sends,events}=_ecRep;
+  const {c,sends,events,subUnsubs}=_ecRep;
   const n=sends.length;
   const delivered=sends.filter(s=>s.status==='delivered'||s.opened_at||s.clicked_at).length;
   const openedU=sends.filter(s=>s.opened_at).length;
@@ -11095,7 +11152,24 @@ function _ecRepRender(){
   const multi=sends.filter(s=>(s.open_count||0)>=2).length;
   const bounced=sends.filter(s=>s.status==='bounced').length;
   const unsubEvents=events.filter(e=>e.event_type==='unsubscribed'||e.event_type==='complained');
-  const unsubbed=new Set(unsubEvents.map(e=>e.contact_id||e.send_id)).size;
+  // Union: Mailgun-tracked unsubs + static-page unsubs (from email_subscriptions).
+  // A contact may appear in both; dedupe by contact_id.
+  const unsubIds=new Set();
+  unsubEvents.forEach(e=>{ if(e.contact_id)unsubIds.add(e.contact_id); });
+  (subUnsubs||[]).forEach(u=>{ if(u.contact_id)unsubIds.add(u.contact_id); });
+  const unsubbed=unsubIds.size;
+  // Link-click breakdown: URL → { count, contactIds:Set, firstAt }
+  const clickEvents=events.filter(e=>e.event_type==='clicked'&&e.url);
+  const urlMap={};
+  clickEvents.forEach(e=>{
+    const u=urlMap[e.url]||(urlMap[e.url]={count:0,uniq:new Set(),firstAt:e.event_at,lastAt:e.event_at,clicks:[]});
+    u.count++;
+    if(e.contact_id)u.uniq.add(e.contact_id);
+    if(e.event_at<u.firstAt)u.firstAt=e.event_at;
+    if(e.event_at>u.lastAt)u.lastAt=e.event_at;
+    u.clicks.push(e);
+  });
+  const urlRows=Object.entries(urlMap).sort((a,b)=>b[1].count-a[1].count);
   const pct=(x,d)=>d?(Math.round(x/d*1000)/10):0;
   const v=_ecRep.view;
   const tile=(key,val,label,sub)=>`<div class="ec-stat" onclick="_ecRepSetView('${key}')" style="cursor:pointer${v===key?';border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset':''}"><div class="v">${val}</div><div class="l">${label}</div>${sub?`<div style="font-family:var(--font-ui);font-size:.55rem;color:var(--txt3);margin-top:2px">${sub}</div>`:''}</div>`;
@@ -11126,11 +11200,51 @@ function _ecRepRender(){
     listHtml=rs.map(s=>row(_ecRepName(s.contact_id,s.email),_ecRepHH(s.contact_id),_escHtml(s.email),_escHtml((s.error||'bounced').slice(0,60)))).join('')||empty('No bounces — clean send.');
   }else if(v==='unsub'){
     listTitle='Unsubscribed / complained ('+unsubbed+')';
-    listHtml=unsubEvents.map(e=>{
+    // Build a unified list, dedupe by contact_id. Mailgun-tracked events go first
+    // (richer data: event type + timestamp); static-page unsubs fill in the rest.
+    const seenIds=new Set();
+    const parts=[];
+    unsubEvents.forEach(e=>{
       const s=e.send_id?sends.find(x=>x.id===e.send_id):null;
       const cid=e.contact_id||(s&&s.contact_id);
-      return row(_ecRepName(cid,s&&s.email),_ecRepHH(cid),(s?_escHtml(s.email)+' · ':'')+e.event_type,_ecRepTime(e.event_at));
-    }).join('')||empty('No unsubscribes — nice.');
+      if(cid){ if(seenIds.has(cid))return; seenIds.add(cid); }
+      const email=s?s.email:'';
+      parts.push(row(_ecRepName(cid,email),_ecRepHH(cid),(email?_escHtml(email)+' · ':'')+e.event_type,_ecRepTime(e.event_at)));
+    });
+    (subUnsubs||[]).forEach(u=>{
+      if(!u.contact_id||seenIds.has(u.contact_id))return;
+      seenIds.add(u.contact_id);
+      const s=sends.find(x=>x.contact_id===u.contact_id);
+      const email=s?s.email:'';
+      parts.push(row(_ecRepName(u.contact_id,email),_ecRepHH(u.contact_id),(email?_escHtml(email)+' · ':'')+'unsubscribed (via link)',_ecRepTime(u.unsubscribed_at)));
+    });
+    listHtml=parts.join('')||empty('No unsubscribes — nice.');
+  }else if(v==='urls'){
+    listTitle='Links clicked ('+urlRows.length+' unique URL'+(urlRows.length===1?'':'s')+')';
+    if(!urlRows.length){
+      listHtml=empty('No clicks tracked yet.');
+    }else{
+      listHtml=urlRows.map(([url,u])=>{
+        const clickers=[...u.uniq].slice(0,60).map(cid=>{
+          const info=_egContactInfo(cid);
+          const s=sends.find(x=>x.contact_id===cid);
+          const hh=info&&info.hhId?info.hhId:null;
+          const clickCount=u.clicks.filter(cl=>cl.contact_id===cid).length;
+          return `<span${hh?` style="cursor:pointer;color:var(--txt);border-bottom:1px dotted var(--border2)" onclick="_eeOpenHH('${_escAttr(hh)}')"`:' style="color:var(--txt2)"'}>${_escHtml((info&&info.name!=='(unknown contact)')?info.name:(s?s.email:'—'))}${clickCount>1?' <span style="color:var(--txt3)">(×'+clickCount+')</span>':''}</span>`;
+        }).join(', ');
+        const shortUrl=url.length>80?url.slice(0,80)+'…':url;
+        return `<div style="padding:10px 4px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+            <a href="${_escAttr(url)}" target="_blank" rel="noopener" style="font-size:.74rem;color:var(--accent);text-decoration:none;font-weight:600;word-break:break-all;flex:1">${_escHtml(shortUrl)}</a>
+            <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt2);text-align:right;flex-shrink:0;white-space:nowrap">
+              <b>${u.count}</b> click${u.count===1?'':'s'}<br>
+              <span style="color:var(--txt3)">${u.uniq.size} unique</span>
+            </div>
+          </div>
+          <div style="font-family:var(--font-ui);font-size:.66rem;line-height:1.6">${clickers||'—'}</div>
+        </div>`;
+      }).join('');
+    }
   }
 
   host.innerHTML=_egTabBar('campaigns')+`
@@ -11146,6 +11260,7 @@ function _ecRepRender(){
       ${tile('delivered',delivered+' <span style="font-size:.6em;color:var(--txt3)">/ '+n+'</span>','Delivered · '+pct(delivered,n)+'%','of '+n+' recipients')}
       ${tile('opened',openedU,'Unique opens · '+pct(openedU,delivered||n)+'%',openedT+' total opens')}
       ${tile('clicked',clickedU,'Unique clicks · '+pct(clickedU,delivered||n)+'%',clickedT+' total · CTR of opens '+pct(clickedU,openedU)+'%')}
+      ${tile('urls',urlRows.length,'Links clicked','which URLs · by whom')}
       ${tile('multi',multi,'Opened 2+ times','repeat readers')}
       ${tile('bounced',bounced,'Bounced · '+pct(bounced,n)+'%','')}
       ${tile('unsub',unsubbed,'Unsubscribed','incl. complaints')}
@@ -11308,12 +11423,33 @@ async function _hhEmailLoad(hid,idx,page){
   try{
     const inList=ids.map(x=>'"'+x+'"').join(',');
     const off=(page||0)*10;
+    // Fetch subscription status for household members (page 1 only — cheap).
+    let unsubbedMembers=[];
+    if(!(page>0)){
+      try{
+        const subs=await sb(`email_subscriptions?contact_id=in.(${inList})&status=eq.unsubscribed&select=contact_id,unsubscribed_at`)||[];
+        unsubbedMembers=subs;
+      }catch(e){ /* best-effort */ }
+    }
     // fetch 11 to know whether a next page exists; display 10
     const sends=await sb(`email_sends?contact_id=in.(${inList})&select=contact_id,campaign_id,email,status,opened_at,clicked_at,open_count,click_count,created_at&order=created_at.desc,id.asc&limit=11&offset=${off}`)||[];
     const hasNext=sends.length>10;
     const pageRows=sends.slice(0,10);
+    // Unsubscribe banner + Resubscribe button — only on page 1, only if applicable.
+    let unsubBanner='';
+    if(!(page>0)&&unsubbedMembers.length){
+      const names=unsubbedMembers.map(u=>{
+        const m=(h.members||[]).find(x=>x.id===u.contact_id);
+        return m?((m.first_name||'')+(m.last_name?' '+m.last_name.charAt(0)+'.':'')).trim():'a member';
+      }).filter(Boolean);
+      const label=names.length===1?names[0]:(names.length===2?names.join(' and '):names.slice(0,-1).join(', ')+', and '+names[names.length-1]);
+      unsubBanner=`<div style="background:rgba(185,28,28,.06);border:1px solid rgba(185,28,28,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt)"><b>${_escHtml(label)}</b> ${unsubbedMembers.length===1?'is':'are'} unsubscribed from emails and won't receive campaigns.</div>
+        <button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick='_hhResubscribe(${JSON.stringify(unsubbedMembers.map(u=>u.contact_id))},"${_escAttr(hid)}",${idx})'>Resubscribe</button>
+      </div>`;
+    }
     if(!pageRows.length&&!(page>0)){
-      el.innerHTML='<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No campaign emails have been sent to this household yet.</div>';
+      el.innerHTML=unsubBanner+'<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No campaign emails have been sent to this household yet.</div>';
       return;
     }
     // resolve campaign names
@@ -11358,10 +11494,29 @@ async function _hhEmailLoad(hid,idx,page){
       <span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);align-self:center">page ${(page||0)+1}</span>
       <button class="eg-mini-btn" ${hasNext?'':'disabled style="opacity:.4;cursor:default"'} onclick="_hhEmailLoad('${_escAttr(hid)}',${idx},${(page||0)+1})">Older →</button>
     </div>`;
-    el.innerHTML=health+rowsHtml+(((page||0)>0||hasNext)?nav:'');
+    el.innerHTML=unsubBanner+health+rowsHtml+(((page||0)>0||hasNext)?nav:'');
   }catch(e){
     el.innerHTML='<div style="font-size:.72rem;color:var(--txt3)">Could not load email history: '+_escHtml(e.message)+'</div>';
   }
+}
+
+// Flip email_subscriptions back to 'subscribed' for one or more household
+// members, then refresh the email history section so the banner disappears.
+async function _hhResubscribe(contactIds,hid,idx){
+  if(!Array.isArray(contactIds)||!contactIds.length)return;
+  const doIt=async()=>{
+    try{
+      const inList=contactIds.map(x=>'"'+x+'"').join(',');
+      await sb(`email_subscriptions?contact_id=in.(${inList})`,{method:'PATCH',body:JSON.stringify({status:'subscribed',unsubscribed_at:null})});
+      // Also drop them from the local unsub set so the Groups view updates without a full reload.
+      if(typeof _egUnsub!=='undefined'&&_egUnsub instanceof Set){ contactIds.forEach(id=>_egUnsub.delete(id)); }
+      _ebToastMsg(contactIds.length===1?'Resubscribed':'Resubscribed '+contactIds.length+' contacts');
+      _hhEmailLoad(hid,idx,0);
+    }catch(e){ _ebToastMsg('Could not resubscribe: '+e.message); }
+  };
+  _egConfirm('Resubscribe',
+    contactIds.length===1?'Add this contact back to your email list?':'Add these '+contactIds.length+' contacts back to your email list?',
+    doIt,'Resubscribe');
 }
 
 // ═══════════════ DASHBOARD EMAIL ENGAGEMENT WIDGET (Feature 10) ═════════════
