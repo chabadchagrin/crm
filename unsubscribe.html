@@ -27,7 +27,7 @@
   <div class="card">
     <div class="org">Chabad at the Falls</div>
     <h1 id="t">One moment…</h1>
-    <p id="m"><span class="spin"></span>Updating your email preferences.</p>
+    <p id="m"><span class="spin"></span>Loading your email preferences.</p>
     <button class="btn" id="b" style="display:none"></button>
     <div class="foot">Chabad at the Falls<br>jewishchagrinfalls.com</div>
   </div>
@@ -49,26 +49,34 @@
   }
   function fail(){
     show('Something went wrong',
-      'We couldn\u2019t process this just now. Please try again in a moment, or reply to any of our emails and we\u2019ll take you off the list by hand.');
+      'We couldn\u2019t process this just now. Please try again in a moment, or reply to any of our emails and we\u2019ll take you off the list by hand.','Try again',doUnsub);
   }
   if(!token){
     show('Link problem',
       'This link is missing its code or was cut off. Please open it directly from the email, or reply to the email and we\u2019ll take you off the list by hand.');
     return;
   }
-  // One-click unsubscribe on arrival (matches the link's promise).
-  call('unsubscribe').then(function(j){
-    if(!j||!j.ok){ 
-      show('Link problem',
-        'We couldn\u2019t find a mailing-list record for this link. It may be from an old email. Reply to any of our emails and we\u2019ll take care of it by hand.');
-      return;
-    }
-    if(j.already){
-      show('Already unsubscribed','You were already off the list \u2014 no further emails will be sent to you.','Resubscribe',resub);
-    }else{
-      show('You\u2019ve been unsubscribed','You won\u2019t receive any more emails from Chabad at the Falls. If this was a mistake, you can rejoin with one click.','Resubscribe',resub);
-    }
-  }).catch(fail);
+  // IMPORTANT: nothing happens until the button is clicked. Corporate email
+  // scanners (Outlook SafeLinks etc.) follow links and run pages automatically —
+  // an auto-unsubscribe on load was removing people who never clicked anything.
+  show('Unsubscribe from our emails?',
+    'Click the button below to stop receiving emails from Chabad at the Falls. Changed your mind? Just close this page \u2014 nothing happens until you click.',
+    'Unsubscribe me',doUnsub);
+  function doUnsub(){
+    show('One moment\u2026','Updating your email preferences.');
+    call('unsubscribe').then(function(j){
+      if(!j||!j.ok){
+        show('Link problem',
+          'We couldn\u2019t find a mailing-list record for this link. It may be from an old email. Reply to any of our emails and we\u2019ll take care of it by hand.');
+        return;
+      }
+      if(j.already){
+        show('Already unsubscribed','You were already off the list \u2014 no further emails will be sent to you.','Resubscribe',resub);
+      }else{
+        show('You\u2019ve been unsubscribed','You won\u2019t receive any more emails from Chabad at the Falls. If this was a mistake, you can rejoin with one click.','Resubscribe',resub);
+      }
+    }).catch(fail);
+  }
   function resub(){
     show('One moment\u2026','Adding you back to the list.');
     call('resubscribe').then(function(j){
