@@ -411,6 +411,27 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .forms-view.active{display:block}
 .email-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
 .email-view.active{display:block}
+/* ── REPORTS VIEW ── */
+.reports-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.reports-view.active{display:block}
+.rp-card{background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.rp-saved-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--surf);margin-bottom:8px;cursor:pointer}
+.rp-saved-row:hover{border-color:var(--accent)}
+.rp-lbl{font-family:var(--font-ui);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:3px}
+.rp-input,.rp-select{box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 8px;font-size:.78rem;color:var(--txt);font-family:inherit}
+.rp-cond{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.rp-group{border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-bottom:10px;background:var(--surf2)}
+.rp-group.exclude{border-color:#fca5a5;background:#fef2f2}
+.rp-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.rp-table th{position:sticky;top:0;background:var(--surf2);text-align:left;padding:7px 9px;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);border-bottom:1px solid var(--border2);white-space:nowrap;cursor:pointer}
+.rp-table td{padding:6px 9px;border-bottom:1px solid var(--border);color:var(--txt);vertical-align:top}
+.rp-table tr:hover td{background:var(--surf2)}
+.rp-colchip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:.62rem;border:1px solid var(--border2);border-radius:20px;padding:3px 9px;margin:0 5px 5px 0;cursor:pointer;background:var(--surf);color:var(--txt2);user-select:none}
+.rp-colchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+/* ── DAAS ASSISTANT OVERLAY ── */
+#assistantOverlay{display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.as-chip{display:inline-block;font-family:var(--font-ui);font-size:.64rem;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;margin:0 6px 6px 0;cursor:pointer;background:var(--surf);color:var(--txt2)}
+.as-chip:hover{border-color:var(--accent);color:var(--accent)}
 .eg-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh-sm);transition:border-color .12s}
 .eg-card:hover{border-color:var(--border2)}
 .eg-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
@@ -694,8 +715,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
       <div id="ac_crm_wrap" style="grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label>CivicCRM ID</label><input type="text" id="ac_crmid" placeholder="1073"></div>
-      <div><label>Spouse CivicCRM ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
+      <div><label>External ID</label><input type="text" id="ac_crmid" placeholder="1073"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
+      <div><label>Spouse External ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
       </div>
       <div id="ac_addr_section" style="grid-column:span 2;display:grid;grid-template-columns:1fr;gap:10px">
       <div><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
@@ -864,7 +885,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
           <option value="Female">Female</option>
         </select>
       </div>
-      <div style="grid-column:span 2"><label>CivicCRM ID</label><input type="text" id="edit_crmid"></div>
+      <div style="grid-column:span 2"><label>External ID</label><input type="text" id="edit_crmid"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;margin-bottom:10px">
       <label style="margin-bottom:6px;display:block">Household Address <span style="font-weight:400;color:var(--txt3);font-size:.7rem">— applies to the whole household</span></label>
@@ -927,7 +948,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <div class="modal-bg" id="importModal" style="display:none">
   <div class="modal" style="width:580px">
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"></path></svg> Import CSV</h2>
-    <p>Import contacts or donations from a CivicCRM export. Existing records (matched by CivicCRM ID) will be updated. New records will be added.</p>
+    <p>Import contacts or donations from any CRM's CSV export. You'll map the file's columns, then rows are matched by External ID (with email / phone / name fallbacks for donations). Contacts sharing an address are grouped into one household.</p>
     <div style="display:flex;gap:10px;margin-bottom:16px">
       <button class="btn btn-pri" id="imp_contacts_btn" onclick="setImportType('contacts')" style="flex:1"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 21a7 7 0 0 1 14 0M17 5a3.5 3.5 0 0 1 0 7M16 14a7 7 0 0 1 6 7"></path></svg> Contacts</button>
       <button class="btn btn-sec" id="imp_donations_btn" onclick="setImportType('donations')" style="flex:1"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"></path></svg> Donations</button>
@@ -938,6 +959,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       <p>Click to select CSV file<br><strong>or drag and drop here</strong></p>
       <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(event)">
     </div>
+    <div id="imp_map" style="display:none;margin-bottom:12px"></div>
     <div id="imp_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-sec" onclick="document.getElementById('importModal').style.display='none'">Close</button>
@@ -968,6 +990,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" onclick="closeSidebar();switchView('events')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <button class="sb-item" onclick="closeSidebar();switchView('forms')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
     <button class="sb-item" onclick="closeSidebar();switchView('email')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</button>
+    <button class="sb-item" onclick="closeSidebar();switchView('reports')" style="font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h2M8 17h2M14 13h2M14 17h2"></path></svg> Reports</button>
     <button class="sb-item" onclick="showHiddenView()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg> Hidden Contacts</button>
 
     <!-- DATA-- DATA section -->
@@ -975,12 +998,13 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="sb-item" onclick="closeSidebar();showImport('contacts')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Import Contacts</button>
     <button class="sb-item" onclick="closeSidebar();showImport('donations')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"></path></svg> Import Donations</button>
     <button class="sb-item" onclick="closeSidebar();showImport('voter')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M5 21h14a2 2 0 0 0 2-2V8l-5-5H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z"></path></svg> Import Voter File</button>
-    <button class="sb-item" onclick="closeSidebar();exportCSV()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"></path></svg> Export CSV</button>
+    <button class="sb-item" onclick="closeSidebar();_rpOpenExport()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"></path></svg> Export CSV (via Reports)</button>
     <button class="sb-item" onclick="closeSidebar();exportBackup()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg> Backup All Data</button>
 
     <!-- INTELLIGENCE section -->
     <div style="padding:14px 18px 6px;font-family:var(--font-ui);font-size:.57rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Intelligence</div>
     <button class="sb-item" onclick="closeSidebar();openGlobalAsk()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg> Research Chat</button>
+    <button class="sb-item" onclick="closeSidebar();openAssistant()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg> DAAS Assistant</button>
     <button class="sb-item" onclick="closeSidebar();openCapture()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Quick Capture</button>
     <button class="sb-item" onclick="closeSidebar();openEnrich()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg> Build Missing Profiles</button>
     <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg> Generate Embeddings</button>
@@ -1147,6 +1171,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <button class="dash-nav-btn" id="navEvents" onclick="switchView('events')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</button>
     <button class="dash-nav-btn" id="navForms" onclick="switchView('forms')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h6"></path></svg> Forms</button>
     <button class="dash-nav-btn" id="navEmail" onclick="switchView('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Email</button>
+    <button class="dash-nav-btn" id="navReports" onclick="switchView('reports')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h2M8 17h2M14 13h2M14 17h2"></path></svg> Reports</button>
     <div class="toolbar-sep"></div>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">＋ Add</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg></button>
@@ -1206,6 +1231,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <div><div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)"></div>
     <div><div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()"></div></div>
     <div><div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()"></div>
+    <button onclick="_rpOpenFromQuickFilters()" title="Carry these filters into the Reports builder" style="align-self:flex-end;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;padding:5px 10px;font-family:var(--font-ui);font-size:.6rem;cursor:pointer;white-space:nowrap">Open in Reports →</button>
     <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px;font-size:.68rem;padding:4px 9px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Clear</button>
     <span id="filterCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
   </div>
@@ -1278,6 +1304,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   <!-- EMAIL VIEW -->
   <div class="email-view" id="emailView">
     <div id="emailViewInner"></div>
+  </div>
+
+  <!-- REPORTS VIEW -->
+  <div class="reports-view" id="reportsView">
+    <div id="reportsViewInner"></div>
   </div>
 </div>
 
@@ -1496,7 +1527,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-05.1';
+const BUILD_STAMP='2026-07-06.2';
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -1566,6 +1597,37 @@ async function sbInChunks(buildPath,ids,chunk=100){
     out.push(...rows);
   }
   return out;
+}
+
+// ── AI PROXY ─────────────────────────────────────────────────────────────
+// Single client entry point for Anthropic calls. Routes through the ai-proxy
+// Edge Function so the key lives server-side, never in the browser. Returns
+// the SAME response shape the direct Anthropic API returned (d.content /
+// d.error.message), so a call site migrates by swapping its fetch(...) for
+// `await _aiComplete({model,max_tokens,system,messages})` with no change to
+// how it reads d.content or catches d.error.message.
+// JWT-protected: sends the user's Supabase session token, exactly like sb().
+async function _aiComplete(payload,opts={}){
+  const token=_authToken||SB_KEY;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),opts.timeoutMs||45000);
+  try{
+    const res=await fetch(SB_URL+'/functions/v1/ai-proxy',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+      signal:controller.signal
+    });
+    clearTimeout(timer);
+    const txt=await res.text();
+    let d; try{d=txt?JSON.parse(txt):{};}catch(_){throw new Error('AI proxy returned a non-JSON response.');}
+    if(!res.ok){throw new Error((d&&d.error&&d.error.message)||('AI proxy error '+res.status));}
+    return d;
+  }catch(e){
+    clearTimeout(timer);
+    if(e&&e.name==='AbortError')throw new Error('AI request timed out.');
+    throw e;
+  }
 }
 async function sbAll(path,pageSize=1000){
   const sep=path.includes('?')?'&':'?';
@@ -2602,48 +2664,19 @@ function _searchMatch(h,q){
   return _searchBlob(h).includes(q);
 }
 
-// Structured filters only (no search) — the "filtered base set"
+// Structured filters only (no search) — the "filtered base set".
+// RE-PLUMBED (2026-07-06.1, Stage D): the strip inputs compile to filter JSON
+// via _rpQuickFilterJSON() and run through the ONE shared engine (runFilter) —
+// same fields, same rollups as Reports. Audited to reproduce the previous
+// inline logic exactly: home_value/AGC/giving minimums, last-gift date range,
+// "colder than N days" with never-contacted passing, one kid matching both
+// age bounds, and city-contains. Household last-contact still reads the
+// canonical _agcInterAgg; giving still reads getGivingStats via the rollups.
 function _filterBase(){
-  const minVal=parseFloat(document.getElementById('minValue')?.value)||0;
-  const minAGC=parseFloat(document.getElementById('minAGC')?.value)||0;
-  const minGiving=parseFloat(document.getElementById('minGiving')?.value)||0;
-  const dateFrom=document.getElementById('filterDateFrom')?.value||'';
-  const dateTo=document.getElementById('filterDateTo')?.value||'';
-  const minDays=parseFloat(document.getElementById('minDaysSince')?.value)||0;
-  const kidAgeMin=parseInt(document.getElementById('filterKidAgeMin')?.value)||0;
-  const kidAgeMax=parseInt(document.getElementById('filterKidAgeMax')?.value)||0;
-  const city=(document.getElementById('filterCity')?.value||'').trim().toLowerCase();
-  const currentYear=new Date().getFullYear();
-  const now=Date.now();
-  return households.filter(h=>{
-    if(minVal>0&&(!h.home_value||h.home_value<minVal))return false;
-    if(minAGC>0&&getAGCScore(h).total<minAGC)return false;
-    if(minGiving>0||dateFrom||dateTo){
-      const g=getGivingStats(h);
-      if(minGiving>0&&(!g||g.total<minGiving))return false;
-      if(dateFrom&&(!g||!g.lastDate||g.lastDate<dateFrom))return false;
-      if(dateTo&&(!g||!g.lastDate||g.lastDate>dateTo))return false;
-    }
-    if(minDays>0){
-      const lc=(_agcInterAgg[h.id]||{}).lastContact;
-      if(lc){const d=(now-new Date(lc))/86400000;if(d<minDays)return false;}
-      // never contacted = infinitely cold = passes the cold filter
-    }
-    if(kidAgeMin>0||kidAgeMax>0){
-      const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
-      if(!kids.length)return false;
-      const hasMatch=kids.some(c=>{
-        if(!c.estimated_birth_year)return false;
-        const age=currentYear-c.estimated_birth_year;
-        if(kidAgeMin>0&&age<kidAgeMin)return false;
-        if(kidAgeMax>0&&age>kidAgeMax)return false;
-        return true;
-      });
-      if(!hasMatch)return false;
-    }
-    if(city&&!(h.city||'').toLowerCase().includes(city))return false;
-    return true;
-  });
+  let base=runFilter('household',_rpQuickFilterJSON(),{households});
+  // "Show on map" bridge from Reports: narrow to the report's household set.
+  if(window._reportPinSet)base=base.filter(h=>window._reportPinSet.has(h.id));
+  return base;
 }
 
 // Header search NEVER narrows the map / list / contacts — it only drives the
@@ -3334,7 +3367,7 @@ async function _acSaveToHousehold(){
   const btn=document.getElementById('ac_actionBtn');btn.disabled=true;
   const status=document.getElementById('ac_status');status.style.display='block';status.textContent='Saving…';
   try{
-    const res=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:h.id,first_name:first,last_name:last,phone,email,civicrm_id:crmId})});
+    const res=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:h.id,first_name:first,last_name:last,phone,email,external_id:crmId})});
     const c=(Array.isArray(res)?res[0]:res)||{household_id:h.id,first_name:first,last_name:last,phone,email};
     if(!h.members)h.members=[];
     h.members.push(c);
@@ -3436,7 +3469,7 @@ async function lookupByAddress(){
           <b>Joint Name:</b> ${_escHtml(jn)}<br>
           ${acFormData.phone?`<b>Phone:</b> ${_escHtml(acFormData.phone)}<br>`:''}
           ${acFormData.email?`<b>Email:</b> ${_escHtml(acFormData.email)}<br>`:''}
-          ${acFormData.crmId?`<b>CivicCRM ID:</b> ${_escHtml(acFormData.crmId)}<br>`:''}
+          ${acFormData.crmId?`<b>External ID:</b> ${_escHtml(acFormData.crmId)}<br>`:''}
         </div>
       </div>
       <div style="background:var(--surf2);border-radius:6px;padding:14px">
@@ -3477,12 +3510,12 @@ async function confirmAddContact(){
         const sp=acFormData.spouse.trim().split(' ');
         const spFirst=sp.length>1?sp.slice(0,-1).join(' '):acFormData.spouse;
         const spLast=sp.length>1?sp[sp.length-1]:acFormData.last;
-        await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:spFirst,last_name:spLast,civicrm_id:acFormData.crmId2||null})});
+        await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:spFirst,last_name:spLast,external_id:acFormData.crmId2||null})});
       }
     }
 
     // Create the new contact linked to household
-    const newContactRes=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,civicrm_id:acFormData.crmId||null})});
+    const newContactRes=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,external_id:acFormData.crmId||null})});
     const newContact=(Array.isArray(newContactRes)?newContactRes[0]:newContactRes)||{};
 
     // Fire Melissa lookup for DOB/demographics (fire-and-forget)
@@ -3515,14 +3548,13 @@ function setImportType(type){
   document.getElementById('imp_voter_btn').className='btn '+(type==='voter'?'btn-pri':'btn-sec');
   document.getElementById('imp_status').style.display='none';
   if(type==='contacts'){
-    document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
-    First Name · Last Name · Email · Phone · Street Address · City · State · ZIP · Contact ID · Gender<br><br>
-    <b>How it works:</b> Matched by Contact ID. New contacts are added, existing ones updated. Contacts sharing the same address are automatically grouped into one household.`;
+    document.getElementById('imp_format').innerHTML=`<b>Contacts from any CRM.</b><br>
+    Drop the CSV and you'll map its columns (External ID, name, email, phone, address\u2026) before anything imports.<br><br>
+    <b>How it works:</b> Rows matched by External ID update the existing contact; new rows are added, grouped into households by address. Unmatched or failed rows come back as a downloadable list \u2014 never silently dropped.`;
   }else if(type==='donations'){
-    document.getElementById('imp_format').innerHTML=`<b>Expected columns:</b><br>
-    Contact ID · Amount · Date · Notes<br>
-    <em style="color:var(--txt3)">Donor Name column is optional — works with or without it.</em><br><br>
-    <b>How it works:</b> Matched by Contact ID. Duplicates (same ID + date + amount) are skipped automatically.`;
+    document.getElementById('imp_format').innerHTML=`<b>Donations from any CRM.</b><br>
+    Drop the CSV and map its columns. Pick the match key \u2014 <b>External ID</b> (recommended), or fall back to email, phone, or name.<br><br>
+    <b>How it works:</b> Duplicates (same person + date + amount) are skipped automatically. Rows with no matching contact come back as a downloadable mismatch list.`;
   }else{
     document.getElementById('imp_format').innerHTML=`<b>Ohio Voter File (.txt)</b><br>
     Download from Ohio Secretary of State → Elections → Voter Registration → Voter File.<br><br>
@@ -3555,9 +3587,10 @@ function processFile(file){
     const status=document.getElementById('imp_status');
     status.style.display='block';status.textContent='Processing…';
     try{
-      if(importType==='contacts')await importContacts(lines);
-      else if(importType==='donations')await importDonations(lines);
+      if(importType==='contacts')_giShowMapper('contacts',lines);       // generic mapper (2026-07-06.1)
+      else if(importType==='donations')_giShowMapper('donations',lines); // generic mapper (2026-07-06.1)
       else await importVoterFile(lines);
+      if(importType!=='voter'){status.style.display='none';}
     }catch(err){status.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Error: '+_escHtml(err.message);}
     document.getElementById('csvFile').value='';
   };
@@ -5191,7 +5224,7 @@ let _pendingRegeocodeId=null;
 function openEditContactById(contactId){
   for(const h of households){
     const m=(h.members||[]).find(x=>x.id===contactId);
-    if(m){openEditContact(m.id,m.first_name,m.last_name,m.phone||'',m.email||'',m.civicrm_id||'',h.id,m.dob||'',m.gender||'');return;}
+    if(m){openEditContact(m.id,m.first_name,m.last_name,m.phone||'',m.email||'',m.external_id||'',h.id,m.dob||'',m.gender||'');return;}
   }
   alert('Contact not found — try reloading.');
 }
@@ -5282,7 +5315,7 @@ async function saveContactEdit(){
     // Update contact fields
     const dob=document.getElementById('edit_dob').value||null;
     const gender=document.getElementById('edit_gender').value||null;
-    await sb(`contacts?id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({first_name:first,last_name:last,phone,email,civicrm_id:crmid,dob,gender})});
+    await sb(`contacts?id=eq.${contactId}`,{method:'PATCH',body:JSON.stringify({first_name:first,last_name:last,phone,email,external_id:crmid,dob,gender})});
 
     if(editLinkedHousehold){
       // Move this contact to the linked household
@@ -6644,8 +6677,10 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children|donation","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","donation_fields":{"amount":null,"method":"","notes":""},"new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children|donation|contact_update|add_person","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","donation_fields":{"amount":null,"method":"","notes":""},"update_fields":{"field":"<phone|email|dob|gender|first_name|last_name>","new_value":""},"add_person_fields":{"anchor_contact_id":"<exact contact_id from roster of an existing member of the target household>","first_name":"","last_name":"","relationship":"","phone":"","email":""},"new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
     +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. Use donation ONLY when money was actually RECEIVED from a matched existing contact — verbs like gave, handed, dropped off, sent, paid, donated, wrote a check — AND an explicit dollar amount appears in the content: fill donation_fields with amount (a number, no $ sign), method (exactly one of: Check, Cash, Venmo, PayPal, Zelle, Card, Bank transfer, Donor Advised Fund, Other — or empty string if the payment method is not stated; \'venmoed\' = Venmo, \'wrote/handed a check\' = Check, \'zelled\' = Zelle), and notes (short context, e.g. what the gift was for). A PLEDGE or promise of future money (pledged, committed, will give, promised) is NOT a donation — file it as an interaction with the amount in the text. When in doubt between interaction and household, prefer interaction; when in doubt between donation and interaction, prefer interaction. '
+    +'Use contact_update when the content gives a NEW or CORRECTED value for one basic field of an EXISTING contact that was matched with HIGH confidence — e.g. a new cell number, a new email address, a date of birth, a gender, or a spelling fix to their first or last name. Allowed fields are ONLY: phone, email, dob, gender, first_name, last_name. Set update_fields.field to one of those exact strings and update_fields.new_value to the new value (dob as YYYY-MM-DD). ADDRESS CHANGES ARE NEVER a contact_update — a move or new address must be save_as household with the new address details in the text (address changes cascade into property data and household identity and need the household editor). If the person match is not high-confidence, do NOT propose contact_update — fall back to an interaction or household note describing the information instead. '
+    +'Use add_person when the content introduces a NEW person who belongs in an EXISTING matched household — e.g. a previously unrecorded spouse or adult child of a contact in the roster (\u201cDanny\u2019s wife is Sarah, her email is\u2026\u201d). Set add_person_fields.anchor_contact_id to the roster contact_id of the existing household member, and fill first_name (required), last_name (default to the anchor\u2019s last name if not stated), relationship, phone, email from the content. If the household match is not confident, use new_contact instead. Never use add_person for young children \u2014 children and their ages go in children_fields via save_as children. '
     +'Choosing the interaction type: an email or text message = \"Email / Text\"; an outbound phone call where you reached them or any in-person live conversation = \"Connected\"; an attempted call that went to voicemail or unanswered = \"Left VM\"; a scheduled or in-person sit-down meeting = \"Meeting in person\"; Shabbat/service attendance = \"Shabbat attendance\"; a class or learning program = \"Class / Program\"; an event or program they came to = \"Event attendance\"; a class, kids program, or youth program they attended = \"Class / Program\"; only use \"Note\" for standing background facts that are NOT a touch, and prefer \"save_as\":\"household\" for those. Use exactly one of these type strings verbatim. '
     +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
     +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). A donation item requires an explicit amount actually stated in the content; never estimate amounts, and never propose a donation for someone not matched in the roster (use new_contact or interaction text instead). If the content covers multiple distinct events or people, return multiple items (a gift plus a conversation can be two items: one donation, one interaction). TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
@@ -6760,6 +6795,81 @@ function _captureRenderProposals(parsed){
       return;
     }
 
+    // ── CONTACT UPDATE card (whitelisted fields; old → new, never silent) ──
+    if(it.save_as==='contact_update'){
+      const uf=it.update_fields||{};
+      const CAP_FIELDS=[['phone','Phone'],['email','Email'],['dob','Date of Birth'],['gender','Gender'],['first_name','First Name'],['last_name','Last Name']];
+      // Address is explicitly excluded — deflect to the contact/household editor.
+      if((uf.field||'')==='address'){
+        html+='<div class="capture-item" data-i="'+i+'" style="background:#faf5ff;border:1px solid #c4b5fd;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+        html+='<div style="font-size:.82rem;font-weight:600;color:#6d28d9;margin-bottom:6px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21H3Z"/><path d="M9 21v-8h6v8"/></svg> Address Change Detected</div>';
+        html+='<div style="font-size:.76rem;color:var(--txt2);margin-bottom:10px">For <strong>'+_enrichEsc(it.contact_name||'Unknown')+'</strong>: '+_enrichEsc(it.text||uf.new_value||'')+'<br><span style="font-size:.68rem;color:var(--txt3)">Address changes affect property data, geocoding, and household identity — they go through the editor, not a quick update.</span></div>';
+        html+='<div style="display:flex;gap:8px">';
+        if(it.contact_id)html+='<button onclick="captureOpenAddressEdit(\''+_escAttr(it.contact_id)+'\')" style="padding:8px 16px;background:#6d28d9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500">Open Household Editor</button>';
+        html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #c4b5fd;color:#6d28d9;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button>';
+        html+='</div></div>';
+        return;
+      }
+      // Old value comes from the actual roster record — never from the AI.
+      let member=null;
+      for(const hh of households){const mm=(hh.members||[]).find(x=>x.id===it.contact_id);if(mm){member=mm;break;}}
+      html+='<div class="capture-item" data-i="'+i+'" style="background:#faf5ff;border:1px solid #c4b5fd;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      html+='<div style="font-size:.82rem;font-weight:600;color:#6d28d9"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Contact Update</div>';
+      html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
+      html+='</div>';
+      html+='<div style="font-size:.64rem;color:#6d28d9;margin-bottom:3px">Contact</div>';
+      html+='<select id="cap-cu-contact-'+i+'" onchange="captureCURefreshOld('+i+')" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+      html+='<option value="">— pick a person —</option>'+copts;
+      html+='</select>';
+      html+='<div style="display:flex;gap:8px;margin-bottom:9px">';
+      html+='<div style="flex:1"><div style="font-size:.64rem;color:#6d28d9;margin-bottom:3px">Field</div>';
+      html+='<select id="cap-cu-field-'+i+'" onchange="captureCURefreshOld('+i+')" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit">';
+      CAP_FIELDS.forEach(f=>{html+='<option value="'+f[0]+'"'+(f[0]===(uf.field||'')?' selected':'')+'>'+f[1]+'</option>';});
+      html+='</select></div>';
+      html+='</div>';
+      html+='<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-bottom:9px">';
+      html+='<div><div style="font-size:.64rem;color:#6d28d9;margin-bottom:3px">Current value</div>';
+      html+='<input id="cap-cu-old-'+i+'" readonly value="'+_escAttr(member?(member[uf.field]||''):'')+'" placeholder="(empty)" style="width:100%;box-sizing:border-box;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt2);font-family:inherit"></div>';
+      html+='<div style="padding-bottom:8px;color:#6d28d9;font-weight:700">→</div>';
+      html+='<div><div style="font-size:.64rem;color:#6d28d9;margin-bottom:3px">New value</div>';
+      html+='<input id="cap-cu-new-'+i+'" value="'+_escAttr(uf.new_value||'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
+      html+='</div>';
+      html+='<div style="display:flex;gap:8px;margin-top:4px">';
+      html+='<button onclick="captureSaveContactUpdate('+i+',this)" style="padding:8px 16px;background:#6d28d9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Confirm Update</button>';
+      html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #c4b5fd;color:#6d28d9;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button>';
+      html+='</div></div>';
+      return;
+    }
+
+    // ── ADD PERSON card (prefills the existing add-to-household mode) ──
+    if(it.save_as==='add_person'){
+      const af=it.add_person_fields||{};
+      const anchorId=af.anchor_contact_id||it.contact_id||'';
+      let anchorHH=null;
+      for(const hh of households){if((hh.members||[]).some(x=>x.id===anchorId)){anchorHH=hh;break;}}
+      html+='<div class="capture-item" data-i="'+i+'" style="background:#f0fdfa;border:1px solid #5eead4;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      html+='<div style="font-size:.82rem;font-weight:600;color:#0f766e"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"/></svg> New Household Member</div>';
+      html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
+      html+='</div>';
+      html+='<div style="font-size:.72rem;color:var(--txt3);margin-bottom:10px">Add to household: <strong>'+_enrichEsc(anchorHH?anchorHH.displayName:'(pick below)')+'</strong>'+(af.relationship?' <span style="color:#0f766e">('+_enrichEsc(af.relationship)+')</span>':'')+'</div>';
+      if(!anchorHH){
+        html+='<select id="cap-ap-hh-'+i+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #5eead4;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px"><option value="">— pick a household —</option>'+hopts+'</select>';
+      }
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+      html+='<div><div style="font-size:.6rem;color:#0f766e;margin-bottom:3px">First Name</div><input id="cap-ap-first-'+i+'" value="'+_escAttr(af.first_name||'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #5eead4;border-radius:5px;padding:7px 8px;font-size:.8rem;font-family:inherit;color:var(--txt)"></div>';
+      html+='<div><div style="font-size:.6rem;color:#0f766e;margin-bottom:3px">Last Name</div><input id="cap-ap-last-'+i+'" value="'+_escAttr(af.last_name||'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #5eead4;border-radius:5px;padding:7px 8px;font-size:.8rem;font-family:inherit;color:var(--txt)"></div>';
+      html+='<div><div style="font-size:.6rem;color:#0f766e;margin-bottom:3px">Phone</div><input id="cap-ap-phone-'+i+'" value="'+_escAttr(af.phone||'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #5eead4;border-radius:5px;padding:7px 8px;font-size:.8rem;font-family:inherit;color:var(--txt)"></div>';
+      html+='<div><div style="font-size:.6rem;color:#0f766e;margin-bottom:3px">Email</div><input id="cap-ap-email-'+i+'" value="'+_escAttr(af.email||'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #5eead4;border-radius:5px;padding:7px 8px;font-size:.8rem;font-family:inherit;color:var(--txt)"></div>';
+      html+='</div>';
+      html+='<div style="display:flex;gap:8px;margin-top:4px">';
+      html+='<button onclick="captureOpenAddPerson('+i+',\''+_escAttr(anchorHH?anchorHH.id:'')+'\')" style="padding:8px 16px;background:#0f766e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Review & Add to Household</button>';
+      html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #5eead4;color:#0f766e;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button>';
+      html+='</div></div>';
+      return;
+    }
+
     if(it.save_as==='new_contact'){
       const f=it.new_contact_fields||{};
       html+='<div class="capture-item" data-i="'+i+'" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
@@ -6832,6 +6942,11 @@ function _captureRenderProposals(parsed){
   items.forEach((it,i)=>{
     if(it.save_as==='new_contact')return; // handled by captureLaunchContactCreator
     if(it.save_as==='children')return; // handled by captureConfirmChildren
+    if(it.save_as==='add_person')return; // handled by captureOpenAddPerson
+    if(it.save_as==='contact_update'){
+      if(it.contact_id){const cusel=document.getElementById('cap-cu-contact-'+i);if(cusel){cusel.value=it.contact_id;captureCURefreshOld(i);}}
+      return;
+    }
     if(it.save_as==='donation'){
       if(it.contact_id){const dsel=document.getElementById('cap-don-contact-'+i);if(dsel)dsel.value=it.contact_id;}
       return;
@@ -7011,9 +7126,70 @@ async function captureSaveDonation(i,btn){
       try{renderList();}catch(e){}
     }
     const card=btn.closest('.capture-item');
-    if(card)card.innerHTML='<div style="font-size:.82rem;color:#a16207;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Donation of $'+amount.toLocaleString()+' saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
 }
+
+// ── Capture v2: whitelisted contact updates + add-person (2026-07-06.1) ──
+// Whitelist is enforced HERE, not just in the prompt. Address is excluded on
+// purpose: address changes cascade into Zillow/property data, geocoding, and
+// household identity — they go through the household editor.
+const CAP_UPDATE_FIELDS=['phone','email','dob','gender','first_name','last_name'];
+function captureCURefreshOld(i){
+  const cid=(document.getElementById('cap-cu-contact-'+i)||{}).value||'';
+  const field=(document.getElementById('cap-cu-field-'+i)||{}).value||'';
+  const oldEl=document.getElementById('cap-cu-old-'+i);
+  if(!oldEl)return;
+  let member=null;
+  for(const hh of households){const mm=(hh.members||[]).find(x=>x.id===cid);if(mm){member=mm;break;}}
+  oldEl.value=member?(member[field]||''):'';
+}
+async function captureSaveContactUpdate(i,btn){
+  const cid=document.getElementById('cap-cu-contact-'+i).value;
+  const field=document.getElementById('cap-cu-field-'+i).value;
+  const newVal=document.getElementById('cap-cu-new-'+i).value.trim();
+  if(!cid){alert('Pick a contact first (or Dismiss this item).');return;}
+  if(!CAP_UPDATE_FIELDS.includes(field)){alert('That field can\u2019t be quick-updated. Use the contact editor.');return;}
+  if(!newVal){alert('Enter the new value.');return;}
+  let h=null,member=null;
+  for(const hh of households){const mm=(hh.members||[]).find(x=>x.id===cid);if(mm){h=hh;member=mm;break;}}
+  const oldVal=member?(member[field]||''):'';
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const body={};body[field]=newVal;
+    await sb('contacts?id=eq.'+cid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(member){member[field]=newVal;}
+    if(h)_invHH(h);
+    try{renderList();}catch(e){}
+    const FIELD_LABELS={phone:'Phone',email:'Email',dob:'Date of Birth',gender:'Gender',first_name:'First Name',last_name:'Last Name'};
+    const card=btn.closest('.capture-item');
+    if(card)card.innerHTML='<div style="font-size:.82rem;color:#6d28d9;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Updated '+_enrichEsc(member?_daasDisplayName(member):'contact')+' \u2014 '+(FIELD_LABELS[field]||field)+': <s style="color:var(--txt3)">'+_enrichEsc(oldVal||'(empty)')+'</s> \u2192 <strong>'+_enrichEsc(newVal)+'</strong></div>';
+  }catch(e){alert('Update failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
+}
+// Address deflection: open the contact editor (household address lives there,
+// with the re-geocode / property-data cascade).
+function captureOpenAddressEdit(contactId){
+  try{closeCapture();}catch(e){}
+  openEditContactById(contactId);
+}
+// Route an add_person proposal into the EXISTING add-to-household mode
+// (showAddPersonToHousehold, shipped 2026-07-05.1), prefilled from the card.
+function captureOpenAddPerson(i,hhId){
+  const get=id=>(document.getElementById(id)||{}).value||'';
+  const first=get('cap-ap-first-'+i), last=get('cap-ap-last-'+i);
+  const phone=get('cap-ap-phone-'+i), email=get('cap-ap-email-'+i);
+  const pickedHH=hhId||get('cap-ap-hh-'+i);
+  if(!pickedHH){alert('Pick a household first (or Dismiss this item).');return;}
+  const idx=households.findIndex(hh=>hh.id===pickedHH);
+  if(idx===-1){alert('Household not found.');return;}
+  try{closeCapture();}catch(e){}
+  showAddPersonToHousehold(idx);
+  const setVal=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
+  setVal('ac_first',first);
+  if(last){const el=document.getElementById('ac_last');if(el)el.value=last;} // overwrite the prefill if the card has one
+  setVal('ac_phone',phone);
+  setVal('ac_email',email);
+}
+
 
 // ════════════════════════════════════════════════════════════
 // ── BUILD MISSING PROFILES (Enrichment Tool) ──
@@ -10710,6 +10886,7 @@ function _ebPad(b){ // uniform side padding, per-block vertical
 }
 function _ebRHeader(b){ // "Logo" block (internal type 'header' kept for saved designs)
   let inner='';
+  if(b.bh!==false){ inner+='<div style="font-family:Georgia,serif;font-size:11px;color:'+EB_THEME.muted+';text-align:center;margin-bottom:6px">\u05d1"\u05d4</div>'; }
   if(b.logo){ inner+='<img src="'+_ebEsc(_ebSafeUrl(b.logo))+'" alt="'+_ebEsc(b.name||_ebOrg.name||'Logo')+'" width="'+(b.logoWidth||140)+'" style="display:block;margin:0 auto;border:0;max-width:'+(b.logoWidth||140)+'px;height:auto">'; }
   return '<tr><td align="center" style="'+_ebPad(b)+'">'+inner+'</td></tr>';
 }
@@ -10921,7 +11098,7 @@ const EB_PALETTE=[
 function _ebNewBlock(type){
   const base={id:_ebUid(),type};
   const d={
-    header:{logo:(_ebOrg.logo||''),logoWidth:140,bg:''},
+    header:{logo:(_ebOrg.logo||''),logoWidth:140,bg:'',bh:true},
     heading:{text:'Your heading here',align:'left'},
     text:{text:'Write your message here. Use the toolbar for **bold** and links.',align:'left'},
     image:{src:'',alt:'',link:'',width:EB_THEME.maxWidth-48},
@@ -12718,6 +12895,7 @@ function switchView(view){
   const events=document.getElementById('eventsView');
   const forms=document.getElementById('formsView');
   const email=document.getElementById('emailView');
+  const reports=document.getElementById('reportsView');
   const strip=document.getElementById('filterStrip');
   const mapCtrl=document.getElementById('mapControls');
   // Reset all
@@ -12727,8 +12905,9 @@ function switchView(view){
   if(events)events.classList.remove('active');
   if(forms)forms.classList.remove('active');
   if(email)email.classList.remove('active');
+  if(reports)reports.classList.remove('active');
   const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
-  ['navCRM','navContacts','navDash','navEvents','navForms','navEmail'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  ['navCRM','navContacts','navDash','navEvents','navForms','navEmail','navReports'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   if(view==='dash'){
     dash.classList.add('active');
     document.getElementById('navDash').classList.add('active');
@@ -12764,6 +12943,12 @@ function switchView(view){
     if(mapCtrl)mapCtrl.style.display='none';
     _egView='campaigns'; _egOpenGroupId=null; // land on Campaigns (primary tab)
     renderEmail();
+  } else if(view==='reports'){
+    if(reports)reports.classList.add('active');
+    document.getElementById('navReports')?.classList.add('active');
+    if(strip)strip.style.display='none';
+    if(mapCtrl)mapCtrl.style.display='none';
+    renderReports();
   } else {
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
@@ -14291,7 +14476,1213 @@ async function deleteTrack(trackId){
   }catch(e){_ebToastMsg('Delete failed: '+e.message);}
 }
 
+
+// ════════════════════════════════════════════════════════════════════════
+// REPORTS (_rp*) — shared filter engine + saved reports + builder + AI box
+// DAAS ASSISTANT (_as*) — outbound funnel router
+// GENERIC IMPORT (_gi*) — source-agnostic CSV column mapper
+// Added 2026-07-06.1. Design doc: DAAS-PHASE-PLAN.md (Stages B–F).
+// ════════════════════════════════════════════════════════════════════════
+
+// ── CANONICAL HOUSEHOLD GREETING TOKENS ──────────────────────────────────
+// VERBATIM CLIENT MIRROR of the email-send Edge Function (v4/v5 rules).
+// A letter must greet people identically to how emails greet them, so this
+// function and email-send MUST stay in sync (same contract as
+// _ecResolveAudience ↔ email-send audience math). Rules:
+//   • stored households.joint_name (non-empty) = manual override, WINS.
+//   • else computed from named members (first||last non-empty):
+//       0 named → "";  1 → "First Last"
+//       multi, ≤1 unique last → "First1 & First2 Last"
+//       multi, mixed lasts    → "First1 Last1 & First2 Last2"
+//   • first_names is ALWAYS computed (no override): firsts joined " & ".
+//   • separator is " & " (email-send), NOT the " and " some legacy stored
+//     joint_names use — stored values win anyway, so greetings still match.
+function _daasHouseholdTokens(h){
+  const members=(h&&h.members)||[];
+  const named=members.map(m=>({first:(m.first_name||'').trim(),last:(m.last_name||'').trim()})).filter(m=>m.first||m.last);
+  const firstsList=named.map(m=>m.first).filter(Boolean);
+  const first_names=firstsList.join(' & ');
+  const lasts=[...new Set(named.map(m=>m.last).filter(Boolean))];
+  let joint='';
+  const stored=(h&&h.joint_name&&h.joint_name.trim())?h.joint_name.trim():'';
+  if(stored)joint=stored;
+  else if(!named.length)joint='';
+  else if(named.length===1)joint=(named[0].first+' '+named[0].last).trim();
+  else if(lasts.length<=1&&firstsList.length>=1){const last=lasts[0]||'';joint=(firstsList.join(' & ')+(last?' '+last:'')).trim();}
+  else joint=named.map(m=>(m.first+' '+m.last).trim()).filter(Boolean).join(' & ');
+  // Verified against email-send v5 (2026-07-06): rules above are byte-identical.
+  // Only the last-resort fallback differs by grain, and cannot diverge for any
+  // named household: email-send falls back to the RECIPIENT's own first name
+  // (it sends per-person); a report row is a whole household, so the closest
+  // equivalent is the first named member's first. Both are empty-name-only
+  // paths that never reach a real mailing row.
+  const fb=firstsList[0]||'';
+  return {joint_name:joint||fb, first_names:first_names||fb, last_name:lasts.length?lasts.join(' & '):''};
+}
+
+// ── RELATIVE DATES (saved reports stay correct forever) ──────────────────
+function _rpResolveDateRange(rel,now){
+  const d=now?new Date(now):new Date();
+  const iso=x=>localDateStr(x);
+  const y=d.getFullYear(),m=d.getMonth();
+  switch(rel){
+    case 'last_30_days':return {from:iso(new Date(d.getTime()-30*86400000)),to:iso(d)};
+    case 'last_60_days':return {from:iso(new Date(d.getTime()-60*86400000)),to:iso(d)};
+    case 'last_90_days':return {from:iso(new Date(d.getTime()-90*86400000)),to:iso(d)};
+    case 'last_365_days':return {from:iso(new Date(d.getTime()-365*86400000)),to:iso(d)};
+    case 'this_month':return {from:iso(new Date(y,m,1)),to:iso(new Date(y,m+1,0))};
+    case 'prev_month':return {from:iso(new Date(y,m-1,1)),to:iso(new Date(y,m,0))};
+    case 'this_year':return {from:y+'-01-01',to:y+'-12-31'};
+    case 'last_year':return {from:(y-1)+'-01-01',to:(y-1)+'-12-31'};
+    default:return null;
+  }
+}
+function _rpResolveYear(v,now){
+  const d=now?new Date(now):new Date();
+  if(v==='this_year')return d.getFullYear();
+  if(v==='last_year')return d.getFullYear()-1;
+  const n=parseInt(v);return isNaN(n)?d.getFullYear():n;
+}
+
+// ── FIELD REGISTRY (one filter engine for reports + map + contact list) ──
+// level: 'h' household attribute · 'roll' scope-resolvable rollup ·
+//        'c' contact attribute · 'd' donation attribute · 'r' registration
+const _RP_FIELDS={
+  home_value:{label:'Home value',level:'h',type:'number'},
+  city:{label:'City',level:'h',type:'text'},
+  county:{label:'County',level:'h',type:'select',options:[['gea','Geauga'],['cuy','Cuyahoga'],['unk','Unknown']]},
+  zip:{label:'ZIP',level:'h',type:'text'},
+  has_address:{label:'Has address',level:'h',type:'bool'},
+  has_kids:{label:'Has kids',level:'h',type:'bool'},
+  kid_age:{label:'Kid age',level:'h',type:'number'},
+  agc:{label:'Prospect score (AGC)',level:'h',type:'number'},
+  total_giving:{label:'Total giving',level:'roll',type:'number'},
+  gift_count:{label:'# of gifts',level:'roll',type:'number'},
+  largest_gift:{label:'Largest gift',level:'roll',type:'number'},
+  last_gift:{label:'Last gift date',level:'roll',type:'date'},
+  gave_in_year:{label:'Gave in year',level:'roll',type:'year'},
+  attended_event:{label:'Attended event',level:'roll',type:'event'},
+  in_group:{label:'In email group',level:'roll',type:'group'},
+  mailable:{label:'Mailable (email, not unsubscribed)',level:'roll',type:'bool'},
+  last_contact:{label:'Last contact date',level:'roll',type:'date'},
+  days_since_contact:{label:'Days since last contact',level:'roll',type:'number'},
+  c_name:{label:'Contact name',level:'c',type:'text'},
+  c_email:{label:'Contact email',level:'c',type:'text'},
+  c_phone:{label:'Contact phone',level:'c',type:'text'},
+  gender:{label:'Gender',level:'c',type:'text'},
+  don_amount:{label:'Gift amount',level:'d',type:'number'},
+  don_date:{label:'Gift date',level:'d',type:'date'},
+  don_method:{label:'Gift method',level:'d',type:'text'},
+  don_notes:{label:'Gift notes',level:'d',type:'text'},
+  reg_event:{label:'Registration event',level:'r',type:'event'},
+  reg_date:{label:'Registration date',level:'r',type:'date'}
+};
+const _RP_OPS={
+  number:[['gte','\u2265'],['lte','\u2264'],['eq','='],['between','between']],
+  date:[['on_or_after','on/after'],['on_or_before','on/before'],['between','between'],['rel','relative']],
+  year:[['is','is']],
+  text:[['contains','contains'],['equals','equals'],['not_contains','doesn\u2019t contain'],['not_empty','is not empty'],['is_empty','is empty']],
+  select:[['is','is'],['is_not','is not']],
+  event:[['is','is'],['is_not','is not']],
+  group:[['is','is'],['is_not','is not']],
+  bool:[['is_true','yes'],['is_false','no']]
+};
+
+// ── ROLLUPS — computed once per run; filters and columns read them ──────
+let _rpInterTouch=null; // contact_id -> latest touch date (canonical _isTouch)
+function _rpBuildRollups(list){
+  const R={h:{},c:{}};
+  const invGroups={};
+  try{Object.keys(_egMembersByGroup||{}).forEach(gid=>{(_egMembersByGroup[gid]||[]).forEach(cid=>{(invGroups[cid]||(invGroups[cid]=new Set())).add(gid);});});}catch(e){}
+  const parents=new Set();
+  try{(RELS||[]).forEach(r=>{if(r.contact_id)parents.add(r.contact_id);});}catch(e){}
+  const yr=new Date().getFullYear();
+  (list||[]).forEach(h=>{
+    const g=getGivingStats(h); // REUSED — rollup math IS getGivingStats math
+    const hh={total:g?g.total:0,count:g?g.count:0,largest:g?g.largest:0,lastGift:g?g.lastDate:'',byYear:{},events:new Set(),groups:new Set(),mailable:false,lastContact:(_agcInterAgg[h.id]||{}).lastContact||'',agc:0,hasKids:false,kidAges:[]};
+    try{hh.agc=getAGCScore(h).total;}catch(e){}
+    if(g)(g.donations||[]).forEach(d=>{const y=(d.date||'').slice(0,4);if(y)hh.byYear[y]=(hh.byYear[y]||0)+(parseFloat(d.amount)||0);});
+    const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
+    kids.forEach(k=>{if(k.estimated_birth_year)hh.kidAges.push(yr-k.estimated_birth_year);});
+    hh.hasKids=kids.length>0;
+    (h.members||[]).forEach(m=>{
+      const cc={total:0,count:0,largest:0,lastGift:'',byYear:{},events:new Set(),groups:invGroups[m.id]||new Set(),mailable:!!(m.email&&!(_egUnsub&&_egUnsub.has&&_egUnsub.has(m.id))),lastContact:''};
+      (m.donations||[]).forEach(d=>{const a=parseFloat(d.amount)||0;cc.total+=a;cc.count++;if(a>cc.largest)cc.largest=a;if(d.date&&(!cc.lastGift||d.date>cc.lastGift))cc.lastGift=d.date;const y=(d.date||'').slice(0,4);if(y)cc.byYear[y]=(cc.byYear[y]||0)+a;});
+      (m.registrations||[]).forEach(r=>{if(r.event_id){cc.events.add(r.event_id);hh.events.add(r.event_id);}if(r.reg_date&&(!cc.lastContact||r.reg_date>cc.lastContact))cc.lastContact=r.reg_date;});
+      const it=_rpInterTouch&&_rpInterTouch[m.id];
+      if(it&&(!cc.lastContact||it>cc.lastContact))cc.lastContact=it;
+      cc.groups.forEach(gid=>hh.groups.add(gid));
+      if(cc.mailable)hh.mailable=true;
+      if(parents.has(m.id))hh.hasKids=true; // family link = has kids
+      R.c[m.id]=cc;
+    });
+    R.h[h.id]=hh;
+  });
+  return R;
+}
+
+// ── THE ONE FILTER ENGINE ────────────────────────────────────────────────
+// filters = [{mode:'include'|'exclude', match:'all'|'any', conds:[{field,op,value,value2,scope}]}]
+// Row passes if it matches EVERY non-empty include group and NO exclude group.
+function _rpOpNum(op,actual,v,v2){
+  if(actual==null||actual===''||(typeof actual==='number'&&isNaN(actual)))return false;
+  if(op==='gte')return actual>=parseFloat(v);
+  if(op==='lte')return actual<=parseFloat(v);
+  if(op==='eq')return actual===parseFloat(v);
+  if(op==='between')return (v==null||v===''||actual>=parseFloat(v))&&(v2==null||v2===''||actual<=parseFloat(v2));
+  return false;
+}
+function _rpOpDate(op,actual,v,v2){
+  if(op==='rel'){const rr=_rpResolveDateRange(v);if(!rr)return false;return !!actual&&actual>=rr.from&&actual<=rr.to;}
+  if(!actual)return false;
+  if(op==='on_or_after')return actual>=v;
+  if(op==='on_or_before')return actual<=v;
+  if(op==='between')return (!v||actual>=v)&&(!v2||actual<=v2);
+  return false;
+}
+function _rpOpText(op,actual,v){
+  const a=(actual==null?'':String(actual)).toLowerCase(),b=(v==null?'':String(v)).toLowerCase();
+  if(op==='contains')return a.includes(b);
+  if(op==='equals')return a===b;
+  if(op==='not_contains')return !a.includes(b);
+  if(op==='not_empty')return a!=='';
+  if(op==='is_empty')return a==='';
+  return false;
+}
+function _rpRollFor(cond,entity,row,R){
+  // scope:'household' forces the household rollup; auto = the row's own grain.
+  if(cond.scope==='household'||entity==='household'){const h=entity==='household'?row:row._h;return h?R.h[h.id]:null;}
+  const m=entity==='contact'?row:row._m;
+  return m?R.c[m.id]:null;
+}
+function _rpCondPass(cond,entity,row,R){
+  const f=_RP_FIELDS[cond.field];if(!f)return true;
+  const h=entity==='household'?row:row._h;
+  const members=entity==='household'?(row.members||[]):(row._m?[row._m]:[]);
+  const v=cond.value,v2=cond.value2,op=cond.op;
+  switch(cond.field){
+    // household attributes
+    case 'home_value':return _rpOpNum(op,h&&h.home_value!=null?h.home_value:null,v,v2);
+    case 'city':return _rpOpText(op,h?h.city:'',v);
+    case 'zip':return _rpOpText(op,h?h.zip:'',v);
+    case 'county':{const c=h?(h.county||'unk'):'unk';return op==='is'?c===v:c!==v;}
+    case 'has_address':{const has=!!(h&&h.address);return op==='is_true'?has:!has;}
+    case 'has_kids':{const hk=!!(h&&R.h[h.id]&&R.h[h.id].hasKids);return op==='is_true'?hk:!hk;}
+    case 'kid_age':{const ages=(h&&R.h[h.id]||{}).kidAges||[];return ages.some(a=>(v==null||v===''||a>=parseFloat(v))&&(v2==null||v2===''||a<=parseFloat(v2)));}
+    case 'agc':return _rpOpNum(op,(h&&R.h[h.id]||{}).agc,v,v2);
+    // rollups (scope-resolvable)
+    case 'total_giving':{const r=_rpRollFor(cond,entity,row,R);return _rpOpNum(op,r?r.total:0,v,v2);}
+    case 'gift_count':{const r=_rpRollFor(cond,entity,row,R);return _rpOpNum(op,r?r.count:0,v,v2);}
+    case 'largest_gift':{const r=_rpRollFor(cond,entity,row,R);return _rpOpNum(op,r?r.largest:0,v,v2);}
+    case 'last_gift':{const r=_rpRollFor(cond,entity,row,R);return _rpOpDate(op,r?r.lastGift:'',v,v2);}
+    case 'gave_in_year':{const r=_rpRollFor(cond,entity,row,R);const y=_rpResolveYear(v);return !!(r&&r.byYear[y]>0);}
+    case 'attended_event':{const r=_rpRollFor(cond,entity,row,R);const hit=v==='any'?!!(r&&r.events.size):!!(r&&r.events.has(v));return op==='is_not'?!hit:hit;}
+    case 'in_group':{const r=_rpRollFor(cond,entity,row,R);const hit=!!(r&&r.groups.has(v));return op==='is_not'?!hit:hit;}
+    case 'mailable':{const r=_rpRollFor(cond,entity,row,R);const mm=!!(r&&r.mailable);return op==='is_true'?mm:!mm;}
+    case 'last_contact':{const r=_rpRollFor(cond,entity,row,R);return _rpOpDate(op,r?r.lastContact:'',v,v2);}
+    case 'days_since_contact':{const r=_rpRollFor(cond,entity,row,R);const lc=r&&r.lastContact;const days=lc?(Date.now()-new Date(lc))/86400000:Infinity;return _rpOpNum(op,days,v,v2);}
+    // contact attributes — at household grain: ANY member
+    case 'c_name':return members.some(m=>_rpOpText(op,((m.first_name||'')+' '+(m.last_name||'')).trim(),v));
+    case 'c_email':return members.some(m=>_rpOpText(op,m.email||'',v));
+    case 'c_phone':return members.some(m=>_rpOpText(op,m.phone||'',v));
+    case 'gender':return members.some(m=>_rpOpText(op,m.gender||'',v));
+    // donation attributes — walk: donation row itself, else ANY gift below the row
+    case 'don_amount':case 'don_date':case 'don_method':case 'don_notes':{
+      const test=d=>{
+        if(cond.field==='don_amount')return _rpOpNum(op,parseFloat(d.amount)||0,v,v2);
+        if(cond.field==='don_date')return _rpOpDate(op,d.date||'',v,v2);
+        if(cond.field==='don_method')return _rpOpText(op,d.method||'',v);
+        return _rpOpText(op,d.notes||'',v);
+      };
+      if(entity==='donation')return test(row);
+      const gifts=[];members.forEach(m=>(m.donations||[]).forEach(d=>gifts.push(d)));
+      return gifts.some(test);
+    }
+    case 'reg_event':case 'reg_date':{
+      const test=r=>{
+        if(cond.field==='reg_event'){const hit=v==='any'?!!r.event_id:r.event_id===v;return op==='is_not'?!hit:hit;}
+        return _rpOpDate(op,r.reg_date||'',v,v2);
+      };
+      if(entity==='registration')return test(row);
+      const regs=[];members.forEach(m=>(m.registrations||[]).forEach(r=>regs.push(r)));
+      return regs.some(test);
+    }
+  }
+  return true;
+}
+function _rpRows(entity,list){
+  list=list||households;
+  if(entity==='household')return list.slice();
+  const out=[];
+  list.forEach(h=>(h.members||[]).forEach(m=>{
+    if(entity==='contact')out.push(Object.assign(Object.create(m),{_m:m,_h:h}));
+    else if(entity==='donation')(m.donations||[]).forEach(d=>out.push(Object.assign(Object.create(d),{_m:m,_h:h})));
+    else if(entity==='registration')(m.registrations||[]).forEach(r=>out.push(Object.assign(Object.create(r),{_m:m,_h:h})));
+  }));
+  return out;
+}
+function runFilter(entity,filters,ctx){
+  ctx=ctx||{};
+  const list=ctx.households||households;
+  const R=ctx.rollups||_rpBuildRollups(list);
+  const rows=_rpRows(entity,list);
+  const groups=(filters||[]).filter(g=>g&&(g.conds||[]).length);
+  if(!groups.length)return rows;
+  return rows.filter(row=>{
+    for(const g of groups){
+      const conds=g.conds||[];
+      const matched=(g.match==='any')?conds.some(c=>_rpCondPass(c,entity,row,R)):conds.every(c=>_rpCondPass(c,entity,row,R));
+      if((g.mode||'include')==='exclude'){if(matched)return false;}
+      else{if(!matched)return false;}
+    }
+    return true;
+  });
+}
+
+// ── CSV EXPORT — with the formula-injection guard (July audit item) ─────
+function _rpCsvCell(v){
+  let s=(v==null?'':String(v));
+  if(/^[=+\-@]/.test(s))s='\''+s; // neutralize =,+,-,@ formula prefixes
+  return '"'+s.replace(/"/g,'""')+'"';
+}
+function _rpDownloadCsv(rows,filename){
+  const csv=rows.map(r=>r.map(_rpCsvCell).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=filename||'report.csv';a.click();
+}
+
+// ── COLUMN REGISTRY ──────────────────────────────────────────────────────
+function _rpHCols(pre,hOf){ // shared household/mailing columns for any grain
+  const T=row=>_daasHouseholdTokens(hOf(row));
+  const o={};
+  o[pre+'joint_name']={label:'Joint Name',get:r=>T(r).joint_name};
+  o[pre+'first_names']={label:'First Names',get:r=>T(r).first_names};
+  o[pre+'last_name']={label:'Last Name',get:r=>T(r).last_name};
+  o[pre+'address']={label:'Address',get:r=>hOf(r).address||''};
+  o[pre+'address2']={label:'Address 2',get:r=>''};
+  o[pre+'city']={label:'City',get:r=>hOf(r).city||''};
+  o[pre+'state']={label:'State',get:r=>hOf(r).state||''};
+  o[pre+'zip']={label:'ZIP',get:r=>hOf(r).zip||''};
+  return o;
+}
+function _rpCols(entity,groupMode){
+  const R=()=>_rpRun.R||{h:{},c:{}};
+  if(entity==='household'||(entity==='donation'&&groupMode==='donor')){
+    const hOf=r=>entity==='household'?r:r._hh;
+    const cols=Object.assign({},_rpHCols('',hOf));
+    cols.phones={label:'Phones',get:r=>((hOf(r).members||[]).filter(m=>m.phone).map(m=>m.first_name+': '+m.phone).join('; '))};
+    cols.emails={label:'Emails',get:r=>((hOf(r).members||[]).filter(m=>m.email).map(m=>m.first_name+': '+m.email).join('; '))};
+    cols.agc={label:'AGC',get:r=>(R().h[hOf(r).id]||{}).agc||0,num:true};
+    cols.home_value={label:'Home Value',get:r=>hOf(r).home_value||'',num:true};
+    if(entity==='household'){
+      cols.total_giving={label:'Total Giving',get:r=>(R().h[r.id]||{}).total||0,num:true};
+      cols.gift_count={label:'# Gifts',get:r=>(R().h[r.id]||{}).count||0,num:true};
+      cols.largest_gift={label:'Largest Gift',get:r=>(R().h[r.id]||{}).largest||0,num:true};
+      cols.last_gift={label:'Last Gift',get:r=>(R().h[r.id]||{}).lastGift||''};
+      cols.last_contact={label:'Last Contact',get:r=>(R().h[r.id]||{}).lastContact||''};
+      cols.has_kids={label:'Has Kids',get:r=>((R().h[r.id]||{}).hasKids?'yes':'no')};
+      cols.members={label:'Members',get:r=>(r.members||[]).map(_daasDisplayName).join('; ')};
+      cols.county={label:'County',get:r=>r.county==='gea'?'Geauga':r.county==='cuy'?'Cuyahoga':''};
+      cols.daas_id={label:'DAAS IDs',get:r=>(r.members||[]).map(m=>m.daas_id).filter(v=>v!=null&&v!=='').map(v=>'#'+v).join('; ')};
+      cols.external_ids={label:'External IDs',get:r=>(r.members||[]).map(m=>m.external_id).filter(Boolean).join('; ')};
+    }else{ // donation donor-mode aggregates over the FILTERED result set
+      const yr=new Date().getFullYear();
+      cols.total_results={label:'Total (results)',get:r=>r._sum,num:true};
+      cols['total_'+yr]={label:'Total '+yr,get:r=>r._sumThisYear,num:true};
+      cols.total_lifetime={label:'Total Lifetime',get:r=>(R().h[r._hh.id]||{}).total||0,num:true};
+      cols.gift_count={label:'# Gifts (results)',get:r=>r._gifts.length,num:true};
+      cols.largest_gift={label:'Largest (results)',get:r=>r._max,num:true};
+      cols.last_gift={label:'Last Gift (results)',get:r=>r._last};
+      cols.gifts_detail={label:'Gifts Detail',get:r=>r._detail};
+    }
+    return cols;
+  }
+  if(entity==='contact'){
+    const cols={
+      first_name:{label:'First Name',get:r=>r.first_name||''},
+      last_name:{label:'Last Name',get:r=>r.last_name||''},
+      email:{label:'Email',get:r=>r.email||''},
+      phone:{label:'Phone',get:r=>r.phone||''},
+      gender:{label:'Gender',get:r=>r.gender||''},
+      dob:{label:'DOB',get:r=>r.dob||''},
+      household:{label:'Household',get:r=>r._h.displayName||''}
+    };
+    Object.assign(cols,_rpHCols('hh_',r=>r._h));
+    cols.agc={label:'AGC',get:r=>(R().h[r._h.id]||{}).agc||0,num:true};
+    cols.c_total_giving={label:'Their Giving',get:r=>(R().c[r.id]||{}).total||0,num:true};
+    cols.c_gift_count={label:'Their # Gifts',get:r=>(R().c[r.id]||{}).count||0,num:true};
+    cols.c_last_gift={label:'Their Last Gift',get:r=>(R().c[r.id]||{}).lastGift||''};
+    cols.external_id={label:'External ID',get:r=>r.external_id||''};
+    cols.daas_id={label:'DAAS ID',get:r=>r.daas_id||''};
+    return cols;
+  }
+  if(entity==='donation'){ // gift grain
+    const cols={
+      date:{label:'Date',get:r=>r.date||''},
+      amount:{label:'Amount',get:r=>parseFloat(r.amount)||0,num:true},
+      method:{label:'Method',get:r=>r.method||''},
+      notes:{label:'Notes',get:r=>r.notes||''},
+      donor:{label:'Donor',get:r=>_daasDisplayName(r._m)},
+      household:{label:'Household',get:r=>r._h.displayName||''}
+    };
+    Object.assign(cols,_rpHCols('hh_',r=>r._h));
+    cols.external_id={label:'External ID',get:r=>r._m.external_id||''};
+    return cols;
+  }
+  // registration
+  const cols={
+    event:{label:'Event',get:r=>{const ev=(_events||[]).find(e=>e.id===r.event_id);return ev?ev.name:(r.event_id||'');}},
+    reg_date:{label:'Date',get:r=>r.reg_date||''},
+    attendee:{label:'Attendee',get:r=>_daasDisplayName(r._m)},
+    household:{label:'Household',get:r=>r._h.displayName||''},
+    fee:{label:'Fee Paid',get:r=>r._fee?(parseFloat(r._fee.amount)||0):0,num:true}
+  };
+  Object.assign(cols,_rpHCols('hh_',r=>r._h));
+  return cols;
+}
+const _RP_DEFAULT_COLS={
+  household:['joint_name','address','city','state','zip','emails','total_giving','last_gift'],
+  contact:['first_name','last_name','email','phone','household'],
+  donation:['date','amount','method','donor','household','notes'],
+  donation_donor:['joint_name','address','city','state','zip','total_results','gift_count','last_gift','gifts_detail'],
+  registration:['event','reg_date','attendee','household','fee']
+};
+
+// ── SAVED REPORTS (full save/edit symmetry; recipes, never results) ─────
+let _rpSaved=[];        // saved_reports rows
+let _rpSavedErr=null;
+let _rpCur=null;        // working recipe {id,name,entity,filters,columns,sort,groupMode}
+let _rpView='home';     // 'home' | 'builder'
+let _rpRun={rows:null,R:null,grain:null}; // last run result
+let _rpPendingAi=null;  // sentence handed off from the Assistant
+let _rpDataReady=false;
+const _RP_PRESETS=[
+  {name:'Mailing Names & Addresses',entity:'household',config:{filters:[],columns:['joint_name','first_names','last_name','address','address2','city','state','zip'],sort:{col:'last_name',dir:'asc'},groupMode:null}},
+  {name:'Donations Last Month',entity:'donation',config:{filters:[{mode:'include',match:'all',conds:[{field:'don_date',op:'rel',value:'prev_month'}]}],columns:['date','amount','method','donor','household','notes'],sort:{col:'date',dir:'desc'},groupMode:'gift'}},
+  {name:'$5k+ Donors Ever',entity:'household',config:{filters:[{mode:'include',match:'all',conds:[{field:'largest_gift',op:'gte',value:5000}]}],columns:['joint_name','address','city','state','zip','total_giving','largest_gift','last_gift'],sort:{col:'largest_gift',dir:'desc'},groupMode:null}},
+  {name:'LYBUNT',entity:'household',config:{filters:[{mode:'include',match:'all',conds:[{field:'gave_in_year',op:'is',value:'last_year'}]},{mode:'exclude',match:'all',conds:[{field:'gave_in_year',op:'is',value:'this_year'}]}],columns:['joint_name','first_names','address','city','state','zip','emails','total_giving','last_gift'],sort:{col:'total_giving',dir:'desc'},groupMode:null}},
+  {name:'SYBUNT',entity:'household',config:{filters:[{mode:'include',match:'all',conds:[{field:'gift_count',op:'gte',value:1}]},{mode:'exclude',match:'all',conds:[{field:'gave_in_year',op:'is',value:'this_year'}]}],columns:['joint_name','first_names','address','city','state','zip','emails','total_giving','last_gift'],sort:{col:'total_giving',dir:'desc'},groupMode:null}}
+];
+async function _rpEnsureData(){
+  try{await _egLoad(true);}catch(e){}
+  try{await _loadEvents();}catch(e){}
+  if(!_rpInterTouch){
+    try{
+      const rows=await sbAll('interactions?select=contact_id,type,date&order=id.asc')||[];
+      _rpInterTouch={};
+      rows.forEach(r=>{if(!r.date||!_isTouch(r.type))return;if(!_rpInterTouch[r.contact_id]||r.date>_rpInterTouch[r.contact_id])_rpInterTouch[r.contact_id]=r.date;});
+    }catch(e){_rpInterTouch={};}
+  }
+  await _rpLoadSaved();
+  _rpDataReady=true;
+}
+async function _rpLoadSaved(){
+  try{_rpSaved=await sbAll('saved_reports?select=*&order=name.asc')||[];}
+  catch(e){_rpSaved=[];_rpSavedErr=e.message;return;}
+  _rpSavedErr=null;
+  if(!_rpSaved.length){
+    // First run: seed the five presets (ordinary, unprotected rows).
+    let seeded=false;
+    try{const s=await sb('app_settings?key=eq.reports_presets_seeded&select=value');seeded=!!(s&&s.length);}catch(e){}
+    if(!seeded){
+      try{
+        await sb('saved_reports',{method:'POST',body:JSON.stringify(_RP_PRESETS.map(p=>({name:p.name,entity:p.entity,config:p.config})))});
+        try{await sbSetSetting('reports_presets_seeded','1');}catch(e){}
+        _rpSaved=await sbAll('saved_reports?select=*&order=name.asc')||[];
+      }catch(e){}
+    }
+  }
+}
+function _rpNew(entity){
+  _rpCur={id:null,name:'',entity:entity||'household',filters:[],columns:_RP_DEFAULT_COLS[entity||'household'].slice(),sort:null,groupMode:(entity==='donation')?'gift':null};
+  _rpRun={rows:null,R:null,grain:null};
+  _rpView='builder';_rpRenderBuilder();
+}
+function _rpLoadSavedReport(id){
+  const s=_rpSaved.find(x=>x.id===id);if(!s)return;
+  const cfg=(typeof s.config==='string')?JSON.parse(s.config):(s.config||{});
+  _rpCur={id:s.id,name:s.name,entity:s.entity,filters:JSON.parse(JSON.stringify(cfg.filters||[])),columns:(cfg.columns||_RP_DEFAULT_COLS[s.entity]||[]).slice(),sort:cfg.sort||null,groupMode:cfg.groupMode||((s.entity==='donation')?'gift':null)};
+  _rpRun={rows:null,R:null,grain:null};
+  _rpView='builder';_rpRenderBuilder();
+}
+async function _rpSaveCur(asCopy){
+  if(!_rpCur)return;
+  const doSave=async(name)=>{
+    const body={name,entity:_rpCur.entity,config:{filters:_rpCur.filters,columns:_rpCur.columns,sort:_rpCur.sort,groupMode:_rpCur.groupMode},updated_at:new Date().toISOString()};
+    try{
+      if(_rpCur.id&&!asCopy){await sb('saved_reports?id=eq.'+_rpCur.id,{method:'PATCH',body:JSON.stringify(body)});}
+      else{const res=await sb('saved_reports',{method:'POST',body:JSON.stringify(body)});_rpCur.id=(res&&res[0]&&res[0].id)||_rpCur.id;}
+      _rpCur.name=name;
+      await _rpLoadSaved();
+      _ebToastMsg('Report saved: '+name);
+      _rpRenderBuilder();
+    }catch(e){_ebToastMsg('Save failed: '+e.message+' (has the saved_reports SQL been run?)');}
+  };
+  const def=asCopy?((_rpCur.name||'Report')+' (copy)'):(_rpCur.name||'');
+  _daasPrompt(asCopy?'Save As Copy':'Save Report','Report name',def,name=>{if(name&&name.trim())doSave(name.trim());},'Save');
+}
+function _rpDeleteSaved(id,ev){
+  if(ev)ev.stopPropagation();
+  const s=_rpSaved.find(x=>x.id===id);if(!s)return;
+  _egConfirm('Delete Report','Delete \u201c'+(s.name||'report')+'\u201d? The saved recipe is removed; no data is touched.',async()=>{
+    try{await sb('saved_reports?id=eq.'+id,{method:'DELETE'});await _rpLoadSaved();renderReports();}
+    catch(e){_ebToastMsg('Delete failed: '+e.message);}
+  },'Delete');
+}
+
+// ── RUN + RESULTS ────────────────────────────────────────────────────────
+function _rpRunCur(){
+  if(!_rpCur)return;
+  const R=_rpBuildRollups(households);
+  let rows=runFilter(_rpCur.entity,_rpCur.filters,{households,rollups:R});
+  let grain=_rpCur.entity;
+  if(_rpCur.entity==='donation'&&_rpCur.groupMode==='donor'){
+    const byHH={};
+    rows.forEach(d=>{
+      const h=d._h;const b=byHH[h.id]||(byHH[h.id]={_hh:h,_gifts:[]});
+      b._gifts.push(d);
+    });
+    const yr=String(new Date().getFullYear());
+    rows=Object.values(byHH).map(b=>{
+      b._sum=b._gifts.reduce((s,d)=>s+(parseFloat(d.amount)||0),0);
+      b._sumThisYear=b._gifts.filter(d=>(d.date||'').slice(0,4)===yr).reduce((s,d)=>s+(parseFloat(d.amount)||0),0);
+      b._max=b._gifts.reduce((s,d)=>Math.max(s,parseFloat(d.amount)||0),0);
+      b._last=b._gifts.reduce((s,d)=>(d.date&&d.date>s)?d.date:s,'');
+      b._detail=b._gifts.slice().sort((a,c)=>(a.date||'')<(c.date||'')?-1:1).map(d=>'$'+(parseFloat(d.amount)||0).toLocaleString()+(d.date?' '+parseInt(d.date.slice(5,7))+'/'+parseInt(d.date.slice(8,10)):'')).join('; ');
+      return b;
+    });
+    grain='donor';
+  }
+  _rpRun={rows,R,grain};
+  // sort AFTER _rpRun is set — column getters read _rpRun.R
+  const colDef=_rpCols(_rpCur.entity,_rpCur.groupMode);
+  const s=_rpCur.sort;
+  if(s&&colDef[s.col]){
+    const g=colDef[s.col].get,num=colDef[s.col].num;
+    rows.sort((a,b)=>{
+      let va=g(a),vb=g(b);
+      if(num){va=parseFloat(va)||0;vb=parseFloat(vb)||0;return s.dir==='desc'?vb-va:va-vb;}
+      va=String(va).toLowerCase();vb=String(vb).toLowerCase();
+      return s.dir==='desc'?(vb<va?-1:vb>va?1:0):(va<vb?-1:va>vb?1:0);
+    });
+  }
+  _rpRenderBuilder();
+}
+function _rpExportCsv(){
+  if(!_rpRun.rows){_ebToastMsg('Run the report first.');return;}
+  const colDef=_rpCols(_rpCur.entity,_rpCur.groupMode);
+  const keys=_rpCur.columns.filter(k=>colDef[k]);
+  const rows=[keys.map(k=>colDef[k].label)];
+  _rpRun.rows.forEach(r=>rows.push(keys.map(k=>colDef[k].get(r))));
+  _rpDownloadCsv(rows,((_rpCur.name||_rpCur.entity+'-report').replace(/[^a-z0-9 _-]/gi,'').trim().replace(/\s+/g,'-').toLowerCase()||'report')+'.csv');
+}
+// Bridge: household-grain results → map pins (visit planning: LYBUNT as pins)
+function _rpShowOnMap(){
+  if(!_rpRun.rows){_ebToastMsg('Run the report first.');return;}
+  let ids=null;
+  if(_rpRun.grain==='household')ids=_rpRun.rows.map(h=>h.id);
+  else if(_rpRun.grain==='donor')ids=_rpRun.rows.map(r=>r._hh.id);
+  else{_ebToastMsg('Show on map works for household-grain results (Households entity, or Donations grouped by donor).');return;}
+  window._reportPinSet=new Set(ids);
+  window._reportPinLabel=(_rpCur.name||'report')+' \u00b7 '+ids.length;
+  switchView('crm');
+  setTimeout(()=>{try{applyFilter();_rpMapChip();}catch(e){}},250);
+}
+function _rpMapChip(){
+  let chip=document.getElementById('reportPinChip');
+  const strip=document.getElementById('filterStrip');
+  if(!window._reportPinSet){if(chip)chip.remove();return;}
+  if(!chip&&strip){
+    chip=document.createElement('span');chip.id='reportPinChip';
+    chip.style.cssText='display:inline-flex;align-items:center;gap:6px;font-family:var(--font-ui);font-size:.64rem;background:var(--accent);color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer;align-self:center';
+    chip.onclick=()=>{window._reportPinSet=null;window._reportPinLabel=null;chip.remove();applyFilter();};
+    strip.appendChild(chip);
+  }
+  if(chip)chip.innerHTML='Report: '+_escHtml(window._reportPinLabel||'')+' <b>\u00d7</b>';
+}
+// Bridge: current map/list quick filters → the Reports builder.
+// ALSO the compiler behind the re-plumbed _filterBase(): the strip inputs
+// become filter JSON here, and the shared engine runs them.
+function _rpQuickFilterJSON(){
+  const conds=[];
+  const num=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const minVal=num('minValue'),minAGC=num('minAGC'),minGiving=num('minGiving');
+  const dateFrom=document.getElementById('filterDateFrom')?.value||'';
+  const dateTo=document.getElementById('filterDateTo')?.value||'';
+  const minDays=num('minDaysSince');
+  const kidAgeMin=parseInt(document.getElementById('filterKidAgeMin')?.value)||0;
+  const kidAgeMax=parseInt(document.getElementById('filterKidAgeMax')?.value)||0;
+  const city=(document.getElementById('filterCity')?.value||'').trim();
+  if(minVal>0)conds.push({field:'home_value',op:'gte',value:minVal});
+  if(minAGC>0)conds.push({field:'agc',op:'gte',value:minAGC});
+  if(minGiving>0)conds.push({field:'total_giving',op:'gte',value:minGiving,scope:'household'});
+  if(dateFrom)conds.push({field:'last_gift',op:'on_or_after',value:dateFrom,scope:'household'});
+  if(dateTo)conds.push({field:'last_gift',op:'on_or_before',value:dateTo,scope:'household'});
+  if(minDays>0)conds.push({field:'days_since_contact',op:'gte',value:minDays,scope:'household'});
+  if(kidAgeMin>0||kidAgeMax>0)conds.push({field:'kid_age',op:'between',value:kidAgeMin>0?kidAgeMin:null,value2:kidAgeMax>0?kidAgeMax:null});
+  if(city)conds.push({field:'city',op:'contains',value:city});
+  return conds.length?[{mode:'include',match:'all',conds}]:[];
+}
+function _rpOpenFromQuickFilters(){
+  const filters=_rpQuickFilterJSON();
+  switchView('reports');
+  _rpNew('household');
+  _rpCur.filters=filters;
+  _rpRenderBuilder();
+}
+function _rpOpenExport(){
+  switchView('reports');
+  setTimeout(()=>{
+    const pre=_rpSaved.find(s=>s.name==='Mailing Names & Addresses');
+    if(pre)_rpLoadSavedReport(pre.id);else if(!_rpCur)_rpNew('household');
+  },400);
+}
+
+// ── REPORTS UI ───────────────────────────────────────────────────────────
+async function renderReports(){
+  const host=document.getElementById('reportsViewInner');if(!host)return;
+  if(!_rpDataReady){
+    host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);padding:20px">Loading report data\u2026</div>';
+    await _rpEnsureData();
+  }
+  if(_rpView==='builder'&&_rpCur)_rpRenderBuilder();else _rpRenderHome();
+  if(_rpPendingAi){const s=_rpPendingAi;_rpPendingAi=null;const el=document.getElementById('rpAiInput');if(el){el.value=s;_rpAiRun();}}
+}
+function _rpAiBoxHtml(){
+  return '<div class="rp-card" style="border-color:var(--accent)">'
+    +'<div class="rp-lbl"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"/></svg> Describe the list you need \u2014 AI fills the builder, you review, then Run</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<input id="rpAiInput" class="rp-input" style="flex:1" placeholder="e.g. households that gave last year but not this year, in Moreland Hills" onkeydown="if(event.key===\'Enter\')_rpAiRun()">'
+    +'<button class="btn btn-pri" style="font-size:.72rem;padding:6px 14px" id="rpAiBtn" onclick="_rpAiRun()">Build</button>'
+    +'</div>'
+    +'<div id="rpAiStatus" style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-top:6px"></div>'
+    +'</div>';
+}
+function _rpRenderHome(){
+  const host=document.getElementById('reportsViewInner');
+  let html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+    +'<h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h2M8 17h2M14 13h2M14 17h2"/></svg> Reports</h2>'
+    +'<button class="btn btn-pri" style="font-size:.7rem;padding:6px 14px" onclick="_rpNew(\'household\')">\uff0b New Report</button>'
+    +'</div>';
+  html+=_rpAiBoxHtml();
+  html+='<div class="rp-lbl" style="margin:16px 0 8px">Saved reports \u2014 tap to open &amp; edit</div>';
+  if(_rpSavedErr)html+='<div class="rp-card" style="border-color:var(--red);color:var(--red);font-size:.75rem">Could not load saved reports: '+_escHtml(_rpSavedErr)+'<br><span style="color:var(--txt3)">Has the saved_reports SQL migration been run in Supabase?</span></div>';
+  if(!_rpSaved.length&&!_rpSavedErr)html+='<div style="font-size:.75rem;color:var(--txt3)">No saved reports yet.</div>';
+  _rpSaved.forEach(s=>{
+    html+='<div class="rp-saved-row" onclick="_rpLoadSavedReport(\''+_escAttr(s.id)+'\')">'
+      +'<div style="flex:1;min-width:0"><div style="font-size:.82rem;font-weight:600;color:var(--txt)">'+_escHtml(s.name)+'</div>'
+      +'<div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);text-transform:capitalize">'+_escHtml(s.entity)+'s</div></div>'
+      +'<button onclick="_rpDeleteSaved(\''+_escAttr(s.id)+'\',event)" title="Delete" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.85rem;padding:4px">\u00d7</button>'
+      +'</div>';
+  });
+  host.innerHTML=html;
+}
+function _rpEntityChanged(entity){
+  if(!_rpCur)return;
+  _rpCur.entity=entity;
+  _rpCur.groupMode=(entity==='donation')?'gift':null;
+  _rpCur.columns=_RP_DEFAULT_COLS[entity].slice();
+  _rpCur.sort=null;_rpRun={rows:null,R:null,grain:null};
+  _rpRenderBuilder();
+}
+function _rpGroupModeChanged(mode){
+  if(!_rpCur)return;
+  _rpCur.groupMode=mode;
+  _rpCur.columns=_RP_DEFAULT_COLS[mode==='donor'?'donation_donor':'donation'].slice();
+  _rpCur.sort=null;_rpRun={rows:null,R:null,grain:null};
+  _rpRenderBuilder();
+}
+function _rpAddGroup(mode){
+  _rpCur.filters.push({mode:mode||'include',match:'all',conds:[{field:'total_giving',op:'gte',value:''}]});
+  _rpRenderBuilder();
+}
+function _rpDelGroup(gi){_rpCur.filters.splice(gi,1);_rpRenderBuilder();}
+function _rpAddCond(gi){_rpCur.filters[gi].conds.push({field:'total_giving',op:'gte',value:''});_rpRenderBuilder();}
+function _rpDelCond(gi,ci){_rpCur.filters[gi].conds.splice(ci,1);if(!_rpCur.filters[gi].conds.length)_rpCur.filters.splice(gi,1);_rpRenderBuilder();}
+function _rpSetCond(gi,ci,part,val){
+  const c=_rpCur.filters[gi].conds[ci];
+  if(part==='field'){c.field=val;const f=_RP_FIELDS[val];c.op=(_RP_OPS[f.type]||[['gte']])[0][0];c.value='';c.value2=null;_rpRenderBuilder();return;}
+  if(part==='op'){c.op=val;_rpRenderBuilder();return;}
+  if(part==='scope'){c.scope=val?'household':undefined;return;}
+  c[part]=val;
+}
+function _rpSetGroup(gi,part,val){_rpCur.filters[gi][part]=val;if(part==='mode')_rpRenderBuilder();}
+function _rpToggleCol(key){
+  const i=_rpCur.columns.indexOf(key);
+  if(i>=0)_rpCur.columns.splice(i,1);else _rpCur.columns.push(key);
+  _rpRenderBuilder();
+}
+function _rpSortBy(key){
+  if(_rpCur.sort&&_rpCur.sort.col===key)_rpCur.sort.dir=_rpCur.sort.dir==='asc'?'desc':'asc';
+  else _rpCur.sort={col:key,dir:'asc'};
+  if(_rpRun.rows)_rpRunCur();else _rpRenderBuilder();
+}
+
+function _rpCondHtml(gi,ci,c){
+  const f=_RP_FIELDS[c.field]||_RP_FIELDS.total_giving;
+  let html='<div class="rp-cond">';
+  html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'field\',this.value)">';
+  Object.keys(_RP_FIELDS).forEach(k=>{html+='<option value="'+k+'"'+(k===c.field?' selected':'')+'>'+_RP_FIELDS[k].label+'</option>';});
+  html+='</select>';
+  html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'op\',this.value)">';
+  (_RP_OPS[f.type]||[]).forEach(o=>{html+='<option value="'+o[0]+'"'+(o[0]===c.op?' selected':'')+'>'+o[1]+'</option>';});
+  html+='</select>';
+  const vAttr=_escAttr(c.value==null?'':String(c.value));
+  if(f.type==='number'){
+    html+='<input type="number" class="rp-input" style="width:110px" value="'+vAttr+'" oninput="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    if(c.op==='between')html+='<span style="font-size:.7rem;color:var(--txt3)">and</span><input type="number" class="rp-input" style="width:110px" value="'+_escAttr(c.value2==null?'':String(c.value2))+'" oninput="_rpSetCond('+gi+','+ci+',\'value2\',this.value)">';
+  }else if(f.type==='date'){
+    if(c.op==='rel'){
+      html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+      [['last_30_days','last 30 days'],['last_60_days','last 60 days'],['last_90_days','last 90 days'],['last_365_days','last 365 days'],['this_month','this month'],['prev_month','previous month'],['this_year','this year'],['last_year','last year']].forEach(o=>{html+='<option value="'+o[0]+'"'+(o[0]===c.value?' selected':'')+'>'+o[1]+'</option>';});
+      html+='</select>';
+    }else{
+      html+='<input type="date" class="rp-input" value="'+vAttr+'" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+      if(c.op==='between')html+='<span style="font-size:.7rem;color:var(--txt3)">and</span><input type="date" class="rp-input" value="'+_escAttr(c.value2==null?'':String(c.value2))+'" onchange="_rpSetCond('+gi+','+ci+',\'value2\',this.value)">';
+    }
+  }else if(f.type==='year'){
+    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    const opts=[['this_year','this year'],['last_year','last year']];
+    const y=new Date().getFullYear();for(let k=0;k<6;k++)opts.push([String(y-k),String(y-k)]);
+    opts.forEach(o=>{html+='<option value="'+o[0]+'"'+(String(o[0])===String(c.value)?' selected':'')+'>'+o[1]+'</option>';});
+    html+='</select>';
+  }else if(f.type==='select'){
+    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    html+='<option value="">\u2014</option>';
+    (f.options||[]).forEach(o=>{html+='<option value="'+o[0]+'"'+(o[0]===c.value?' selected':'')+'>'+o[1]+'</option>';});
+    html+='</select>';
+  }else if(f.type==='event'){
+    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    html+='<option value="any"'+(c.value==='any'?' selected':'')+'>any event</option>';
+    (_events||[]).forEach(ev=>{html+='<option value="'+_escAttr(ev.id)+'"'+(ev.id===c.value?' selected':'')+'>'+_escHtml(ev.name||'(unnamed)')+'</option>';});
+    html+='</select>';
+  }else if(f.type==='group'){
+    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    html+='<option value="">\u2014</option>';
+    (_egGroups||[]).forEach(g=>{html+='<option value="'+_escAttr(g.id)+'"'+(g.id===c.value?' selected':'')+'>'+_escHtml(g.name)+'</option>';});
+    html+='</select>';
+  }else if(f.type==='bool'){
+    /* the op alone carries yes/no */
+  }else{
+    html+='<input class="rp-input" style="min-width:140px" value="'+vAttr+'" oninput="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+  }
+  if(f.level==='roll'&&_rpCur.entity!=='household'){
+    html+='<label style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(c.scope==='household'?'checked':'')+' onchange="_rpSetCond('+gi+','+ci+',\'scope\',this.checked)"> whole household</label>';
+  }
+  html+='<button onclick="_rpDelCond('+gi+','+ci+')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.85rem;padding:2px 4px">\u00d7</button>';
+  html+='</div>';
+  return html;
+}
+function _rpRenderBuilder(){
+  const host=document.getElementById('reportsViewInner');if(!host||!_rpCur)return;
+  const ENT=[['household','Households'],['contact','Contacts'],['donation','Donations'],['registration','Registrations']];
+  let html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">'
+    +'<button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick="_rpView=\'home\';renderReports()">\u2190 Reports</button>'
+    +'<h2 style="font-family:var(--font-display);font-size:1rem;color:var(--txt);flex:1;min-width:120px">'+(_rpCur.name?_escHtml(_rpCur.name):'New Report')+(_rpCur.id?'':' <span style="font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">(unsaved)</span>')+'</h2>'
+    +'<button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick="_rpSaveCur(false)">'+(_rpCur.id?'Save':'Save\u2026')+'</button>'
+    +(_rpCur.id?'<button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick="_rpSaveCur(true)">Save as copy</button>':'')
+    +'<button class="btn btn-pri" style="font-size:.7rem;padding:6px 16px" onclick="_rpRunCur()">\u25b6 Run</button>'
+    +'</div>';
+  html+=_rpAiBoxHtml();
+  // entity picker — entity decides what one ROW is
+  html+='<div class="rp-card"><div class="rp-lbl">Each row is one\u2026</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
+  ENT.forEach(e=>{html+='<button class="btn '+(_rpCur.entity===e[0]?'btn-pri':'btn-sec')+'" style="font-size:.7rem;padding:5px 14px" onclick="_rpEntityChanged(\''+e[0]+'\')">'+e[1]+'</button>';});
+  html+='</div>';
+  if(_rpCur.entity==='donation'){
+    html+='<div class="rp-lbl" style="margin-top:10px">Grouping</div><div style="display:flex;gap:6px">'
+      +'<button class="btn '+(_rpCur.groupMode!=='donor'?'btn-pri':'btn-sec')+'" style="font-size:.68rem;padding:4px 12px" onclick="_rpGroupModeChanged(\'gift\')">One row per gift</button>'
+      +'<button class="btn '+(_rpCur.groupMode==='donor'?'btn-pri':'btn-sec')+'" style="font-size:.68rem;padding:4px 12px" onclick="_rpGroupModeChanged(\'donor\')">One row per donor household</button>'
+      +'</div>';
+  }
+  html+='</div>';
+  // filters
+  html+='<div class="rp-card"><div class="rp-lbl">Filters <span style="text-transform:none;letter-spacing:0">\u2014 rows must match every include group and no exclude group</span></div>';
+  _rpCur.filters.forEach((g,gi)=>{
+    html+='<div class="rp-group'+((g.mode||'include')==='exclude'?' exclude':'')+'">';
+    html+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">';
+    html+='<select class="rp-select" style="font-size:.68rem" onchange="_rpSetGroup('+gi+',\'mode\',this.value)"><option value="include"'+((g.mode||'include')==='include'?' selected':'')+'>Include when</option><option value="exclude"'+((g.mode||'include')==='exclude'?' selected':'')+'>Exclude when</option></select>';
+    html+='<select class="rp-select" style="font-size:.68rem" onchange="_rpSetGroup('+gi+',\'match\',this.value)"><option value="all"'+((g.match||'all')==='all'?' selected':'')+'>all conditions match</option><option value="any"'+(g.match==='any'?' selected':'')+'>any condition matches</option></select>';
+    html+='<div style="flex:1"></div>';
+    html+='<button onclick="_rpDelGroup('+gi+')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.85rem">\u00d7</button>';
+    html+='</div>';
+    (g.conds||[]).forEach((c,ci)=>{html+=_rpCondHtml(gi,ci,c);});
+    html+='<button onclick="_rpAddCond('+gi+')" style="font-size:.66rem;padding:3px 10px;background:none;border:1px dashed var(--border2);color:var(--txt3);border-radius:5px;cursor:pointer">+ condition</button>';
+    html+='</div>';
+  });
+  html+='<div style="display:flex;gap:8px"><button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpAddGroup(\'include\')">+ Include group</button>'
+    +'<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px;color:var(--red)" onclick="_rpAddGroup(\'exclude\')">+ Exclude group</button></div>';
+  html+='</div>';
+  // columns — the salutation token columns match the email greeting exactly
+  const colDef=_rpCols(_rpCur.entity,_rpCur.groupMode);
+  html+='<div class="rp-card"><div class="rp-lbl">Columns <span style="text-transform:none;letter-spacing:0">\u2014 Joint Name / First Names / Last Name match the email greeting tokens exactly</span></div><div>';
+  Object.keys(colDef).forEach(k=>{
+    html+='<span class="rp-colchip'+(_rpCur.columns.includes(k)?' on':'')+'" onclick="_rpToggleCol(\''+k+'\')">'+_escHtml(colDef[k].label)+'</span>';
+  });
+  html+='</div></div>';
+  // results
+  if(_rpRun.rows){
+    const keys=_rpCur.columns.filter(k=>colDef[k]);
+    html+='<div class="rp-card" style="padding:0;overflow:hidden">';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap">';
+    html+='<div style="font-size:.8rem;font-weight:600;color:var(--txt)">'+_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')+'</div>';
+    html+='<div style="flex:1"></div>';
+    if(_rpRun.grain==='household'||_rpRun.grain==='donor')html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpShowOnMap()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Show on map</button>';
+    html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpExportCsv()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg> Export CSV</button>';
+    html+='</div>';
+    html+='<div style="max-height:60vh;overflow:auto"><table class="rp-table"><thead><tr>';
+    keys.forEach(k=>{const sorted=_rpCur.sort&&_rpCur.sort.col===k;html+='<th onclick="_rpSortBy(\''+k+'\')">'+_escHtml(colDef[k].label)+(sorted?(_rpCur.sort.dir==='asc'?' \u25b2':' \u25bc'):'')+'</th>';});
+    html+='</tr></thead><tbody>';
+    const cap=Math.min(_rpRun.rows.length,500);
+    for(let i=0;i<cap;i++){
+      const r=_rpRun.rows[i];
+      html+='<tr>'+keys.map(k=>{let v=colDef[k].get(r);if(colDef[k].num&&v!==''&&v!=null)v=(parseFloat(v)||0).toLocaleString();return '<td>'+_escHtml(v==null?'':String(v))+'</td>';}).join('')+'</tr>';
+    }
+    html+='</tbody></table>';
+    if(_rpRun.rows.length>cap)html+='<div style="padding:8px 14px;font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">Showing first '+cap+' rows \u2014 Export CSV includes all '+_rpRun.rows.length.toLocaleString()+'.</div>';
+    html+='</div></div>';
+  }
+  host.innerHTML=html;
+}
+
+// ── STAGE C: AI SEARCH BOX — sentence → filter JSON → builder (review) ──
+// The AI NEVER touches data: metadata only (names), filter schema in,
+// filter JSON out. Execution is runFilter(), deterministic and client-side.
+function _rpAiSchemaDoc(){
+  const fields=Object.keys(_RP_FIELDS).map(k=>{const f=_RP_FIELDS[k];return k+' ('+f.type+', '+f.label+')';}).join('; ');
+  return 'FILTER SCHEMA. Report config JSON: {"base_report":"<exact saved report name to start from, or null>","entity":"household|contact|donation|registration","filters":[{"mode":"include|exclude","match":"all|any","conds":[{"field":"<field key>","op":"<op>","value":"...","value2":"...","scope":"household (optional \u2014 forces whole-household evaluation)"}]}],"columns":null or ["<column keys>"],"sort":{"col":"<column key>","dir":"asc|desc"} or null,"group_mode":"gift|donor|null"}. '
+    +'Fields: '+fields+'. Ops by type \u2014 number: gte,lte,eq,between; date: on_or_after,on_or_before,between,rel (value one of last_30_days,last_60_days,last_90_days,last_365_days,this_month,prev_month,this_year,last_year); year: is (value this_year|last_year|YYYY); text: contains,equals,not_contains,not_empty,is_empty; select/event/group: is,is_not; bool: is_true,is_false. '
+    +'ALWAYS prefer relative dates/years over literals so a saved report stays correct forever. Rows must match every include group and no exclude group. LYBUNT = include gave_in_year last_year + exclude gave_in_year this_year. '
+    +'For event and group conditions, value must be an exact id from the metadata lists (or "any" for attended_event).';
+}
+async function _rpAiRun(){
+  const input=document.getElementById('rpAiInput');if(!input)return;
+  const sentence=input.value.trim();if(!sentence)return;
+  const status=document.getElementById('rpAiStatus');
+  const btn=document.getElementById('rpAiBtn');if(btn){btn.disabled=true;btn.textContent='Thinking\u2026';}
+  if(status)status.textContent='Translating to filters\u2026 (the AI sees names only, never your data)';
+  const meta='SAVED REPORTS: '+(_rpSaved.map(s=>s.name).join(' | ')||'(none)')
+    +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
+    +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
+  try{
+    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. Leave columns null unless specific columns were requested.',
+      messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No config in the response.');
+    _rpApplyAiConfig(JSON.parse(m[0]));
+    if(status)status.textContent='';
+  }catch(e){if(status)status.textContent='AI search failed: '+e.message;}
+  if(btn){btn.disabled=false;btn.textContent='Build';}
+}
+function _rpApplyAiConfig(cfg){
+  cfg=cfg||{};
+  let base=null;
+  if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
+  if(base){
+    const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
+    _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
+    (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)_rpCur.filters.push(g);});
+  }else{
+    const entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
+    const gm=(entity==='donation')?(cfg.group_mode==='donor'?'donor':'gift'):null;
+    _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,groupMode:gm};
+  }
+  // sanitize condition fields the model may have invented
+  _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
+  _rpRun={rows:null,R:null,grain:null};
+  _rpView='builder';
+  _rpRenderBuilder();
+  _ebToastMsg('AI built the filters \u2014 review them, then hit Run.');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// GENERIC IMPORT (_gi*) — source-agnostic CSV column mapper (Stage E).
+// Replaces the CiviCRM-shaped importer. Match key: External ID (default),
+// with email → phone → name fallbacks. Every import ends with a mismatch
+// report — never silent drops.
+// ════════════════════════════════════════════════════════════════════════
+let _giState=null; // {type, headers, rows}
+const _GI_CONTACT_TARGETS=[
+  ['external_id','External ID (ID from a previous CRM)'],['first_name','First Name'],['last_name','Last Name'],
+  ['email','Email'],['phone','Phone'],['street','Street Address'],['city','City'],['state','State'],['zip','ZIP'],['gender','Gender']
+];
+const _GI_DONATION_TARGETS=[
+  ['match','Match column (who gave)'],['amount','Amount'],['date','Date'],['method','Method'],['notes','Notes']
+];
+function _giGuess(target,headers){
+  const syn={external_id:['external id','externalid','contact id','contactid','civicrm id','civicrmid','crm id','crmid','constituent id','id'],
+    first_name:['first name','firstname','first'],last_name:['last name','lastname','surname','last'],
+    email:['email address','e-mail','email'],phone:['phone number','telephone','mobile','cell','phone'],
+    street:['street address','address 1','address1','street','address','addr'],city:['city','town'],state:['state','province'],zip:['zip code','zipcode','postal code','postal','zip'],
+    gender:['gender','sex'],match:['external id','contact id','civicrm id','constituent id','email','id'],
+    amount:['gift amount','total amount','donation amount','amount','total','donation'],date:['gift date','date received','donation date','received','date'],
+    method:['payment method','payment type','method','type'],notes:['notes','note','memo','description','source']};
+  const list=syn[target]||[target];
+  const H=headers.map(h=>(h||'').trim().toLowerCase());
+  for(const s of list){const i=H.findIndex(h=>h===s);if(i>=0)return i;}
+  for(const s of list){const i=H.findIndex(h=>h.includes(s));if(i>=0)return i;}
+  return -1;
+}
+function _giShowMapper(type,lines){
+  const headers=parseCSVLine(lines[0]);
+  const rows=lines.slice(1).map(parseCSVLine).filter(r=>r.some(c=>c&&c.trim()));
+  _giState={type,headers,rows};
+  const host=document.getElementById('imp_map');if(!host)return;
+  const targets=type==='contacts'?_GI_CONTACT_TARGETS:_GI_DONATION_TARGETS;
+  const hopts=sel=>'<option value="-1">\u2014 not in this file \u2014</option>'+headers.map((h,i)=>'<option value="'+i+'"'+(i===sel?' selected':'')+'>'+_escHtml(h||('column '+(i+1)))+'</option>').join('');
+  let html='<div style="font-size:.72rem;color:var(--txt2);background:var(--surf2);padding:10px;border-radius:6px;margin-bottom:10px"><b>'+rows.length+' rows found.</b> Map this file\u2019s columns \u2014 works with an export from any CRM.</div>';
+  html+='<div style="display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center;margin-bottom:10px">';
+  targets.forEach(t=>{
+    html+='<div style="font-size:.7rem;color:var(--txt2)">'+t[1]+'</div>';
+    html+='<select id="gi_map_'+t[0]+'" style="font-size:.74rem;padding:5px">'+hopts(_giGuess(t[0],headers))+'</select>';
+  });
+  html+='</div>';
+  if(type==='donations'){
+    html+='<div style="display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center;margin-bottom:6px">';
+    html+='<div style="font-size:.7rem;color:var(--txt2)">Match rows to contacts by</div>';
+    html+='<select id="gi_matchkey" style="font-size:.74rem;padding:5px"><option value="external_id">External ID (recommended)</option><option value="email">Email</option><option value="phone">Phone</option><option value="name">Full name (in the match column)</option></select>';
+    html+='</div>';
+  }
+  html+='<div style="font-size:.64rem;color:var(--txt3);margin-bottom:10px">Rows that can\u2019t be matched are never silently dropped \u2014 you\u2019ll get a downloadable mismatch list.</div>';
+  html+='<button class="btn btn-pri" style="width:100%" onclick="_giRun(this)">Import '+rows.length+' rows</button>';
+  host.style.display='block';
+  host.innerHTML=html;
+}
+function _giVal(row,target){const el=document.getElementById('gi_map_'+target);const i=el?parseInt(el.value):-1;return (i>=0&&row[i]!=null)?String(row[i]).trim():'';}
+async function _giRun(btn){
+  btn.disabled=true;btn.textContent='Importing\u2026';
+  const status=document.getElementById('imp_status');
+  status.style.display='block';status.textContent='Importing\u2026';
+  try{
+    if(_giState.type==='contacts')await _giRunContacts(status);
+    else await _giRunDonations(status);
+  }catch(e){status.innerHTML='Error: '+_escHtml(e.message);}
+  btn.disabled=false;btn.textContent='Import again';
+}
+function _giMismatchLink(mismatches,headers,label){
+  if(!mismatches.length)return '';
+  window._giLastMismatch=[headers.concat(['(reason)'])].concat(mismatches.map(m=>m.row.concat([m.reason])));
+  return ' <a href="#" onclick="_rpDownloadCsv(window._giLastMismatch,\'import-mismatches.csv\');return false" style="color:var(--accent)">'+label+'</a>';
+}
+async function _giRunContacts(status){
+  const rows=_giState.rows,headers=_giState.headers;
+  // in-memory lookup: external_id -> {h,m} (visible + hidden)
+  const byExt={};
+  (households||[]).concat(hiddenHouseholds||[]).forEach(h=>(h.members||[]).forEach(m=>{if(m.external_id)byExt[String(m.external_id)]={h,m};}));
+  let added=0,updated=0,skipped=0;const mismatches=[];
+  const addressMap={}; // address+zip -> household_id (groups spouses, as before)
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    const ext=_giVal(r,'external_id')||null;
+    const first=_giVal(r,'first_name'),last=_giVal(r,'last_name');
+    const email=_giVal(r,'email')||null,phone=_giVal(r,'phone')||null;
+    const street=_giVal(r,'street')||null,city=_giVal(r,'city')||null;
+    const state=_giVal(r,'state')||'OH',zip=(_giVal(r,'zip')||'').replace(/\D/g,'').substring(0,5)||null;
+    const gender=_giVal(r,'gender')||null;
+    if(!first&&!last&&!email){skipped++;continue;}
+    try{
+      const hit=ext?byExt[ext]:null;
+      if(hit){
+        const patch={};
+        if(first)patch.first_name=first; if(last)patch.last_name=last;
+        if(email)patch.email=email; if(phone)patch.phone=phone; if(gender)patch.gender=gender;
+        if(Object.keys(patch).length){
+          await sb('contacts?id=eq.'+hit.m.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(patch)});
+          Object.assign(hit.m,patch);_invHH(hit.h);
+        }
+        updated++;
+      }else{
+        // new contact — households grouped by address, as today
+        let householdId=null;
+        const addrKey=street&&zip?(street.toLowerCase()+'|'+zip):null;
+        if(addrKey&&addressMap[addrKey])householdId=addressMap[addrKey];
+        if(!householdId){
+          const jointName=(first&&last)?(first+' '+last):null;
+          const hhRes=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,address:street,city,state:street?state:null,zip,date_added:localToday()})});
+          householdId=hhRes[0].id;
+          if(addrKey)addressMap[addrKey]=householdId;
+        }
+        const cRes=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:first||null,last_name:last||null,email,phone,gender,external_id:ext})});
+        if(ext&&cRes&&cRes[0])byExt[ext]={h:{id:householdId,members:[]},m:cRes[0]}; // guard against in-file dupes
+        added++;
+      }
+    }catch(e){
+      // unique-index collisions surface as ERRORS in the report, never dupes
+      const msg=/duplicate|unique|conflict|409/i.test(e.message||'')?('External ID "'+ext+'" already exists on another contact'):(e.message||'save failed');
+      mismatches.push({row:r,reason:msg});
+    }
+    if(i>0&&i%25===0)status.textContent='Importing\u2026 '+i+' / '+rows.length;
+  }
+  status.innerHTML='<b>Done.</b> '+added+' added \u00b7 '+updated+' updated by External ID \u00b7 '+skipped+' empty rows skipped'
+    +(mismatches.length?(' \u00b7 <span style="color:var(--red)">'+mismatches.length+' failed</span>'+_giMismatchLink(mismatches,headers,'download list')):'')
+    +'<br><span style="font-size:.64rem;color:var(--txt3)">Reload the page to see new contacts everywhere.</span>';
+}
+async function _giRunDonations(status){
+  const rows=_giState.rows,headers=_giState.headers;
+  const key=(document.getElementById('gi_matchkey')||{}).value||'external_id';
+  // Match map from the in-memory model — zero extra queries.
+  const map={};
+  const norm=s=>(s==null?'':String(s)).trim().toLowerCase();
+  (households||[]).concat(hiddenHouseholds||[]).forEach(h=>(h.members||[]).forEach(m=>{
+    let k=null;
+    if(key==='external_id')k=norm(m.external_id);
+    else if(key==='email')k=norm(m.email);
+    else if(key==='phone')k=norm((m.phone||'').replace(/\D/g,''));
+    else k=norm((m.first_name||'')+' '+(m.last_name||''));
+    if(k&&!map[k])map[k]={h,m};
+  }));
+  let inserted=0,dupes=0;const mismatches=[];const toInsert=[];
+  for(const r of rows){
+    let mk=_giVal(r,'match');
+    if(key==='phone')mk=mk.replace(/\D/g,'');
+    const amount=parseFloat(String(_giVal(r,'amount')).replace(/[$,]/g,''));
+    const date=(_giVal(r,'date')||'').slice(0,10)||null;
+    if(!mk||!amount){mismatches.push({row:r,reason:!mk?'no match value':'no valid amount'});continue;}
+    const hit=map[norm(mk)];
+    if(!hit){mismatches.push({row:r,reason:'no matching contact for "'+mk+'"'});continue;}
+    // dupe check: same contact + date + amount already known
+    const isDupe=(hit.m.donations||[]).some(d=>d.date===date&&Math.abs((parseFloat(d.amount)||0)-amount)<0.005);
+    if(isDupe){dupes++;continue;}
+    toInsert.push({contact_id:hit.m.id,amount,date,method:_giVal(r,'method')||null,notes:_giVal(r,'notes')||null,_hit:hit});
+  }
+  for(let i=0;i<toInsert.length;i+=200){
+    const slice=toInsert.slice(i,i+200);
+    const body=slice.map(t=>({contact_id:t.contact_id,amount:t.amount,date:t.date,method:t.method,notes:t.notes}));
+    const saved=await sb('donations',{method:'POST',body:JSON.stringify(body)});
+    slice.forEach((t,j)=>{
+      const row=(saved&&saved[j])||body[j];
+      if(!t._hit.m.donations)t._hit.m.donations=[];
+      t._hit.m.donations.unshift(row);
+      _invHH(t._hit.h);
+    });
+    inserted+=slice.length;
+    status.textContent='Inserting\u2026 '+Math.min(i+200,toInsert.length)+' / '+toInsert.length;
+  }
+  status.innerHTML='<b>Done.</b> '+inserted+' donations added \u00b7 '+dupes+' duplicates skipped'
+    +(mismatches.length?(' \u00b7 <span style="color:var(--red)">'+mismatches.length+' unmatched</span>'+_giMismatchLink(mismatches,headers,'download mismatch list')):' \u00b7 0 unmatched');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// DAAS ASSISTANT (_as*) — the OUTBOUND funnel (Stage F).
+// Research Chat answers questions; the Assistant MAKES things. One API call
+// returns {intent, payload}; a router opens the right builder prefilled.
+// AI produces structured proposals only — nothing saves or sends without a
+// click in the normal builder. The system prompt gets metadata only (group /
+// event / template / saved-report NAMES) — never the roster.
+// ════════════════════════════════════════════════════════════════════════
+let _asMediaRec=null,_asStream=null,_asChunks=[];
+function openAssistant(){
+  document.getElementById('assistantOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+  const r=document.getElementById('as-results');if(r)r.innerHTML='';
+}
+function closeAssistant(){
+  _assistantStopVoice();
+  document.getElementById('assistantOverlay').style.display='none';
+  document.body.style.overflow='';
+}
+function assistantRecordVoice(btn){
+  if(_asMediaRec&&_asMediaRec.state==='recording'){_assistantStopVoice();return;}
+  if(!navigator.mediaDevices||!window.MediaRecorder){_ebToastMsg('Audio recording isn\u2019t supported here. Use your keyboard mic into the text box.');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _asStream=stream;_asChunks=[];
+    let mime='';
+    if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
+    else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _asMediaRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _asMediaRec.ondataavailable=e=>{if(e.data&&e.data.size>0)_asChunks.push(e.data);};
+    _asMediaRec.onstop=()=>{_assistantTranscribe();};
+    _asMediaRec.start();
+    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="currentColor" stroke="none"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';btn.style.background='var(--red,#b91c1c)';btn.style.color='#fff';
+  }).catch(()=>_ebToastMsg('Microphone permission denied or unavailable.'));
+}
+function _assistantStopVoice(){
+  if(_asMediaRec&&_asMediaRec.state==='recording'){try{_asMediaRec.stop();}catch(e){}}
+  if(_asStream){try{_asStream.getTracks().forEach(t=>t.stop());}catch(e){}_asStream=null;}
+  const b=document.getElementById('as-mic');
+  if(b){b.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>';b.style.background='var(--surf,#fff)';b.style.color='var(--txt2)';}
+}
+async function _assistantTranscribe(){
+  if(_asStream){try{_asStream.getTracks().forEach(t=>t.stop());}catch(e){}_asStream=null;}
+  _assistantStopVoice();
+  if(!_asChunks.length)return;
+  if(!OPENAI_KEY){_keyNudge(document.getElementById('as-text')||null,'OpenAI','_assistantTranscribe()');return;}
+  const blob=new Blob(_asChunks,{type:_asChunks[0].type||'audio/webm'});
+  const ta=document.getElementById('as-text');
+  const prev=ta.value;
+  ta.value=(prev?prev+'\n':'')+'Transcribing\u2026';
+  try{
+    const fd=new FormData();
+    const ext=(blob.type.indexOf('mp4')>=0)?'mp4':'webm';
+    fd.append('file',blob,'note.'+ext);
+    fd.append('model','whisper-1');
+    const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+OPENAI_KEY},body:fd});
+    const d=await tr.json();
+    if(d.error)throw new Error(d.error.message);
+    ta.value=(prev?prev+'\n':'')+(d.text||'').trim();
+  }catch(e){ta.value=prev;_ebToastMsg('Transcription failed: '+e.message);}
+}
+// PURE router — separable from DOM for testing. parsed → {action, payload}.
+function _asRoute(parsed){
+  parsed=parsed||{};
+  const intent=parsed.intent;
+  if(intent==='email'&&parsed.email)return {action:'email',payload:parsed.email};
+  if(intent==='event'&&parsed.event)return {action:'event',payload:parsed.event};
+  if(intent==='search'&&(parsed.search_sentence||parsed.search))return {action:'search',payload:String(parsed.search_sentence||parsed.search)};
+  return {action:'unknown',payload:parsed.reply||''};
+}
+async function _asAnalyze(btn){
+  const ta=document.getElementById('as-text');
+  const text=(ta.value||'').trim();
+  if(!text){_ebToastMsg('Say or type what you want to make first.');return;}
+  const results=document.getElementById('as-results');
+  const orig=btn.textContent;btn.disabled=true;btn.textContent='Working\u2026';
+  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">Figuring out what to build\u2026</div>';
+  try{await _egLoad(true);}catch(e){}
+  try{await _loadEvents();}catch(e){}
+  try{if(typeof _etLoad==='function')await _etLoad(true);}catch(e){}
+  if(!_rpDataReady){try{await _rpEnsureData();}catch(e){}}
+  const meta='EMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name).join(' | ')||'(none)')
+    +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+(e.event_date?' ('+e.event_date+')':'')).join(' | ')||'(none)')
+    +'\nEMAIL TEMPLATES: '+(((typeof _etList!=='undefined'&&_etList)||[]).map(t=>t.name).join(' | ')||'(none)')
+    +'\nSAVED REPORTS: '+((_rpSaved||[]).map(s=>s.name).join(' | ')||'(none)')
+    +'\nTODAY: '+localToday();
+  const sys='You are the routing brain of a CRM assistant for a rabbi. He describes something he wants to CREATE; you return ONLY valid JSON (no markdown) deciding which builder to open, prefilled: '
+    +'{"intent":"email|event|search|unknown",'
+    +'"email":{"name":"<internal mailing name>","subject":"","preheader":"","groups":["<group names from the metadata that match what he said>"],"blocks":[{"type":"heading|text|button","text":"<for heading/text: the content, markdown ok for text>","label":"<button label>","url":"<button url or empty>"}]} or null,'
+    +'"event":{"name":"","date":"YYYY-MM-DD or empty","location":"","description":"","tiers":[{"label":"","amount":0}]} or null,'
+    +'"search_sentence":"<the request restated as one plain search sentence>" or null,'
+    +'"reply":"<only for unknown: one short sentence>"}. '
+    +'Rules: intent email = he wants to SEND or DRAFT an email/mailing to people. Draft real, warm, ready-to-edit content in blocks (a heading and one or two text blocks; a button only if a link/action was implied). PERSONALIZATION TOKENS: when a greeting or the text should address the recipient by name, use these EXACT merge tags (with curly braces) and NO other format \u2014 never write [First Name], <Name>, or similar: {first_name} (the recipient\u2019s own first name), {joint_name} (e.g. "David & Rachel Cohen"), {first_names} (e.g. "David & Rachel"), {last_name}, {email}. So "Dear first name," becomes "Dear {first_name}," and "Dear the family," becomes "Dear {joint_name},". Do NOT add a logo, header, "\u05d1\u05f4\u05d4" line, or unsubscribe link \u2014 those are added automatically. Match group names loosely against EMAIL GROUPS and return the metadata spelling. intent event = he wants to create an event, program, or signup/registration/donation form: extract name, date (resolve relative dates against TODAY), location, ticket tiers with prices. intent search = he wants a list, report, count, or lookup of people/donations \u2014 restate it as search_sentence. If it fits none of the three, intent unknown with a short reply. NEVER invent group names not in the metadata; if no group matches, return an empty groups array.';
+  try{
+    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1600,system:sys,messages:[{role:'user',content:meta+'\n\nREQUEST:\n'+text}]});
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('Could not read a plan from the response.');
+    const route=_asRoute(JSON.parse(m[0]));
+    _asExecute(route);
+  }catch(e){results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Assistant failed: '+_enrichEsc(e.message)+'</div>';}
+  btn.disabled=false;btn.textContent=orig;
+}
+function _asExecute(route){
+  if(route.action==='email'){_asExecuteEmail(route.payload);return;}
+  if(route.action==='event'){_asExecuteEvent(route.payload);return;}
+  if(route.action==='search'){_asExecuteSearch(route.payload);return;}
+  // unknown → graceful "did you mean…" offering the three
+  const results=document.getElementById('as-results');
+  if(results)results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;font-size:.8rem;color:var(--txt2)">'
+    +(route.payload?_enrichEsc(route.payload)+'<br><br>':'')
+    +'I can build three kinds of things \u2014 did you mean one of these?<br><br>'
+    +'<span class="as-chip" onclick="_asHint(\'email\')">\u2709 Draft an email to a group</span>'
+    +'<span class="as-chip" onclick="_asHint(\'event\')">\ud83d\uddd3 Create an event or form</span>'
+    +'<span class="as-chip" onclick="_asHint(\'search\')">\ud83d\udd0e Build a list / report</span>'
+    +'</div>';
+}
+function _asHint(kind){
+  const ta=document.getElementById('as-text');
+  const pre={email:'Send an email to ',event:'Create an event called ',search:'Find '}[kind]||'';
+  ta.value=pre+(ta.value||'');
+  ta.focus();
+}
+// Activate the email view WITHOUT switchView (its async renderEmail lands on
+// the Campaigns list and would race/overwrite our prefilled setup screen).
+function _asShowEmailView(){
+  document.getElementById('appLoading')?.remove();
+  document.getElementById('crmView').classList.add('hidden');
+  document.getElementById('dashView').classList.remove('active');
+  document.getElementById('contactsView').classList.remove('active');
+  document.getElementById('eventsView')?.classList.remove('active');
+  document.getElementById('formsView')?.classList.remove('active');
+  document.getElementById('reportsView')?.classList.remove('active');
+  const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
+  ['navCRM','navContacts','navDash','navEvents','navForms','navReports'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  document.getElementById('emailView')?.classList.add('active');
+  document.getElementById('navEmail')?.classList.add('active');
+  const strip=document.getElementById('filterStrip');if(strip)strip.style.display='none';
+  const mapCtrl=document.getElementById('mapControls');if(mapCtrl)mapCtrl.style.display='none';
+}
+async function _asExecuteEmail(p){
+  p=p||{};
+  closeAssistant();
+  _asShowEmailView();
+  const host=document.getElementById('emailViewInner');
+  if(host)host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);padding:20px">Drafting your email\u2026</div>';
+  try{await _egLoad(true);}catch(e){}
+  try{await _ecLoad(true);}catch(e){}
+  try{await _ebLoadOrg();}catch(e){} // ensure default logo + footer details are loaded before header/footer blocks are built
+  const inc=[];
+  (p.groups||[]).forEach(gn=>{
+    const q=String(gn||'').toLowerCase();
+    const g=(_egGroups||[]).find(x=>(x.name||'').toLowerCase()===q)||(_egGroups||[]).find(x=>(x.name||'').toLowerCase().includes(q));
+    if(g&&!inc.includes(g.id))inc.push(g.id);
+  });
+  const blocks=[_ebNewBlock('header')];
+  (p.blocks||[]).forEach(b=>{
+    if(!b||!b.type)return;
+    if(b.type==='heading'){const x=_ebNewBlock('heading');x.text=b.text||'';blocks.push(x);}
+    else if(b.type==='text'){const x=_ebNewBlock('text');x.text=b.text||'';blocks.push(x);}
+    else if(b.type==='button'){const x=_ebNewBlock('button');x.label=b.label||b.text||'Learn more';x.url=b.url||'';blocks.push(x);}
+    else if(b.type==='divider')blocks.push(_ebNewBlock('divider'));
+    else if(b.type==='spacer')blocks.push(_ebNewBlock('spacer'));
+  });
+  if(blocks.length===1){const t=_ebNewBlock('text');if(p.body)t.text=p.body;blocks.push(t);}
+  blocks.push(_ebNewBlock('footer'));
+  _ecCur={id:null,name:p.name||p.subject||'Assistant draft',subject:p.subject||'',preheader:p.preheader||'',
+    from_name:(_ecFromList[0]||{}).name||'',from_address:(_ecFromList[0]||{}).address||'',group_id:null,
+    audience:{include_groups:inc,exclude_groups:[],exclude_campaigns:[]},status:'draft',
+    blocks,section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card}};
+  _egView='setup';
+  _ecRenderSetup(); // normal review → builder → send flow; nothing auto-sends
+}
+function _asExecuteEvent(p){
+  p=p||{};
+  closeAssistant();
+  switchView('events'); // resets any in-progress draft synchronously, then loads the list
+  setTimeout(()=>{
+    _evcNew('event'); // real creator defaults (read from _evc* internals)
+    const d=_ecDraft;
+    if(!d)return;
+    d.name=p.name||'';
+    d.event_date=(p.date||'').slice(0,10);
+    d.location=p.location||'';
+    d.description=p.description||'';
+    if(Array.isArray(p.tiers)&&p.tiers.length){
+      d.allow_online=true;d.paid=true;
+      if(d.stripe_mode!=='tiered'&&d.stripe_mode!=='tiered_addon')d.stripe_mode='tiered';
+      d.tiers=p.tiers.map(t=>({amount:parseFloat(t.amount)||0,label:t.label||''}));
+    }
+    _ecRenderCreator();
+  },500);
+}
+function _asExecuteSearch(sentence){
+  closeAssistant();
+  _rpPendingAi=String(sentence||'');
+  switchView('reports'); // renderReports consumes _rpPendingAi → Stage C AI box
+}
+
 </script>
+<!-- DAAS ASSISTANT OVERLAY (outbound funnel — Stage F) -->
+<div id="assistantOverlay">
+  <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0">
+      <span style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--txt);white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg> DAAS Assistant</span>
+    </div>
+    <button onclick="closeAssistant()" style="background:none;border:none;cursor:pointer;color:var(--txt2);font-size:1.3rem;line-height:1;padding:2px 8px">×</button>
+  </div>
+  <div style="max-width:640px;margin:0 auto;padding:18px 16px 60px">
+    <div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">Say what you want to <b>make</b> — an email to a group, a new event or form, or a list of people. The right builder opens prefilled; nothing sends or saves until you confirm there. <span style="color:var(--txt3)">(Questions go to Research Chat.)</span></div>
+    <textarea id="as-text" rows="4" placeholder="e.g. &quot;Send an email to the Hebrew school parents about the schedule change next week&quot; · &quot;Create a Purim dinner event on March 3, $36 adults $18 kids&quot; · &quot;Who gave last year but not this year?&quot;" style="width:100%;box-sizing:border-box;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:12px;font-size:.85rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button id="as-mic" onclick="assistantRecordVoice(this)" title="Record a voice note" style="width:44px;height:40px;border:1px solid var(--border2);border-radius:8px;background:var(--surf,#fff);color:var(--txt2);cursor:pointer;font-size:1rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
+      <button id="as-go" onclick="_asAnalyze(this)" class="btn btn-pri" style="flex:1;font-size:.82rem;padding:9px">Make it →</button>
+    </div>
+    <div id="as-results" style="margin-top:16px"></div>
+  </div>
+</div>
 <!-- QUICK CAPTURE OVERLAY -->
 <div id="captureOverlay" style="display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch">
   <div style="position:sticky;top:0;background:var(--surf,#fff);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:5">
