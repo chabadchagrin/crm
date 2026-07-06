@@ -190,6 +190,23 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   /* Person-chat (context chat) — full-screen its inner card on mobile */
   #personChatPanel{align-items:stretch!important;justify-content:stretch!important;backdrop-filter:none!important}
   #personChatPanel > div{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;border-radius:0!important;padding-bottom:env(safe-area-inset-bottom)}
+  /* ── Full profile v2: cleaner header card + comfortable timeline ── */
+  /* Header card stacks: score row, then info, then a full-width action row */
+  #fullPanelContent > div:first-child{padding:16px!important;gap:14px!important}
+  /* Score block + AGC bars go full width, score number left, bars fill */
+  #fullPanelContent [style*="grid-column:span 2"] [style*="width:160px"]{width:100%!important;max-width:340px}
+  #fullPanelContent [style*="font-size:3.5rem"]{font-size:2.4rem!important}
+  /* Stat chips (Home Value / Total / Gifts / Last Gift) as a wrapping 2-col grid */
+  #fullPanelContent [style*="grid-column:span 2"] [style*="display:flex"][style*="gap:16px"][style*="flex-wrap:wrap"]{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+  #fullPanelContent [style*="grid-column:span 2"] [style*="display:flex"][style*="gap:16px"][style*="flex-wrap:wrap"] > div{background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px}
+  /* Timeline card: no inner max-height cap on mobile (the page scrolls), bigger text */
+  #fullPanelContent [style*="max-height:500px"]{max-height:none!important}
+  #fullPanelContent [style*="font-size:.75rem"]{font-size:.82rem!important}
+  #fullPanelContent [style*="font-size:.72rem"]{font-size:.8rem!important}
+  /* Timeline edit/delete buttons — larger tap targets */
+  #fullPanelContent [title="Edit"],#fullPanelContent [title="Delete"],#fullPanelContent [title="Reassign to another contact"]{padding:6px!important;font-size:.8rem!important}
+
+  /* ===== MOBILE FREEFORM SEARCH OVERLAY reflow (base styles below media query) ===== */
 
   /* ===== OVERLAY REFLOW — Chat (Research) full-screen mobile ===== */
   /* Pin the top bar so it never scrolls away; messages scroll inside .chat-msgs only */
@@ -415,6 +432,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .mas-row{display:flex;align-items:center;gap:10px;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer}
 .mas-row .mas-n{flex:1;min-width:0;font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mas-row .mas-s{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);white-space:nowrap}
+/* ── MOBILE FREEFORM SEARCH OVERLAY (header-style: names, notes, profiles) ── */
+#mFindOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:2100;flex-direction:column}
+#mFindOverlay.open{display:flex}
+.mfind-top{display:flex;align-items:center;gap:9px;padding:max(10px,env(safe-area-inset-top)) 12px 10px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+.mfind-top input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px 12px;font-size:16px;color:var(--txt);font-family:inherit;outline:none}
+.mfind-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px calc(20px + env(safe-area-inset-bottom))}
+.mfind-row{display:flex;align-items:center;gap:11px;background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin-bottom:8px;cursor:pointer}
+.mfind-av{width:38px;height:38px;border-radius:50%;background:var(--surf2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);font-weight:700;font-size:.82rem;color:var(--txt2);flex-shrink:0}
+.mfind-txt{flex:1;min-width:0}
+.mfind-name{font-family:var(--font-ui);font-size:.86rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mfind-snip{font-family:var(--font-ui);font-size:.68rem;color:var(--txt3);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.mfind-score{font-family:var(--font-ui);font-size:.82rem;font-weight:700;flex-shrink:0}
 @media(min-width:769px){.mobile-bar{display:none}}
 
 /* ── DASHBOARD ── */
@@ -490,6 +519,8 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 #assistantOverlay{display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .as-chip{display:inline-block;font-family:var(--font-ui);font-size:.64rem;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;margin:0 6px 6px 0;cursor:pointer;background:var(--surf);color:var(--txt2)}
 .as-chip:hover{border-color:var(--accent);color:var(--accent)}
+.as-chip-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.as-chip-on:hover{color:#fff}
 .eg-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh-sm);transition:border-color .12s}
 .eg-card:hover{border-color:var(--border2)}
 .eg-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--txt)}
@@ -1585,7 +1616,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-06.3';
+const BUILD_STAMP='2026-07-06.4';
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -15324,13 +15355,13 @@ async function _rpAiRun(){
     +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
   try{
     const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
-      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. Leave columns null unless specific columns were requested.',
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const m=txt.match(/\{[\s\S]*\}/);
     if(!m)throw new Error('No config in the response.');
-    _rpApplyAiConfig(JSON.parse(m[0]));
+    const _cfg=JSON.parse(m[0]); _cfg._sentence=sentence; _rpApplyAiConfig(_cfg);
     if(status)status.textContent='';
   }catch(e){if(status)status.textContent='AI search failed: '+e.message;}
   if(btn){btn.disabled=false;btn.textContent='Build';}
@@ -15350,10 +15381,39 @@ function _rpApplyAiConfig(cfg){
   }
   // sanitize condition fields the model may have invented
   _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
+  // If the AI didn't return a sort but the sentence implies a ranking/recency,
+  // pre-fill a grain-appropriate sort so "top/recent donors" ranks instead of
+  // returning everyone A–Z when the user hits Run. Same helper mobile uses.
+  if(!_rpCur.sort){ const fb=_mFallbackSort(cfg._sentence||'',_rpCur); if(fb)_rpCur.sort=fb; }
   _rpRun={rows:null,R:null,grain:null};
   _rpView='builder';
   _rpRenderBuilder();
   _ebToastMsg('AI built the filters \u2014 review them, then hit Run.');
+}
+// When the AI omits a sort but the sentence clearly implies a ranking, pick the
+// right column for the grain so "top/biggest donors" (by amount) and "recent
+// donors" (by last gift) actually rank instead of returning everyone A–Z.
+// SHARED helper: defined in the main block so both desktop (_rpApplyAiConfig)
+// and mobile (_mAsSearch, which loads second) can call it. Do not duplicate.
+function _mFallbackSort(sentence,cur){
+  const s=String(sentence||'').toLowerCase();
+  const recency=/\b(recent|latest|newest|recently)\b/.test(s);
+  const ranking=/\b(top|biggest|largest|highest|best|most)\b/.test(s);
+  if(!recency&&!ranking)return null;
+  const e=cur.entity, gm=cur.groupMode;
+  if(recency){
+    if(e==='household')return {col:'last_gift',dir:'desc'};
+    if(e==='donation'&&gm==='donor')return {col:'last_gift',dir:'desc'};
+    if(e==='donation')return {col:'date',dir:'desc'};
+    if(e==='contact')return {col:'c_last_gift',dir:'desc'};
+    return null;
+  }
+  // value ranking
+  if(e==='household')return {col:'total_giving',dir:'desc'};
+  if(e==='donation'&&gm==='donor')return {col:'total_results',dir:'desc'};
+  if(e==='donation')return {col:'amount',dir:'desc'};
+  if(e==='contact')return {col:'c_total_giving',dir:'desc'};
+  return null;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -15532,10 +15592,33 @@ async function _giRunDonations(status){
 // event / template / saved-report NAMES) — never the roster.
 // ════════════════════════════════════════════════════════════════════════
 let _asMediaRec=null,_asStream=null,_asChunks=[];
+// Optional intent chips. null = auto-classify (today's behavior). When set to
+// 'email'|'event'|'search', the AI still extracts fields but skips the intent
+// GUESS — the chosen intent is forced. Single-select, tap-to-toggle.
+let _asForcedIntent=null;
+function _asChipDefs(){
+  const all=[{k:'email',label:'\u2709 Email'},{k:'event',label:'\ud83d\uddd3 Event'},{k:'search',label:'\ud83d\udd0e Find people'}];
+  // Mobile has no Event (events are desktop-only — see mobile event removal).
+  const onMobile=(typeof isMobile==='function'&&isMobile());
+  return onMobile?all.filter(c=>c.k!=='event'):all;
+}
+function _asRenderChips(){
+  const host=document.getElementById('as-chips');if(!host)return;
+  host.innerHTML=_asChipDefs().map(c=>{
+    const on=_asForcedIntent===c.k;
+    return '<span class="as-chip'+(on?' as-chip-on':'')+'" onclick="_asSetIntent(\''+c.k+'\')">'+c.label+'</span>';
+  }).join('');
+}
+function _asSetIntent(kind){
+  _asForcedIntent=(_asForcedIntent===kind)?null:kind; // tap active chip → back to auto
+  _asRenderChips();
+}
 function openAssistant(){
   document.getElementById('assistantOverlay').style.display='block';
   document.body.style.overflow='hidden';
   const r=document.getElementById('as-results');if(r)r.innerHTML='';
+  _asForcedIntent=null; // fresh open = auto-classify, no leak between uses
+  _asRenderChips();
 }
 function closeAssistant(){
   _assistantStopVoice();
@@ -15614,7 +15697,8 @@ async function _asAnalyze(btn){
     +'"event":{"name":"","date":"YYYY-MM-DD or empty","location":"","description":"","tiers":[{"label":"","amount":0}]} or null,'
     +'"search_sentence":"<the request restated as one plain search sentence>" or null,'
     +'"reply":"<only for unknown: one short sentence>"}. '
-    +'Rules: intent email = he wants to SEND or DRAFT an email/mailing to people. Draft real, warm, ready-to-edit content in blocks (a heading and one or two text blocks; a button only if a link/action was implied). PERSONALIZATION TOKENS: when a greeting or the text should address the recipient by name, use these EXACT merge tags (with curly braces) and NO other format \u2014 never write [First Name], <Name>, or similar: {first_name} (the recipient\u2019s own first name), {joint_name} (e.g. "David & Rachel Cohen"), {first_names} (e.g. "David & Rachel"), {last_name}, {email}. So "Dear first name," becomes "Dear {first_name}," and "Dear the family," becomes "Dear {joint_name},". Do NOT add a logo, header, "\u05d1\u05f4\u05d4" line, or unsubscribe link \u2014 those are added automatically. Match group names loosely against EMAIL GROUPS and return the metadata spelling. intent event = he wants to create an event, program, or signup/registration/donation form: extract name, date (resolve relative dates against TODAY), location, ticket tiers with prices. intent search = he wants a list, report, count, or lookup of people/donations \u2014 restate it as search_sentence. If it fits none of the three, intent unknown with a short reply. NEVER invent group names not in the metadata; if no group matches, return an empty groups array.';
+    +'Rules: intent email = he wants to SEND or DRAFT an email/mailing to people. Draft real, warm, ready-to-edit content in blocks (a heading and one or two text blocks; a button only if a link/action was implied). PERSONALIZATION TOKENS: when a greeting or the text should address the recipient by name, use these EXACT merge tags (with curly braces) and NO other format \u2014 never write [First Name], <Name>, or similar: {first_name} (the recipient\u2019s own first name), {joint_name} (e.g. "David & Rachel Cohen"), {first_names} (e.g. "David & Rachel"), {last_name}, {email}. So "Dear first name," becomes "Dear {first_name}," and "Dear the family," becomes "Dear {joint_name},". Do NOT add a logo, header, "\u05d1\u05f4\u05d4" line, or unsubscribe link \u2014 those are added automatically. Match group names loosely against EMAIL GROUPS and return the metadata spelling. intent event = he wants to create an event, program, or signup/registration/donation form: extract name, date (resolve relative dates against TODAY), location, ticket tiers with prices. intent search = he wants a list, report, count, or lookup of people/donations \u2014 restate it as search_sentence. If it fits none of the three, intent unknown with a short reply. NEVER invent group names not in the metadata; if no group matches, return an empty groups array.'
+    +(_asForcedIntent?(' IMPORTANT: The user has explicitly chosen intent="'+_asForcedIntent+'". You MUST set intent to "'+_asForcedIntent+'" and extract ONLY the fields for that intent \u2014 do not classify differently and do not return unknown.'):'');
   try{
     const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1600,system:sys,messages:[{role:'user',content:meta+'\n\nREQUEST:\n'+text}]});
     if(d.error)throw new Error(d.error.message);
@@ -15623,6 +15707,7 @@ async function _asAnalyze(btn){
     if(!m)throw new Error('Could not read a plan from the response.');
     const route=_asRoute(JSON.parse(m[0]));
     _asExecute(route);
+    _asForcedIntent=null;_asRenderChips(); // consumed — back to auto for next use
   }catch(e){results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Assistant failed: '+_enrichEsc(e.message)+'</div>';}
   btn.disabled=false;btn.textContent=orig;
 }
@@ -15738,6 +15823,7 @@ function _asExecuteSearch(sentence){
   </div>
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 60px">
     <div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">Say what you want to <b>make</b> — an email to a group, a new event or form, or a list of people. The right builder opens prefilled; nothing sends or saves until you confirm there. <span style="color:var(--txt3)">(Questions go to Research Chat.)</span></div>
+    <div id="as-chips" style="margin-bottom:10px"></div>
     <textarea id="as-text" rows="4" placeholder="e.g. &quot;Send an email to the Hebrew school parents about the schedule change next week&quot; · &quot;Create a Purim dinner event on March 3, $36 adults $18 kids&quot; · &quot;Who gave last year but not this year?&quot;" style="width:100%;box-sizing:border-box;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:12px;font-size:.85rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button id="as-mic" onclick="assistantRecordVoice(this)" title="Record a voice note" style="width:44px;height:40px;border:1px solid var(--border2);border-radius:8px;background:var(--surf,#fff);color:var(--txt2);cursor:pointer;font-size:1rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
@@ -15861,6 +15947,15 @@ function _asExecuteSearch(sentence){
   <div class="me-foot" id="mEmailFoot" style="display:none"></div>
 </div>
 
+<!-- MOBILE FREEFORM SEARCH (header-style: names, notes, profiles) — outside #app -->
+<div id="mFindOverlay">
+  <div class="mfind-top">
+    <button class="m-iconbtn" onclick="mFindClose()" title="Back"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <input id="mFindInput" type="search" autocomplete="off" placeholder="Search names, notes, profiles…" oninput="mFindRun()">
+  </div>
+  <div class="mfind-body" id="mFindBody"></div>
+</div>
+
 <div id="mobileShell">
   <div class="m-topbar">
     <div class="logo"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0"><path d="M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z" fill="none" stroke="#a16207" stroke-width="1.5"></path><path d="M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z" fill="#b91c1c"></path></svg> דעת</div>
@@ -15873,6 +15968,7 @@ function _asExecuteSearch(sentence){
     <button onclick="mMenuGo('assistant')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg><span class="m-menu-txt"><b>DAAS Assistant</b><span>Say it — email, event, or list</span></span></button>
     <button onclick="mMenuGo('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg><span class="m-menu-txt"><b>Emails</b><span>Drafts, templates, build &amp; send</span></span></button>
     <button onclick="mMenuGo('contact')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg><span class="m-menu-txt"><b>New Contact</b><span>Add a person you just met</span></span></button>
+    <button onclick="mMenuGo('search')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="m-menu-txt"><b>Search</b><span>Find by name, note, phone, or profile</span></span></button>
   </div>
 
   <div class="m-body">
@@ -16497,9 +16593,52 @@ function mMenuClose(){
 }
 function mMenuGo(what){
   mMenuClose();
-  if(what==='assistant'){ try{ openAssistant(); }catch(e){ _ebToastMsg('Could not open the Assistant.'); } }
+  if(what==='assistant'){ try{ openAssistant(); setTimeout(()=>{ const ta=document.getElementById('as-text'); if(ta)ta.placeholder='e.g. \u201cSend an email to the Hebrew school parents about the schedule change next week\u201d \u00b7 \u201cCreate a Purim dinner event on March 3, $36 adults $18 kids\u201d \u00b7 \u201cWho gave last year but not this year?\u201d'; const go=document.getElementById('as-go'); if(go)go.textContent='Make it \u2192'; },60); }catch(e){ _ebToastMsg('Could not open the Assistant.'); } }
   else if(what==='email'){ mEmailHome(); }
   else if(what==='contact'){ try{ showAddContact(); }catch(e){ _ebToastMsg('Could not open Add Contact.'); } }
+  else if(what==='search'){ mFindOpen(); }
+}
+
+/* ===================== FREEFORM SEARCH (mobile) =====================
+   Instant local search over the same corpus the desktop header uses
+   (_searchBlob: names, address, notes, emails, phones, donation &
+   interaction notes, AI profile fields). Taps open the contact sheet. */
+let _mFindDebounce=null;
+function mFindOpen(){
+  document.getElementById('mFindOverlay').classList.add('open');
+  const inp=document.getElementById('mFindInput');
+  if(inp){ inp.value=''; setTimeout(()=>inp.focus(),80); }
+  document.getElementById('mFindBody').innerHTML='<div class="m-empty">Type a name, phone, note, or anything from a profile.</div>';
+}
+function mFindClose(){ document.getElementById('mFindOverlay').classList.remove('open'); }
+function mFindRun(){
+  clearTimeout(_mFindDebounce);
+  _mFindDebounce=setTimeout(_mFindRender,140);
+}
+function _mFindRender(){
+  const body=document.getElementById('mFindBody'); if(!body)return;
+  const q=(document.getElementById('mFindInput').value||'').trim().toLowerCase();
+  if(!q){ body.innerHTML='<div class="m-empty">Type a name, phone, note, or anything from a profile.</div>'; return; }
+  let matches=[];
+  try{ matches=households.filter(h=>_searchMatch(h,q)); }catch(e){ matches=[]; }
+  if(!matches.length){ body.innerHTML='<div class="m-empty">No matches for \u201c'+_escHtml(q)+'\u201d.</div>'; return; }
+  // name matches first, then the rest; cap at 60 rows
+  const nameHit=h=>((h.displayName||'').toLowerCase().includes(q))||((h.members||[]).some(m=>((m.first_name||'')+' '+(m.last_name||'')).toLowerCase().includes(q)));
+  matches.sort((a,b)=>{ const an=nameHit(a),bn=nameHit(b); if(an&&!bn)return -1; if(bn&&!an)return 1; return (a.displayName||'').localeCompare(b.displayName||''); });
+  const rows=matches.slice(0,60).map(h=>{
+    const agc=getAGCScore(h).total;
+    const c=agc>=70?'var(--green)':agc>=40?'var(--gold)':'var(--red)';
+    const initials=((_mLastName(h)[0])||(h.displayName||'?')[0]||'?').toUpperCase();
+    let snip='';
+    try{ if(!nameHit(h)&&typeof _popoutSnippet==='function')snip=_popoutSnippet(h,q); }catch(e){}
+    return `<div class="mfind-row" onclick="mFindClose();mOpenSheetById('${_escAttr(h.id)}')">
+      <div class="mfind-av">${_escHtml(initials)}</div>
+      <div class="mfind-txt"><div class="mfind-name">${_escHtml(h.displayName||'Household')}</div>${snip?`<div class="mfind-snip">\u2026${_escHtml(snip)}\u2026</div>`:`<div class="mfind-snip">${_escHtml(h.noAddress?'No address':((h.city||h.address||'')))}</div>`}</div>
+      <div class="mfind-score" style="color:${c}">${agc}</div>
+    </div>`;
+  }).join('');
+  const more=matches.length>60?'<div class="m-empty" style="padding:16px">+'+(matches.length-60)+' more \u2014 keep typing to narrow.</div>':'';
+  body.innerHTML=rows+more;
 }
 
 /* ===================== EMAIL FLOW (mobile) =====================
@@ -16892,7 +17031,9 @@ async function _meConfirmSend(btn){
    parsed summary (event building stays on desktop). Returns true if handled. */
 function _mAsExecute(route){
   if(route.action==='email'){ _mAsEmail(route.payload); return true; }
-  if(route.action==='event'){ _mAsEvent(route.payload); return true; }
+  // Events are desktop-only (forms/tickets/embedding). Toast and stop — returning
+  // true prevents fall-through into the hidden #app desktop event view.
+  if(route.action==='event'){ _ebToastMsg('Events are built on desktop.'); return true; }
   if(route.action==='search'){ _mAsSearch(route.payload); return true; }
   return false; // 'unknown' renders fine in as-results on mobile
 }
@@ -16934,22 +17075,31 @@ async function _mAsEmail(p){
   _meBind(); _meGo(1);
   _ebToastMsg('Draft ready \u2014 review the audience, content, and preview, then send.');
 }
-function _mAsEvent(p){
-  p=p||{};
-  const results=document.getElementById('as-results'); if(!results)return;
-  const tiers=(Array.isArray(p.tiers)?p.tiers:[]).map(t=>_escHtml(t.label||'Tier')+' \u2014 $'+_escHtml(String(t.amount||0))).join('<br>');
-  results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);line-height:1.7">'
-    +'<b>Here\u2019s the event I understood:</b><br>'
-    +(p.name?'Name: '+_escHtml(p.name)+'<br>':'')
-    +(p.date?'Date: '+_escHtml(String(p.date).slice(0,10))+'<br>':'')
-    +(p.location?'Location: '+_escHtml(p.location)+'<br>':'')
-    +(p.description?'Details: '+_escHtml(p.description)+'<br>':'')
-    +(tiers?'Tickets:<br>'+tiers+'<br>':'')
-    +'<div style="margin-top:8px;color:var(--txt3);font-size:.72rem">Event building (forms, tickets, embedding) stays on desktop \u2014 open DAAS there and ask the Assistant the same thing to get this prefilled.</div></div>';
-}
 /* SYNC-MIRROR of _rpAiRun()'s prompt + _rpApplyAiConfig()'s config handling
    (desktop), compiled straight to runFilter and rendered as a tap-through
    list instead of the Reports builder. */
+/* SYNC-MIRROR of _rpAiRun() + _rpApplyAiConfig() + _rpRunCur() (desktop):
+   build _rpCur from the AI config, then run the SAME rollup → filter →
+   donor-grain → sort pipeline desktop uses, and render as a tap-through
+   list. Earlier this only ran runFilter() on the filters and dropped the
+   sort/grain entirely, so "top 5 donors" (a sort, not a filter) returned
+   every row. Now it honors sort, donor grouping, and a "top N" limit. */
+function _mParseLimit(sentence){
+  const s=String(sentence||'').toLowerCase();
+  const KW='top|first|best|highest|biggest|largest|most|recent|latest|newest';
+  // "top 5", "recent 5", "latest 10"
+  let m=s.match(new RegExp('\\b(?:'+KW+')\\s+(\\d{1,4})\\b'));
+  // "5 most recent", "5 recent", "3 biggest", "10 latest"
+  if(!m)m=s.match(new RegExp('\\b(\\d{1,4})\\s+(?:most\\s+)?(?:'+KW+')\\b'));
+  if(m)return parseInt(m[1],10)||0;
+  // bare "top donors" / "most recent donors" with no number → default 10
+  if(new RegExp('\\b(?:'+KW+')\\b').test(s))return 10;
+  return 0;
+}
+// When the AI omits a sort but the sentence clearly implies a ranking, the
+// grain-appropriate sort is picked by _mFallbackSort — a SHARED helper defined
+// in the main <script> block (see _rpApplyAiConfig). The main block loads first,
+// so it is already defined by the time this mobile block runs. Do not redefine.
 async function _mAsSearch(sentence){
   const results=document.getElementById('as-results'); if(!results)return;
   results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px"><div class="spin" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Searching\u2026 (the AI sees names only, never your data)</div>';
@@ -16959,57 +17109,73 @@ async function _mAsSearch(sentence){
       +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
       +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
     const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
-      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. Leave columns null unless specific columns were requested.',
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+String(sentence||'')}]});
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const m=txt.match(/\{[\s\S]*\}/);
     if(!m)throw new Error('No config in the response.');
     const cfg=JSON.parse(m[0]);
-    let entity,filters;
+    // Build _rpCur exactly like desktop's _rpApplyAiConfig
     let base=null;
     if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
     if(base){
       const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
-      entity=base.entity;
-      filters=JSON.parse(JSON.stringify(bcfg.filters||[]));
-      (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)filters.push(g);});
+      _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
+      (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)_rpCur.filters.push(g);});
     }else{
-      entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
-      filters=(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length);
+      const entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
+      const gm=(entity==='donation')?(cfg.group_mode==='donor'?'donor':'gift'):null;
+      _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,groupMode:gm};
     }
-    filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
-    const rows=runFilter(entity,filters);
-    _mAsRenderRows(entity,rows,sentence);
+    _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
+    // If the AI didn't return a sort but the sentence implies a ranking, apply
+    // a grain-appropriate one so "top/recent donors" ranks instead of A–Z.
+    if(!_rpCur.sort){ const fb=_mFallbackSort(sentence,_rpCur); if(fb)_rpCur.sort=fb; }
+    // Run the SAME pipeline desktop uses (rollups + donor grain + sort)
+    _rpRunCur();
+    let rows=(_rpRun&&_rpRun.rows)?_rpRun.rows.slice():[];
+    const limit=_mParseLimit(sentence);
+    if(limit&&rows.length>limit)rows=rows.slice(0,limit);
+    _mAsRenderRows(_rpRun.grain||_rpCur.entity,rows,sentence,limit);
   }catch(e){ results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Search failed: '+_escHtml(e.message||String(e))+'</div>'; }
 }
-function _mAsRenderRows(entity,rows,sentence){
+function _mAsRenderRows(grain,rows,sentence,limit){
   const results=document.getElementById('as-results'); if(!results)return;
   const CAP=100;
-  const head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+rows.length+'</b> result'+(rows.length===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
-  if(!rows.length){ results.innerHTML=head+'<div style="font-size:.78rem;color:var(--txt3);padding:6px 2px">Nothing matched. Try rephrasing, or build it in Reports on desktop.</div>'; return; }
-  const items=rows.slice(0,CAP).map(r=>{
-    if(entity==='household'){
-      const agc=getAGCScore(r).total;
-      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r.id)}')"><span class="mas-n">${_escHtml(r.displayName||'Household')}</span><span class="mas-s">${_escHtml(r.city||'')} \u00b7 ${agc}</span></div>`;
+  const shownCap=limit||CAP;
+  const total=rows.length;
+  let head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+total+'</b> result'+(total===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
+  if(!total){ results.innerHTML=head+'<div style="font-size:.78rem;color:var(--txt3);padding:6px 2px">Nothing matched. Try rephrasing, or build it in Reports on desktop.</div>'; return; }
+  const items=rows.slice(0,shownCap).map(r=>{
+    // donor grain: r is {_hh,_sum,...}; household: r is the household; else r has _h/_m
+    if(grain==='donor'){
+      const h=r._hh;
+      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(h.id)}')"><span class="mas-n">${_escHtml(h.displayName||'Household')}</span><span class="mas-s">$${_escHtml(String(Math.round(r._sum||0).toLocaleString()))} \u00b7 ${(r._gifts||[]).length} gift${(r._gifts||[]).length===1?'':'s'}</span></div>`;
     }
-    if(entity==='contact'){
+    if(grain==='household'){
+      const agc=getAGCScore(r).total;
+      const gs=(typeof getGivingStats==='function')?getGivingStats(r):null;
+      const meta=(gs&&gs.total)?'$'+Math.round(gs.total).toLocaleString():(r.city||'');
+      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r.id)}')"><span class="mas-n">${_escHtml(r.displayName||'Household')}</span><span class="mas-s">${_escHtml(meta)} \u00b7 ${agc}</span></div>`;
+    }
+    if(grain==='contact'){
       const nm=((r.first_name||'')+' '+(r.last_name||'')).trim()||r.email||'(no name)';
       return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(r._h.displayName||'')}</span></div>`;
     }
-    if(entity==='donation'){
+    if(grain==='donation'){
       return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">$${_escHtml(String(Math.round(parseFloat(r.amount)||0).toLocaleString()))} \u00b7 ${_escHtml(r._h.displayName||'')}</span><span class="mas-s">${_escHtml(r.date||'')}</span></div>`;
     }
-    const nm=((r._m.first_name||'')+' '+(r._m.last_name||'')).trim()||'(no name)';
+    const nm=((r._m&&r._m.first_name||'')+' '+(r._m&&r._m.last_name||'')).trim()||'(no name)';
     const ev=(_events||[]).find(e=>e.id===r.event_id);
     return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(ev?(ev.name||''):'')}</span></div>`;
   }).join('');
-  const more=rows.length>CAP?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">+'+(rows.length-CAP)+' more \u2014 run it in Reports on desktop for the full list and CSV.</div>':'';
+  const more=(total>shownCap)?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">'+(limit?'Showing top '+shownCap+' of '+total+'.':'+'+(total-shownCap)+' more \u2014 run it in Reports on desktop for the full list and CSV.')+'</div>':'';
   results.innerHTML=head+items+more;
 }
 
 /* ===================== ESC / cleanup ===================== */
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); mMenuClose(); document.getElementById('mMapTray')?.classList.remove('open'); }});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); mMenuClose(); document.getElementById('mFindOverlay')?.classList.remove('open'); document.getElementById('mMapTray')?.classList.remove('open'); }});
 /* close sheet on grab swipe-ish (tap grab) */
 document.getElementById('mContactSheet')?.addEventListener('click',e=>{});
 /* ===================== END DAAS MOBILE LAYER ===================== */
