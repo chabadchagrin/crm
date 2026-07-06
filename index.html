@@ -357,6 +357,64 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .m-livedot{width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,.4),0 1px 4px rgba(0,0,0,.3)}
 
 .m-empty{text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.84rem;padding:40px 20px;line-height:1.6}
+
+/* ── MOBILE TOPBAR MENU (Assistant / Emails / New Contact) ── */
+.m-menu-bd{display:none;position:fixed;inset:0;background:rgba(28,25,23,.25);z-index:30}
+.m-menu-bd.open{display:block}
+.m-menu{display:none;position:absolute;top:calc(max(10px,env(safe-area-inset-top)) + 48px);right:12px;z-index:40;background:var(--surf);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh-lg);min-width:230px;overflow:hidden;flex-direction:column}
+.m-menu.open{display:flex}
+.m-menu button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:13px 15px;cursor:pointer;text-align:left;font-family:var(--font-ui);color:var(--txt)}
+.m-menu button:last-child{border-bottom:none}
+.m-menu button .ic{width:19px;height:19px;color:var(--accent);flex-shrink:0}
+.m-menu .m-menu-txt{display:flex;flex-direction:column;min-width:0}
+.m-menu .m-menu-txt b{font-size:.82rem;font-weight:600}
+.m-menu .m-menu-txt span{font-size:.62rem;color:var(--txt3);margin-top:1px}
+
+/* ── MOBILE EMAIL FLOW OVERLAY ── */
+#mEmailOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:2000;flex-direction:column}
+#mEmailOverlay.open{display:flex}
+.me-top{display:flex;align-items:center;gap:9px;padding:max(10px,env(safe-area-inset-top)) 12px 10px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+.me-title{flex:1;min-width:0;font-family:var(--font-display);font-weight:700;font-size:.98rem;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me-save{font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);white-space:nowrap}
+.me-steps{display:flex;gap:4px;padding:9px 14px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+.me-step{flex:1;text-align:center;font-family:var(--font-ui);font-size:.6rem;font-weight:600;letter-spacing:.02em;color:var(--txt3);padding:6px 2px;border-radius:7px;border:1px solid transparent;cursor:pointer}
+.me-step.on{color:var(--accent);background:rgba(15,118,110,.08);border-color:rgba(15,118,110,.25)}
+.me-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(20px + env(safe-area-inset-bottom))}
+.me-foot{flex-shrink:0;display:flex;gap:9px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--surf);border-top:1px solid var(--border)}
+.me-foot .btn{flex:1;padding:13px;font-size:.85rem;border-radius:10px}
+.me-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.me-h{font-family:var(--font-ui);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px}
+.me-card label.me-f{display:block;font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px}
+.me-card label.me-f:first-of-type{margin-top:0}
+#mEmailOverlay input[type="text"],#mEmailOverlay input[type="url"],#mEmailOverlay input[type="date"],#mEmailOverlay input[type="time"],#mEmailOverlay textarea,#mEmailOverlay select{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px 12px;font-size:16px;color:var(--txt);font-family:inherit;outline:none}
+#mEmailOverlay textarea{resize:vertical;line-height:1.5;min-height:70px}
+.me-aud-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--border);font-family:var(--font-ui);font-size:.84rem;color:var(--txt)}
+.me-aud-row:last-child{border-bottom:none}
+.me-aud-row input[type="checkbox"]{width:19px;height:19px;flex-shrink:0}
+.me-aud-row .me-aud-n{margin-left:auto;font-size:.68rem;color:var(--txt3)}
+.me-count{display:inline-block;font-family:var(--font-ui);font-size:.74rem;font-weight:600;color:var(--accent);background:rgba(15,118,110,.08);border:1px solid rgba(15,118,110,.25);border-radius:8px;padding:5px 11px}
+.me-blk{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:10px}
+.me-blk-top{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.me-blk-type{font-family:var(--font-ui);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);flex:1}
+.me-blk-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--txt2);cursor:pointer;font-size:.85rem}
+.me-blk-btn:disabled{opacity:.3}
+.me-blk-lock{font-family:var(--font-ui);font-size:.68rem;color:var(--txt3);padding:2px 0}
+.me-add-row{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 12px}
+.me-add-row button{flex:1;min-width:70px;background:var(--surf);border:1px dashed var(--border2);border-radius:9px;padding:10px 6px;font-family:var(--font-ui);font-size:.7rem;font-weight:600;color:var(--accent);cursor:pointer}
+.me-list-row{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px 13px;margin-bottom:9px;cursor:pointer}
+.me-list-row .me-list-txt{flex:1;min-width:0}
+.me-list-row .me-list-name{font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me-list-row .me-list-sub{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me-prev-frame{width:100%;border:1px solid var(--border);border-radius:12px;background:#fff;min-height:60vh}
+.me-hint{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);line-height:1.5;margin-top:6px}
+.me-send-big{width:100%;padding:15px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-family:var(--font-ui);font-size:.92rem;font-weight:700;cursor:pointer}
+.me-send-big.armed{background:var(--red)}
+.me-send-big:disabled{opacity:.55}
+.me-err{margin-top:10px;padding:9px 12px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.3);border-radius:8px;color:var(--red);font-family:var(--font-ui);font-size:.72rem}
+/* assistant mobile search result rows */
+.mas-row{display:flex;align-items:center;gap:10px;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer}
+.mas-row .mas-n{flex:1;min-width:0;font-family:var(--font-ui);font-size:.82rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mas-row .mas-s{font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);white-space:nowrap}
 @media(min-width:769px){.mobile-bar{display:none}}
 
 /* ── DASHBOARD ── */
@@ -1527,7 +1585,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-06.2';
+const BUILD_STAMP='2026-07-06.3';
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -15569,6 +15627,11 @@ async function _asAnalyze(btn){
   btn.disabled=false;btn.textContent=orig;
 }
 function _asExecute(route){
+  // MOBILE: the desktop views below live inside #app, which is display:none on
+  // phones — route email/event/search to the mobile layer instead. _mAsExecute
+  // (mobile script block) returns true when it handled the route; 'unknown'
+  // falls through since as-results renders fine inside the overlay.
+  if(typeof isMobile==='function'&&isMobile()&&typeof _mAsExecute==='function'&&_mAsExecute(route))return;
   if(route.action==='email'){_asExecuteEmail(route.payload);return;}
   if(route.action==='event'){_asExecuteEvent(route.payload);return;}
   if(route.action==='search'){_asExecuteSearch(route.payload);return;}
@@ -15780,11 +15843,36 @@ function _asExecuteSearch(sentence){
 </div>
 
 <!-- ===================== DAAS MOBILE SHELL ===================== -->
+<!-- MOBILE EMAIL FLOW (drafts / templates / build / send) — outside #app so it renders on mobile -->
+<div id="mEmailOverlay">
+  <div class="me-top">
+    <button class="m-iconbtn" id="meBackBtn" onclick="mEmailBack()" title="Back"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div class="me-title" id="meTitle">Emails</div>
+    <div class="me-save" id="meSaveState"></div>
+    <button class="m-iconbtn" onclick="mEmailClose()" title="Close"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+  <div class="me-steps" id="meSteps" style="display:none">
+    <div class="me-step" id="meStep1" onclick="_meGo(1)">1 · Details</div>
+    <div class="me-step" id="meStep2" onclick="_meGo(2)">2 · Content</div>
+    <div class="me-step" id="meStep3" onclick="_meGo(3)">3 · Preview</div>
+    <div class="me-step" id="meStep4" onclick="_meGo(4)">4 · Send</div>
+  </div>
+  <div class="me-body" id="mEmailBody"></div>
+  <div class="me-foot" id="mEmailFoot" style="display:none"></div>
+</div>
+
 <div id="mobileShell">
   <div class="m-topbar">
     <div class="logo"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0"><path d="M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16 7C14 11 11.5 14 11.5 17.5A4.5 4.5 0 0 0 16 22A4.5 4.5 0 0 0 20.5 17.5C20.5 14 18 11 16 7Z" fill="none" stroke="#a16207" stroke-width="1.5"></path><path d="M16 12C15 14.5 14 16 14 17.5A2 2 0 0 0 16 19.5A2 2 0 0 0 18 17.5C18 16 17 14.5 16 12Z" fill="#b91c1c"></path></svg> דעת</div>
     <div class="m-spacer"></div>
     <button class="m-iconbtn" onclick="mSync(this)" title="Sync from CRM"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"></path></svg></button>
+    <button class="m-iconbtn" onclick="mMenuToggle()" title="Menu"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg></button>
+  </div>
+  <div class="m-menu-bd" id="mMenuBd" onclick="mMenuClose()"></div>
+  <div class="m-menu" id="mMenu">
+    <button onclick="mMenuGo('assistant')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg><span class="m-menu-txt"><b>DAAS Assistant</b><span>Say it — email, event, or list</span></span></button>
+    <button onclick="mMenuGo('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg><span class="m-menu-txt"><b>Emails</b><span>Drafts, templates, build &amp; send</span></span></button>
+    <button onclick="mMenuGo('contact')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg><span class="m-menu-txt"><b>New Contact</b><span>Add a person you just met</span></span></button>
   </div>
 
   <div class="m-body">
@@ -16105,7 +16193,7 @@ function mOutcome(outcome){
   if(!card) return;
   const h=card.item.h;
   const call=_mD5CallTarget(h)||_mD5EmailTarget(h)||((h.members||[])[0]?{id:h.members[0].id}:null);
-  if(!call){ alert('No contact on file to log against.'); return; }
+  if(!call){ _ebToastMsg('No contact on file to log against.'); return; }
   _mOutcomeCtx={outcome, contactId:call.id, household:h};
   document.getElementById('mOutH').textContent=outcome+' · '+(h.displayName||'Household');
   document.getElementById('mOutSub').textContent='Logs an interaction'+(card.type==='activetrack'?' and advances the track.':'.');
@@ -16128,7 +16216,7 @@ async function mSaveOutcome(btn){
     _bumpAGCAgg(contactId,outcome,todayStr);
     // refresh local interaction data so AGC/Daily reflect it
     if(typeof loadAll==='function'){ /* light touch: just advance */ }
-  }catch(e){ alert('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
+  }catch(e){ _ebToastMsg('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
   // Capture before mCloseOutcome() nulls the context
   const _doneHid=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
   mCloseOutcome();
@@ -16152,7 +16240,7 @@ async function mSaveOutcome(btn){
 let _mOutRec=null,_mOutStream=null,_mOutChunks=[];
 function mOutcomeVoice(btn){
   if(_mOutRec && _mOutRec.state==='recording'){ _mOutcomeStopVoice(); return; }
-  if(!navigator.mediaDevices||!window.MediaRecorder){ alert('Audio recording isn\u2019t supported here. Use your keyboard mic into the note box.'); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){ _ebToastMsg('Audio recording isn\u2019t supported here. Use your keyboard mic into the note box.'); return; }
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
     _mOutStream=stream; _mOutChunks=[];
     let mime=''; if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm'; else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
@@ -16162,7 +16250,7 @@ function mOutcomeVoice(btn){
     _mOutRec.start();
     btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
     btn.style.background='var(--red)'; btn.style.color='#fff';
-  }).catch(()=>alert('Microphone permission denied. Allow mic access and retry.'));
+  }).catch(()=>_ebToastMsg('Microphone permission denied. Allow mic access and retry.'));
 }
 function _mOutcomeStopVoice(){
   if(_mOutRec && _mOutRec.state==='recording'){ try{_mOutRec.stop();}catch(e){} }
@@ -16173,7 +16261,7 @@ function _mOutcomeStopVoice(){
 async function _mOutProcess(){
   if(_mOutStream){ try{_mOutStream.getTracks().forEach(t=>t.stop());}catch(e){} _mOutStream=null; }
   if(!_mOutChunks.length) return;
-  if(!OPENAI_KEY){ alert('Add your OpenAI key on desktop to use voice transcription.'); return; }
+  if(!OPENAI_KEY){ _ebToastMsg('Add your OpenAI key on desktop to use voice transcription.'); return; }
   const ta=document.getElementById('mOutNote');
   const blob=new Blob(_mOutChunks,{type:_mOutChunks[0].type||'audio/webm'});
   const prev=ta.value; ta.value=(prev?prev+' ':'')+'⏳ transcribing…';
@@ -16184,7 +16272,7 @@ async function _mOutProcess(){
     const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+OPENAI_KEY},body:fd});
     const j=await tr.json();
     ta.value=(prev?prev+' ':'')+(j.text||'').trim();
-  }catch(e){ ta.value=prev; alert('Transcription failed.'); }
+  }catch(e){ ta.value=prev; _ebToastMsg('Transcription failed.'); }
 }
 
 /* ===================== CONTACTS ROSTER (mobile) ===================== */
@@ -16398,8 +16486,530 @@ function _mUpdateLive(lat,lon){
   else _mLiveMarker=L.marker([lat,lon],{icon}).addTo(_mMapObj);
 }
 
+/* ===================== TOPBAR MENU (mobile) ===================== */
+function mMenuToggle(){
+  document.getElementById('mMenu').classList.toggle('open');
+  document.getElementById('mMenuBd').classList.toggle('open', document.getElementById('mMenu').classList.contains('open'));
+}
+function mMenuClose(){
+  document.getElementById('mMenu')?.classList.remove('open');
+  document.getElementById('mMenuBd')?.classList.remove('open');
+}
+function mMenuGo(what){
+  mMenuClose();
+  if(what==='assistant'){ try{ openAssistant(); }catch(e){ _ebToastMsg('Could not open the Assistant.'); } }
+  else if(what==='email'){ mEmailHome(); }
+  else if(what==='contact'){ try{ showAddContact(); }catch(e){ _ebToastMsg('Could not open Add Contact.'); } }
+}
+
+/* ===================== EMAIL FLOW (mobile) =====================
+   A linear 4-step UI (Details → Content → Preview → Send) over the SAME
+   engine desktop uses. Source of truth while editing is the desktop
+   builder's globals (_ebBlocks/_ebSubjectV/_ebPreheaderV/_ebSection) plus
+   _ecCur — so _ecSyncFromBuilder, _ecSaveDraft, _ebCompile, audience math
+   (_ecNormAudience/_ecResolveAudience/_ecEnsureSentCache), _ecSendTest and
+   _ecInvokeSend all work VERBATIM. Drafts are the same email_campaigns
+   rows: start on phone, finish on desktop, or vice versa. */
+let _meStep=0, _meDirty=false;
+
+function _meShow(){ document.getElementById('mEmailOverlay').classList.add('open'); }
+function _meHideOverlay(){ document.getElementById('mEmailOverlay').classList.remove('open'); }
+function _meSetSave(t){ const el=document.getElementById('meSaveState'); if(el)el.textContent=t||''; }
+
+async function mEmailHome(){
+  _meShow(); _meStep=0; _meDirty=false;
+  document.getElementById('meSteps').style.display='none';
+  document.getElementById('mEmailFoot').style.display='none';
+  document.getElementById('meTitle').textContent='Emails';
+  _meSetSave('');
+  const body=document.getElementById('mEmailBody');
+  body.innerHTML='<div class="m-empty"><div class="spin" style="width:22px;height:22px;border-width:3px;margin:0 auto 10px"></div>Loading…</div>';
+  try{
+    await Promise.all([_ecLoad(true), _egLoad(false), _etLoad(false), _ebLoadOrg()]);
+  }catch(e){ body.innerHTML='<div class="m-empty">Couldn\u2019t load emails: '+_escHtml(e.message||'')+'</div>'; return; }
+  _meRenderHome();
+}
+function _meRenderHome(){
+  const body=document.getElementById('mEmailBody');
+  document.getElementById('meSteps').style.display='none';
+  document.getElementById('mEmailFoot').style.display='none';
+  document.getElementById('meTitle').textContent='Emails';
+  const open=(_ecCampaigns||[]).filter(c=>c.status!=='sent');
+  const drafts=open.length?open.map(c=>{
+    const sub=[_escHtml(c.subject||'(no subject)')];
+    if(c.status==='scheduled'&&c.scheduled_for)sub.push('scheduled '+_escHtml(_ecFmtDate(c.scheduled_for)));
+    else if(c.updated_at)sub.push('edited '+_escHtml(_ecFmtDate(c.updated_at)));
+    return `<div class="me-list-row" onclick="_meOpenDraft('${_escAttr(c.id)}')">
+      <div class="me-list-txt"><div class="me-list-name">${_escHtml(c.name||'(untitled)')}</div><div class="me-list-sub">${sub.join(' · ')}</div></div>
+      ${_ecStatusBadge(c.status)}
+    </div>`;
+  }).join(''):'<div class="me-hint" style="padding:6px 2px 10px">No drafts. Start a new email or pick a template.</div>';
+  const tpls=(_etList||[]).length?_etList.map(t=>`<div class="me-list-row" onclick="_meUseTemplate('${_escAttr(t.id)}')">
+      <div class="me-list-txt"><div class="me-list-name">${_escHtml(t.name||'(untitled)')}</div><div class="me-list-sub">${_escHtml(t.subject||'')}</div></div>
+      <span style="font-family:var(--font-ui);font-size:.64rem;font-weight:600;color:var(--accent)">Use →</span>
+    </div>`).join(''):'<div class="me-hint" style="padding:6px 2px 10px">No templates yet. Save one from the desktop builder.</div>';
+  body.innerHTML=`
+    <button class="me-send-big" style="margin-bottom:16px" onclick="_meNewEmail()">＋ New Email</button>
+    <div class="me-h">Drafts &amp; Scheduled</div>${drafts}
+    <div class="me-h" style="margin-top:16px">Templates</div>${tpls}
+    <div class="me-hint" style="margin-top:14px">Emails save automatically as drafts — you can always finish on desktop. Sent campaigns and their reports live on desktop.</div>`;
+}
+
+/* SYNC-MIRROR of _ecNew() (desktop) minus the desktop render — keep the
+   _ecCur literal identical. */
+function _meNewEmail(){
+  _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
+    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+    blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+  _meBind(); _meGo(1);
+}
+/* Bind the desktop builder globals to the current campaign so the shared
+   save/compile/send pipeline reads mobile edits. */
+function _meBind(){
+  _ebBlocks=_ecCur.blocks;
+  _ebSubjectV=_ecCur.subject||'';
+  _ebPreheaderV=_ecCur.preheader||'';
+  _ebSection=_ecCur.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card};
+}
+/* SYNC-MIRROR of _ecOpen() (desktop) minus the desktop render — same status
+   guards, same scheduled→draft cancel, same _ecCur literal. */
+async function _meOpenDraft(id){
+  const body=document.getElementById('mEmailBody');
+  body.innerHTML='<div class="m-empty"><div class="spin" style="width:22px;height:22px;border-width:3px;margin:0 auto 10px"></div>Opening…</div>';
+  try{
+    const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*');
+    const c=rows&&rows[0]; if(!c){ _meRenderHome(); return; }
+    if(c.status==='sent'){ _ebToastMsg('Already sent — open its report on desktop.'); _meRenderHome(); return; }
+    if(c.status==='sending'){ _ebToastMsg('This campaign is being sent right now \u2014 it can\u2019t be edited. Check back in a minute.'); _meRenderHome(); return; }
+    if(c.status==='scheduled'){
+      try{
+        await sb('email_campaigns?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status:'draft',scheduled_for:null})});
+        c.status='draft'; c.scheduled_for=null;
+        _ebToastMsg('Schedule cancelled \u2014 back to draft. Re-schedule from Send when you\u2019re done.');
+      }catch(e){ _ebToastMsg('Couldn\u2019t cancel the schedule \u2014 not opening for edit. '+(e.message||'')); _meRenderHome(); return; }
+    }
+    let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
+    _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
+      audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
+      blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+    _meBind(); _meGo(1);
+  }catch(e){ _ebToastMsg('Could not open: '+(e.message||e)); _meRenderHome(); }
+}
+/* SYNC-MIRROR of _etUse() (desktop) minus the desktop render. */
+async function _meUseTemplate(id){
+  try{
+    await _ecLoad(false);
+    const rows=await sbAll('email_templates?id=eq.'+id+'&select=*'); const t=rows&&rows[0]; if(!t)return;
+    const parsed=_etParse(t);
+    if(!parsed.blocks.length){ _ebToastMsg('This template has no design blocks saved.'); return; }
+    _ecCur={ id:null, name:(t.name||'Campaign'), subject:t.subject||'', preheader:parsed.preheader||'',
+      from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
+      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+      blocks:JSON.parse(JSON.stringify(parsed.blocks)),
+      section:parsed.section?JSON.parse(JSON.stringify(parsed.section)):{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
+    _meBind(); _meGo(1);
+  }catch(e){ _ebToastMsg('Could not open template: '+(e.message||e)); }
+}
+
+async function _meSave(explicit){
+  if(!_ecCur)return;
+  _meSetSave('Saving\u2026');
+  try{ await _ecSaveDraft(explicit); _meSetSave('Saved \u2713'); }
+  catch(e){ _meSetSave('Not saved'); }
+}
+/* light autosave — desktop's _ecAutosaveTick only fires in the desktop
+   compose view, so the mobile flow runs its own */
+setInterval(()=>{ 
+  try{
+    if(!_meDirty||_meStep<1||!_ecCur)return;
+    const ov=document.getElementById('mEmailOverlay');
+    if(!ov||!ov.classList.contains('open'))return;
+    _meDirty=false; _meSave(false);
+  }catch(e){}
+},5000);
+
+function _meGo(step){
+  if(!_ecCur)return;
+  if(_meStep>=1&&_meDirty){ _meDirty=false; _meSave(false); }
+  _meStep=step;
+  document.getElementById('meSteps').style.display='flex';
+  for(let i=1;i<=4;i++)document.getElementById('meStep'+i).classList.toggle('on', i===step);
+  document.getElementById('meTitle').textContent=_ecCur.name||'New email';
+  const foot=document.getElementById('mEmailFoot');
+  if(step===1){ foot.style.display='flex'; foot.innerHTML='<button class="btn btn-sec" onclick="mEmailBack()">Save &amp; close</button><button class="btn btn-pri" onclick="_meGo(2)">Content \u2192</button>'; _meRenderDetails(); }
+  else if(step===2){ foot.style.display='flex'; foot.innerHTML='<button class="btn btn-pri" onclick="_meGo(3)">Preview \u2192</button>'; _meRenderContent(); }
+  else if(step===3){ foot.style.display='flex'; foot.innerHTML='<button class="btn btn-pri" onclick="_meGo(4)">Send \u2192</button>'; _meRenderPreview(); }
+  else { foot.style.display='none'; _meRenderSend(); }
+}
+function mEmailBack(){
+  if(_meStep===0){ mEmailClose(); return; }
+  if(_meStep===1){ _meLeaveToHome(); return; }
+  _meGo(_meStep-1);
+}
+async function _meLeaveToHome(){
+  if(_ecCur){ await _meSave(false); }
+  try{ await _ecLoad(true); }catch(e){}
+  _meStep=0; _meRenderHome();
+}
+async function mEmailClose(){
+  if(_meStep>=1&&_ecCur){ await _meSave(false); }
+  _meHideOverlay();
+}
+
+/* ── step 1: details + audience ── */
+function _meRenderDetails(){
+  const body=document.getElementById('mEmailBody');
+  const aud=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
+  _ecCur.audience=aud;
+  const fromOpts=(_ecFromList||[]).map((f,i)=>{
+    const sel=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
+    return '<option value="'+i+'"'+(sel?' selected':'')+'>'+_escHtml(f.name)+' \u2039'+_escHtml(f.address)+'\u203a</option>';
+  }).join('');
+  const incSet=new Set(aud.include_groups), exgSet=new Set(aud.exclude_groups), excSet=new Set(aud.exclude_campaigns);
+  const gRow=(g,kind,set)=>'<label class="me-aud-row"><input type="checkbox" '+(set.has(g.id)?'checked':'')+' onchange="_meAud(\''+kind+'\',\''+_escAttr(g.id)+'\',this.checked)"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+_escHtml(g.name)+'</span><span class="me-aud-n">'+(g._count||0)+'</span></label>';
+  const incHtml=(_egGroups||[]).length?_egGroups.map(g=>gRow(g,'inc',incSet)).join(''):'<div class="me-hint">No groups yet — create them on desktop (Emails \u2192 Groups).</div>';
+  const exgHtml=(_egGroups||[]).map(g=>gRow(g,'exg',exgSet)).join('');
+  const sentCamps=(_ecCampaigns||[]).filter(c=>c.status==='sent');
+  const excHtml=sentCamps.length?sentCamps.map(c=>'<label class="me-aud-row"><input type="checkbox" '+(excSet.has(c.id)?'checked':'')+' onchange="_meAud(\'exc\',\''+_escAttr(c.id)+'\',this.checked)"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">'+_escHtml(c.name||'(untitled)')+'</span></label>').join(''):'<div class="me-hint">No sent campaigns yet to exclude.</div>';
+  body.innerHTML=`
+    <div class="me-card">
+      <label class="me-f">Subject line</label>
+      <input type="text" value="${_escAttr(_ebSubjectV||'')}" placeholder="Email subject\u2026" oninput="_ebSubjectV=this.value;_meDirty=true">
+      <label class="me-f">Preheader (preview text, optional)</label>
+      <input type="text" value="${_escAttr(_ebPreheaderV||'')}" placeholder="Short line shown after the subject" oninput="_ebPreheaderV=this.value;_meDirty=true">
+      <label class="me-f">Internal name</label>
+      <input type="text" value="${_escAttr(_ecCur.name||'')}" placeholder="e.g. Purim invite 2026" oninput="_ecCur.name=this.value;_meDirty=true;document.getElementById('meTitle').textContent=this.value||'New email'">
+      <label class="me-f">From</label>
+      ${fromOpts?'<select onchange="_meFrom(this.value)">'+fromOpts+'</select>':'<div class="me-hint">No From addresses set up — add one on desktop (Emails \u2192 Setup) before sending.</div>'}
+    </div>
+    <div class="me-card">
+      <div class="me-h">Send to</div>
+      ${incHtml}
+      <div style="margin-top:12px"><span class="me-count" id="meCount">\u2026</span></div>
+      <details style="margin-top:12px">
+        <summary style="font-family:var(--font-ui);font-size:.72rem;color:var(--txt2);cursor:pointer">Advanced: exclusions</summary>
+        <div class="me-h" style="margin-top:10px">Exclude groups</div>${exgHtml||'<div class="me-hint">No groups.</div>'}
+        <div class="me-h" style="margin-top:12px">Exclude people who got a past mailing</div>${excHtml}
+      </details>
+    </div>`;
+  _meCountRefresh();
+}
+function _meFrom(i){
+  const f=(_ecFromList||[])[parseInt(i,10)];
+  if(f){ _ecCur.from_name=f.name; _ecCur.from_address=f.address; _meDirty=true; }
+}
+function _meAud(kind,id,on){
+  const aud=_ecCur.audience;
+  const key=kind==='inc'?'include_groups':kind==='exg'?'exclude_groups':'exclude_campaigns';
+  const arr=aud[key];
+  if(on){ if(!arr.includes(id))arr.push(id); }
+  else{ aud[key]=arr.filter(x=>x!==id); }
+  _meDirty=true;
+  _meCountRefresh();
+}
+async function _meCountRefresh(){
+  const el=document.getElementById('meCount'); if(!el)return;
+  el.textContent='\u2026';
+  try{
+    const aud=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
+    await _ecEnsureSentCache(aud.exclude_campaigns);
+    const n=aud.include_groups.length?_ecResolveAudience(aud).length:0;
+    el.textContent=n+' mailable recipient'+(n===1?'':'s');
+  }catch(e){ el.textContent='count unavailable'; }
+}
+
+/* ── step 2: content blocks (linear, no drag-drop) ── */
+const _ME_BLK_LABEL={header:'Logo header',heading:'Heading',text:'Text',button:'Button',image:'Image',divider:'Divider',spacer:'Spacer',social:'Social icons',footer:'Footer'};
+function _meBlkGet(id){ return (_ebBlocks||[]).find(b=>b.id===id); }
+function _meRenderContent(){
+  const body=document.getElementById('mEmailBody');
+  const rows=(_ebBlocks||[]).map((b,i)=>{
+    const label=_ME_BLK_LABEL[b.type]||b.type;
+    const locked=(b.type==='header');
+    const first=i<=1, last=i>=_ebBlocks.length-2; // movement stays between header and footer
+    const ctl=(b.type==='header'||b.type==='footer')?'' :
+      `<button class="me-blk-btn" onclick="_meBlkMove('${_escAttr(b.id)}',-1)" ${first?'disabled':''}>\u25b2</button>
+       <button class="me-blk-btn" onclick="_meBlkMove('${_escAttr(b.id)}',1)" ${last?'disabled':''}>\u25bc</button>
+       <button class="me-blk-btn" style="color:var(--red)" onclick="_meBlkDel('${_escAttr(b.id)}')">\u2715</button>`;
+    let ed='';
+    if(b.type==='header')ed='<div class="me-blk-lock">Your logo — added automatically.</div>';
+    else if(b.type==='heading')ed=`<input type="text" value="${_escAttr(b.text||'')}" oninput="_meBlkSet('${_escAttr(b.id)}','text',this.value)">`;
+    else if(b.type==='text')ed=`<textarea rows="4" oninput="_meBlkSet('${_escAttr(b.id)}','text',this.value)">${_escHtml(b.text||'')}</textarea>`;
+    else if(b.type==='button')ed=`<input type="text" value="${_escAttr(b.label||'')}" placeholder="Button label" oninput="_meBlkSet('${_escAttr(b.id)}','label',this.value)"><input type="url" style="margin-top:7px" value="${_escAttr(b.url||'')}" placeholder="https:// link" oninput="_meBlkSet('${_escAttr(b.id)}','url',this.value)">`;
+    else if(b.type==='image')ed=`<input type="url" value="${_escAttr(b.src||'')}" placeholder="Image URL" oninput="_meBlkSet('${_escAttr(b.id)}','src',this.value)"><input type="text" style="margin-top:7px" value="${_escAttr(b.alt||'')}" placeholder="Alt text" oninput="_meBlkSet('${_escAttr(b.id)}','alt',this.value)">`;
+    else if(b.type==='footer')ed=`<textarea rows="4" oninput="_meBlkSet('${_escAttr(b.id)}','text',this.value)">${_escHtml(b.text||'')}</textarea><div class="me-hint">Must keep the [Unsubscribe]({unsubscribe}) link — sending is blocked without it.</div>`;
+    else ed='<div class="me-blk-lock">'+_escHtml(label)+'</div>';
+    return `<div class="me-blk"><div class="me-blk-top"><span class="me-blk-type">${_escHtml(label)}${locked?' \u00b7 locked':''}</span>${ctl}</div>${ed}</div>`;
+  }).join('');
+  body.innerHTML=`
+    <div class="me-add-row">
+      <button onclick="_meBlkAdd('heading')">＋ Heading</button>
+      <button onclick="_meBlkAdd('text')">＋ Text</button>
+      <button onclick="_meBlkAdd('button')">＋ Button</button>
+      <button onclick="_meBlkAdd('divider')">＋ Divider</button>
+    </div>
+    ${rows}
+    <div class="me-hint">Personalize with merge tags: {first_name}, {joint_name}, {first_names}, {last_name}. **bold** works in text blocks.</div>`;
+}
+function _meBlkSet(id,key,val){ const b=_meBlkGet(id); if(b){ b[key]=val; _meDirty=true; _ebDirty=true; } }
+function _meBlkMove(id,dir){
+  const i=_ebBlocks.findIndex(b=>b.id===id); if(i<0)return;
+  const j=i+dir;
+  if(j<1||j>_ebBlocks.length-2)return; // never displace header (0) or footer (last)
+  const t=_ebBlocks[i]; _ebBlocks[i]=_ebBlocks[j]; _ebBlocks[j]=t;
+  _meDirty=true; _ebDirty=true; _meRenderContent();
+}
+function _meBlkDel(id){
+  const b=_meBlkGet(id); if(!b||b.type==='header'||b.type==='footer')return;
+  _egConfirm('Remove Block','Remove this '+(_ME_BLK_LABEL[b.type]||b.type).toLowerCase()+' block?',async()=>{
+    _ebBlocks=_ebBlocks.filter(x=>x.id!==id); _ecCur.blocks=_ebBlocks;
+    _meDirty=true; _ebDirty=true; _meRenderContent();
+  },'Remove');
+}
+function _meBlkAdd(type){
+  const nb=_ebNewBlock(type);
+  const fi=_ebBlocks.findIndex(b=>b.type==='footer');
+  if(fi>=0)_ebBlocks.splice(fi,0,nb); else _ebBlocks.push(nb);
+  _ecCur.blocks=_ebBlocks;
+  _meDirty=true; _ebDirty=true; _meRenderContent();
+}
+
+/* ── step 3: true preview (the compiled HTML recipients get) ── */
+function _meRenderPreview(){
+  const body=document.getElementById('mEmailBody');
+  body.innerHTML='<div class="me-hint" style="margin:0 0 10px">This is the exact compiled email. Merge tags are filled with sample values.</div><iframe class="me-prev-frame" id="mePrevFrame" sandbox=""></iframe>';
+  try{
+    let html=_ebCompile(_ebBlocks,{subject:_ebSubjectV,preheader:_ebPreheaderV,section:_ebSection});
+    // sample-fill per-recipient tokens — same substitutions as _ecSendTest
+    html=html.replace(/%recipient\.first_name%/g,'Sample')
+             .replace(/%recipient\.last_name%/g,'Recipient')
+             .replace(/%recipient\.joint_name%/g,'Sample &amp; Test Recipient')
+             .replace(/%recipient\.first_names%/g,'Sample &amp; Test')
+             .replace(/%recipient\.email%/g,'sample@example.com')
+             .replace(/%unsubscribe_url%/g,'#unsubscribe');
+    document.getElementById('mePrevFrame').srcdoc=html;
+  }catch(e){ body.innerHTML='<div class="m-empty">Preview failed: '+_escHtml(e.message||'')+'</div>'; }
+}
+
+/* ── step 4: validate + test + send/schedule ──
+   SYNC-MIRROR of _ecOpenSend()'s validation list and _ecConfirmSend()'s
+   send/schedule rules — keep them identical. */
+let _meArmed=false,_meArmTimer=null;
+async function _meRenderSend(){
+  const body=document.getElementById('mEmailBody');
+  body.innerHTML='<div class="m-empty"><div class="spin" style="width:22px;height:22px;border-width:3px;margin:0 auto 10px"></div>Checking\u2026</div>';
+  _meArmed=false;
+  _ecSyncFromBuilder();
+  const aud=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
+  await _ecEnsureSentCache(aud.exclude_campaigns);
+  const problems=[];
+  if(aud.exclude_campaigns.length&&_ecSentCacheFailed)problems.push('The past-mailing exclusion list could not be loaded \u2014 sending now could re-email people who already got those mailings. Check your connection and reopen this step.');
+  if(!_ecCur.subject||_ecCur.subject==='(no subject)')problems.push('Add a subject line (step 1).');
+  if(!_ecCur.from_address)problems.push('Choose a From address (step 1).');
+  if(!aud.include_groups.length)problems.push('Choose at least one group to send to (step 1).');
+  if(!_ebBlocks.some(b=>b.type==='footer'&&/\{unsubscribe\}/.test(b.text||'')))problems.push('Your footer must contain an {unsubscribe} link (legally required) \u2014 step 2.');
+  const mailable=aud.include_groups.length?_ecResolveAudience(aud).length:0;
+  if(aud.include_groups.length&&mailable===0)problems.push('This audience has no mailable recipients (need an email, not unsubscribed, after exclusions).');
+  const audLabel=_ecAudienceSummary(aud,_ecCur.group_id);
+  // default schedule: tomorrow 9:00 AM local (same as desktop)
+  const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
+  const pad=n=>(n<10?'0':'')+n;
+  const defDate=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const defTime=pad(d.getHours())+':'+pad(d.getMinutes());
+  if(problems.length){
+    body.innerHTML='<div class="me-card"><div class="me-h" style="color:var(--red)">Fix these first</div><ul style="margin:0;padding-left:18px;font-family:var(--font-ui);font-size:.78rem;color:var(--txt2);line-height:1.7">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul></div>';
+    return;
+  }
+  body.innerHTML=`
+    <div class="me-card" style="font-family:var(--font-ui);font-size:.82rem;color:var(--txt);line-height:1.7">
+      Sending <b>\u201c${_escHtml(_ecCur.subject)}\u201d</b><br>
+      to <b>${_escHtml(audLabel)}</b> \u2014 <b>${mailable}</b> mailable recipient${mailable===1?'':'s'}<br>
+      from <b>${_escHtml(_ecCur.from_name)} \u2039${_escHtml(_ecCur.from_address)}\u203a</b>
+    </div>
+    <div class="me-card">
+      <button class="btn btn-sec" style="width:100%;padding:12px" onclick="_ecSendTest()">Send me a test first</button>
+      <div class="me-hint">A single copy to any address, merge tags filled with sample values. Recommended before a real send.</div>
+    </div>
+    <div class="me-card">
+      <label class="me-aud-row" style="border-bottom:none"><input type="radio" name="meWhen" value="now" checked onchange="document.getElementById('meSchedRow').style.display='none'"> Send now</label>
+      <label class="me-aud-row" style="border-bottom:none"><input type="radio" name="meWhen" value="later" onchange="document.getElementById('meSchedRow').style.display='block'"> Schedule for later</label>
+      <div id="meSchedRow" style="display:none;margin-top:8px">
+        <label class="me-f">Date</label><input type="date" id="meSchedDate" value="${defDate}">
+        <label class="me-f">Time</label><input type="time" id="meSchedTime" value="${defTime}">
+      </div>
+      <div id="meSendErr" class="me-err" style="display:none"></div>
+      <button class="me-send-big" id="meSendBtn" style="margin-top:14px" onclick="_meSendTap(this)">Send to ${mailable} ${mailable===1?'person':'people'}</button>
+      <div class="me-hint" style="text-align:center">Tap twice to confirm \u2014 nothing sends on the first tap.</div>
+    </div>`;
+}
+function _meSendErr(msg){ const el=document.getElementById('meSendErr'); if(el){ el.textContent=msg; el.style.display='block'; } }
+function _meSendTap(btn){
+  if(!_meArmed){
+    _meArmed=true;
+    btn.classList.add('armed');
+    btn.dataset.orig=btn.textContent;
+    btn.textContent='Tap again to confirm';
+    clearTimeout(_meArmTimer);
+    _meArmTimer=setTimeout(()=>{ _meArmed=false; btn.classList.remove('armed'); if(btn.dataset.orig)btn.textContent=btn.dataset.orig; },4000);
+    return;
+  }
+  clearTimeout(_meArmTimer); _meArmed=false; btn.classList.remove('armed');
+  _meConfirmSend(btn);
+}
+async function _meConfirmSend(btn){
+  const when=(document.querySelector('input[name="meWhen"]:checked')||{}).value||'now';
+  let scheduledFor=null;
+  if(when==='later'){
+    const dEl=document.getElementById('meSchedDate'), tEl=document.getElementById('meSchedTime');
+    if(!dEl||!tEl||!dEl.value||!tEl.value){ _meSendErr('Pick a date and time to schedule.'); return; }
+    const dt=new Date(dEl.value+'T'+tEl.value);
+    if(dt<=new Date()){ _meSendErr('Scheduled time must be in the future.'); return; }
+    scheduledFor=dt.toISOString();
+  }
+  btn.disabled=true; const o=btn.textContent; btn.textContent='Working\u2026';
+  let done=false;
+  try{
+    await _ecSaveDraft(false); // ensure saved + has id + fresh html
+    if(!_ecCur.id){ throw new Error('Could not save the campaign before sending (no draft id). Check your connection and try again.'); }
+    if(when==='later'){
+      await sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify({status:'scheduled',scheduled_for:scheduledFor})});
+      _ebToastMsg('Scheduled for '+_ecFmtDate(scheduledFor));
+      done=true;
+    }else{
+      const r=await _ecInvokeSend(_ecCur.id);
+      _ebToastMsg('Sent'+(r&&r.recipients!=null?' \u2014 '+r.recipients+' recipient'+(r.recipients===1?'':'s'):''));
+      done=true;
+    }
+    try{ await _ecLoad(true); }catch(e){}
+    _meStep=0; _meRenderHome();
+  }catch(e){ _meSendErr('Send failed: '+(e.message||e)); }
+  finally{ if(!done){ btn.disabled=false; btn.textContent=o; } }
+}
+
+/* ===================== DAAS ASSISTANT (mobile routing) =====================
+   The desktop execute paths land in views inside #app (hidden on mobile), so
+   email → the mobile email flow, search → an inline result list, event → a
+   parsed summary (event building stays on desktop). Returns true if handled. */
+function _mAsExecute(route){
+  if(route.action==='email'){ _mAsEmail(route.payload); return true; }
+  if(route.action==='event'){ _mAsEvent(route.payload); return true; }
+  if(route.action==='search'){ _mAsSearch(route.payload); return true; }
+  return false; // 'unknown' renders fine in as-results on mobile
+}
+/* SYNC-MIRROR of _asExecuteEmail() (desktop) — same group matching, same
+   block construction, same _ecCur literal — but lands in the mobile flow. */
+async function _mAsEmail(p){
+  p=p||{};
+  closeAssistant();
+  _meShow();
+  document.getElementById('meSteps').style.display='none';
+  document.getElementById('mEmailFoot').style.display='none';
+  document.getElementById('meTitle').textContent='Drafting\u2026';
+  document.getElementById('mEmailBody').innerHTML='<div class="m-empty"><div class="spin" style="width:22px;height:22px;border-width:3px;margin:0 auto 10px"></div>Drafting your email\u2026</div>';
+  try{await _egLoad(true);}catch(e){}
+  try{await _ecLoad(true);}catch(e){}
+  try{await _ebLoadOrg();}catch(e){}
+  try{await _etLoad(false);}catch(e){}
+  const inc=[];
+  (p.groups||[]).forEach(gn=>{
+    const q=String(gn||'').toLowerCase();
+    const g=(_egGroups||[]).find(x=>(x.name||'').toLowerCase()===q)||(_egGroups||[]).find(x=>(x.name||'').toLowerCase().includes(q));
+    if(g&&!inc.includes(g.id))inc.push(g.id);
+  });
+  const blocks=[_ebNewBlock('header')];
+  (p.blocks||[]).forEach(b=>{
+    if(!b||!b.type)return;
+    if(b.type==='heading'){const x=_ebNewBlock('heading');x.text=b.text||'';blocks.push(x);}
+    else if(b.type==='text'){const x=_ebNewBlock('text');x.text=b.text||'';blocks.push(x);}
+    else if(b.type==='button'){const x=_ebNewBlock('button');x.label=b.label||b.text||'Learn more';x.url=b.url||'';blocks.push(x);}
+    else if(b.type==='divider')blocks.push(_ebNewBlock('divider'));
+    else if(b.type==='spacer')blocks.push(_ebNewBlock('spacer'));
+  });
+  if(blocks.length===1){const t=_ebNewBlock('text');if(p.body)t.text=p.body;blocks.push(t);}
+  blocks.push(_ebNewBlock('footer'));
+  _ecCur={id:null,name:p.name||p.subject||'Assistant draft',subject:p.subject||'',preheader:p.preheader||'',
+    from_name:(_ecFromList[0]||{}).name||'',from_address:(_ecFromList[0]||{}).address||'',group_id:null,
+    audience:{include_groups:inc,exclude_groups:[],exclude_campaigns:[]},status:'draft',
+    blocks,section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card}};
+  _meBind(); _meGo(1);
+  _ebToastMsg('Draft ready \u2014 review the audience, content, and preview, then send.');
+}
+function _mAsEvent(p){
+  p=p||{};
+  const results=document.getElementById('as-results'); if(!results)return;
+  const tiers=(Array.isArray(p.tiers)?p.tiers:[]).map(t=>_escHtml(t.label||'Tier')+' \u2014 $'+_escHtml(String(t.amount||0))).join('<br>');
+  results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);line-height:1.7">'
+    +'<b>Here\u2019s the event I understood:</b><br>'
+    +(p.name?'Name: '+_escHtml(p.name)+'<br>':'')
+    +(p.date?'Date: '+_escHtml(String(p.date).slice(0,10))+'<br>':'')
+    +(p.location?'Location: '+_escHtml(p.location)+'<br>':'')
+    +(p.description?'Details: '+_escHtml(p.description)+'<br>':'')
+    +(tiers?'Tickets:<br>'+tiers+'<br>':'')
+    +'<div style="margin-top:8px;color:var(--txt3);font-size:.72rem">Event building (forms, tickets, embedding) stays on desktop \u2014 open DAAS there and ask the Assistant the same thing to get this prefilled.</div></div>';
+}
+/* SYNC-MIRROR of _rpAiRun()'s prompt + _rpApplyAiConfig()'s config handling
+   (desktop), compiled straight to runFilter and rendered as a tap-through
+   list instead of the Reports builder. */
+async function _mAsSearch(sentence){
+  const results=document.getElementById('as-results'); if(!results)return;
+  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px"><div class="spin" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Searching\u2026 (the AI sees names only, never your data)</div>';
+  try{
+    if(!_rpDataReady){ await _rpEnsureData(); }
+    const meta='SAVED REPORTS: '+(_rpSaved.map(s=>s.name).join(' | ')||'(none)')
+      +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
+      +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
+    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. Leave columns null unless specific columns were requested.',
+      messages:[{role:'user',content:meta+'\n\nSENTENCE: '+String(sentence||'')}]});
+    if(d.error)throw new Error(d.error.message);
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No config in the response.');
+    const cfg=JSON.parse(m[0]);
+    let entity,filters;
+    let base=null;
+    if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
+    if(base){
+      const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
+      entity=base.entity;
+      filters=JSON.parse(JSON.stringify(bcfg.filters||[]));
+      (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)filters.push(g);});
+    }else{
+      entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
+      filters=(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length);
+    }
+    filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
+    const rows=runFilter(entity,filters);
+    _mAsRenderRows(entity,rows,sentence);
+  }catch(e){ results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Search failed: '+_escHtml(e.message||String(e))+'</div>'; }
+}
+function _mAsRenderRows(entity,rows,sentence){
+  const results=document.getElementById('as-results'); if(!results)return;
+  const CAP=100;
+  const head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+rows.length+'</b> result'+(rows.length===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
+  if(!rows.length){ results.innerHTML=head+'<div style="font-size:.78rem;color:var(--txt3);padding:6px 2px">Nothing matched. Try rephrasing, or build it in Reports on desktop.</div>'; return; }
+  const items=rows.slice(0,CAP).map(r=>{
+    if(entity==='household'){
+      const agc=getAGCScore(r).total;
+      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r.id)}')"><span class="mas-n">${_escHtml(r.displayName||'Household')}</span><span class="mas-s">${_escHtml(r.city||'')} \u00b7 ${agc}</span></div>`;
+    }
+    if(entity==='contact'){
+      const nm=((r.first_name||'')+' '+(r.last_name||'')).trim()||r.email||'(no name)';
+      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(r._h.displayName||'')}</span></div>`;
+    }
+    if(entity==='donation'){
+      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">$${_escHtml(String(Math.round(parseFloat(r.amount)||0).toLocaleString()))} \u00b7 ${_escHtml(r._h.displayName||'')}</span><span class="mas-s">${_escHtml(r.date||'')}</span></div>`;
+    }
+    const nm=((r._m.first_name||'')+' '+(r._m.last_name||'')).trim()||'(no name)';
+    const ev=(_events||[]).find(e=>e.id===r.event_id);
+    return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(ev?(ev.name||''):'')}</span></div>`;
+  }).join('');
+  const more=rows.length>CAP?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">+'+(rows.length-CAP)+' more \u2014 run it in Reports on desktop for the full list and CSV.</div>':'';
+  results.innerHTML=head+items+more;
+}
+
 /* ===================== ESC / cleanup ===================== */
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); document.getElementById('mMapTray')?.classList.remove('open'); }});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); mMenuClose(); document.getElementById('mMapTray')?.classList.remove('open'); }});
 /* close sheet on grab swipe-ish (tap grab) */
 document.getElementById('mContactSheet')?.addEventListener('click',e=>{});
 /* ===================== END DAAS MOBILE LAYER ===================== */
