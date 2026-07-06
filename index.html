@@ -663,13 +663,26 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- ADD CONTACT MODAL -->
 <div class="modal-bg" id="addContactModal" style="display:none">
   <div class="modal">
-    <h2>＋ Add New Contact</h2>
-    <p>Enter details — the app will look up property data automatically.</p>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 id="ac_title" style="margin-bottom:0">＋ Add New Contact</h2>
+      <button type="button" onclick="_acTogglePresetMgr()" title="Manage address presets" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg></button>
+    </div>
+    <p id="ac_desc">Enter details — the app will look up property data automatically.</p>
+    <div id="ac_hh_note" style="display:none;padding:8px 12px;background:rgba(15,118,110,.08);border:1px solid var(--accent);border-radius:5px;margin-bottom:10px;font-size:.76rem;color:var(--accent)"></div>
+    <div id="ac_preset_mgr" style="display:none;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Address Presets</div>
+      <div id="ac_preset_list"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input type="text" id="ac_preset_city" placeholder="City" style="flex:2;margin-bottom:0">
+        <input type="text" id="ac_preset_zip" placeholder="ZIP" maxlength="5" style="flex:1;margin-bottom:0">
+        <button type="button" onclick="_acAddPreset()" style="padding:4px 12px;font-size:.72rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap">＋ Add</button>
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
       <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
-      <div><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
-      <div style="grid-column:span 2">
+      <div id="ac_spouse_wrap"><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
+      <div style="grid-column:span 2" id="ac_spouselink_wrap">
         <label>Or link to existing contact as spouse</label>
         <div style="display:flex;gap:6px">
           <input type="text" id="ac_spouse_search" placeholder="Search existing contact…" oninput="searchSpouse()" style="margin-bottom:0;flex:1">
@@ -680,32 +693,27 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
       </div>
       <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
       <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
+      <div id="ac_crm_wrap" style="grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label>CivicCRM ID</label><input type="text" id="ac_crmid" placeholder="1073"></div>
       <div><label>Spouse CivicCRM ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
-      <div style="grid-column:span 2"><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
-      <div style="grid-column:span 2">
+      </div>
+      <div id="ac_addr_section" style="grid-column:span 2;display:grid;grid-template-columns:1fr;gap:10px">
+      <div><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
+      <div>
         <label>City *</label>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
-          <button type="button" onclick="setCity('Chagrin Falls','44022')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Chagrin Falls 44022</button>
-          <button type="button" onclick="setCity('Chagrin Falls','44023')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Chagrin Falls 44023</button>
-          <button type="button" onclick="setCity('Bainbridge','44023')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Bainbridge 44023</button>
-          <button type="button" onclick="setCity('South Russell','44022')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">South Russell 44022</button>
-          <button type="button" onclick="setCity('Bentleyville','44022')" style="font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Bentleyville 44022</button>
-        </div>
+        <div id="ac_city_presets" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px"></div>
         <input type="text" id="ac_city" placeholder="Or type city" style="margin-bottom:0">
       </div>
-      <div style="grid-column:span 2">
+      <div>
         <label>ZIP</label>
-        <div style="display:flex;gap:5px;margin-bottom:6px">
-          <button type="button" onclick="setZip('44022')" style="font-size:.67rem;padding:4px 12px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">44022</button>
-          <button type="button" onclick="setZip('44023')" style="font-size:.67rem;padding:4px 12px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">44023</button>
-        </div>
+        <div id="ac_zip_presets" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px"></div>
         <input type="text" id="ac_zip" placeholder="Or type ZIP" maxlength="5" style="margin-bottom:0">
+      </div>
       </div>
     </div>
     <div id="ac_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" id="ac_actionBtn" onclick="lookupByAddress()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg> Look Up Property</button>
+      <button class="btn btn-pri" id="ac_actionBtn" onclick="_acAction()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg> Look Up Property</button>
       <button class="btn btn-sec" onclick="hideAddContact()">Cancel</button>
     </div>
   </div>
@@ -904,7 +912,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <!-- MERGE CONTACTS MODAL (field-by-field chooser) -->
 <div class="modal-bg" id="mergeModal" style="display:none">
   <div class="modal" style="width:620px">
-    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"/></svg> Merge Contacts</h2>
+    <h2 style="margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M3 8h4M17 8h4M3 16h4M17 16h4M11 12h2M11 8a4 4 0 0 1 0 8M13 8a4 4 0 0 0 0 8"></path></svg> Merge Contacts</h2>
     <p style="margin-bottom:12px;color:var(--txt2)">Pick which value wins for each field. Donations, interactions, and event registrations from the duplicate move to the keeper, then the duplicate is removed.</p>
     <div id="merge_body"></div>
     <div id="merge_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-top:12px;font-size:.74rem;color:var(--txt2)"></div>
@@ -1347,6 +1355,19 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
     <input type="number" id="don_amount" placeholder="180.00" step="0.01" min="0">
     <label>Date *</label>
     <input type="date" id="don_date">
+    <label>Method</label>
+    <select id="don_method" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+      <option value="">—</option>
+      <option>Check</option>
+      <option>Cash</option>
+      <option>Venmo</option>
+      <option>PayPal</option>
+      <option>Zelle</option>
+      <option>Card</option>
+      <option>Bank transfer</option>
+      <option>Donor Advised Fund</option>
+      <option>Other</option>
+    </select>
     <label>Notes</label>
     <input type="text" id="don_notes" placeholder="Annual gala, etc.">
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
@@ -1475,7 +1496,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-04.1';
+const BUILD_STAMP='2026-07-05.1';
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -1628,6 +1649,31 @@ function _escHtml(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&l
 function _escAttr(s){return _escHtml(s).replace(/'/g,'&#39;');}
 // Escape a value for safe embedding inside a single-quoted JS string in an inline handler.
 function _escJs(s){return String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3c').replace(/"/g,'&quot;').replace(/\r?\n/g,' ');}
+
+// ── LITE MARKDOWN — AI chat replies come back with **bold**, *italic*, ###
+// headings, lists, etc. Render them properly instead of showing raw symbols.
+// HTML-escapes FIRST, so it is as XSS-safe as the old _escHtml path.
+function _mdLite(raw){
+  const lines=_escHtml(raw||'').split('\n');
+  let html='',inUl=false,inOl=false;
+  const closeLists=()=>{if(inUl){html+='</ul>';inUl=false;}if(inOl){html+='</ol>';inOl=false;}};
+  const inline=s=>s
+    .replace(/`([^`]+)`/g,'<code style="background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px;font-size:.92em">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>');
+  for(const line of lines){
+    const t=line.trim();
+    let m;
+    if(/^[-_*]{3,}$/.test(t)){closeLists();html+='<hr style="border:none;border-top:1px solid var(--border2);margin:8px 0">';}
+    else if((m=t.match(/^#{1,6}\s+(.*)/))){closeLists();html+='<div style="font-weight:700;margin:10px 0 4px">'+inline(m[1])+'</div>';}
+    else if((m=t.match(/^[-*•]\s+(.*)/))){if(inOl){html+='</ol>';inOl=false;}if(!inUl){html+='<ul style="margin:4px 0 8px;padding-left:20px">';inUl=true;}html+='<li style="margin:3px 0">'+inline(m[1])+'</li>';}
+    else if((m=t.match(/^(\d{1,3})[.)]\s+(.*)/))){if(inUl){html+='</ul>';inUl=false;}if(!inOl){html+='<ol style="margin:4px 0 8px;padding-left:20px">';inOl=true;}html+='<li style="margin:3px 0" value="'+m[1]+'">'+inline(m[2])+'</li>';}
+    else if(t===''){closeLists();html+='<div style="height:7px"></div>';}
+    else{closeLists();html+='<div>'+inline(t)+'</div>';}
+  }
+  closeLists();
+  return html;
+}
 
 // ── ID-SAFE DISPATCH — rendered HTML used to bake array indices into onclick
 // handlers; if the households array re-sorted or reloaded between render and
@@ -1969,6 +2015,10 @@ async function loadAll(){
       sbAll('donations?select=*&order=date.desc,id.asc'),
       sbAll('registrations?select=*&order=reg_date.desc,id.asc')
     ]);
+
+    // Family links (parent→child). Loaded tolerantly: if the relationships
+    // table hasn't been created yet, the app must still boot normally.
+    try{RELS=await sbAll('relationships?select=*&order=created_at.asc,id.asc')||[];}catch(e){RELS=[];}
 
     // Split the donations ledger by financial_type. Event fees are stored in the
     // donations table for Stripe reconciliation, but they must NEVER count as
@@ -2821,7 +2871,7 @@ function setProp(mode,h,result){
     <div style="font-family:var(--font-ui);font-size:.53rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:6px">Donation History</div>
     ${giving.donations.map(d=>`<div style="padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:.78rem;font-weight:500">${fa(d.amount)}</div>
+        <div style="font-size:.78rem;font-weight:500">${fa(d.amount)}${d.method?` <span style="font-size:.6rem;font-weight:500;color:var(--txt3);background:var(--surf2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;vertical-align:1px">${_escHtml(d.method)}</span>`:''}</div>
         <div style="display:flex;align-items:center;gap:4px">
           <div style="font-size:.68rem;color:var(--txt3);white-space:nowrap">${fd(d.date)}</div>
           <button onclick="editDonationNote('${d.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:2px 3px" title="Edit note"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
@@ -3201,8 +3251,108 @@ function exportCSV(){
 
 // ── ADD CONTACT ──
 let acPropResult=null,acFormData={};
-function showAddContact(){document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';}
-function hideAddContact(){document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip','ac_spouse_search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('ac_spouse_results').style.display='none';document.getElementById('ac_spouse_selected').style.display='none';acLinkedSpouse=null;}
+// ── CONTACT EDITOR MODES + ADDRESS PRESETS ──
+// One canonical editor. _acMode 'new' = full flow (address + Zillow lookup +
+// confirm). _acMode 'add' = add a person to an EXISTING household from the
+// household page: address/spouse/lookup hidden, saves straight in.
+let _acMode='new',_acTargetHH=null;
+const _AC_DEFAULT_PRESETS=[{city:'Chagrin Falls',zip:'44022'},{city:'Chagrin Falls',zip:'44023'},{city:'Moreland Hills',zip:'44022'},{city:'Bainbridge',zip:'44023'},{city:'South Russell',zip:'44022'},{city:'Bentleyville',zip:'44022'}];
+let _acPresets=null; // loaded from app_settings 'address_presets'
+async function _acLoadPresets(){
+  if(_acPresets)return _acPresets;
+  try{
+    const rows=await sb('app_settings?key=eq.address_presets&select=value');
+    if(rows&&rows[0]&&rows[0].value){const p=JSON.parse(rows[0].value);if(Array.isArray(p)&&p.length)_acPresets=p;}
+  }catch(e){}
+  if(!_acPresets)_acPresets=_AC_DEFAULT_PRESETS.slice();
+  return _acPresets;
+}
+async function _acSavePresets(){try{await sbSetSetting('address_presets',JSON.stringify(_acPresets));}catch(e){alert('Could not save presets: '+e.message);}}
+function _acRenderPresets(){
+  const cityHost=document.getElementById('ac_city_presets');
+  const zipHost=document.getElementById('ac_zip_presets');
+  if(!cityHost||!zipHost||!_acPresets)return;
+  const chip='font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer';
+  cityHost.innerHTML=_acPresets.map(p=>`<button type="button" onclick="setCity('${_escAttr(p.city)}','${_escAttr(p.zip)}')" style="${chip}">${_escHtml(p.city)} ${_escHtml(p.zip)}</button>`).join('');
+  const zips=[...new Set(_acPresets.map(p=>p.zip).filter(Boolean))];
+  zipHost.innerHTML=zips.map(z=>`<button type="button" onclick="setZip('${_escAttr(z)}')" style="${chip}">${_escHtml(z)}</button>`).join('');
+  // Preset manager list (if open)
+  const list=document.getElementById('ac_preset_list');
+  if(list)list.innerHTML=_acPresets.map((p,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:.76rem"><span>${_escHtml(p.city)} ${_escHtml(p.zip)}</span><button type="button" onclick="_acRemovePreset(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;padding:0 4px">×</button></div>`).join('')||'<div style="font-size:.72rem;color:var(--txt3)">No presets — add one below.</div>';
+}
+function _acTogglePresetMgr(){
+  const mgr=document.getElementById('ac_preset_mgr');
+  mgr.style.display=mgr.style.display==='none'?'block':'none';
+  if(mgr.style.display==='block')_acRenderPresets();
+}
+async function _acAddPreset(){
+  const city=document.getElementById('ac_preset_city').value.trim();
+  const zip=document.getElementById('ac_preset_zip').value.trim();
+  if(!city||!/^\d{5}$/.test(zip)){alert('Enter a city and a 5-digit ZIP.');return;}
+  if(_acPresets.some(p=>p.city.toLowerCase()===city.toLowerCase()&&p.zip===zip)){alert('That preset already exists.');return;}
+  _acPresets.push({city,zip});
+  document.getElementById('ac_preset_city').value='';document.getElementById('ac_preset_zip').value='';
+  _acRenderPresets();await _acSavePresets();
+}
+async function _acRemovePreset(i){_acPresets.splice(i,1);_acRenderPresets();await _acSavePresets();}
+function _acAction(){if(_acMode==='add'){_acSaveToHousehold();}else{lookupByAddress();}}
+function _acApplyMode(){
+  const isAdd=_acMode==='add';
+  document.getElementById('ac_title').textContent=isAdd?'＋ Add Person to Household':'＋ Add New Contact';
+  document.getElementById('ac_desc').style.display=isAdd?'none':'block';
+  document.getElementById('ac_spouse_wrap').style.display=isAdd?'none':'block';
+  document.getElementById('ac_spouselink_wrap').style.display=isAdd?'none':'block';
+  document.getElementById('ac_addr_section').style.display=isAdd?'none':'grid';
+  const crm2=document.getElementById('ac_crmid2');if(crm2&&crm2.parentElement)crm2.parentElement.style.display=isAdd?'none':'block';
+  const note=document.getElementById('ac_hh_note');
+  note.style.display=isAdd&&_acTargetHH?'block':'none';
+  if(isAdd&&_acTargetHH)note.innerHTML='Adding to <b>'+_escHtml(_acTargetHH.displayName||'household')+'</b>'+(_acTargetHH.address?' — '+_escHtml(_acTargetHH.address):'');
+  const btn=document.getElementById('ac_actionBtn');
+  btn.innerHTML=isAdd
+    ?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Add to Household'
+    :'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Look Up Property';
+}
+function showAddContact(){_acMode='new';_acTargetHH=null;_acApplyMode();document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';_acLoadPresets().then(_acRenderPresets);}
+function showAddPersonToHousehold(idx){
+  const h=households[idx];if(!h)return;
+  _acMode='add';_acTargetHH=h;_acApplyMode();
+  // Pre-fill last name from the household's existing members
+  const ln=(h.members&&h.members[0]&&h.members[0].last_name)||'';
+  document.getElementById('ac_last').value=ln;
+  document.getElementById('addContactModal').style.display='flex';
+  document.getElementById('ac_first').focus();
+  document.getElementById('ac_status').style.display='none';
+}
+async function _acSaveToHousehold(){
+  const h=_acTargetHH;if(!h)return;
+  const first=document.getElementById('ac_first').value.trim();
+  const last=document.getElementById('ac_last').value.trim();
+  if(!first||!last){alert('Please enter first and last name.');return;}
+  const phone=document.getElementById('ac_phone').value.trim()||null;
+  const email=document.getElementById('ac_email').value.trim()||null;
+  const crmId=document.getElementById('ac_crmid').value.trim()||null;
+  const btn=document.getElementById('ac_actionBtn');btn.disabled=true;
+  const status=document.getElementById('ac_status');status.style.display='block';status.textContent='Saving…';
+  try{
+    const res=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:h.id,first_name:first,last_name:last,phone,email,civicrm_id:crmId})});
+    const c=(Array.isArray(res)?res[0]:res)||{household_id:h.id,first_name:first,last_name:last,phone,email};
+    if(!h.members)h.members=[];
+    h.members.push(c);
+    // Update joint name to include the new person
+    const firsts=h.members.map(m=>m.first_name).filter(Boolean);
+    const lastName=h.members[0].last_name||last;
+    const jn=firsts.join(' and ')+' '+lastName;
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({joint_name:jn})});
+    h.joint_name=jn;h.displayName=jn;
+    _invHH(h);
+    hideAddContact();
+    const fresh=hIdx(h.id);
+    try{renderList();}catch(e){}
+    try{if(fresh>=0)openFullPanel(fresh);}catch(e){}
+  }catch(e){status.textContent='Save failed: '+e.message;}
+  btn.disabled=false;
+}
+function hideAddContact(){_acMode='new';_acTargetHH=null;document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';const mgr=document.getElementById('ac_preset_mgr');if(mgr)mgr.style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip','ac_spouse_search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('ac_spouse_results').style.display='none';document.getElementById('ac_spouse_selected').style.display='none';acLinkedSpouse=null;}
 function setCity(city,zip){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
 let acLinkedSpouse=null;
 
@@ -3575,6 +3725,7 @@ function showAddDonation(idx){
   // Default date to today
   document.getElementById('don_date').value = localToday();
   document.getElementById('don_amount').value = '';
+  document.getElementById('don_method').value = '';
   document.getElementById('don_notes').value = '';
   document.getElementById('don_status').style.display = 'none';
   document.getElementById('addDonationModal').style.display = 'flex';
@@ -3584,6 +3735,7 @@ async function saveDonation(){
   const editId=document.getElementById('don_edit_id').value;
   const amount = parseFloat(document.getElementById('don_amount').value);
   const date = document.getElementById('don_date').value;
+  const method = document.getElementById('don_method').value||null;
   const notes = document.getElementById('don_notes').value.trim();
   const contactId = document.getElementById('don_contact').value;
   const status = document.getElementById('don_status');
@@ -3591,7 +3743,7 @@ async function saveDonation(){
   status.style.display='block';status.textContent='Saving…';
   try{
     if(editId){
-      await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+      await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null})});
       // Update local state (was missing entirely — edits showed stale until reload)
       const hE=households[addDonHouseholdIdx];
       (hE.members||[]).forEach(m=>{
@@ -3604,16 +3756,16 @@ async function saveDonation(){
           const tgt=hE.members.find(x=>x.id===contactId);
           if(tgt){
             if(!tgt.donations)tgt.donations=[];
-            tgt.donations.unshift({...d,contact_id:contactId,amount,date,notes:notes||null});
+            tgt.donations.unshift({...d,contact_id:contactId,amount,date,method,notes:notes||null});
             tgt.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
           }
         }else{
-          d.amount=amount;d.date=date;d.notes=notes||null;
+          d.amount=amount;d.date=date;d.method=method;d.notes=notes||null;
           m.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
         }
       });
     }else{
-      const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,notes:notes||null})});
+      const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null})});
       // Update local state for new donation — keep the DB row (with its id!) so
       // edit/delete work immediately. Previously the id was discarded, leaving
       // the new donation un-deletable and un-editable until a full reload.
@@ -3621,7 +3773,7 @@ async function saveDonation(){
       const memberNew=hNew.members.find(m=>m.id===contactId);
       if(memberNew){
         if(!memberNew.donations)memberNew.donations=[];
-        memberNew.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,notes});
+        memberNew.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,method,notes});
         memberNew.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
       }
     }
@@ -3932,6 +4084,9 @@ Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${
 HOUSEHOLD NOTES (authoritative):
 ${h.notes&&h.notes.trim()?h.notes.trim():'None'}
 
+FAMILY LINKS (authoritative — adult children/parents in other households, from the CRM's relationships table):
+${_famLinksText(h)||'None on file'}
+
 PRIVATE NOTES (${notes_list.length}):
 ${notes_list.length?notes_list.slice(0,10).map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None'}
 
@@ -4061,6 +4216,9 @@ Donations: ${g.donations.map(d=>`$${parseFloat(d.amount).toLocaleString()} on ${
 
 RABBI'S HOUSEHOLD NOTES (authoritative — these are facts the rabbi knows personally):
 ${h.notes&&h.notes.trim()?h.notes.trim():'None'}
+
+FAMILY LINKS (authoritative — adult children/parents in other households, from the CRM's relationships table; never contradict these):
+${_famLinksText(h)||'None on file'}
 
 PRIVATE NOTES (${notes_list.length}):
 ${notes_list.length?notes_list.slice(0,20).map(n=>`[${n.date}] ${n.notes}`).join('\n'):'None'}
@@ -4409,7 +4567,7 @@ function openFullPanel(idx){
     // Build unified timeline: notes + activities + donations
     const timeline=[];
     interactions.forEach(i=>timeline.push({date:i.date,sort:_localDate(i.date),type:i.type==='Note'?'note':'activity',label:i.type,text:i.notes||'',id:i.id}));
-    if(g)g.donations.forEach(d=>timeline.push({date:d.date,sort:_localDate(d.date),type:'donation',label:'Donation',amount:d.amount,text:d.notes||'',id:d.id}));
+    if(g)g.donations.forEach(d=>timeline.push({date:d.date,sort:_localDate(d.date),type:'donation',label:'Donation',amount:d.amount,method:d.method||null,text:d.notes||'',id:d.id}));
     timeline.sort((a,b)=>b.sort-a.sort);
 
     const timelineHtml=timeline.length?timeline.map(t=>{
@@ -4419,7 +4577,7 @@ function openFullPanel(idx){
         <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:.65rem;margin-top:2px">${icon}</div>
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-size:.72rem;font-weight:600;color:var(--txt)">${t.type==='donation'?fa(t.amount):t.label}</div>
+            <div style="font-size:.72rem;font-weight:600;color:var(--txt)">${t.type==='donation'?fa(t.amount)+(t.method?` <span style="font-size:.58rem;font-weight:500;color:var(--txt3);background:var(--surf2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;vertical-align:1px">${_escHtml(t.method)}</span>`:''):t.label}</div>
             <div style="display:flex;align-items:center;gap:6px">
               <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap">${fd(t.date)}</div>
               <button onclick="editTimelineItem('${t.id}','${t.type}',this.dataset.text,'${t.date}',${idx})" data-text="${(t.text||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
@@ -4512,15 +4670,21 @@ function openFullPanel(idx){
     <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Household Notes</div>
-        <button onclick="byId('saveHouseholdNotes','${households[idx].id}',${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="notes-save-state-${idx}" style="font-size:.62rem;color:var(--txt3)"></span>
+          <button onclick="byId('saveHouseholdNotes','${households[idx].id}',${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
+        </div>
       </div>
-      <textarea id="fullpanel-notes-${idx}" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${_escHtml(h.notes||'')}</textarea>
+      <textarea id="fullpanel-notes-${idx}" oninput="byId('_hhNotesTyped','${households[idx].id}',${idx})" onblur="byId('_hhNotesBlur','${households[idx].id}',${idx})" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${_escHtml(h.notes||'')}</textarea>
     </div>
 
     <!-- Contacts + Property -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 5a3.5 3.5 0 0 1 0 7M16 14a7 7 0 0 1 6 7"/></svg> People</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 5a3.5 3.5 0 0 1 0 7M16 14a7 7 0 0 1 6 7"/></svg> People</div>
+          <button onclick="byId('showAddPersonToHousehold','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(15,118,110,.1);border:1px solid rgba(15,118,110,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">＋ Add person</button>
+        </div>
         ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="font-weight:600;font-size:.82rem">${_escHtml(_daasDisplayName(m))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
@@ -4581,6 +4745,32 @@ function openFullPanel(idx){
         <div style="display:flex;gap:8px;margin-top:10px">
           <button onclick="byId('saveChildrenEdit','${households[idx].id}',${idx})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:500">Save</button>
           <button onclick="byId('cancelChildrenEdit','${households[idx].id}',${idx})" style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.78rem">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Linked Family (cross-household parent/child links for adult children) -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Linked Family</div>
+          <button onclick="byId('famLinkOpen','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(15,118,110,.1);border:1px solid rgba(15,118,110,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">🔗 Link family</button>
+        </div>
+        <div id="famlink-list-${idx}">${_famLinksHtml(h,idx)}</div>
+        <div id="famlink-ui-${idx}" style="display:none;margin-top:8px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div style="font-size:.6rem;color:var(--txt3);margin-bottom:3px">Person here</div>
+              <select id="famlink-member-${idx}" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 9px;font-family:var(--font-ui);font-size:.78rem;border-radius:5px;outline:none">
+                ${(h.members||[]).map(m=>`<option value="${m.id}">${_escHtml(_daasDisplayName(m))}</option>`).join('')}
+              </select></div>
+            <div><div style="font-size:.6rem;color:var(--txt3);margin-bottom:3px">Relation</div>
+              <select id="famlink-rel-${idx}" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:7px 9px;font-family:var(--font-ui);font-size:.78rem;border-radius:5px;outline:none">
+                <option value="parent_of">is the PARENT of…</option>
+                <option value="child_of">is the CHILD of…</option>
+              </select></div>
+          </div>
+          <div style="font-size:.6rem;color:var(--txt3);margin-bottom:3px">Existing contact in another household</div>
+          <input type="text" id="famlink-search-${idx}" placeholder="Search contact…" oninput="famLinkSearch(${idx})" style="width:100%;box-sizing:border-box;margin-bottom:0">
+          <div id="famlink-results-${idx}" style="display:none;border:1px solid var(--border2);border-radius:4px;background:var(--surf);max-height:150px;overflow-y:auto;margin-top:4px"></div>
+          <div style="font-size:.6rem;color:var(--txt3);margin-top:6px">Links two contacts that already exist — nothing is created. Little kids stay on the parents' Family card.</div>
         </div>
       </div>
     </div>
@@ -4700,6 +4890,156 @@ async function saveChildrenEdit(idx){
   }catch(e){alert('Save failed: '+e.message);}
 }
 
+// ── FAMILY LINKS (relationships table) ──
+// Cross-household parent/child links for ADULT children who have their own
+// household. Links connect two EXISTING contacts only — nothing is auto-created.
+// Storage direction is always parent→child: contact_id = the parent,
+// related_contact_id = the child. RELS is loaded in loadAll().
+let RELS=[];
+function _relContact(cid){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===cid);
+    if(m)return{m,h};
+  }
+  return null;
+}
+function _relsForHousehold(h){
+  const ids=new Set((h.members||[]).map(m=>m.id));
+  return RELS.filter(r=>ids.has(r.contact_id)||ids.has(r.related_contact_id));
+}
+function _famLinksHtml(h,idx){
+  const links=_relsForHousehold(h);
+  if(!links.length)return '<div style="font-size:.72rem;color:var(--txt3);font-style:italic">No linked family in other households.</div>';
+  const ids=new Set((h.members||[]).map(m=>m.id));
+  return links.map(r=>{
+    const hereIsParent=ids.has(r.contact_id);
+    const hereC=_relContact(hereIsParent?r.contact_id:r.related_contact_id);
+    const otherC=_relContact(hereIsParent?r.related_contact_id:r.contact_id);
+    if(!otherC)return '';
+    const hereName=hereC?_daasDisplayName(hereC.m):'(?)';
+    const otherName=_daasDisplayName(otherC.m);
+    const label=hereIsParent?'parent of':'child of';
+    const jumpIdx=hIdx(otherC.h.id);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+      <span><span style="font-weight:500">${_escHtml(hereName)}</span> <span style="color:var(--txt3)">${label}</span> <span style="font-weight:500">${_escHtml(otherName)}</span> <span style="font-size:.66rem;color:var(--txt3)">(${_escHtml(otherC.h.displayName||'')})</span></span>
+      <span style="display:flex;gap:2px;flex-shrink:0">
+        <button onclick="famLinkJump('${otherC.h.id}')" title="Open household" style="background:none;border:none;cursor:pointer;color:var(--accent);padding:2px 4px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></button>
+        <button onclick="famLinkDelete('${r.id}',${idx})" title="Remove link" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 4px;font-size:.78rem">×</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+// Compact ground-truth string for AI contexts (profile builder, chats).
+function _famLinksText(h){
+  const links=_relsForHousehold(h);
+  if(!links.length)return '';
+  const out=links.map(r=>{
+    const p=_relContact(r.contact_id),c=_relContact(r.related_contact_id);
+    if(!p||!c)return null;
+    return _daasDisplayName(p.m)+' ('+(p.h.displayName||'')+') is the parent of '+_daasDisplayName(c.m)+' ('+(c.h.displayName||'')+')';
+  }).filter(Boolean);
+  return out.join('; ');
+}
+function famLinkOpen(idx){
+  const ui=document.getElementById('famlink-ui-'+idx);
+  if(ui)ui.style.display=ui.style.display==='none'?'block':'none';
+}
+function famLinkSearch(idx){
+  const h=households[idx];
+  const q=document.getElementById('famlink-search-'+idx).value.toLowerCase().trim();
+  const res=document.getElementById('famlink-results-'+idx);
+  if(q.length<2){res.style.display='none';return;}
+  const hereIds=new Set((h.members||[]).map(m=>m.id));
+  const matches=[];
+  households.forEach(hh=>{
+    if(hh.id===h.id)return;
+    (hh.members||[]).forEach(m=>{
+      if(hereIds.has(m.id))return;
+      if((m.first_name+' '+m.last_name).toLowerCase().includes(q)||(hh.displayName||'').toLowerCase().includes(q)){
+        matches.push({m,hh});
+      }
+    });
+  });
+  if(!matches.length){res.style.display='none';return;}
+  res.style.display='block';
+  res.innerHTML=matches.slice(0,8).map(x=>`
+    <div onclick="famLinkPick(${idx},'${x.m.id}')" style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.76rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+      <div style="font-weight:500">${_escHtml(_daasDisplayName(x.m))}</div>
+      <div style="font-size:.66rem;color:var(--txt3)">${_escHtml((x.hh.displayName||'')+(x.hh.city?' · '+x.hh.city:''))}</div>
+    </div>`).join('');
+}
+async function famLinkPick(idx,otherContactId){
+  const h=households[idx];
+  const memberId=document.getElementById('famlink-member-'+idx).value;
+  const rel=document.getElementById('famlink-rel-'+idx).value;
+  if(!memberId||!otherContactId)return;
+  // Normalize to parent→child
+  const parentId=rel==='parent_of'?memberId:otherContactId;
+  const childId=rel==='parent_of'?otherContactId:memberId;
+  if(RELS.some(r=>r.contact_id===parentId&&r.related_contact_id===childId)){alert('That link already exists.');return;}
+  try{
+    const saved=await sb('relationships',{method:'POST',body:JSON.stringify({contact_id:parentId,related_contact_id:childId,relation:'parent'})});
+    const row=(Array.isArray(saved)?saved[0]:saved);
+    if(row&&row.id)RELS.push(row);
+    document.getElementById('famlink-search-'+idx).value='';
+    document.getElementById('famlink-results-'+idx).style.display='none';
+    document.getElementById('famlink-ui-'+idx).style.display='none';
+    const list=document.getElementById('famlink-list-'+idx);
+    if(list)list.innerHTML=_famLinksHtml(h,idx);
+  }catch(e){alert('Link failed: '+e.message+'\n\nIf this says the table does not exist, run the relationships SQL in Supabase first.');}
+}
+function famLinkDelete(relId,idx){
+  _egConfirm('Remove family link','Remove this parent/child link? The contacts themselves are not affected.',async()=>{
+    try{
+      await sb('relationships?id=eq.'+relId,{method:'DELETE'});
+      RELS=RELS.filter(r=>r.id!==relId);
+      const h=households[idx];
+      const list=document.getElementById('famlink-list-'+idx);
+      if(list&&h)list.innerHTML=_famLinksHtml(h,idx);
+    }catch(e){alert('Remove failed: '+e.message);}
+  },'Remove');
+}
+function famLinkJump(hhId){
+  const i=hIdx(hhId);
+  if(i<0){alert('Household not loaded.');return;}
+  try{openFullPanel(i);}catch(e){}
+}
+
+// ── HOUSEHOLD NOTES AUTOSAVE ──
+// Debounced save ~1.5s after typing stops, immediate on blur. Text persists on
+// the fast path; semantic re-embedding only fires on blur (embedding every
+// keystroke pause would be wasteful). The Save button remains as a manual
+// fallback and still embeds.
+let _hhNotesTimer=null;
+function _hhNotesTyped(idx){
+  const st=document.getElementById('notes-save-state-'+idx);
+  if(st)st.textContent='…';
+  clearTimeout(_hhNotesTimer);
+  _hhNotesTimer=setTimeout(()=>{_hhNotesAutosave(idx,false);},1500);
+}
+function _hhNotesBlur(idx){
+  clearTimeout(_hhNotesTimer);
+  _hhNotesAutosave(idx,true);
+}
+async function _hhNotesAutosave(idx,withEmbed){
+  const h=households[idx];
+  const el=document.getElementById('fullpanel-notes-'+idx);
+  if(!h||!el)return;
+  const text=el.value;
+  if(text===(h.notes||''))
+    {const st=document.getElementById('notes-save-state-'+idx);if(st&&st.textContent==='…')st.textContent='';return;}
+  const st=document.getElementById('notes-save-state-'+idx);
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:text})});
+    h.notes=text;
+    _invHH(h);
+    if(withEmbed)embedHouseholdNotes(h.id,text);
+    if(st){st.textContent='Saved ✓';st.style.color='var(--green)';setTimeout(()=>{if(st.textContent==='Saved ✓'){st.textContent='';st.style.color='var(--txt3)';}},2500);}
+  }catch(e){
+    if(st){st.textContent='Save failed';st.style.color='var(--red)';}
+  }
+}
+
 async function saveHouseholdNotes(idx,btn){
   const h=households[idx];
   const el=document.getElementById('fullpanel-notes-'+idx);
@@ -4742,6 +5082,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       sel.innerHTML=(h.members||[]).map(m=>`<option value="${m.id}"${m.id===d.contact_id?' selected':''}>${_escHtml(_daasDisplayName(m))}</option>`).join('');
       document.getElementById('don_amount').value=d.amount||'';
       document.getElementById('don_date').value=d.date||'';
+      document.getElementById('don_method').value=d.method||'';
       document.getElementById('don_notes').value=d.notes||'';
       document.getElementById('don_status').style.display='none';
       document.getElementById('addDonationModal').style.display='flex';
@@ -5189,7 +5530,7 @@ async function runAISearch(){
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    results.innerHTML=_escHtml(txt).replace(/\n/g,'<br>');
+    results.innerHTML=_mdLite(txt);
   }catch(e){
     results.innerHTML='<span style="color:var(--red)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> '+_escHtml(e.message)+'</span>';
   }
@@ -5385,6 +5726,7 @@ async function sendPersonChat(){
   const context=`CONTACT: ${_escHtml(h.displayName)}
 ADDRESS: ${h.address||'unknown'}, ${h.city||''}, OH ${h.zip||''}
 HOUSEHOLD MEMBERS: ${(h.members||[]).map(m=>`${m.first_name} ${m.last_name} (${m.gender||''}${m.dob?' · DOB: '+formatDOB(m.dob)+' · Age '+calcAge(m.dob):''})`).join(', ')}
+FAMILY LINKS (ground truth — adult children/parents in other households): ${_famLinksText(h)||'none on file'}
 PHONES: ${(h.members||[]).map(m=>m.phone).filter(Boolean).join(', ')||'none'}
 EMAILS: ${(h.members||[]).map(m=>m.email).filter(Boolean).join(', ')||'none'}
 
@@ -5428,7 +5770,7 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
       body:JSON.stringify({
         model:'claude-sonnet-4-6',
         max_tokens:800,
-        system:[{type:'text',text:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete, authoritative information about one specific contact. The AGC scores in the context are pre-calculated database facts — treat them as ground truth, not estimates. Your job is to help the rabbi understand this person deeply, recall past interactions, plan next steps, and craft specific outreach. Be warm, insightful, and concrete. Reference actual details. Surface patterns the rabbi might not see. Suggest specific asks, timing, and talking points based on the data.\n\n${context}`,cache_control:{type:'ephemeral'}}],
+        system:[{type:'text',text:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete, authoritative information about one specific contact. The AGC scores in the context are pre-calculated database facts — treat them as ground truth, not estimates. Your job is to help the rabbi understand this person deeply, recall past interactions, plan next steps, and craft specific outreach. Be warm, insightful, and concrete. Reference actual details. Surface patterns the rabbi might not see. Suggest specific asks, timing, and talking points based on the data. Keep formatting simple: short paragraphs, plain lists and occasional bold — no deep heading hierarchies or tables.\n\n${context}`,cache_control:{type:'ephemeral'}}],
         messages:personChatHistory
       })
     });
@@ -5437,7 +5779,7 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
     const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     personChatHistory.push({role:'assistant',content:reply});
     document.getElementById('person-typing')?.remove();
-    msgs.innerHTML+=`<div style="display:flex;margin-bottom:14px"><div style="background:var(--surf2);padding:11px 15px;border-radius:16px 16px 16px 4px;font-size:.84rem;color:var(--txt);line-height:1.65;max-width:88%">${_escHtml(reply).replace(/\n/g,'<br>')}</div></div>`;
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:14px"><div style="background:var(--surf2);padding:11px 15px;border-radius:16px 16px 16px 4px;font-size:.84rem;color:var(--txt);line-height:1.6;max-width:88%">${_mdLite(reply)}</div></div>`;
     msgs.scrollTop=msgs.scrollHeight;
   }catch(e){
     document.getElementById('person-typing')?.remove();
@@ -5557,7 +5899,7 @@ async function loadSession(sessionId){
       if(m.role==='user'){
         inner.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><div style="background:var(--accent);color:#fff;padding:10px 15px;border-radius:16px 16px 4px 16px;font-size:.84rem;max-width:78%;line-height:1.5">${_escHtml(m.content)}</div></div>`;
       }else{
-        inner.innerHTML+=`<div style="display:flex;margin-bottom:14px"><div style="background:var(--surf2);padding:11px 15px;border-radius:16px 16px 16px 4px;font-size:.84rem;color:var(--txt);line-height:1.65;max-width:88%">${_escHtml(m.content).replace(/\n/g,'<br>')}</div></div>`;
+        inner.innerHTML+=`<div style="display:flex;margin-bottom:14px"><div style="background:var(--surf2);padding:11px 15px;border-radius:16px 16px 16px 4px;font-size:.84rem;color:var(--txt);line-height:1.6;max-width:88%">${_mdLite(m.content)}</div></div>`;
       }
     });
     msgs.scrollTop=msgs.scrollHeight;
@@ -5793,7 +6135,7 @@ async function sendGlobalAsk(){
         model:mode==='quick'?'claude-haiku-4-5-20251001':'claude-sonnet-4-6',
         max_tokens:mode==='quick'?600:mode==='power'?2000:1400,
         system:[
-          {type:'text',text:`${temporalAnchor}\n\nCHRONOLOGICAL EVALUATION RULE: You are processing structured historical logs where each line is formatted as [LOG_DATE] | TYPE -> TEXT. CRITICAL: Any relative time-anchored words found inside the note text (such as 'yesterday', 'last week', 'months ago', or 'tomorrow') are strictly relative to the specific [LOG_DATE] prefix on that exact line. Compute timelines backwards or forwards from that local [LOG_DATE] first, then cross-reference your final timeline calculation against the current global date.\n\nYou are a relationship intelligence assistant for a Chabad rabbi. AGC scores are pre-calculated database facts — treat them as authoritative. Help identify the right people, surface patterns, give concrete actionable recommendations. Always name specific people and reference actual data.${rabbiCtx?'\n\nABOUT THE RABBI:\n'+rabbiCtx:''}${mode==='quick'?'\n\nBe concise — one paragraph max.':''}`},
+          {type:'text',text:`${temporalAnchor}\n\nCHRONOLOGICAL EVALUATION RULE: You are processing structured historical logs where each line is formatted as [LOG_DATE] | TYPE -> TEXT. CRITICAL: Any relative time-anchored words found inside the note text (such as 'yesterday', 'last week', 'months ago', or 'tomorrow') are strictly relative to the specific [LOG_DATE] prefix on that exact line. Compute timelines backwards or forwards from that local [LOG_DATE] first, then cross-reference your final timeline calculation against the current global date.\n\nYou are a relationship intelligence assistant for a Chabad rabbi. AGC scores are pre-calculated database facts — treat them as authoritative. Help identify the right people, surface patterns, give concrete actionable recommendations. Always name specific people and reference actual data. Keep formatting simple: short paragraphs, plain lists and occasional bold — no deep heading hierarchies or tables.${rabbiCtx?'\n\nABOUT THE RABBI:\n'+rabbiCtx:''}${mode==='quick'?'\n\nBe concise — one paragraph max.':''}`},
           {type:'text',text:'CONTACT DATABASE:\n'+rosterStr,cache_control:{type:'ephemeral'}}
         ],
         messages:[...globalChatHistory.slice(0,-1),{role:'user',content:query+(notesStr?'\n\nRELEVANT NOTES (semantic matches for this query):\n'+notesStr:'')}]
@@ -5804,7 +6146,7 @@ async function sendGlobalAsk(){
     const reply=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     globalChatHistory.push({role:'assistant',content:reply});
     document.getElementById('global-typing')?.remove();
-    msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.65;max-width:85%">${_escHtml(reply).replace(/\n/g,'<br>')}</div></div>`;
+    msgs.innerHTML+=`<div style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt);line-height:1.6;max-width:85%">${_mdLite(reply)}</div></div>`;
     _chatScroll();
     // Auto-save session after each exchange
     saveCurrentSession();
@@ -5826,13 +6168,14 @@ function _rosterLines(detail){
     const g=getGivingStats(h);
     const agc=getAGCScore(h);
     const p=h.profile_data||{};
+    const fam=(typeof _famLinksText==='function'&&RELS&&RELS.length)?_famLinksText(h):'';
     let line;
     if(detail==='quick'){
       const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
-      line=h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none');
+      line=h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none')+(fam?' | Family:'+fam:'');
     }else if(detail==='full'){
       const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
-      line=h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
+      line=h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(fam?' | FamilyLinks:'+fam:'')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
     }else{ // lean
       const membersStr=(h.members||[]).map(m=>{
         const age=m.dob?calcAge(m.dob):null;
@@ -5846,6 +6189,7 @@ function _rosterLines(detail){
         ' | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+')'+
         ' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+
         ' | Giving:'+givingStr+
+        (fam?' | Family:'+fam:'')+
         (h.notes?' | Notes:'+h.notes.substring(0,80):'')+
         (summaryStr?' | '+summaryStr:'')+
         (approachStr?' | '+approachStr:'');
@@ -6300,11 +6644,11 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
-    +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, pledge, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. When in doubt between interaction and household, prefer interaction. '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children|donation","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","donation_fields":{"amount":null,"method":"","notes":""},"new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. Use donation ONLY when money was actually RECEIVED from a matched existing contact — verbs like gave, handed, dropped off, sent, paid, donated, wrote a check — AND an explicit dollar amount appears in the content: fill donation_fields with amount (a number, no $ sign), method (exactly one of: Check, Cash, Venmo, PayPal, Zelle, Card, Bank transfer, Donor Advised Fund, Other — or empty string if the payment method is not stated; \'venmoed\' = Venmo, \'wrote/handed a check\' = Check, \'zelled\' = Zelle), and notes (short context, e.g. what the gift was for). A PLEDGE or promise of future money (pledged, committed, will give, promised) is NOT a donation — file it as an interaction with the amount in the text. When in doubt between interaction and household, prefer interaction; when in doubt between donation and interaction, prefer interaction. '
     +'Choosing the interaction type: an email or text message = \"Email / Text\"; an outbound phone call where you reached them or any in-person live conversation = \"Connected\"; an attempted call that went to voicemail or unanswered = \"Left VM\"; a scheduled or in-person sit-down meeting = \"Meeting in person\"; Shabbat/service attendance = \"Shabbat attendance\"; a class or learning program = \"Class / Program\"; an event or program they came to = \"Event attendance\"; a class, kids program, or youth program they attended = \"Class / Program\"; only use \"Note\" for standing background facts that are NOT a touch, and prefer \"save_as\":\"household\" for those. Use exactly one of these type strings verbatim. '
     +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
-    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). Do NOT propose donation records; pledges and gifts go into the interaction text. If the content covers multiple distinct events or people, return multiple items. TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
+    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). A donation item requires an explicit amount actually stated in the content; never estimate amounts, and never propose a donation for someone not matched in the roster (use new_contact or interaction text instead). If the content covers multiple distinct events or people, return multiple items (a gift plus a conversation can be two items: one donation, one interaction). TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
 
   // Build user content (text + optional file)
   const userContent=[];
@@ -6385,6 +6729,37 @@ function _captureRenderProposals(parsed){
       return;
     }
 
+    if(it.save_as==='donation'){
+      const df=it.donation_fields||{};
+      const methods=['','Check','Cash','Venmo','PayPal','Zelle','Card','Bank transfer','Donor Advised Fund','Other'];
+      html+='<div class="capture-item" data-i="'+i+'" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      html+='<div style="font-size:.82rem;font-weight:600;color:#a16207"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Donation Received</div>';
+      html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
+      html+='</div>';
+      html+='<div style="font-size:.64rem;color:#a16207;margin-bottom:3px">Contact</div>';
+      html+='<select id="cap-don-contact-'+i+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+      html+='<option value="">— pick a person —</option>'+copts;
+      html+='</select>';
+      html+='<div style="display:flex;gap:8px;margin-bottom:9px">';
+      html+='<div style="flex:1"><div style="font-size:.64rem;color:#a16207;margin-bottom:3px">Amount $</div>';
+      html+='<input type="number" step="0.01" min="0" id="cap-don-amount-'+i+'" value="'+(df.amount!=null?df.amount:'')+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
+      html+='<div style="flex:1"><div style="font-size:.64rem;color:#a16207;margin-bottom:3px">Date</div>';
+      html+='<input type="date" id="cap-don-date-'+i+'" value="'+date+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit"></div>';
+      html+='<div style="flex:1"><div style="font-size:.64rem;color:#a16207;margin-bottom:3px">Method</div>';
+      html+='<select id="cap-don-method-'+i+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit">';
+      methods.forEach(mm=>{html+='<option value="'+mm+'"'+(mm===(df.method||'')?' selected':'')+'>'+(mm||'—')+'</option>';});
+      html+='</select></div>';
+      html+='</div>';
+      html+='<div style="font-size:.64rem;color:#a16207;margin-bottom:3px">Notes</div>';
+      html+='<textarea id="cap-don-notes-'+i+'" rows="2" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:8px;font-size:.78rem;color:var(--txt);font-family:inherit;resize:vertical">'+_enrichEsc(df.notes||it.text||'')+'</textarea>';
+      html+='<div style="display:flex;gap:8px;margin-top:10px">';
+      html+='<button onclick="captureSaveDonation('+i+',this)" style="padding:8px 16px;background:#a16207;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Confirm & Save Donation</button>';
+      html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #fcd34d;color:#a16207;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button>';
+      html+='</div></div>';
+      return;
+    }
+
     if(it.save_as==='new_contact'){
       const f=it.new_contact_fields||{};
       html+='<div class="capture-item" data-i="'+i+'" style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
@@ -6457,6 +6832,10 @@ function _captureRenderProposals(parsed){
   items.forEach((it,i)=>{
     if(it.save_as==='new_contact')return; // handled by captureLaunchContactCreator
     if(it.save_as==='children')return; // handled by captureConfirmChildren
+    if(it.save_as==='donation'){
+      if(it.contact_id){const dsel=document.getElementById('cap-don-contact-'+i);if(dsel)dsel.value=it.contact_id;}
+      return;
+    }
     if(it.contact_id){
       const sel=document.getElementById('cap-contact-'+i);if(sel)sel.value=it.contact_id;
       const h=households.find(hh=>(hh.members||[]).some(m=>m.id===it.contact_id));
@@ -6602,6 +6981,37 @@ async function captureSaveItem(i,btn){
     if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
     const card=btn.closest('.capture-item');
     if(card)card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
+  }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
+}
+
+// Save a donation proposed by Quick Capture (received money only — the AI is
+// instructed to keep pledges as interactions). Same POST shape as saveDonation.
+async function captureSaveDonation(i,btn){
+  const contactId=document.getElementById('cap-don-contact-'+i).value;
+  const amount=parseFloat(document.getElementById('cap-don-amount-'+i).value);
+  const date=document.getElementById('cap-don-date-'+i).value||localToday();
+  const method=document.getElementById('cap-don-method-'+i).value||null;
+  const notes=document.getElementById('cap-don-notes-'+i).value.trim()||null;
+  if(!contactId){alert('Pick a contact first (or Dismiss this item).');return;}
+  if(!amount||amount<=0){alert('Enter a valid amount.');return;}
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,method,notes})});
+    // Keep in-memory giving state fresh (same pattern as saveDonation)
+    const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
+    if(h){
+      const member=h.members.find(m=>m.id===contactId);
+      if(member){
+        if(!member.donations)member.donations=[];
+        member.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,method,notes});
+        member.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      }
+      _invHH(h);
+      if(typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
+      try{renderList();}catch(e){}
+    }
+    const card=btn.closest('.capture-item');
+    if(card)card.innerHTML='<div style="font-size:.82rem;color:#a16207;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Donation of $'+amount.toLocaleString()+' saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
 }
 
@@ -8904,6 +9314,23 @@ async function _mergeConfirm(){
 
     // ── 5. Apply chosen merged fields to the keeper ──
     show('Applying merged fields…');
+    // Repoint family links first — relationships cascade-delete with the
+    // contact, so any parent/child links on the duplicate must move to the
+    // keeper before the delete below. Unique-constraint clashes (link already
+    // exists on the keeper) fall back to deleting the duplicate's row.
+    try{
+      const dupRels=await sb('relationships?select=*&or=(contact_id.eq.'+dup.id+',related_contact_id.eq.'+dup.id+')')||[];
+      for(const r of dupRels){
+        const patch={};
+        if(r.contact_id===dup.id)patch.contact_id=keeper.id;
+        if(r.related_contact_id===dup.id)patch.related_contact_id=keeper.id;
+        // A contact can't be its own parent — drop degenerate links.
+        const np=patch.contact_id||r.contact_id, nc=patch.related_contact_id||r.related_contact_id;
+        if(np===nc){await sb('relationships?id=eq.'+r.id,{method:'DELETE'});continue;}
+        try{await sb('relationships?id=eq.'+r.id,{method:'PATCH',body:JSON.stringify(patch)});}
+        catch(e){try{await sb('relationships?id=eq.'+r.id,{method:'DELETE'});}catch(e2){}}
+      }
+    }catch(e){/* relationships table may not exist yet — merge proceeds */}
     const patch={};
     ['first_name','last_name','email','phone'].forEach(key=>{
       const src=_merge.fields[key]==='dup'?dup:keeper;
