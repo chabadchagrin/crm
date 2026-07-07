@@ -2830,13 +2830,15 @@ function mobileSrch(){const v=document.getElementById('srch-mobile').value;docum
 // janked every keystroke). All rows remain reachable by scrolling.
 const _LIST_CHUNK=120;
 function _renderListRow(h){
-  const i=hIdx(h.id);const tier=getTier(i);
+  const i=hIdx(h.id);
+  if(i<0)return''; // household no longer loaded (deleted mid-scroll) — skip rather than crash on households[-1]
+  const tier=getTier(i);
   const phones=[...new Set((h.members||[]).map(m=>m.phone).filter(Boolean))].join(' · ');
   const valStr=h.home_value?'$'+Math.round(h.home_value).toLocaleString():'';
   const g=getGivingStats(h);
   const agc=getAGCScore(h);
   const scoreColor=agc.total>=70?'var(--green)':agc.total>=40?'var(--gold)':'var(--red)';
-  return`<div class="citem${i===activeIdx?' active':''}" onclick="byId('selectHousehold','${households[i].id}',${i})" oncontextmenu="_hideCtxMenu(event,'${households[i].id}')">
+  return`<div class="citem${i===activeIdx?' active':''}" onclick="byId('selectHousehold','${h.id}',${i})" oncontextmenu="_hideCtxMenu(event,'${h.id}')">
       <div class="pindot ${tier==='grey'?'':tier}">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="cname">${_escHtml(h.displayName)}</div>
@@ -3412,9 +3414,9 @@ function _acRenderPresets(){
   const zipHost=document.getElementById('ac_zip_presets');
   if(!cityHost||!zipHost||!_acPresets)return;
   const chip='font-size:.67rem;padding:4px 9px;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer';
-  cityHost.innerHTML=_acPresets.map(p=>`<button type="button" onclick="setCity('${_escAttr(p.city)}','${_escAttr(p.zip)}')" style="${chip}">${_escHtml(p.city)} ${_escHtml(p.zip)}</button>`).join('');
+  cityHost.innerHTML=_acPresets.map(p=>`<button type="button" onclick="setCity('${_escAttr(p.city)}','${_escAttr(p.zip)}',this)" style="${chip}">${_escHtml(p.city)} ${_escHtml(p.zip)}</button>`).join('');
   const zips=[...new Set(_acPresets.map(p=>p.zip).filter(Boolean))];
-  zipHost.innerHTML=zips.map(z=>`<button type="button" onclick="setZip('${_escAttr(z)}')" style="${chip}">${_escHtml(z)}</button>`).join('');
+  zipHost.innerHTML=zips.map(z=>`<button type="button" onclick="setZip('${_escAttr(z)}',this)" style="${chip}">${_escHtml(z)}</button>`).join('');
   // Preset manager list (if open)
   const list=document.getElementById('ac_preset_list');
   if(list)list.innerHTML=_acPresets.map((p,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:.76rem"><span>${_escHtml(p.city)} ${_escHtml(p.zip)}</span><button type="button" onclick="_acRemovePreset(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;padding:0 4px">×</button></div>`).join('')||'<div style="font-size:.72rem;color:var(--txt3)">No presets — add one below.</div>';
@@ -3492,7 +3494,7 @@ async function _acSaveToHousehold(){
   btn.disabled=false;
 }
 function hideAddContact(){_acMode='new';_acTargetHH=null;document.getElementById('addContactModal').style.display='none';document.getElementById('confirmAddModal').style.display='none';const mgr=document.getElementById('ac_preset_mgr');if(mgr)mgr.style.display='none';['ac_first','ac_last','ac_spouse','ac_phone','ac_email','ac_crmid','ac_crmid2','ac_street','ac_city','ac_zip','ac_spouse_search'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('ac_spouse_results').style.display='none';document.getElementById('ac_spouse_selected').style.display='none';acLinkedSpouse=null;}
-function setCity(city,zip){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
+function setCity(city,zip,el){document.getElementById('ac_city').value=city;document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setCity"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});const t=el||((typeof event!=='undefined'&&event)?event.target:null);if(t){t.style.background='var(--accent)';t.style.color='#fff';t.style.borderColor='var(--accent)';}}
 let acLinkedSpouse=null;
 
 function searchSpouse(){
@@ -3543,7 +3545,7 @@ function clearSpouseLink(){
   document.querySelectorAll('[onclick^="setCity"],[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});
 }
 
-function setZip(zip){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});event.target.style.background='var(--accent)';event.target.style.color='#fff';event.target.style.borderColor='var(--accent)';}
+function setZip(zip,el){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});const t=el||((typeof event!=='undefined'&&event)?event.target:null);if(t){t.style.background='var(--accent)';t.style.color='#fff';t.style.borderColor='var(--accent)';}}
 
 async function lookupByAddress(){
   const first=document.getElementById('ac_first').value.trim();
@@ -5298,24 +5300,27 @@ async function saveFullNotes(idx){
 async function reGeocode(idx){
   const h=households[idx];
   if(!h||!h.address)return;
-  const btn=event.target;btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Geocoding…';btn.disabled=true;
+  // byId() dispatches this, so there is no inline-handler `event` argument; window.event
+  // is set during dispatch in current browsers but is not guaranteed — capture defensively.
+  const btn=(typeof event!=='undefined'&&event&&event.target)?event.target:null;
+  if(btn)btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Geocoding…';if(btn)btn.disabled=true;
   // Try Zillow first for lat/lon
   const result=await fetchProp(h);
   if(!result.error&&result.lat&&result.lon){
     h.lat=result.lat;h.lon=result.lon;
     await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({lat:h.lat,lon:h.lon})});
-    placePinAt(idx);map.setView([h.lat,h.lon],16,{animate:true});
-    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Done';return;
+    placePinAt(idx);if(map)map.setView([h.lat,h.lon],16,{animate:true});
+    if(btn)btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Done';return;
   }
   // Fall back to Nominatim
   const geo=await geocodeOne(h);
   if(geo){
     h.lat=geo.lat;h.lon=geo.lon;
     await sb('households?id=eq.'+h.id,{method:'PATCH',body:JSON.stringify({lat:geo.lat,lon:geo.lon})});
-    placePinAt(idx);map.setView([h.lat,h.lon],16,{animate:true});
-    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Done';
+    placePinAt(idx);if(map)map.setView([h.lat,h.lon],16,{animate:true});
+    if(btn)btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Done';
   }else{
-    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Not found';btn.disabled=false;
+    if(btn)btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Not found';if(btn)btn.disabled=false;
   }
 }
 
@@ -11932,7 +11937,7 @@ async function _ebPutToStorage(file,origName){
   const path='campaigns/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext;
   const base=(typeof SB_URL!=='undefined')?SB_URL:(window.SB_URL||'');
   const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:(window.SB_KEY||'');
-  const res=await fetch(base+'/storage/v1/object/email-images/'+path,{method:'POST',headers:{'Authorization':'Bearer '+keyv,'apikey':keyv,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},body:file});
+  const res=await fetch(base+'/storage/v1/object/email-images/'+path,{method:'POST',headers:{'Authorization':'Bearer '+(_authToken||keyv),'apikey':keyv,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},body:file});
   if(!res.ok){ const t=await res.text().catch(()=>''); throw new Error('storage '+res.status+' '+t.slice(0,140)); }
   return base+'/storage/v1/object/public/email-images/'+path;
 }
@@ -12458,7 +12463,7 @@ async function _ecInvokeSend(campaignId){
   console.log('[send] invoking email-send at',new Date().toISOString(),'campaign',campaignId);
   let res;
   try{
-    res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'Authorization':'Bearer '+keyv,'Content-Type':'application/json'},body:JSON.stringify({campaign_id:campaignId}),signal:ctrl.signal});
+    res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'apikey':keyv,'Authorization':'Bearer '+(_authToken||keyv),'Content-Type':'application/json'},body:JSON.stringify({campaign_id:campaignId}),signal:ctrl.signal});
   }catch(err){
     clearTimeout(timer);
     console.log('[send] fetch failed after',Date.now()-t0,'ms:',err&&err.name,err&&err.message);
@@ -12502,7 +12507,7 @@ async function _ecSendTest(){
     try{
       const base=(typeof SB_URL!=='undefined')?SB_URL:'';
       const keyv=(typeof SB_KEY!=='undefined')?SB_KEY:'';
-      const res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'Authorization':'Bearer '+keyv,'Content-Type':'application/json'},
+      const res=await fetch(base+'/functions/v1/email-send',{method:'POST',headers:{'apikey':keyv,'Authorization':'Bearer '+(_authToken||keyv),'Content-Type':'application/json'},
         body:JSON.stringify({test_to:_ecLastTestTo,subject:'[TEST] '+(_ecCur.subject||'(no subject)'),html:html,from_name:_ecCur.from_name||'',from_address:_ecCur.from_address})});
       const txt=await res.text(); let j={}; try{ j=JSON.parse(txt); }catch(e){}
       if(!res.ok) return 'Test send failed: '+(j.error||txt||('HTTP '+res.status));
@@ -16466,6 +16471,7 @@ async function mSync(btn){
   btn.innerHTML=orig; btn.disabled=false;
   if(_mActiveTab==='dash') mRenderD5();
   if(_mActiveTab==='contacts') mRenderRoster();
+  if(_mMapBuilt) _mSyncMapPins(); // synced data may have added/geocoded households
 }
 
 /* ===================== DAILY FIVE (mobile) ===================== */
@@ -16781,12 +16787,13 @@ function mSheetChat(hid){
 function mSheetHide(hid){ mCloseSheet(); hideHousehold(hid); try{ if(typeof mRenderRoster==='function')mRenderRoster(); }catch(e){} }
 
 /* ===================== MAP (mobile) ===================== */
-function mInitMap(){
-  if(_mMapBuilt){ setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); },80); return; }
-  if(typeof L==='undefined'){ return; }
-  _mMapObj=L.map('mMap',{zoomControl:true,attributionControl:false}).setView([41.43,-81.39],12);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_mMapObj);
-  // plot household pins
+function _mSyncMapPins(){
+  // Rebuild the pin layer from the CURRENT households array. Previously pins were
+  // plotted exactly once at first map build — a Map tab opened before loadAll
+  // finished stayed empty forever, and a CRM sync never refreshed the pins.
+  if(!_mMapObj) return;
+  _mPins.forEach(mk=>{ try{ _mMapObj.removeLayer(mk); }catch(e){} });
+  _mPins=[];
   households.forEach(h=>{
     if(!h.lat||!h.lon) return;
     const agc=getAGCScore(h).total;
@@ -16796,6 +16803,13 @@ function mInitMap(){
     mk.addTo(_mMapObj);
     _mPins.push(mk);
   });
+}
+function mInitMap(){
+  if(_mMapBuilt){ _mSyncMapPins(); setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); },80); return; }
+  if(typeof L==='undefined'){ return; }
+  _mMapObj=L.map('mMap',{zoomControl:true,attributionControl:false}).setView([41.43,-81.39],12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_mMapObj);
+  _mSyncMapPins();
   _mMapBuilt=true;
   setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); mLocate(); },120);
 }
