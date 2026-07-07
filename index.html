@@ -515,6 +515,23 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .rp-table tr:hover td{background:var(--surf2)}
 .rp-colchip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:.62rem;border:1px solid var(--border2);border-radius:20px;padding:3px 9px;margin:0 5px 5px 0;cursor:pointer;background:var(--surf);color:var(--txt2);user-select:none}
 .rp-colchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.rp-cond.rp-inert{outline:1.5px solid #d97706;outline-offset:3px;border-radius:6px}
+.rp-colnum{background:rgba(255,255,255,.28);border-radius:9px;padding:0 5px;font-size:.56rem;line-height:1.4}
+.rp-colarr{opacity:.7;font-size:.5rem;padding:0 2px;cursor:pointer}
+.rp-colarr:hover{opacity:1}
+.rp-table tfoot td{font-weight:700;border-top:2px solid var(--border2);background:var(--surf2);position:sticky;bottom:0;white-space:nowrap}
+#rpPrintArea{display:none}
+@media print{
+  body.rp-printing>*:not(#rpPrintArea){display:none !important}
+  body.rp-printing #rpPrintArea{display:block !important}
+  #rpPrintArea h1{font-family:Georgia,serif;font-size:16pt;margin:0 0 2pt}
+  #rpPrintArea .rp-pmeta{font-size:9pt;color:#555;margin:0 0 10pt}
+  #rpPrintArea table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #rpPrintArea th{text-align:left;border-bottom:1.5pt solid #000;padding:3pt 5pt;white-space:nowrap}
+  #rpPrintArea td{border-bottom:.5pt solid #bbb;padding:3pt 5pt;vertical-align:top}
+  #rpPrintArea tfoot td{border-top:1.5pt solid #000;border-bottom:none;font-weight:700}
+  #rpPrintArea tr{page-break-inside:avoid}
+}
 /* ── DAAS ASSISTANT OVERLAY ── */
 #assistantOverlay{display:none;position:fixed;inset:0;background:var(--bg,#faf8f5);z-index:2000;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .as-chip{display:inline-block;font-family:var(--font-ui);font-size:.64rem;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;margin:0 6px 6px 0;cursor:pointer;background:var(--surf);color:var(--txt2)}
@@ -14639,8 +14656,10 @@ function _rpResolveYear(v,now){
 const _RP_FIELDS={
   home_value:{label:'Home value',level:'h',type:'number'},
   city:{label:'City',level:'h',type:'text'},
+  state:{label:'State',level:'h',type:'text'},
   county:{label:'County',level:'h',type:'select',options:[['gea','Geauga'],['cuy','Cuyahoga'],['unk','Unknown']]},
   zip:{label:'ZIP',level:'h',type:'text'},
+  member_count:{label:'# of members',level:'h',type:'number'},
   has_address:{label:'Has address',level:'h',type:'bool'},
   has_kids:{label:'Has kids',level:'h',type:'bool'},
   kid_age:{label:'Kid age',level:'h',type:'number'},
@@ -14650,6 +14669,8 @@ const _RP_FIELDS={
   largest_gift:{label:'Largest gift',level:'roll',type:'number'},
   last_gift:{label:'Last gift date',level:'roll',type:'date'},
   gave_in_year:{label:'Gave in year',level:'roll',type:'year'},
+  giving_this_year:{label:'Giving this year',level:'roll',type:'number'},
+  giving_last_year:{label:'Giving last year',level:'roll',type:'number'},
   attended_event:{label:'Attended event',level:'roll',type:'event'},
   in_group:{label:'In email group',level:'roll',type:'group'},
   mailable:{label:'Mailable (email, not unsubscribed)',level:'roll',type:'bool'},
@@ -14658,10 +14679,12 @@ const _RP_FIELDS={
   c_name:{label:'Contact name',level:'c',type:'text'},
   c_email:{label:'Contact email',level:'c',type:'text'},
   c_phone:{label:'Contact phone',level:'c',type:'text'},
+  has_email:{label:'Has email',level:'c',type:'bool'},
+  has_phone:{label:'Has phone',level:'c',type:'bool'},
   gender:{label:'Gender',level:'c',type:'text'},
   don_amount:{label:'Gift amount',level:'d',type:'number'},
   don_date:{label:'Gift date',level:'d',type:'date'},
-  don_method:{label:'Gift method',level:'d',type:'text'},
+  don_method:{label:'Gift method',level:'d',type:'select',options:[['Check','Check'],['Cash','Cash'],['Venmo','Venmo'],['PayPal','PayPal'],['Zelle','Zelle'],['Card','Card'],['Bank transfer','Bank transfer'],['Donor Advised Fund','Donor Advised Fund'],['Other','Other']]},
   don_notes:{label:'Gift notes',level:'d',type:'text'},
   reg_event:{label:'Registration event',level:'r',type:'event'},
   reg_date:{label:'Registration date',level:'r',type:'date'}
@@ -14670,10 +14693,10 @@ const _RP_OPS={
   number:[['gte','\u2265'],['lte','\u2264'],['eq','='],['between','between']],
   date:[['on_or_after','on/after'],['on_or_before','on/before'],['between','between'],['rel','relative']],
   year:[['is','is']],
-  text:[['contains','contains'],['equals','equals'],['not_contains','doesn\u2019t contain'],['not_empty','is not empty'],['is_empty','is empty']],
-  select:[['is','is'],['is_not','is not']],
-  event:[['is','is'],['is_not','is not']],
-  group:[['is','is'],['is_not','is not']],
+  text:[['contains','contains'],['equals','equals'],['not_contains','doesn\u2019t contain'],['in_list','is one of'],['not_in_list','is not one of'],['not_empty','is not empty'],['is_empty','is empty']],
+  select:[['is','is'],['is_not','is not'],['in_list','is one of'],['not_in_list','is not one of']],
+  event:[['is','is'],['is_not','is not'],['in_list','is one of'],['not_in_list','is not one of']],
+  group:[['is','is'],['is_not','is not'],['in_list','is one of'],['not_in_list','is not one of']],
   bool:[['is_true','yes'],['is_false','no']]
 };
 
@@ -14731,12 +14754,36 @@ function _rpOpDate(op,actual,v,v2){
 }
 function _rpOpText(op,actual,v){
   const a=(actual==null?'':String(actual)).toLowerCase(),b=(v==null?'':String(v)).toLowerCase();
+  if(op==='in_list'||op==='not_in_list'){const list=_rpListVals(v).map(x=>x.toLowerCase());const hit=list.includes(a);return op==='in_list'?hit:!hit;}
   if(op==='contains')return a.includes(b);
   if(op==='equals')return a===b;
   if(op==='not_contains')return !a.includes(b);
   if(op==='not_empty')return a!=='';
   if(op==='is_empty')return a==='';
   return false;
+}
+// Normalize an is-one-of value: array as-is, string split on commas.
+function _rpListVals(v){return Array.isArray(v)?v.map(x=>String(x)):String(v==null?'':v).split(',').map(s=>s.trim()).filter(Boolean);}
+// select-typed comparison (county, gift method): is / is_not / in_list / not_in_list, case-insensitive.
+function _rpOpSelect(op,actual,v){
+  const a=String(actual==null?'':actual).toLowerCase();
+  if(op==='in_list'||op==='not_in_list'){const hit=_rpListVals(v).some(x=>x.toLowerCase()===a);return op==='in_list'?hit:!hit;}
+  const hit=a===String(v==null?'':v).toLowerCase();
+  return op==='is_not'?!hit:hit;
+}
+// A condition with no value entered yet is INCOMPLETE — runFilter skips it
+// entirely (inert for include AND exclude groups) and the builder outlines it
+// in amber. Previously a blank number silently compared against NaN → 0 rows.
+function _rpCondBlank(cond){
+  const f=_RP_FIELDS[cond.field];if(!f)return false;
+  const t=f.type,op=cond.op,v=cond.value,v2=cond.value2;
+  const blank=x=>x==null||String(x).trim()==='';
+  if(t==='bool'||t==='year')return false; // op/select alone carries the value
+  if(op==='in_list'||op==='not_in_list')return !_rpListVals(v).length;
+  if(t==='number')return op==='between'?(blank(v)&&blank(v2)):blank(v);
+  if(t==='date')return op==='between'?(blank(v)&&blank(v2)):blank(v);
+  if(t==='text')return (op==='not_empty'||op==='is_empty')?false:blank(v);
+  return blank(v); // select / event ('any' counts as set) / group
 }
 function _rpRollFor(cond,entity,row,R){
   // scope:'household' forces the household rollup; auto = the row's own grain.
@@ -14753,8 +14800,10 @@ function _rpCondPass(cond,entity,row,R){
     // household attributes
     case 'home_value':return _rpOpNum(op,h&&h.home_value!=null?h.home_value:null,v,v2);
     case 'city':return _rpOpText(op,h?h.city:'',v);
+    case 'state':return _rpOpText(op,h?h.state:'',v);
     case 'zip':return _rpOpText(op,h?h.zip:'',v);
-    case 'county':{const c=h?(h.county||'unk'):'unk';return op==='is'?c===v:c!==v;}
+    case 'member_count':return _rpOpNum(op,h?(h.members||[]).length:0,v,v2);
+    case 'county':return _rpOpSelect(op,h?(h.county||'unk'):'unk',v);
     case 'has_address':{const has=!!(h&&h.address);return op==='is_true'?has:!has;}
     case 'has_kids':{const hk=!!(h&&R.h[h.id]&&R.h[h.id].hasKids);return op==='is_true'?hk:!hk;}
     case 'kid_age':{const ages=(h&&R.h[h.id]||{}).kidAges||[];return ages.some(a=>(v==null||v===''||a>=parseFloat(v))&&(v2==null||v2===''||a<=parseFloat(v2)));}
@@ -14765,8 +14814,9 @@ function _rpCondPass(cond,entity,row,R){
     case 'largest_gift':{const r=_rpRollFor(cond,entity,row,R);return _rpOpNum(op,r?r.largest:0,v,v2);}
     case 'last_gift':{const r=_rpRollFor(cond,entity,row,R);return _rpOpDate(op,r?r.lastGift:'',v,v2);}
     case 'gave_in_year':{const r=_rpRollFor(cond,entity,row,R);const y=_rpResolveYear(v);return !!(r&&r.byYear[y]>0);}
-    case 'attended_event':{const r=_rpRollFor(cond,entity,row,R);const hit=v==='any'?!!(r&&r.events.size):!!(r&&r.events.has(v));return op==='is_not'?!hit:hit;}
-    case 'in_group':{const r=_rpRollFor(cond,entity,row,R);const hit=!!(r&&r.groups.has(v));return op==='is_not'?!hit:hit;}
+    case 'giving_this_year':case 'giving_last_year':{const r=_rpRollFor(cond,entity,row,R);const y=String(new Date().getFullYear()-(cond.field==='giving_last_year'?1:0));return _rpOpNum(op,r?(r.byYear[y]||0):0,v,v2);}
+    case 'attended_event':{const r=_rpRollFor(cond,entity,row,R);const one=id=>id==='any'?!!(r&&r.events.size):!!(r&&r.events.has(id));const hit=(op==='in_list'||op==='not_in_list')?_rpListVals(v).some(one):one(v);return (op==='is_not'||op==='not_in_list')?!hit:hit;}
+    case 'in_group':{const r=_rpRollFor(cond,entity,row,R);const one=id=>!!(r&&r.groups.has(id));const hit=(op==='in_list'||op==='not_in_list')?_rpListVals(v).some(one):one(v);return (op==='is_not'||op==='not_in_list')?!hit:hit;}
     case 'mailable':{const r=_rpRollFor(cond,entity,row,R);const mm=!!(r&&r.mailable);return op==='is_true'?mm:!mm;}
     case 'last_contact':{const r=_rpRollFor(cond,entity,row,R);return _rpOpDate(op,r?r.lastContact:'',v,v2);}
     case 'days_since_contact':{const r=_rpRollFor(cond,entity,row,R);const lc=r&&r.lastContact;const days=lc?(Date.now()-new Date(lc))/86400000:Infinity;return _rpOpNum(op,days,v,v2);}
@@ -14774,13 +14824,15 @@ function _rpCondPass(cond,entity,row,R){
     case 'c_name':return members.some(m=>_rpOpText(op,((m.first_name||'')+' '+(m.last_name||'')).trim(),v));
     case 'c_email':return members.some(m=>_rpOpText(op,m.email||'',v));
     case 'c_phone':return members.some(m=>_rpOpText(op,m.phone||'',v));
+    case 'has_email':{const has=members.some(m=>!!m.email);return op==='is_true'?has:!has;}
+    case 'has_phone':{const has=members.some(m=>!!m.phone);return op==='is_true'?has:!has;}
     case 'gender':return members.some(m=>_rpOpText(op,m.gender||'',v));
     // donation attributes — walk: donation row itself, else ANY gift below the row
     case 'don_amount':case 'don_date':case 'don_method':case 'don_notes':{
       const test=d=>{
         if(cond.field==='don_amount')return _rpOpNum(op,parseFloat(d.amount)||0,v,v2);
         if(cond.field==='don_date')return _rpOpDate(op,d.date||'',v,v2);
-        if(cond.field==='don_method')return _rpOpText(op,d.method||'',v);
+        if(cond.field==='don_method')return _rpOpSelect(op,d.method||'',v);
         return _rpOpText(op,d.notes||'',v);
       };
       if(entity==='donation')return test(row);
@@ -14789,7 +14841,7 @@ function _rpCondPass(cond,entity,row,R){
     }
     case 'reg_event':case 'reg_date':{
       const test=r=>{
-        if(cond.field==='reg_event'){const hit=v==='any'?!!r.event_id:r.event_id===v;return op==='is_not'?!hit:hit;}
+        if(cond.field==='reg_event'){const one=id=>id==='any'?!!r.event_id:r.event_id===id;const hit=(op==='in_list'||op==='not_in_list')?_rpListVals(v).some(one):one(v);return (op==='is_not'||op==='not_in_list')?!hit:hit;}
         return _rpOpDate(op,r.reg_date||'',v,v2);
       };
       if(entity==='registration')return test(row);
@@ -14815,7 +14867,10 @@ function runFilter(entity,filters,ctx){
   const list=ctx.households||households;
   const R=ctx.rollups||_rpBuildRollups(list);
   const rows=_rpRows(entity,list);
-  const groups=(filters||[]).filter(g=>g&&(g.conds||[]).length);
+  // Incomplete conditions (no value yet) are inert: dropped here so a blank
+  // number never NaN-compares to 0 rows, and a blank cond in an EXCLUDE group
+  // never wipes out everything. A group left with no live conds is skipped.
+  const groups=(filters||[]).map(g=>g&&{mode:g.mode,match:g.match,conds:(g.conds||[]).filter(c=>!_rpCondBlank(c))}).filter(g=>g&&g.conds.length);
   if(!groups.length)return rows;
   return rows.filter(row=>{
     for(const g of groups){
@@ -14871,6 +14926,10 @@ function _rpCols(entity,groupMode){
       cols.last_gift={label:'Last Gift',get:r=>(R().h[r.id]||{}).lastGift||''};
       cols.last_contact={label:'Last Contact',get:r=>(R().h[r.id]||{}).lastContact||''};
       cols.has_kids={label:'Has Kids',get:r=>((R().h[r.id]||{}).hasKids?'yes':'no')};
+      const yrNow=new Date().getFullYear();
+      cols.member_count={label:'# Members',get:r=>(r.members||[]).length,num:true};
+      cols.giving_this_year={label:'Giving '+yrNow,get:r=>((R().h[r.id]||{}).byYear||{})[yrNow]||0,num:true};
+      cols.giving_last_year={label:'Giving '+(yrNow-1),get:r=>((R().h[r.id]||{}).byYear||{})[yrNow-1]||0,num:true};
       cols.members={label:'Members',get:r=>(r.members||[]).map(_daasDisplayName).join('; ')};
       cols.county={label:'County',get:r=>r.county==='gea'?'Geauga':r.county==='cuy'?'Cuyahoga':''};
       cols.daas_id={label:'DAAS IDs',get:r=>(r.members||[]).map(m=>m.daas_id).filter(v=>v!=null&&v!=='').map(v=>'#'+v).join('; ')};
@@ -14984,21 +15043,21 @@ async function _rpLoadSaved(){
   }
 }
 function _rpNew(entity){
-  _rpCur={id:null,name:'',entity:entity||'household',filters:[],columns:_RP_DEFAULT_COLS[entity||'household'].slice(),sort:null,groupMode:(entity==='donation')?'gift':null};
+  _rpCur={id:null,name:'',entity:entity||'household',filters:[],columns:_RP_DEFAULT_COLS[entity||'household'].slice(),sort:null,limit:null,groupMode:(entity==='donation')?'gift':null};
   _rpRun={rows:null,R:null,grain:null};
   _rpView='builder';_rpRenderBuilder();
 }
 function _rpLoadSavedReport(id){
   const s=_rpSaved.find(x=>x.id===id);if(!s)return;
   const cfg=(typeof s.config==='string')?JSON.parse(s.config):(s.config||{});
-  _rpCur={id:s.id,name:s.name,entity:s.entity,filters:JSON.parse(JSON.stringify(cfg.filters||[])),columns:(cfg.columns||_RP_DEFAULT_COLS[s.entity]||[]).slice(),sort:cfg.sort||null,groupMode:cfg.groupMode||((s.entity==='donation')?'gift':null)};
+  _rpCur={id:s.id,name:s.name,entity:s.entity,filters:JSON.parse(JSON.stringify(cfg.filters||[])),columns:(cfg.columns||_RP_DEFAULT_COLS[s.entity]||[]).slice(),sort:cfg.sort||null,limit:(parseInt(cfg.limit)>0)?parseInt(cfg.limit):null,groupMode:cfg.groupMode||((s.entity==='donation')?'gift':null)};
   _rpRun={rows:null,R:null,grain:null};
   _rpView='builder';_rpRenderBuilder();
 }
 async function _rpSaveCur(asCopy){
   if(!_rpCur)return;
   const doSave=async(name)=>{
-    const body={name,entity:_rpCur.entity,config:{filters:_rpCur.filters,columns:_rpCur.columns,sort:_rpCur.sort,groupMode:_rpCur.groupMode},updated_at:new Date().toISOString()};
+    const body={name,entity:_rpCur.entity,config:{filters:_rpCur.filters,columns:_rpCur.columns,sort:_rpCur.sort,limit:_rpCur.limit||null,groupMode:_rpCur.groupMode},updated_at:new Date().toISOString()};
     try{
       if(_rpCur.id&&!asCopy){await sb('saved_reports?id=eq.'+_rpCur.id,{method:'PATCH',body:JSON.stringify(body)});}
       else{const res=await sb('saved_reports',{method:'POST',body:JSON.stringify(body)});_rpCur.id=(res&&res[0]&&res[0].id)||_rpCur.id;}
@@ -15056,6 +15115,12 @@ function _rpRunCur(){
       return s.dir==='desc'?(vb<va?-1:vb>va?1:0):(va<vb?-1:va>vb?1:0);
     });
   }
+  // Top N: applied AFTER sort so "top 25 by giving" means the 25 largest.
+  // Respected everywhere downstream (table, CSV, print, map, save-as-group)
+  // because they all read _rpRun.rows.
+  _rpRun.total=rows.length;
+  const lim=parseInt(_rpCur.limit);
+  if(lim>0&&rows.length>lim){rows=rows.slice(0,lim);_rpRun.rows=rows;}
   _rpRenderBuilder();
 }
 function _rpExportCsv(){
@@ -15064,7 +15129,88 @@ function _rpExportCsv(){
   const keys=_rpCur.columns.filter(k=>colDef[k]);
   const rows=[keys.map(k=>colDef[k].label)];
   _rpRun.rows.forEach(r=>rows.push(keys.map(k=>colDef[k].get(r))));
+  // final totals row: numeric sums + row count (mirrors the table footer)
+  {let labeled=false;
+   rows.push(keys.map(k=>{
+     if(colDef[k].num)return Math.round(_rpRun.rows.reduce((a,r)=>a+(parseFloat(colDef[k].get(r))||0),0)*100)/100;
+     if(!labeled){labeled=true;return 'Totals ('+_rpRun.rows.length+' rows)';}
+     return '';
+   }));}
   _rpDownloadCsv(rows,((_rpCur.name||_rpCur.entity+'-report').replace(/[^a-z0-9 _-]/gi,'').trim().replace(/\s+/g,'-').toLowerCase()||'report')+'.csv');
+}
+// Item 9: printable view — clean table, report name, date, totals row.
+function _rpPrint(){
+  if(!_rpRun.rows){_ebToastMsg('Run the report first.');return;}
+  const colDef=_rpCols(_rpCur.entity,_rpCur.groupMode);
+  const keys=_rpCur.columns.filter(k=>colDef[k]);
+  let el=document.getElementById('rpPrintArea');
+  if(!el){el=document.createElement('div');el.id='rpPrintArea';document.body.appendChild(el);}
+  let h='<h1>'+_escHtml(_rpCur.name||'Report')+'</h1>';
+  h+='<div class="rp-pmeta">'+_escHtml(new Date().toLocaleDateString())+' \u00b7 '+_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')+((_rpRun.total&&_rpRun.total>_rpRun.rows.length)?' (top '+_rpRun.rows.length+' of '+_rpRun.total.toLocaleString()+')':'')+'</div>';
+  h+='<table><thead><tr>'+keys.map(k=>'<th>'+_escHtml(colDef[k].label)+'</th>').join('')+'</tr></thead><tbody>';
+  _rpRun.rows.forEach(r=>{
+    h+='<tr>'+keys.map(k=>{let v=colDef[k].get(r);if(colDef[k].num&&v!==''&&v!=null)v=(parseFloat(v)||0).toLocaleString();return '<td>'+_escHtml(v==null?'':String(v))+'</td>';}).join('')+'</tr>';
+  });
+  h+='</tbody><tfoot><tr>';
+  {let labeled=false;
+   keys.forEach(k=>{
+     if(colDef[k].num){const s=_rpRun.rows.reduce((a,r)=>a+(parseFloat(colDef[k].get(r))||0),0);h+='<td>'+(Math.round(s*100)/100).toLocaleString()+'</td>';}
+     else if(!labeled){labeled=true;h+='<td>Totals \u00b7 '+_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')+'</td>';}
+     else h+='<td></td>';
+   });}
+  h+='</tr></tfoot></table>';
+  el.innerHTML=h;
+  document.body.classList.add('rp-printing');
+  const done=()=>{document.body.classList.remove('rp-printing');window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);
+  window.print();
+  setTimeout(done,1500); // fallback for browsers that never fire afterprint
+}
+// Item 10: household/donor/contact-grain results → email group. Reuses the
+// existing _egBulkAddTo insert path + egSelectModal picker — no new writes.
+function _rpSaveAsGroup(){
+  if(!_rpRun.rows){_ebToastMsg('Run the report first.');return;}
+  const grain=_rpRun.grain;
+  if(grain!=='household'&&grain!=='donor'&&grain!=='contact'){_ebToastMsg('Save as group works for household, donor, or contact results.');return;}
+  const seen=new Set(),cids=[];
+  const addM=m=>{ // only mailable members: email present and not unsubscribed
+    if(!m||!m.id||seen.has(m.id))return;
+    if(!m.email)return;
+    if(_egUnsub&&_egUnsub.has&&_egUnsub.has(m.id))return;
+    seen.add(m.id);cids.push(m.id);
+  };
+  if(grain==='household')_rpRun.rows.forEach(hh=>(hh.members||[]).forEach(addM));
+  else if(grain==='donor')_rpRun.rows.forEach(r=>((r._hh&&r._hh.members)||[]).forEach(addM));
+  else _rpRun.rows.forEach(r=>addM(r._m||r));
+  if(!cids.length){_ebToastMsg('No mailable contacts (with an email, not unsubscribed) in these results.');return;}
+  _egBulkCids=cids;
+  document.getElementById('egSelectSub').textContent='Add '+cids.length+' mailable contact'+(cids.length===1?'':'s')+' from this report to:';
+  const list=document.getElementById('egSelectList');
+  let h='<div class="eg-picker-row" onclick="_rpSaveAsNewGroup()">'
+    +'<div style="flex:1;min-width:0"><div style="font-size:.86rem;font-weight:600;color:var(--accent)">\uff0b New group\u2026</div>'
+    +'<div style="font-size:.68rem;color:var(--txt3)">Create a group and add these contacts</div></div></div>';
+  h+=_egGroups.map(g=>`<div class="eg-picker-row" onclick="_egBulkAddTo('${_escAttr(g.id)}',this)">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.86rem;font-weight:500;color:var(--txt)">${_escHtml(g.name)}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${g._count||0} member${(g._count||0)===1?'':'s'}</div>
+    </div>
+    <svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+  </div>`).join('');
+  list.innerHTML=h;
+  document.getElementById('egSelectModal').style.display='flex';
+}
+function _rpSaveAsNewGroup(){
+  document.getElementById('egSelectModal').style.display='none';
+  _daasPrompt('New Email Group','Group name',(_rpCur&&_rpCur.name)||'',async(name)=>{
+    if(!name||!name.trim())return;
+    try{
+      const res=await sb('email_groups',{method:'POST',body:JSON.stringify({name:name.trim()})});
+      const g=Array.isArray(res)?res[0]:res;
+      if(!g||!g.id)throw new Error('No group returned.');
+      g._count=0;_egGroups.push(g);_egGroups.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      await _egBulkAddTo(g.id,null); // same insert path as everywhere else
+    }catch(e){_ebToastMsg('Could not create group: '+e.message);}
+  },'Create');
 }
 // Bridge: household-grain results → map pins (visit planning: LYBUNT as pins)
 function _rpShowOnMap(){
@@ -15192,9 +15338,26 @@ function _rpDelCond(gi,ci){_rpCur.filters[gi].conds.splice(ci,1);if(!_rpCur.filt
 function _rpSetCond(gi,ci,part,val){
   const c=_rpCur.filters[gi].conds[ci];
   if(part==='field'){c.field=val;const f=_RP_FIELDS[val];c.op=(_RP_OPS[f.type]||[['gte']])[0][0];c.value='';c.value2=null;_rpRenderBuilder();return;}
-  if(part==='op'){c.op=val;_rpRenderBuilder();return;}
+  if(part==='op'){
+    const f=_RP_FIELDS[c.field]||{};
+    const multi=(val==='in_list'||val==='not_in_list');
+    if(f.type==='select'||f.type==='event'||f.type==='group'){
+      if(multi&&!Array.isArray(c.value))c.value=(c.value!==''&&c.value!=null)?[c.value]:[];
+      if(!multi&&Array.isArray(c.value))c.value=c.value.length?c.value[0]:'';
+    }else if(Array.isArray(c.value)){c.value=c.value.join(', ');}
+    c.op=val;_rpRenderBuilder();return;
+  }
   if(part==='scope'){c.scope=val?'household':undefined;return;}
   c[part]=val;
+  // live amber toggle without a re-render (re-rendering would drop input focus)
+  const el=document.querySelector('.rp-cond[data-gi="'+gi+'"][data-ci="'+ci+'"]');
+  if(el){const b=_rpCondBlank(c);el.classList.toggle('rp-inert',b);if(b)el.setAttribute('title','Incomplete \u2014 ignored until a value is set');else el.removeAttribute('title');}
+}
+function _rpSetCondMulti(gi,ci,sel){
+  const c=_rpCur.filters[gi].conds[ci];
+  c.value=[...sel.selectedOptions].map(o=>o.value);
+  const el=document.querySelector('.rp-cond[data-gi="'+gi+'"][data-ci="'+ci+'"]');
+  if(el){const b=_rpCondBlank(c);el.classList.toggle('rp-inert',b);if(b)el.setAttribute('title','Incomplete \u2014 ignored until a value is set');else el.removeAttribute('title');}
 }
 function _rpSetGroup(gi,part,val){_rpCur.filters[gi][part]=val;if(part==='mode')_rpRenderBuilder();}
 function _rpToggleCol(key){
@@ -15207,12 +15370,41 @@ function _rpSortBy(key){
   else _rpCur.sort={col:key,dir:'asc'};
   if(_rpRun.rows)_rpRunCur();else _rpRenderBuilder();
 }
+function _rpSetLimit(v){const n=parseInt(v);_rpCur.limit=(n>0)?n:null;} // applied on next Run
+function _rpSetSortCol(col){
+  if(!col)_rpCur.sort=null;
+  else _rpCur.sort={col,dir:(_rpCur.sort&&_rpCur.sort.dir)||'asc'};
+  if(_rpRun.rows)_rpRunCur();else _rpRenderBuilder();
+}
+function _rpSetSortDir(dir){
+  if(!_rpCur.sort)return;
+  _rpCur.sort.dir=(dir==='desc')?'desc':'asc';
+  if(_rpRun.rows)_rpRunCur();else _rpRenderBuilder();
+}
+function _rpMoveCol(key,dir){
+  const a=_rpCur.columns,i=a.indexOf(key);if(i<0)return;
+  const j=i+dir;if(j<0||j>=a.length)return;
+  a.splice(i,1);a.splice(j,0,key);
+  _rpRenderBuilder();
+}
 
 function _rpCondHtml(gi,ci,c){
   const f=_RP_FIELDS[c.field]||_RP_FIELDS.total_giving;
-  let html='<div class="rp-cond">';
+  const inert=_rpCondBlank(c);
+  let html='<div class="rp-cond'+(inert?' rp-inert':'')+'" data-gi="'+gi+'" data-ci="'+ci+'"'+(inert?' title="Incomplete \u2014 ignored until a value is set"':'')+'>';
   html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'field\',this.value)">';
-  Object.keys(_RP_FIELDS).forEach(k=>{html+='<option value="'+k+'"'+(k===c.field?' selected':'')+'>'+_RP_FIELDS[k].label+'</option>';});
+  const _GIV=['total_giving','gift_count','largest_gift','last_gift','gave_in_year','giving_this_year','giving_last_year'];
+  [['Household',k=>_RP_FIELDS[k].level==='h'],
+   ['Giving',k=>_RP_FIELDS[k].level==='roll'&&_GIV.includes(k)],
+   ['Engagement',k=>_RP_FIELDS[k].level==='roll'&&!_GIV.includes(k)],
+   ['Contact',k=>_RP_FIELDS[k].level==='c'],
+   ['Gift',k=>_RP_FIELDS[k].level==='d'],
+   ['Registration',k=>_RP_FIELDS[k].level==='r']].forEach(cat=>{
+    const ks=Object.keys(_RP_FIELDS).filter(cat[1]);if(!ks.length)return;
+    html+='<optgroup label="'+cat[0]+'">';
+    ks.forEach(k=>{html+='<option value="'+k+'"'+(k===c.field?' selected':'')+'>'+_RP_FIELDS[k].label+'</option>';});
+    html+='</optgroup>';
+  });
   html+='</select>';
   html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'op\',this.value)">';
   (_RP_OPS[f.type]||[]).forEach(o=>{html+='<option value="'+o[0]+'"'+(o[0]===c.op?' selected':'')+'>'+o[1]+'</option>';});
@@ -15237,24 +15429,30 @@ function _rpCondHtml(gi,ci,c){
     opts.forEach(o=>{html+='<option value="'+o[0]+'"'+(String(o[0])===String(c.value)?' selected':'')+'>'+o[1]+'</option>';});
     html+='</select>';
   }else if(f.type==='select'){
-    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
-    html+='<option value="">\u2014</option>';
-    (f.options||[]).forEach(o=>{html+='<option value="'+o[0]+'"'+(o[0]===c.value?' selected':'')+'>'+o[1]+'</option>';});
+    const multi=(c.op==='in_list'||c.op==='not_in_list');
+    const selv=Array.isArray(c.value)?c.value.map(String):[String(c.value==null?'':c.value)];
+    html+='<select class="rp-select" '+(multi?'multiple size="'+Math.min((f.options||[]).length||2,5)+'" onchange="_rpSetCondMulti('+gi+','+ci+',this)"':'onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)"')+'>';
+    if(!multi)html+='<option value="">\u2014</option>';
+    (f.options||[]).forEach(o=>{html+='<option value="'+_escAttr(o[0])+'"'+(selv.includes(String(o[0]))?' selected':'')+'>'+_escHtml(o[1])+'</option>';});
     html+='</select>';
   }else if(f.type==='event'){
-    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
-    html+='<option value="any"'+(c.value==='any'?' selected':'')+'>any event</option>';
-    (_events||[]).forEach(ev=>{html+='<option value="'+_escAttr(ev.id)+'"'+(ev.id===c.value?' selected':'')+'>'+_escHtml(ev.name||'(unnamed)')+'</option>';});
+    const multi=(c.op==='in_list'||c.op==='not_in_list');
+    const selv=Array.isArray(c.value)?c.value.map(String):[String(c.value==null?'':c.value)];
+    html+='<select class="rp-select" '+(multi?'multiple size="'+Math.min(((_events||[]).length+1)||2,5)+'" onchange="_rpSetCondMulti('+gi+','+ci+',this)"':'onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)"')+'>';
+    html+='<option value="any"'+(selv.includes('any')?' selected':'')+'>any event</option>';
+    (_events||[]).forEach(ev=>{html+='<option value="'+_escAttr(ev.id)+'"'+(selv.includes(String(ev.id))?' selected':'')+'>'+_escHtml(ev.name||'(unnamed)')+'</option>';});
     html+='</select>';
   }else if(f.type==='group'){
-    html+='<select class="rp-select" onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
-    html+='<option value="">\u2014</option>';
-    (_egGroups||[]).forEach(g=>{html+='<option value="'+_escAttr(g.id)+'"'+(g.id===c.value?' selected':'')+'>'+_escHtml(g.name)+'</option>';});
+    const multi=(c.op==='in_list'||c.op==='not_in_list');
+    const selv=Array.isArray(c.value)?c.value.map(String):[String(c.value==null?'':c.value)];
+    html+='<select class="rp-select" '+(multi?'multiple size="'+Math.min((_egGroups||[]).length||2,5)+'" onchange="_rpSetCondMulti('+gi+','+ci+',this)"':'onchange="_rpSetCond('+gi+','+ci+',\'value\',this.value)"')+'>';
+    if(!multi)html+='<option value="">\u2014</option>';
+    (_egGroups||[]).forEach(g=>{html+='<option value="'+_escAttr(g.id)+'"'+(selv.includes(String(g.id))?' selected':'')+'>'+_escHtml(g.name)+'</option>';});
     html+='</select>';
   }else if(f.type==='bool'){
     /* the op alone carries yes/no */
   }else{
-    html+='<input class="rp-input" style="min-width:140px" value="'+vAttr+'" oninput="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
+    html+='<input class="rp-input" style="min-width:140px" '+((c.op==='in_list'||c.op==='not_in_list')?'placeholder="value1, value2, \u2026" ':'')+'value="'+vAttr+'" oninput="_rpSetCond('+gi+','+ci+',\'value\',this.value)">';
   }
   if(f.level==='roll'&&_rpCur.entity!=='household'){
     html+='<label style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(c.scope==='household'?'checked':'')+' onchange="_rpSetCond('+gi+','+ci+',\'scope\',this.checked)"> whole household</label>';
@@ -15271,6 +15469,7 @@ function _rpRenderBuilder(){
     +'<h2 style="font-family:var(--font-display);font-size:1rem;color:var(--txt);flex:1;min-width:120px">'+(_rpCur.name?_escHtml(_rpCur.name):'New Report')+(_rpCur.id?'':' <span style="font-size:.6rem;color:var(--txt3);font-family:var(--font-ui)">(unsaved)</span>')+'</h2>'
     +'<button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick="_rpSaveCur(false)">'+(_rpCur.id?'Save':'Save\u2026')+'</button>'
     +(_rpCur.id?'<button class="btn btn-sec" style="font-size:.68rem;padding:5px 12px" onclick="_rpSaveCur(true)">Save as copy</button>':'')
+    +'<label style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);display:inline-flex;align-items:center;gap:5px" title="Keep only the first N rows after sorting \u2014 blank shows all. Applies to the table, CSV export, and Show on map.">Top <input type="number" min="1" class="rp-input" style="width:64px;padding:4px 6px" value="'+_escAttr(_rpCur.limit?String(_rpCur.limit):'')+'" placeholder="all" oninput="_rpSetLimit(this.value)"> rows</label>'
     +'<button class="btn btn-pri" style="font-size:.7rem;padding:6px 16px" onclick="_rpRunCur()">\u25b6 Run</button>'
     +'</div>';
   html+=_rpAiBoxHtml();
@@ -15304,19 +15503,34 @@ function _rpRenderBuilder(){
   html+='</div>';
   // columns — the salutation token columns match the email greeting exactly
   const colDef=_rpCols(_rpCur.entity,_rpCur.groupMode);
-  html+='<div class="rp-card"><div class="rp-lbl">Columns <span style="text-transform:none;letter-spacing:0">\u2014 Joint Name / First Names / Last Name match the email greeting tokens exactly</span></div><div>';
+  html+='<div class="rp-card"><div class="rp-lbl">Columns <span style="text-transform:none;letter-spacing:0">\u2014 Joint Name / First Names / Last Name match the email greeting tokens exactly \u00b7 numbers show column order, \u25c0 \u25b6 reorder</span></div><div>';
   Object.keys(colDef).forEach(k=>{
-    html+='<span class="rp-colchip'+(_rpCur.columns.includes(k)?' on':'')+'" onclick="_rpToggleCol(\''+k+'\')">'+_escHtml(colDef[k].label)+'</span>';
+    const oi=_rpCur.columns.indexOf(k);
+    html+='<span class="rp-colchip'+(oi>=0?' on':'')+'" onclick="_rpToggleCol(\''+k+'\')">'
+      +(oi>=0?'<b class="rp-colnum">'+(oi+1)+'</b>':'')
+      +_escHtml(colDef[k].label)
+      +(oi>=0?'<span class="rp-colarr" title="Move earlier" onclick="event.stopPropagation();_rpMoveCol(\''+k+'\',-1)">\u25c0</span><span class="rp-colarr" title="Move later" onclick="event.stopPropagation();_rpMoveCol(\''+k+'\',1)">\u25b6</span>':'')
+      +'</span>';
   });
-  html+='</div></div>';
+  html+='</div>';
+  // explicit sort control — saved with the recipe; header-click sorting still works
+  html+='<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;font-family:var(--font-ui);font-size:.64rem;color:var(--txt3)">Sort by ';
+  html+='<select class="rp-select" style="font-size:.68rem" onchange="_rpSetSortCol(this.value)"><option value="">\u2014 none \u2014</option>';
+  Object.keys(colDef).forEach(k=>{html+='<option value="'+k+'"'+((_rpCur.sort&&_rpCur.sort.col===k)?' selected':'')+'>'+_escHtml(colDef[k].label)+'</option>';});
+  html+='</select>';
+  html+='<select class="rp-select" style="font-size:.68rem" '+(_rpCur.sort?'':'disabled ')+'onchange="_rpSetSortDir(this.value)"><option value="asc"'+((!_rpCur.sort||_rpCur.sort.dir!=='desc')?' selected':'')+'>ascending (A\u2192Z, low\u2192high)</option><option value="desc"'+((_rpCur.sort&&_rpCur.sort.dir==='desc')?' selected':'')+'>descending (Z\u2192A, high\u2192low)</option></select>';
+  html+='<span>(or click a column header in the results)</span></div>';
+  html+='</div>';
   // results
   if(_rpRun.rows){
     const keys=_rpCur.columns.filter(k=>colDef[k]);
     html+='<div class="rp-card" style="padding:0;overflow:hidden">';
     html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap">';
-    html+='<div style="font-size:.8rem;font-weight:600;color:var(--txt)">'+_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')+'</div>';
+    html+='<div style="font-size:.8rem;font-weight:600;color:var(--txt)">'+((_rpRun.total&&_rpRun.total>_rpRun.rows.length)?('Top '+_rpRun.rows.length.toLocaleString()+' of '+_rpRun.total.toLocaleString()+' rows'):(_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')))+'</div>';
     html+='<div style="flex:1"></div>';
+    if(_rpRun.grain==='household'||_rpRun.grain==='donor'||_rpRun.grain==='contact')html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpSaveAsGroup()" title="Create or add to an email group from the mailable contacts in these results"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> Save as email group</button>';
     if(_rpRun.grain==='household'||_rpRun.grain==='donor')html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpShowOnMap()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Show on map</button>';
+    html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpPrint()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg> Print</button>';
     html+='<button class="btn btn-sec" style="font-size:.66rem;padding:4px 12px" onclick="_rpExportCsv()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg> Export CSV</button>';
     html+='</div>';
     html+='<div style="max-height:60vh;overflow:auto"><table class="rp-table"><thead><tr>';
@@ -15327,7 +15541,17 @@ function _rpRenderBuilder(){
       const r=_rpRun.rows[i];
       html+='<tr>'+keys.map(k=>{let v=colDef[k].get(r);if(colDef[k].num&&v!==''&&v!=null)v=(parseFloat(v)||0).toLocaleString();return '<td>'+_escHtml(v==null?'':String(v))+'</td>';}).join('')+'</tr>';
     }
-    html+='</tbody></table>';
+    html+='</tbody>';
+    // totals row: numeric columns summed over ALL rows (not just the displayed cap)
+    html+='<tfoot><tr>';
+    {let labeled=false;
+     keys.forEach((k,i)=>{
+       if(colDef[k].num){const s=_rpRun.rows.reduce((a,r)=>a+(parseFloat(colDef[k].get(r))||0),0);html+='<td>'+(Math.round(s*100)/100).toLocaleString()+'</td>';}
+       else if(!labeled){labeled=true;html+='<td>Totals \u00b7 '+_rpRun.rows.length.toLocaleString()+' row'+(_rpRun.rows.length===1?'':'s')+'</td>';}
+       else html+='<td></td>';
+     });
+     if(!labeled&&keys.length){/* every column numeric: no free cell for the count; header already shows it */}}
+    html+='</tr></tfoot></table>';
     if(_rpRun.rows.length>cap)html+='<div style="padding:8px 14px;font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">Showing first '+cap+' rows \u2014 Export CSV includes all '+_rpRun.rows.length.toLocaleString()+'.</div>';
     html+='</div></div>';
   }
@@ -15338,9 +15562,11 @@ function _rpRenderBuilder(){
 // The AI NEVER touches data: metadata only (names), filter schema in,
 // filter JSON out. Execution is runFilter(), deterministic and client-side.
 function _rpAiSchemaDoc(){
-  const fields=Object.keys(_RP_FIELDS).map(k=>{const f=_RP_FIELDS[k];return k+' ('+f.type+', '+f.label+')';}).join('; ');
-  return 'FILTER SCHEMA. Report config JSON: {"base_report":"<exact saved report name to start from, or null>","entity":"household|contact|donation|registration","filters":[{"mode":"include|exclude","match":"all|any","conds":[{"field":"<field key>","op":"<op>","value":"...","value2":"...","scope":"household (optional \u2014 forces whole-household evaluation)"}]}],"columns":null or ["<column keys>"],"sort":{"col":"<column key>","dir":"asc|desc"} or null,"group_mode":"gift|donor|null"}. '
-    +'Fields: '+fields+'. Ops by type \u2014 number: gte,lte,eq,between; date: on_or_after,on_or_before,between,rel (value one of last_30_days,last_60_days,last_90_days,last_365_days,this_month,prev_month,this_year,last_year); year: is (value this_year|last_year|YYYY); text: contains,equals,not_contains,not_empty,is_empty; select/event/group: is,is_not; bool: is_true,is_false. '
+  const fields=Object.keys(_RP_FIELDS).map(k=>{const f=_RP_FIELDS[k];return k+' ('+f.type+', '+f.label+(f.type==='select'?', values: '+(f.options||[]).map(o=>o[0]).join('|'):'')+')';}).join('; ');
+  return 'FILTER SCHEMA. Report config JSON: {"base_report":"<exact saved report name to start from, or null>","entity":"household|contact|donation|registration","filters":[{"mode":"include|exclude","match":"all|any","conds":[{"field":"<field key>","op":"<op>","value":"...","value2":"...","scope":"household (optional \u2014 forces whole-household evaluation)"}]}],"columns":null or ["<column keys>"],"sort":{"col":"<column key>","dir":"asc|desc"} or null,"limit":N or null,"group_mode":"gift|donor|null"}. '
+    +'Fields: '+fields+'. Ops by type \u2014 number: gte,lte,eq,between; date: on_or_after,on_or_before,between,rel (value one of last_30_days,last_60_days,last_90_days,last_365_days,this_month,prev_month,this_year,last_year); year: is (value this_year|last_year|YYYY); text: contains,equals,not_contains,in_list,not_in_list,not_empty,is_empty; select/event/group: is,is_not,in_list,not_in_list; bool: is_true,is_false. '
+    +'For in_list/not_in_list, value is an ARRAY of exact values (select: the listed values; event/group: exact ids); for text fields a comma-separated string also works. '
+    +'"limit" keeps only the first N rows AFTER sorting \u2014 set it whenever the sentence asks for a specific count ("top 5", "first 10", "3 biggest"). '
     +'ALWAYS prefer relative dates/years over literals so a saved report stays correct forever. Rows must match every include group and no exclude group. LYBUNT = include gave_in_year last_year + exclude gave_in_year this_year. '
     +'For event and group conditions, value must be an exact id from the metadata lists (or "any" for attended_event).';
 }
@@ -15355,7 +15581,7 @@ async function _rpAiRun(){
     +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
   try{
     const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
-      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. Leave columns null unless specific columns were requested.',
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
@@ -15372,15 +15598,20 @@ function _rpApplyAiConfig(cfg){
   if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
   if(base){
     const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
-    _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
+    _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,limit:(parseInt(bcfg.limit)>0)?parseInt(bcfg.limit):null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
     (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)_rpCur.filters.push(g);});
   }else{
     const entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
     const gm=(entity==='donation')?(cfg.group_mode==='donor'?'donor':'gift'):null;
-    _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,groupMode:gm};
+    _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,limit:null,groupMode:gm};
   }
   // sanitize condition fields the model may have invented
   _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
+  // Pre-fill Top N from the config (or parse it out of the sentence) — the
+  // user reviews it in the builder toolbar; nothing auto-runs (decision A).
+  // A base report's own saved limit survives unless the sentence overrides it.
+  {const lim=(parseInt(cfg.limit)>0)?parseInt(cfg.limit):_mParseLimit(cfg._sentence||'');
+   if(lim>0)_rpCur.limit=lim;}
   // If the AI didn't return a sort but the sentence implies a ranking/recency,
   // pre-fill a grain-appropriate sort so "top/recent donors" ranks instead of
   // returning everyone A–Z when the user hits Run. Same helper mobile uses.
@@ -15414,6 +15645,23 @@ function _mFallbackSort(sentence,cur){
   if(e==='donation')return {col:'amount',dir:'desc'};
   if(e==='contact')return {col:'c_total_giving',dir:'desc'};
   return null;
+}
+// Parse a "top N / first N / N most recent" count out of the sentence.
+// SHARED helper (main block) used by desktop _rpApplyAiConfig to PRE-FILL the
+// builder's Top N (review, never auto-run) and by mobile _mAsSearch to set
+// _rpCur.limit so both surfaces share one limit path in _rpRunCur.
+// Do not duplicate in the mobile block.
+function _mParseLimit(sentence){
+  const s=String(sentence||'').toLowerCase();
+  const KW='top|first|best|highest|biggest|largest|most|recent|latest|newest';
+  // "top 5", "recent 5", "latest 10"
+  let m=s.match(new RegExp('\\b(?:'+KW+')\\s+(\\d{1,4})\\b'));
+  // "5 most recent", "5 recent", "3 biggest", "10 latest"
+  if(!m)m=s.match(new RegExp('\\b(\\d{1,4})\\s+(?:most\\s+)?(?:'+KW+')\\b'));
+  if(m)return parseInt(m[1],10)||0;
+  // bare "top donors" / "most recent donors" with no number → default 10
+  if(new RegExp('\\b(?:'+KW+')\\b').test(s))return 10;
+  return 0;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -17084,18 +17332,9 @@ async function _mAsEmail(p){
    list. Earlier this only ran runFilter() on the filters and dropped the
    sort/grain entirely, so "top 5 donors" (a sort, not a filter) returned
    every row. Now it honors sort, donor grouping, and a "top N" limit. */
-function _mParseLimit(sentence){
-  const s=String(sentence||'').toLowerCase();
-  const KW='top|first|best|highest|biggest|largest|most|recent|latest|newest';
-  // "top 5", "recent 5", "latest 10"
-  let m=s.match(new RegExp('\\b(?:'+KW+')\\s+(\\d{1,4})\\b'));
-  // "5 most recent", "5 recent", "3 biggest", "10 latest"
-  if(!m)m=s.match(new RegExp('\\b(\\d{1,4})\\s+(?:most\\s+)?(?:'+KW+')\\b'));
-  if(m)return parseInt(m[1],10)||0;
-  // bare "top donors" / "most recent donors" with no number → default 10
-  if(new RegExp('\\b(?:'+KW+')\\b').test(s))return 10;
-  return 0;
-}
+/* _mParseLimit ("top N" sentence parsing) is a SHARED helper defined in the
+   main <script> block next to _mFallbackSort — desktop pre-fills the builder's
+   Top N from it, mobile sets _rpCur.limit from it. Do not redefine here. */
 // When the AI omits a sort but the sentence clearly implies a ranking, the
 // grain-appropriate sort is picked by _mFallbackSort — a SHARED helper defined
 // in the main <script> block (see _rpApplyAiConfig). The main block loads first,
@@ -17109,7 +17348,7 @@ async function _mAsSearch(sentence){
       +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
       +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
     const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
-      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. Leave columns null unless specific columns were requested.',
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+String(sentence||'')}]});
     if(d.error)throw new Error(d.error.message);
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
@@ -17121,31 +17360,35 @@ async function _mAsSearch(sentence){
     if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
     if(base){
       const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
-      _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
+      _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,limit:(parseInt(bcfg.limit)>0)?parseInt(bcfg.limit):null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
       (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)_rpCur.filters.push(g);});
     }else{
       const entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
       const gm=(entity==='donation')?(cfg.group_mode==='donor'?'donor':'gift'):null;
-      _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,groupMode:gm};
+      _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,limit:null,groupMode:gm};
     }
     _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
     // If the AI didn't return a sort but the sentence implies a ranking, apply
     // a grain-appropriate one so "top/recent donors" ranks instead of A–Z.
     if(!_rpCur.sort){ const fb=_mFallbackSort(sentence,_rpCur); if(fb)_rpCur.sort=fb; }
-    // Run the SAME pipeline desktop uses (rollups + donor grain + sort)
+    // ONE limit path shared with desktop: set _rpCur.limit and let _rpRunCur
+    // slice after sorting (no separate mobile trim). cfg.limit wins, then the
+    // sentence ("top 5"), then any limit saved on the base report.
+    {const lim=(parseInt(cfg.limit)>0)?parseInt(cfg.limit):_mParseLimit(sentence);
+     if(lim>0)_rpCur.limit=lim;}
+    // Run the SAME pipeline desktop uses (rollups + donor grain + sort + limit)
     _rpRunCur();
-    let rows=(_rpRun&&_rpRun.rows)?_rpRun.rows.slice():[];
-    const limit=_mParseLimit(sentence);
-    if(limit&&rows.length>limit)rows=rows.slice(0,limit);
-    _mAsRenderRows(_rpRun.grain||_rpCur.entity,rows,sentence,limit);
+    const rows=(_rpRun&&_rpRun.rows)?_rpRun.rows.slice():[];
+    _mAsRenderRows(_rpRun.grain||_rpCur.entity,rows,sentence,parseInt(_rpCur.limit)||0,_rpRun.total||rows.length);
   }catch(e){ results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Search failed: '+_escHtml(e.message||String(e))+'</div>'; }
 }
-function _mAsRenderRows(grain,rows,sentence,limit){
+function _mAsRenderRows(grain,rows,sentence,limit,fullTotal){
   const results=document.getElementById('as-results'); if(!results)return;
   const CAP=100;
   const shownCap=limit||CAP;
   const total=rows.length;
-  let head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+total+'</b> result'+(total===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
+  fullTotal=fullTotal||total; // pre-limit count from _rpRun.total
+  let head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+fullTotal+'</b> result'+(fullTotal===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
   if(!total){ results.innerHTML=head+'<div style="font-size:.78rem;color:var(--txt3);padding:6px 2px">Nothing matched. Try rephrasing, or build it in Reports on desktop.</div>'; return; }
   const items=rows.slice(0,shownCap).map(r=>{
     // donor grain: r is {_hh,_sum,...}; household: r is the household; else r has _h/_m
@@ -17170,7 +17413,8 @@ function _mAsRenderRows(grain,rows,sentence,limit){
     const ev=(_events||[]).find(e=>e.id===r.event_id);
     return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(ev?(ev.name||''):'')}</span></div>`;
   }).join('');
-  const more=(total>shownCap)?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">'+(limit?'Showing top '+shownCap+' of '+total+'.':'+'+(total-shownCap)+' more \u2014 run it in Reports on desktop for the full list and CSV.')+'</div>':'';
+  const shown=Math.min(total,shownCap);
+  const more=(fullTotal>shown)?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">'+(limit?'Showing top '+shown+' of '+fullTotal+'.':'+'+(fullTotal-shown)+' more \u2014 run it in Reports on desktop for the full list and CSV.')+'</div>':'';
   results.innerHTML=head+items+more;
 }
 
