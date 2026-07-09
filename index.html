@@ -6619,6 +6619,28 @@ async function _deployPushToGitHub(pat){
   try{
     const src=_PRISTINE_SRC;
     if(!src||src.length<10000)throw new Error('Source snapshot missing — reload the page and deploy again.');
+    // ── INTEGRITY GUARD ──────────────────────────────────────────────
+    // A truncated snapshot once shipped a broken mobile build (an unescaped
+    // <\/script> inside a string split the script block on re-parse). Never
+    // push a snapshot that is cut short: verify the tail and both end-of-block
+    // sentinels are present, and that <\/script> tags aren't unbalanced by a
+    // stray unescaped closer in JS text. Abort loudly instead of deploying.
+    {
+      const _s=src.trim();
+      const _bad=[];
+      if(!_s.endsWith('</html>')) _bad.push('file does not end with </html> (tail truncated)');
+      if(src.indexOf('DAAS-BLOCKA-END')<0) _bad.push('desktop script block is incomplete');
+      if(src.indexOf('DAAS-BLOCKB-END')<0) _bad.push('mobile script block is incomplete');
+      // Every real inline block ends with <\/script>; an unescaped <\/script> in a
+      // string would add an extra closer. Legit closers = 4 external libs + 2
+      // inline blocks = 6. Anything else means a stray/lost closer.
+      const _closers=(src.match(/<\/script>/gi)||[]).length;
+      if(_closers!==6) _bad.push('unexpected <\/script> count ('+_closers+') — likely an unescaped <\/script> in a string (use <\\/script>)');
+      if(_bad.length){
+        throw new Error('Deploy blocked — the page snapshot failed its integrity check: '+_bad.join('; ')+'. Reload the page and try again; if it keeps failing, the source has a bug that must be fixed before deploying.');
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────
     const bytes=new TextEncoder().encode(src);
     // PERF: chunked conversion — the old char-by-char string concat was O(n²)
     const _bparts=[];const _BCH=0x8000;
@@ -16596,6 +16618,7 @@ function _asExecuteSearch(sentence){
   switchView('reports'); // renderReports consumes _rpPendingAi → Stage C AI box
 }
 
+/* DAAS-BLOCKA-END — integrity sentinel; deploy aborts if missing */
 </script>
 <!-- DAAS ASSISTANT OVERLAY (outbound funnel — Stage F) -->
 <div id="assistantOverlay">
@@ -16753,6 +16776,7 @@ function _asExecuteSearch(sentence){
     <button onclick="mMenuGo('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg><span class="m-menu-txt"><b>Emails</b><span>Drafts, templates, build &amp; send</span></span></button>
     <button onclick="mMenuGo('contact')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg><span class="m-menu-txt"><b>New Contact</b><span>Add a person you just met</span></span></button>
     <button onclick="mMenuGo('search')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="m-menu-txt"><b>Search</b><span>Find by name, note, phone, or profile</span></span></button>
+    <button onclick="mMenuGo('enrich')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="m-menu-txt"><b>Build Profiles</b><span id="mEnrichCount">Build research dossiers, top prospects first</span></span></button>
   </div>
 
   <div class="m-body">
@@ -16769,11 +16793,9 @@ function _asExecuteSearch(sentence){
           <button onclick="mRebuildDailyFive()" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:0 13px;color:var(--txt2);font-family:var(--font-ui);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3M21 3v6h-6M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3M3 21v-6h6"></path></svg> Rebuild</button>
         </div>
         <div id="mD5host"></div>
-        <button class="m-action-card" onclick="openEnrich()">
-          <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span>
-          <span class="m-action-txt"><b>Build Missing Profiles</b><span id="mEnrichCount">Build research dossiers, top prospects first</span></span>
-          <span class="m-chev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
-        </button>
+        <div class="m-section-h" style="margin-top:24px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"></path><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"></path></svg> Tasks</div>
+        <div class="m-sub">Your to-dos — follow-ups, promises, plans.</div>
+        <div id="mTasksHost"></div>
       </div>
     </div>
 
@@ -16870,7 +16892,7 @@ function mNav(tab){
   // If switching AWAY from chat/capture, close their overlays so they don't linger
   if(tab!=='chat'){ try{ const g=document.getElementById('globalAskPanel'); if(g&&g.style.display!=='none'){ if(typeof closeGlobalAsk==='function')closeGlobalAsk(); else g.style.display='none'; } }catch(e){} }
   if(tab!=='capture'){ try{ const c=document.getElementById('captureOverlay'); if(c&&c.style.display!=='none'){ if(typeof closeCapture==='function')closeCapture(); else c.style.display='none'; } }catch(e){} }
-  if(tab==='dash') mRenderD5();
+  if(tab==='dash'){ mRenderD5(); try{ mRenderTasks(); }catch(e){} }
   else if(tab==='contacts') mRenderRoster();
   else if(tab==='map') mInitMap();
   else if(tab==='capture'){ try{ openCapture(); _mWireCaptureClose(); }catch(e){} }
@@ -16941,6 +16963,7 @@ async function mBoot(){
   // mobile computes with _dailySet=null and clobbers desktop's set on save.
   try{ if(typeof _loadDailyState==='function') await _loadDailyState(); }catch(e){ console.warn('[DAAS] mobile daily state load failed',e); }
   try{ mRenderD5(); }catch(e){ console.error('mRenderD5',e); }
+  try{ mRenderTasks(); }catch(e){ console.error('mRenderTasks',e); }
   // enrich count hint
   try{
     const n=(typeof buildEnrichQueue==='function')?buildEnrichQueue().length:0;
@@ -17507,6 +17530,7 @@ function mMenuGo(what){
   else if(what==='email'){ mEmailHome(); }
   else if(what==='contact'){ try{ showAddContact(); }catch(e){ _ebToastMsg('Could not open Add Contact.'); } }
   else if(what==='search'){ mFindOpen(); }
+  else if(what==='enrich'){ try{ openEnrich(); }catch(e){ _ebToastMsg('Could not open Build Profiles.'); } }
 }
 
 /* ===================== FREEFORM SEARCH (mobile) =====================
@@ -17972,4 +17996,244 @@ async function _mAsEmail(p){
     if(!b||!b.type)return;
     if(b.type==='heading'){const x=_ebNewBlock('heading');x.text=b.text||'';blocks.push(x);}
     else if(b.type==='text'){const x=_ebNewBlock('text');x.text=b.text||'';blocks.push(x);}
-    else if(b.type==='button'){const x=_ebNewBlock('</script></body></html>
+    else if(b.type==='button'){const x=_ebNewBlock('button');x.label=b.label||b.text||'Learn more';x.url=b.url||'';blocks.push(x);}
+    else if(b.type==='divider')blocks.push(_ebNewBlock('divider'));
+    else if(b.type==='spacer')blocks.push(_ebNewBlock('spacer'));
+  });
+  if(blocks.length===1){const t=_ebNewBlock('text');if(p.body)t.text=p.body;blocks.push(t);}
+  blocks.push(_ebNewBlock('footer'));
+  _ecCur={id:null,name:p.name||p.subject||'Assistant draft',subject:p.subject||'',preheader:p.preheader||'',
+    from_name:(_ecFromList[0]||{}).name||'',from_address:(_ecFromList[0]||{}).address||'',group_id:null,
+    audience:{include_groups:inc,exclude_groups:[],exclude_campaigns:[]},status:'draft',
+    blocks,section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card}};
+  // Land in the mobile email editor at step 1 (details + audience). The rabbi
+  // reviews the AI draft, then walks Content -> Preview -> Send. Nothing auto-sends.
+  _meBind(); _meGo(1);
+}
+
+/* SYNC-MIRROR of _asExecuteSearch() (desktop). The desktop reports view lives
+   inside #app (hidden on mobile), so instead of switchView('reports') we run
+   the same AI -> config -> _rpRunCur engine here and render the rows inline in
+   the Assistant overlay's #as-results. Shares _rpApplyAiConfig / _rpRunCur /
+   _mParseLimit / _mFallbackSort with desktop -- no duplicated report logic. */
+async function _mAsSearch(sentence){
+  sentence=String(sentence||'').trim();
+  const out=document.getElementById('as-results');
+  if(!sentence){ if(out)out.innerHTML=''; return; }
+  if(out)out.innerHTML='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt3);padding:14px 2px;display:flex;align-items:center;gap:9px"><div class="spin" style="width:16px;height:16px;border-width:2px"></div>Searching your base… (the AI sees names only, never your data)</div>';
+  const meta='SAVED REPORTS: '+((_rpSaved||[]).map(s=>s.name).join(' | ')||'(none)')
+    +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
+    +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
+  try{
+    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
+      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
+      messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
+    if(d.error)throw new Error(d.error.message);
+    const txt=(d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('No config in the response.');
+    const cfg=JSON.parse(m[0]); cfg._sentence=sentence;
+    _rpApplyAiConfig(cfg); // builds _rpCur (+ limit/sort via shared helpers); renders the hidden desktop builder
+    _rpRunCur();           // computes _rpRun.rows with the shared engine
+    _mRenderSearchResults(sentence);
+  }catch(e){ if(out)out.innerHTML='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--red,#b91c1c);padding:14px 2px">Search failed: '+_escHtml(e.message||String(e))+'</div>'; }
+}
+
+/* Render _rpRun.rows into the Assistant overlay as tappable .mas-row items.
+   Grain-aware name + one-line stat; tapping opens the mobile contact sheet. */
+function _mRenderSearchResults(sentence){
+  const out=document.getElementById('as-results');
+  if(!out)return;
+  const rows=(_rpRun&&_rpRun.rows)||[];
+  const grain=(_rpRun&&_rpRun.grain)||(_rpCur&&_rpCur.entity)||'household';
+  const total=(_rpRun&&_rpRun.total)||rows.length;
+  const money=n=>'$'+(Math.round(parseFloat(n)||0)).toLocaleString();
+  if(!rows.length){ out.innerHTML='<div style="font-family:var(--font-ui);font-size:.76rem;color:var(--txt3);padding:14px 2px">No matches for “'+_escHtml(sentence||'')+'”.</div>'; return; }
+  const hdr='<div style="font-family:var(--font-ui);font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin:2px 0 9px">'+rows.length.toLocaleString()+(total>rows.length?(' of '+total.toLocaleString()):'')+' result'+(rows.length===1?'':'s')+'</div>';
+  const item=(hid,name,sub)=>'<div class="mas-row"'+(hid?(' onclick="mOpenSheetById(\''+hid+'\')"'):'')+'><div class="mas-n">'+_escHtml(name||'—')+'</div>'+(sub?('<div class="mas-s">'+_escHtml(sub)+'</div>'):'')+'</div>';
+  let html=hdr;
+  rows.forEach(r=>{
+    let hid=null,name='',sub='';
+    if(grain==='household'){ hid=r.id; name=r.displayName||'Household'; const g=(typeof getGivingStats==='function')?getGivingStats(r):null; sub=g?money(g.total)+' lifetime':''; }
+    else if(grain==='donor'){ const h=r._hh||{}; hid=h.id; name=h.displayName||'Donor'; sub=money(r._sum)+(r._last?(' · last '+parseInt(r._last.slice(5,7))+'/'+r._last.slice(0,4)):''); }
+    else if(grain==='contact'){ const mm=r._m||r; const h=r._h||r._hh||{}; hid=h.id||mm.household_id; name=(typeof _daasDisplayName==='function')?_daasDisplayName(mm):((mm.first_name||'')+' '+(mm.last_name||'')).trim(); sub=h.displayName||''; }
+    else if(grain==='donation'){ const h=r._h||{}; hid=h.id; name=h.displayName||'Gift'; sub=money(r.amount)+(r.date?(' · '+parseInt(r.date.slice(5,7))+'/'+r.date.slice(0,4)):''); }
+    else { const h=r._h||r._hh||{}; hid=h.id; name=h.displayName||r.name||'Result'; }
+    html+=item(hid,name,sub);
+  });
+  out.innerHTML=html;
+}
+
+/* ===================== TASKS (mobile dashboard) =====================
+   Full to-do list on the Today tab, below Daily Five. Reuses the SAME data
+   layer as the desktop Tasks panel (loadTasks/_tasks/createTask/toggleTaskDone/
+   deleteTask/parseTaskInput/_taskHousehold/_taskDueBadge) — only the DOM is
+   mobile-specific (mTasksHost + m-task-* ids) so there are no duplicate ids. */
+let _mTaskQuickContact=null; // {contactId, householdId, name}
+
+async function mRenderTasks(){
+  const el=document.getElementById('mTasksHost');
+  if(!el) return;
+  await loadTasks();
+  const today=localToday(), wk=localToday(7);
+  const open=_tasks.filter(t=>t.status!=='done');
+  const done=_tasks.filter(t=>t.status==='done').sort((a,b)=>String(b.completed_at||'').localeCompare(String(a.completed_at||''))).slice(0,8);
+  const b={overdue:[],today:[],week:[],later:[],someday:[]};
+  open.forEach(t=>{
+    if(!t.due_date) b.someday.push(t);
+    else if(t.due_date<today) b.overdue.push(t);
+    else if(t.due_date===today) b.today.push(t);
+    else if(t.due_date<=wk) b.week.push(t);
+    else b.later.push(t);
+  });
+  const sd=(a,z)=>String(a.due_date||'').localeCompare(String(z.due_date||''));
+  Object.values(b).forEach(a=>a.sort(sd));
+  const sec=(label,arr,color)=> arr.length ? ('<div style="margin-top:12px"><div style="font-family:var(--font-ui);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+color+';margin-bottom:3px">'+label+' &middot; '+arr.length+'</div>'+arr.map(_mTaskRowHtml).join('')+'</div>') : '';
+  const _ls=_mTaskQuickContact;
+  let html='<div class="m-card m-card-pad" style="margin-bottom:12px">'
+    +'<div style="display:flex;gap:8px;margin-bottom:8px">'
+      +'<input id="m-task-quick-input" placeholder="Add a task — e.g. coffee with the Golds next week" enterkeyhint="done" onkeydown="if(event.key===\'Enter\'){event.preventDefault();mTaskQuickAdd();}" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px 12px;font-size:16px;color:var(--txt);font-family:var(--font-ui);outline:none">'
+      +'<button id="m-task-quick-btn" onclick="mTaskQuickAdd()" title="Add task" style="flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:0 16px;font-size:1.25rem;line-height:1;cursor:pointer">+</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+      +'<div style="flex:1;min-width:0;position:relative">'
+        +'<div id="m-task-link-chip" style="display:'+(_ls?'flex':'none')+';align-items:center;gap:6px;background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:8px;padding:7px 10px;font-size:.74rem;color:var(--accent)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span id="m-task-link-name" style="font-weight:600">'+(_ls?_escHtml(_ls.name):'')+'</span><button onclick="mTaskPickClear()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.7rem;margin-left:auto">clear</button></div>'
+        +'<input id="m-task-link-input" placeholder="Link a contact (optional)…" oninput="mTaskPickFilter()" autocomplete="off" style="display:'+(_ls?'none':'block')+';width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;font-size:16px;color:var(--txt);font-family:var(--font-ui);outline:none">'
+        +'<div id="m-task-link-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:9px;margin-top:4px;max-height:220px;overflow-y:auto;z-index:30;box-shadow:0 6px 18px rgba(0,0,0,.18)"></div>'
+      +'</div>'
+      +'<input type="date" id="m-task-due-input" title="Due date (optional)" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px;font-size:.78rem;color:var(--txt);font-family:var(--font-ui)">'
+    +'</div>'
+  +'</div>';
+  if(!open.length) html+='<div style="font-size:.76rem;color:var(--txt3);padding:4px 2px 10px">Nothing on your list. Add something above, or capture a follow-up from a note or Quick Capture.</div>';
+  html+=sec('Overdue',b.overdue,'var(--red,#b91c1c)');
+  html+=sec('Today',b.today,'var(--amber,#a16207)');
+  html+=sec('This week',b.week,'var(--accent)');
+  html+=sec('Later',b.later,'var(--txt2)');
+  html+=sec('Someday',b.someday,'var(--txt3)');
+  if(done.length) html+='<details style="margin-top:14px"><summary style="font-family:var(--font-ui);font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);cursor:pointer;padding:5px 0">Done ('+done.length+')</summary>'+done.map(_mTaskRowHtml).join('')+'</details>';
+  el.innerHTML=html;
+}
+
+function _mTaskRowHtml(t){
+  const h=_taskHousehold(t);
+  const done=t.status==='done';
+  const chip = h ? '<span onclick="event.stopPropagation();mOpenSheetById(\''+t.household_id+'\')" title="Open profile" style="cursor:pointer;font-size:.6rem;color:var(--accent);background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:10px;padding:2px 8px;white-space:nowrap">'+_escHtml(h.displayName||'household')+'</span>' : '';
+  const due=_taskDueBadge(t.due_date);
+  const meta=(chip||due)?('<div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">'+chip+due+'</div>'):'';
+  return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
+    +'<input type="checkbox" '+(done?'checked':'')+' onchange="mToggleTask(\''+t.id+'\')" style="margin-top:2px;width:19px;height:19px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">'
+    +'<div style="flex:1;min-width:0"><div style="font-size:.86rem;line-height:1.35;color:'+(done?'var(--txt3)':'var(--txt)')+';'+(done?'text-decoration:line-through':'')+'">'+_escHtml(t.text)+'</div>'+meta+'</div>'
+    +'<button onclick="mDeleteTask(\''+t.id+'\')" title="Delete" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.9rem;flex-shrink:0;padding:2px 6px;line-height:1">&#10005;</button>'
+    +'</div>';
+}
+
+/* mutations delegate to the shared engine, then refresh the mobile list */
+async function mToggleTask(id){ try{ await toggleTaskDone(id); }catch(e){} try{ mRenderTasks(); }catch(e){} }
+async function mDeleteTask(id){ try{ await deleteTask(id); }catch(e){} try{ mRenderTasks(); }catch(e){} }
+
+function mTaskPickFilter(){
+  const q=((document.getElementById('m-task-link-input')||{}).value||'').trim().toLowerCase();
+  const dd=document.getElementById('m-task-link-results');
+  if(!dd) return;
+  if(q.length<2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const hits=[];
+  for(const h of households){
+    for(const m of (h.members||[])){
+      const full=((m.first_name||'')+' '+(m.last_name||'')).toLowerCase();
+      if(full.includes(q) || (h.displayName||'').toLowerCase().includes(q)){ hits.push({m,h}); if(hits.length>=8)break; }
+    }
+    if(hits.length>=8)break;
+  }
+  if(!hits.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML=hits.map(({m,h})=>'<div onclick="mTaskPickSelect(\''+m.id+'\')" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.82rem"><span style="font-weight:600">'+_escHtml(_daasDisplayName(m))+'</span><span style="font-size:.68rem;color:var(--txt3);margin-left:6px">'+_escHtml(h.displayName||'')+'</span></div>').join('');
+  dd.style.display='block';
+}
+function mTaskPickSelect(contactId){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){ _mTaskQuickContact={contactId:m.id, householdId:h.id, name:_daasDisplayName(m)+' · '+(h.displayName||'')}; break; }
+  }
+  const chip=document.getElementById('m-task-link-chip'), nm=document.getElementById('m-task-link-name'),
+        srch=document.getElementById('m-task-link-input'), res=document.getElementById('m-task-link-results');
+  if(nm)nm.textContent=_mTaskQuickContact?_mTaskQuickContact.name:'';
+  if(chip)chip.style.display='flex';
+  if(srch){ srch.style.display='none'; srch.value=''; }
+  if(res){ res.style.display='none'; res.innerHTML=''; }
+  const qi=document.getElementById('m-task-quick-input'); if(qi)qi.focus();
+}
+function mTaskPickClear(){
+  _mTaskQuickContact=null;
+  const chip=document.getElementById('m-task-link-chip'), srch=document.getElementById('m-task-link-input');
+  if(chip)chip.style.display='none';
+  if(srch){ srch.style.display='block'; srch.focus(); }
+}
+
+async function mTaskQuickAdd(){
+  const inp=document.getElementById('m-task-quick-input');
+  if(!inp) return;
+  const text=inp.value.trim();
+  if(!text) return;
+  const btn=document.getElementById('m-task-quick-btn');
+  const bo=btn?btn.innerHTML:'';
+  inp.disabled=true; if(btn){ btn.disabled=true; btn.textContent='…'; }
+  const manualDue=((document.getElementById('m-task-due-input')||{}).value)||null;
+  const picked=_mTaskQuickContact;
+  let fields={text, source:'manual', due_date:manualDue||null,
+    contact_id: picked?picked.contactId:null,
+    household_id: picked?picked.householdId:null};
+  if(!picked || !manualDue){
+    try{
+      const pr=await parseTaskInput(text);
+      if(!picked){
+        const hh=(pr.household_id && households.some(h=>h.id===pr.household_id))?pr.household_id:null;
+        fields.household_id=hh;
+        fields.contact_id=hh?(((households.find(h=>h.id===hh).members)||[])[0]||{}).id||null:null;
+        if(hh) fields.source='ai';
+      }
+      if(!manualDue) fields.due_date=pr.due_date||null;
+      if(pr.text) fields.text=String(pr.text).trim();
+    }catch(e){ /* AI unavailable — keep manual/plain fields */ }
+  }
+  try{ await createTask(fields); }
+  catch(e){ alert('Could not add task: '+e.message); }
+  inp.value=''; inp.disabled=false; if(btn){ btn.disabled=false; btn.innerHTML=bo; }
+  _mTaskQuickContact=null;
+  try{ inp.focus(); }catch(e){}
+  try{ mRenderTasks(); }catch(e){}
+  try{ if(typeof renderTasksPanel==='function') renderTasksPanel(); }catch(e){}
+  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+}
+
+/* ===================== CROSS-DEVICE AUTO-REFRESH =====================
+   Tasks and the Daily Five are shared across desktop + mobile via the DB, but
+   each device caches them in memory. When a device regains focus/visibility,
+   force-pull the freshest tasks + daily state and re-render the live view so
+   changes made on the OTHER device show up without a manual reload. Targeted,
+   debounced, and login-gated — it never touches open editors/overlays. */
+let _daasLastFocusRefresh=0;
+async function _daasFocusRefresh(){
+  try{
+    if(typeof document!=='undefined' && document.visibilityState && document.visibilityState!=='visible') return;
+    if(typeof _authToken==='undefined' || !_authToken) return; // not signed in
+    const now=Date.now();
+    if(now-_daasLastFocusRefresh < 4000) return; // debounce rapid focus/visibility toggles
+    _daasLastFocusRefresh=now;
+    try{ if(typeof loadTasks==='function') await loadTasks(true); }catch(e){}
+    try{ if(typeof _loadDailyState==='function') await _loadDailyState(); }catch(e){}
+    if(typeof isMobile==='function' && isMobile()){
+      if(_mActiveTab==='dash'){ try{ mRenderD5(); }catch(e){} try{ mRenderTasks(); }catch(e){} }
+    } else {
+      try{ if(typeof renderTasksPanel==='function') renderTasksPanel(); }catch(e){}
+      try{ if(typeof renderDailyFive==='function') renderDailyFive(); }catch(e){}
+      try{ if(typeof _refreshOpenHouseholdTasks==='function') _refreshOpenHouseholdTasks(); }catch(e){}
+    }
+  }catch(e){ /* never let a refresh throw into the event loop */ }
+}
+try{
+  document.addEventListener('visibilitychange',_daasFocusRefresh);
+  window.addEventListener('focus',_daasFocusRefresh);
+}catch(e){}
+
+
+/* DAAS-BLOCKB-END — integrity sentinel; deploy aborts if missing */
+</script></body></html>
