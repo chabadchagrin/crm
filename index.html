@@ -3045,6 +3045,7 @@ function setProp(mode,h,result){
         return `<span style="font-family:var(--font-ui);font-size:.58rem;color:${sc};background:rgba(0,0,0,.04);padding:2px 6px;border-radius:3px" title="Affinity: ${agc.affinity}/35 · Generosity: ${agc.generosity}/35 · Capacity: ${agc.capacity}/30">Score: ${agc.total}/100</span>`;
       })()}
     </div>
+    <button onclick="openAddTaskModal(${idx})" style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;font-size:.68rem;padding:5px 11px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:var(--font-ui)" title="Add a to-do for this contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Add to-do</button>
   </div>
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-prop-${idx}" onclick="byId('showTab','${households[idx].id}',${idx},'prop')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg> Property</button>
@@ -4855,6 +4856,7 @@ function openFullPanel(idx){
           <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg> Note</button>
           <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg> Activity</button>
           <button onclick="byId('openAddDonation','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Donation</button>
+          <button onclick="openAddTaskModal(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(67,56,202,.1);border:1px solid rgba(67,56,202,.28);color:#4338ca;border-radius:4px;cursor:pointer" title="Add a to-do for this contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> To-do</button>
         </div>
       </div>
       ${timelineHtml}
@@ -6870,12 +6872,13 @@ async function captureAnalyze(btn){
   const roster=_captureRoster();
   const sys='You help a rabbi file loose information into his donor CRM. You are given a ROSTER of contacts (each with a contact_id) and some dumped content (text, and possibly a PDF or image of an email/letter). '
     +'Identify which contact(s) the content concerns and propose what to log. Return ONLY valid JSON, no markdown, with shape: '
-    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children|donation|contact_update|add_person","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","donation_fields":{"amount":null,"method":"","notes":""},"update_fields":{"field":"<phone|email|dob|gender|first_name|last_name>","new_value":""},"add_person_fields":{"anchor_contact_id":"<exact contact_id from roster of an existing member of the target household>","first_name":"","last_name":"","relationship":"","phone":"","email":""},"new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}]}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
+    +'{"items":[{"contact_id":"<exact id from roster, or null if no confident match>","contact_name":"<name>","match_confidence":"high|medium|low","save_as":"interaction|household|new_contact|children|donation|contact_update|add_person|task","type":"<Email / Text|Phone call|Connected|Meeting in person|Shabbat attendance|Class / Program|Event attendance|Left VM|Other|Note>","date":"<YYYY-MM-DD found in the content, or null>","text":"<the note/interaction text in clean prose; if a pledge or gift amount is mentioned, include it in this text e.g. \'Pledged $5,000 at gala\'>","donation_fields":{"amount":null,"method":"","notes":""},"update_fields":{"field":"<phone|email|dob|gender|first_name|last_name>","new_value":""},"add_person_fields":{"anchor_contact_id":"<exact contact_id from roster of an existing member of the target household>","first_name":"","last_name":"","relationship":"","phone":"","email":""},"new_contact_fields":{"first_name":"","last_name":"","spouse_first_name":"","phone":"","email":"","street_address":"","city":"","zip":""},"children_fields":[{"name":"","estimated_birth_year":null,"basis":""}],"task_fields":{"due_date":null}}],"unmatched_reason":"<if you could not match anyone, briefly why>"}. '
     +'Decide save_as: use interaction for a specific dated event involving a person (call, meeting, conversation, email, event attendance) logged to that one person. Use household for general background about the family that is not a dated event (e.g. they had a baby, family keeps kosher, moved from Chicago, relationship/personality notes) appended to household notes. Use new_contact if the dumped text or document describes a person or family that cannot be confidently matched to any contact_id in the provided ROSTER — set contact_id to null and carefully extract into new_contact_fields: first_name, last_name, spouse_first_name, phone, email, street_address, city, zip from the prose if available. Use children if the content mentions children, their ages, Bar Mitzvah years, Bat Mitzvah years, or other child milestone signals for an EXISTING contact — extract into children_fields array with name, estimated_birth_year (Bar Mitzvah year minus 13, Bat Mitzvah year minus 12, or current year minus stated age), and basis. Use donation ONLY when money was actually RECEIVED from a matched existing contact — verbs like gave, handed, dropped off, sent, paid, donated, wrote a check — AND an explicit dollar amount appears in the content: fill donation_fields with amount (a number, no $ sign), method (exactly one of: Check, Cash, Venmo, PayPal, Zelle, Card, Bank transfer, Donor Advised Fund, Other — or empty string if the payment method is not stated; \'venmoed\' = Venmo, \'wrote/handed a check\' = Check, \'zelled\' = Zelle), and notes (short context, e.g. what the gift was for). A PLEDGE or promise of future money (pledged, committed, will give, promised) is NOT a donation — file it as an interaction with the amount in the text. When in doubt between interaction and household, prefer interaction; when in doubt between donation and interaction, prefer interaction. '
     +'Use contact_update when the content gives a NEW or CORRECTED value for one basic field of an EXISTING contact that was matched with HIGH confidence — e.g. a new cell number, a new email address, a date of birth, a gender, or a spelling fix to their first or last name. Allowed fields are ONLY: phone, email, dob, gender, first_name, last_name. Set update_fields.field to one of those exact strings and update_fields.new_value to the new value (dob as YYYY-MM-DD). ADDRESS CHANGES ARE NEVER a contact_update — a move or new address must be save_as household with the new address details in the text (address changes cascade into property data and household identity and need the household editor). If the person match is not high-confidence, do NOT propose contact_update — fall back to an interaction or household note describing the information instead. '
     +'Use add_person when the content introduces a NEW person who belongs in an EXISTING matched household — e.g. a previously unrecorded spouse or adult child of a contact in the roster (\u201cDanny\u2019s wife is Sarah, her email is\u2026\u201d). Set add_person_fields.anchor_contact_id to the roster contact_id of the existing household member, and fill first_name (required), last_name (default to the anchor\u2019s last name if not stated), relationship, phone, email from the content. If the household match is not confident, use new_contact instead. Never use add_person for young children \u2014 children and their ages go in children_fields via save_as children. '
     +'Choosing the interaction type: an email or text message = \"Email / Text\"; an outbound phone call where you reached them or any in-person live conversation = \"Connected\"; an attempted call that went to voicemail or unanswered = \"Left VM\"; a scheduled or in-person sit-down meeting = \"Meeting in person\"; Shabbat/service attendance = \"Shabbat attendance\"; a class or learning program = \"Class / Program\"; an event or program they came to = \"Event attendance\"; a class, kids program, or youth program they attended = \"Class / Program\"; only use \"Note\" for standing background facts that are NOT a touch, and prefer \"save_as\":\"household\" for those. Use exactly one of these type strings verbatim. '
     +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
+    +'Use task when the content states a forward-looking action the rabbi intends to do \u2014 a follow-up, a promise, or a plan (e.g. "told Howard I\'ll reach out next week to schedule coffee", "need to send the tuition form", "call the Cohens after the holiday"). Put a clean imperative in text (e.g. "Reach out to Howard to schedule coffee"), set contact_id to the person it involves if matched (else null for a free-floating to-do), and set task_fields.due_date to a concrete YYYY-MM-DD if a timeframe is implied ("next week" = the coming Monday) else null. A task is about the FUTURE; a past event is still an interaction. '
     +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). A donation item requires an explicit amount actually stated in the content; never estimate amounts, and never propose a donation for someone not matched in the roster (use new_contact or interaction text instead). If the content covers multiple distinct events or people, return multiple items (a gift plus a conversation can be two items: one donation, one interaction). TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
 
   // Build user content (text + optional file)
@@ -7089,6 +7092,25 @@ function _captureRenderProposals(parsed){
       return; // skip normal card rendering for this item
     }
 
+    // ── TASK card (a to-do / follow-up; may be linked to a contact or free-floating) ──
+    if(it.save_as==='task'){
+      const tf=it.task_fields||{};
+      html+='<div class="capture-item" data-i="'+i+'" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:14px 16px;margin-bottom:12px">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      html+='<div style="font-size:.82rem;font-weight:600;color:#4338ca"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> To-Do / Follow-up</div>';
+      html+='<span style="font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;color:'+confColor+';font-weight:600">'+conf+' match</span>';
+      html+='</div>';
+      html+='<div style="font-size:.64rem;color:#4338ca;margin-bottom:3px">Link to contact (optional)</div>';
+      html+='<select id="cap-task-contact-'+i+'" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #c7d2fe;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px"><option value="">— none (free-floating) —</option>'+copts+'</select>';
+      html+='<div style="font-size:.64rem;color:#4338ca;margin-bottom:3px">Due (optional)</div>';
+      html+='<input type="date" id="cap-task-date-'+i+'" value="'+(tf.due_date||'')+'" style="box-sizing:border-box;background:#fff;border:1px solid #c7d2fe;border-radius:6px;padding:7px;font-size:.8rem;color:var(--txt);font-family:inherit;margin-bottom:9px">';
+      html+='<div style="font-size:.64rem;color:#4338ca;margin-bottom:3px">Task</div>';
+      html+='<textarea id="cap-task-text-'+i+'" rows="2" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #c7d2fe;border-radius:6px;padding:8px;font-size:.8rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+_enrichEsc(it.text||'')+'</textarea>';
+      html+='<div style="display:flex;gap:8px;margin-top:10px"><button onclick="captureSaveTask('+i+',this)" style="padding:8px 16px;background:#4338ca;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Save Task</button>';
+      html+='<button onclick="this.closest(\'.capture-item\').style.display=\'none\'" style="padding:8px 14px;background:none;border:1px solid #c7d2fe;color:#4338ca;border-radius:6px;cursor:pointer;font-size:.8rem">Dismiss</button></div></div>';
+      return;
+    }
+
     // ── NORMAL card (interaction / household) ──
     html+='<div class="capture-item" data-i="'+i+'" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:12px">';
     html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
@@ -7138,6 +7160,10 @@ function _captureRenderProposals(parsed){
     if(it.save_as==='add_person')return; // handled by captureOpenAddPerson
     if(it.save_as==='contact_update'){
       if(it.contact_id){const cusel=document.getElementById('cap-cu-contact-'+i);if(cusel){cusel.value=it.contact_id;captureCURefreshOld(i);}}
+      return;
+    }
+    if(it.save_as==='task'){
+      if(it.contact_id){const tsel=document.getElementById('cap-task-contact-'+i);if(tsel)tsel.value=it.contact_id;}
       return;
     }
     if(it.save_as==='donation'){
@@ -7805,12 +7831,13 @@ Rules:
 - "household" = timeless background facts about the family (where they moved from, family composition, personality, kosher/observance level, general relationship dynamics). NOT a dated event.
 - "note" = a specific observation or piece of info tied to a person, but not a datable event/meeting (e.g. he mentioned he's interested in X, she tends to write checks not her husband).
 - "interaction" = a specific dated or datable event (call, meeting, ran into them, email, pledge conversation, event attendance). If a date is implied (Sunday, last week, Yom Kippur) include it as best_date in YYYY-MM-DD format relative to today ${localToday()}; otherwise omit best_date.
+- "task" = a forward-looking action the rabbi intends to do: a follow-up, a promise, or a plan (e.g. "I'll send him the schedule", "reach out to schedule coffee", "call after the holiday"). Put a clean imperative in text. Assign person_id like a note. If a target date is implied, set best_date (YYYY-MM-DD); otherwise omit it. A task is about the FUTURE; a past event is an interaction, not a task.
 - For "note" and "interaction", assign person_id from the members list by matching first names. If it's about both people or unclear, use the first member's id.
 - Clean up the text: fix grammar, remove filler words, keep all facts/names/numbers/dates.
 - If the whole dump is one coherent thing, return one chunk. Split only when genuinely separate.
 
 Return ONLY a JSON array, no markdown, no explanation:
-[{"type":"household"|"note"|"interaction","text":"cleaned text","person_id":"uuid or null","person_name":"First Last or null","interaction_type":"Call|Meeting|Event|Email|Other (only for interaction type)","best_date":"YYYY-MM-DD or null"}]`,
+[{"type":"household"|"note"|"interaction"|"task","text":"cleaned text","person_id":"uuid or null","person_name":"First Last or null","interaction_type":"Call|Meeting|Event|Email|Other (only for interaction type)","best_date":"YYYY-MM-DD or null"}]`,
         messages:[{role:'user',content:dumpText}]
       })
     });
@@ -7834,10 +7861,10 @@ function _enrichRenderDumpChunks(idx,chunks,members){
   const resultEl=document.getElementById('enrich-dump-result');
   if(!resultEl)return;
   const typeIcon={household:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg>',note:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg>',interaction:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg>'};
-  const typeLabel={household:'Household note',note:'Note',interaction:'Interaction'};
-  const typeColor={household:'rgba(21,128,61,.12)',note:'rgba(15,30,51,.1)',interaction:'rgba(161,98,7,.1)'};
-  const typeBorder={household:'rgba(21,128,61,.3)',note:'rgba(15,30,51,.25)',interaction:'rgba(161,98,7,.25)'};
-  const typeText={household:'var(--green)',note:'var(--accent)',interaction:'var(--amber)'};
+  const typeLabel={household:'Household note',note:'Note',interaction:'Interaction',task:'To-do'};
+  const typeColor={household:'rgba(21,128,61,.12)',note:'rgba(15,30,51,.1)',interaction:'rgba(161,98,7,.1)',task:'rgba(67,56,202,.1)'};
+  const typeBorder={household:'rgba(21,128,61,.3)',note:'rgba(15,30,51,.25)',interaction:'rgba(161,98,7,.25)',task:'rgba(67,56,202,.3)'};
+  const typeText={household:'var(--green)',note:'var(--accent)',interaction:'var(--amber)',task:'#4338ca'};
   let html='<div style="border:1px solid var(--border2);border-radius:10px;padding:12px 14px;background:var(--surf2)">';
   html+='<div style="font-size:.7rem;font-weight:600;color:var(--txt);margin-bottom:10px">Review — uncheck anything you don\'t want to save:</div>';
   chunks.forEach((c,i)=>{
@@ -7874,6 +7901,11 @@ function _enrichRenderDumpChunks(idx,chunks,members){
       html+='<input type="date" id="dump-date-'+i+'" value="'+(c.best_date||localToday())+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
       html+='</div>';
     }
+    if(c.type==='task'){
+      html+='<div style="margin-top:5px;display:flex;align-items:center;gap:6px"><span style="font-size:.68rem;color:var(--txt3)">Due (optional):</span>';
+      html+='<input type="date" id="dump-taskdate-'+i+'" value="'+(c.best_date||'')+'" style="font-size:.72rem;padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--txt);font-family:inherit">';
+      html+='</div>';
+    }
     html+='</div></div></div>';
   });
   html+='<button id="enrich-save-all-btn" onclick="byId(&quot;_enrichSaveAllChunks&quot;,&quot;'+households[idx].id+'&quot;,'+idx+')" style="margin-top:4px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Save All</button>';
@@ -7903,7 +7935,13 @@ async function _enrichSaveAllChunks(idx){
     const dateEl=document.getElementById('dump-date-'+i);
     const personEl=document.getElementById('dump-person-'+i);
     try{
-      if(dateEl){
+      const _ptype=(_enrichPendingChunks[i]||{}).type;
+      if(_ptype==='task'){
+        const tcid=(document.getElementById('dump-person-'+i)||{}).value||(members[0]||{}).id||null;
+        const tdue=(document.getElementById('dump-taskdate-'+i)||{}).value||null;
+        await createTask({text:text.trim(),household_id:h.id,contact_id:tcid,due_date:tdue,source:'note'});
+        try{renderTasksPanel();}catch(e){}
+      }else if(dateEl){
         // interaction
         const cid=personEl?personEl.value:(members[0]||{}).id;
         const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
@@ -8219,7 +8257,7 @@ async function resetEngineSettings(){
 // Bump this whenever DASH_DEFAULT_LAYOUT panels are added/removed/renamed.
 // Saved layouts with a different version are ignored on load (prevents the
 // "doubled panels" bug where stale saved coords clash with new defaults).
-const DASH_LAYOUT_VERSION=6;
+const DASH_LAYOUT_VERSION=7;
 const DASH_DEFAULT_LAYOUT=[
   {id:'panel-heatmap',    x:0, y:0,  w:12, h:3,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',           fn:'renderHeatmap'},
   {id:'panel-activity',   x:0, y:20, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',            fn:'renderRecentActivity'},
@@ -8230,9 +8268,393 @@ const DASH_DEFAULT_LAYOUT=[
   {id:'panel-sri',        x:6, y:11, w:6,  h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',     fn:'renderSRI'},
   {id:'panel-tracks',     x:0, y:16, w:12, h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',              fn:'renderActiveTracks'},
   {id:'panel-emailengage',x:0, y:25, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',           fn:'renderEmailEngage'},
+  {id:'panel-tasks',     x:0, y:30, w:6,  h:6,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',                     fn:'renderTasksPanel'},
 ];
 
 // ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// TASKS — a free-flowing to-do list, optionally linked to a household.
+// Entry points: the dashboard panel + box (with AI natural-language parse),
+// the note enricher, and Quick Capture. Completing a task that is linked to a
+// contact auto-logs an interaction on that contact, so to-dos feed the
+// reconnect engine, heatmap, and profile history.
+//
+// SQL to run ONCE in Supabase before deploying:
+//   create table if not exists tasks (
+//     id uuid primary key default gen_random_uuid(),
+//     text text not null,
+//     household_id uuid references households(id) on delete set null,
+//     contact_id uuid references contacts(id) on delete set null,
+//     due_date date,
+//     status text not null default 'open',      -- 'open' | 'done'
+//     source text default 'manual',             -- manual | ai | note | capture
+//     log_type text,                            -- interaction type logged on completion
+//     logged_interaction_id uuid,               -- receipt of the auto-logged interaction
+//     created_at timestamptz default now(),
+//     completed_at timestamptz
+//   );
+//   alter table tasks enable row level security;
+//   create policy "tasks_auth_all" on tasks for all
+//     using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+// ════════════════════════════════════════════════════════════════════════
+let _tasks=[];
+let _tasksLoaded=false;
+
+async function loadTasks(force){
+  if(_tasksLoaded && !force) return _tasks;
+  try{ _tasks = await sbAll('tasks?select=*&order=created_at.desc') || []; _tasksLoaded=true; }
+  catch(e){ console.warn('[DAAS] loadTasks failed', e); _tasks=[]; }
+  return _tasks;
+}
+
+// Infer the interaction type to log when a linked task is completed.
+function _taskLogType(text){
+  const t=(text||'').toLowerCase();
+  if(/\b(coffee|lunch|dinner|breakfast|meet|meeting|visit|sit ?down|get together|drop by|stop by|see)\b/.test(t)) return 'Meeting in person';
+  if(/\b(call|phone|ring|dial|voicemail|vm)\b/.test(t)) return 'Phone call';
+  if(/\b(email|e-mail|text|message|write|send|forward|reply)\b/.test(t)) return 'Email / Text';
+  return 'Other';
+}
+function _taskHousehold(t){ return t && t.household_id ? households.find(h=>h.id===t.household_id) : null; }
+
+function _taskToast(msg){
+  try{ document.getElementById('_taskToast')?.remove(); }catch(e){}
+  const d=document.createElement('div');
+  d.id='_taskToast';
+  d.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--accent,#0f1e33);color:#fff;padding:10px 18px;border-radius:8px;font-family:var(--font-ui,sans-serif);font-size:.78rem;z-index:10060;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:82vw;text-align:center';
+  d.textContent=msg;
+  document.body.appendChild(d);
+  setTimeout(()=>{ d.style.transition='opacity .4s'; d.style.opacity='0'; setTimeout(()=>{try{d.remove();}catch(e){}},420); }, 2600);
+}
+
+async function createTask(obj){
+  const text=(obj.text||'').trim();
+  if(!text) return null;
+  const row={
+    text,
+    household_id: obj.household_id||null,
+    contact_id: obj.contact_id||null,
+    due_date: obj.due_date||null,
+    status:'open',
+    source: obj.source||'manual',
+    log_type: obj.log_type||_taskLogType(text),
+    created_at: new Date().toISOString()
+  };
+  const saved=await sb('tasks',{method:'POST',body:JSON.stringify(row)});
+  const t=(saved&&saved[0])?saved[0]:row;
+  _tasks.unshift(t);
+  return t;
+}
+
+async function toggleTaskDone(id){
+  const t=_tasks.find(x=>x.id===id);
+  if(!t) return;
+  const nowDone = t.status!=='done';
+  t.status = nowDone?'done':'open';
+  t.completed_at = nowDone? new Date().toISOString() : null;
+  try{renderTasksPanel();}catch(e){}
+  try{
+    if(nowDone){
+      let loggedId=null;
+      if(t.contact_id){
+        try{
+          const type=t.log_type||_taskLogType(t.text);
+          const date=localToday();
+          const saved=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:t.contact_id,type,date,notes:'Task: '+t.text,created_at:new Date().toISOString()})});
+          if(saved&&saved[0]){ loggedId=saved[0].id; if(typeof embedAndStore==='function') embedAndStore(saved[0].id, type+': '+t.text); }
+          if(typeof _bumpAGCAgg==='function') _bumpAGCAgg(t.contact_id,type,date);
+          const h=_taskHousehold(t);
+          if(h && typeof refreshAGCScore==='function'){ try{ await refreshAGCScore(h.id); }catch(e){} }
+          _taskToast('Done — logged as '+type+(h?(' on '+(h.displayName||'contact')):''));
+        }catch(e){ console.warn('[DAAS] task auto-log failed', e); }
+      }
+      await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'done',completed_at:t.completed_at,logged_interaction_id:loggedId})});
+      t.logged_interaction_id=loggedId;
+    }else{
+      if(t.logged_interaction_id){ try{ await sb('interactions?id=eq.'+t.logged_interaction_id,{method:'DELETE',headers:{'Prefer':'return=minimal'}}); }catch(e){} }
+      await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'open',completed_at:null,logged_interaction_id:null})});
+      t.logged_interaction_id=null;
+    }
+  }catch(e){ alert('Task update failed: '+e.message); await loadTasks(true); try{renderTasksPanel();}catch(_){} }
+  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+}
+
+async function deleteTask(id){
+  const t=_tasks.find(x=>x.id===id);
+  if(!t) return;
+  _tasks=_tasks.filter(x=>x.id!==id);
+  try{renderTasksPanel();}catch(e){}
+  try{ await sb('tasks?id=eq.'+id,{method:'DELETE',headers:{'Prefer':'return=minimal'}}); }
+  catch(e){ await loadTasks(true); try{renderTasksPanel();}catch(_){} }
+  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+}
+
+function _taskDueBadge(due){
+  if(!due) return '';
+  const today=localToday();
+  let c='var(--txt3)', label=_fmtDate(due);
+  if(due<today){ c='var(--red,#b91c1c)'; label='Overdue · '+_fmtDate(due); }
+  else if(due===today){ c='var(--amber,#a16207)'; label='Today'; }
+  else if(due<=localToday(7)){ c='var(--accent)'; }
+  return '<span style="font-size:.58rem;font-weight:600;color:'+c+';white-space:nowrap">'+label+'</span>';
+}
+
+function _taskRowHtml(t){
+  const h=_taskHousehold(t);
+  const done=t.status==='done';
+  const chip = h ? '<span onclick="_eeOpenHH(\''+t.household_id+'\')" title="Open profile" style="cursor:pointer;font-size:.58rem;color:var(--accent);background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:10px;padding:1px 7px;white-space:nowrap">'+_escHtml(h.displayName||'household')+'</span>' : '';
+  const due=_taskDueBadge(t.due_date);
+  const meta=(chip||due)?('<div style="display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap">'+chip+due+'</div>'):'';
+  return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'
+    +'<input type="checkbox" '+(done?'checked':'')+' onchange="toggleTaskDone(\''+t.id+'\')" style="margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">'
+    +'<div style="flex:1;min-width:0"><div style="font-size:.78rem;line-height:1.35;color:'+(done?'var(--txt3)':'var(--txt)')+';'+(done?'text-decoration:line-through':'')+'">'+_escHtml(t.text)+'</div>'+meta+'</div>'
+    +'<button onclick="deleteTask(\''+t.id+'\')" title="Delete" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.72rem;flex-shrink:0;padding:2px 4px;line-height:1">&#10005;</button>'
+    +'</div>';
+}
+
+// Manually-selected contact for the dashboard quick-add (search, not AI).
+let _taskQuickContact=null; // {contactId, householdId, name}
+function taskPickFilter(){
+  const q=((document.getElementById('task-link-input')||{}).value||'').trim().toLowerCase();
+  const dd=document.getElementById('task-link-results');
+  if(!dd) return;
+  if(q.length<2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const hits=[];
+  for(const h of households){
+    for(const m of (h.members||[])){
+      const full=((m.first_name||'')+' '+(m.last_name||'')).toLowerCase();
+      if(full.includes(q) || (h.displayName||'').toLowerCase().includes(q)){ hits.push({m,h}); if(hits.length>=8)break; }
+    }
+    if(hits.length>=8)break;
+  }
+  if(!hits.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML=hits.map(({m,h})=>'<div onclick="taskPickSelect(\''+m.id+'\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.78rem" onmouseover="this.style.background=\'var(--surf2)\'" onmouseout="this.style.background=\'\'"><span style="font-weight:600">'+_escHtml(_daasDisplayName(m))+'</span><span style="font-size:.66rem;color:var(--txt3);margin-left:6px">'+_escHtml(h.displayName||'')+'</span></div>').join('');
+  dd.style.display='block';
+}
+function taskPickSelect(contactId){
+  for(const h of households){
+    const m=(h.members||[]).find(x=>x.id===contactId);
+    if(m){ _taskQuickContact={contactId:m.id, householdId:h.id, name:_daasDisplayName(m)+' · '+(h.displayName||'')}; break; }
+  }
+  const chip=document.getElementById('task-link-chip'), nm=document.getElementById('task-link-name'),
+        srch=document.getElementById('task-link-input'), res=document.getElementById('task-link-results');
+  if(nm)nm.textContent=_taskQuickContact?_taskQuickContact.name:'';
+  if(chip)chip.style.display='flex';
+  if(srch){ srch.style.display='none'; srch.value=''; }
+  if(res){ res.style.display='none'; res.innerHTML=''; }
+  const qi=document.getElementById('task-quick-input'); if(qi)qi.focus();
+}
+function taskPickClear(){
+  _taskQuickContact=null;
+  const chip=document.getElementById('task-link-chip'), srch=document.getElementById('task-link-input');
+  if(chip)chip.style.display='none';
+  if(srch){ srch.style.display='block'; srch.focus(); }
+}
+
+async function renderTasksPanel(){
+  const el=document.getElementById('body-panel-tasks');
+  if(!el) return;
+  await loadTasks();
+  const today=localToday(), wk=localToday(7);
+  const open=_tasks.filter(t=>t.status!=='done');
+  const done=_tasks.filter(t=>t.status==='done').sort((a,b)=>String(b.completed_at||'').localeCompare(String(a.completed_at||''))).slice(0,8);
+  const b={overdue:[],today:[],week:[],later:[],someday:[]};
+  open.forEach(t=>{
+    if(!t.due_date) b.someday.push(t);
+    else if(t.due_date<today) b.overdue.push(t);
+    else if(t.due_date===today) b.today.push(t);
+    else if(t.due_date<=wk) b.week.push(t);
+    else b.later.push(t);
+  });
+  const sd=(a,z)=>String(a.due_date||'').localeCompare(String(z.due_date||''));
+  Object.values(b).forEach(a=>a.sort(sd));
+  const sec=(label,arr,color)=> arr.length ? ('<div style="margin-top:10px"><div style="font-family:var(--font-ui);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+color+';margin-bottom:2px">'+label+' &middot; '+arr.length+'</div>'+arr.map(_taskRowHtml).join('')+'</div>') : '';
+  const _ls=_taskQuickContact;
+  let html='<div style="margin-bottom:6px">'
+    +'<div style="display:flex;gap:6px;margin-bottom:6px">'
+      +'<input id="task-quick-input" placeholder="Add a task — e.g. coffee with the Golds next week" onkeydown="if(event.key===\'Enter\'){event.preventDefault();taskQuickAdd();}" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:.76rem;color:var(--txt);font-family:inherit">'
+      +'<button id="task-quick-btn" onclick="taskQuickAdd()" title="Add task (searches names or lets AI match)" style="flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:0 13px;font-size:1.05rem;line-height:1;cursor:pointer">+</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;align-items:center">'
+      +'<div style="flex:1;min-width:0;position:relative">'
+        +'<div id="task-link-chip" style="display:'+(_ls?'flex':'none')+';align-items:center;gap:6px;background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:6px;padding:5px 9px;font-size:.7rem;color:var(--accent)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span id="task-link-name" style="font-weight:600">'+(_ls?_escHtml(_ls.name):'')+'</span><button onclick="taskPickClear()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.68rem;margin-left:auto">clear</button></div>'
+        +'<input id="task-link-input" placeholder="Or link a contact — type a name to search…" oninput="taskPickFilter()" autocomplete="off" style="display:'+(_ls?'none':'block')+';width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:.72rem;color:var(--txt);font-family:inherit">'
+        +'<div id="task-link-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:190px;overflow-y:auto;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.12)"></div>'
+      +'</div>'
+      +'<input type="date" id="task-due-input" title="Due date (optional)" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:5px 6px;font-size:.7rem;color:var(--txt);font-family:inherit">'
+    +'</div>'
+  +'</div>';
+  if(!open.length) html+='<div style="font-size:.73rem;color:var(--txt3);padding:12px 2px">Nothing on your list. Add something above, or capture a follow-up from a note or Quick Capture.</div>';
+  html+=sec('Overdue',b.overdue,'var(--red,#b91c1c)');
+  html+=sec('Today',b.today,'var(--amber,#a16207)');
+  html+=sec('This week',b.week,'var(--accent)');
+  html+=sec('Later',b.later,'var(--txt2)');
+  html+=sec('Someday',b.someday,'var(--txt3)');
+  if(done.length) html+='<details style="margin-top:12px"><summary style="font-family:var(--font-ui);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);cursor:pointer;padding:4px 0">Done ('+done.length+')</summary>'+done.map(_taskRowHtml).join('')+'</details>';
+  el.innerHTML=html;
+}
+
+// Parse a one-line to-do into {text, household_id, due_date} via the AI proxy.
+async function parseTaskInput(text){
+  const roster=households.slice(0,700).map(h=>h.id+' | '+(h.displayName||'')).join('\n');
+  const sys='You convert a rabbi\'s one-line to-do into structured JSON for his CRM. You are given TODAY\'s date and a ROSTER of households (household_id | name). Return ONLY JSON, no markdown: {"text":"clean imperative task","household_id":"exact id from roster or null","due_date":"YYYY-MM-DD or null"}. '
+    +'Match a household ONLY if a name in the line clearly refers to one (a first name, last name, or family). If unsure, use null. Resolve relative dates against TODAY: "next week" = the coming Monday, "tomorrow" = TODAY+1, a weekday name = the next such weekday, "after the holiday"/"sometime" = null. If no timeframe is stated, due_date null. Keep text short and action-oriented; you may keep the person\'s name in the text.';
+  const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:300,system:sys,messages:[{role:'user',content:'TODAY: '+localToday()+'\n\nROSTER:\n'+roster+'\n\nLINE: '+text}]});
+  const raw=(d.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('');
+  const m=raw.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('no json');
+  return JSON.parse(m[0]);
+}
+
+async function taskQuickAdd(){
+  const inp=document.getElementById('task-quick-input');
+  if(!inp) return;
+  const text=inp.value.trim();
+  if(!text) return;
+  const btn=document.getElementById('task-quick-btn');
+  const bo=btn?btn.innerHTML:'';
+  inp.disabled=true; if(btn){ btn.disabled=true; btn.textContent='…'; }
+  const manualDue=((document.getElementById('task-due-input')||{}).value)||null;
+  const picked=_taskQuickContact;
+  let fields={text, source:'manual', due_date:manualDue||null,
+    contact_id: picked?picked.contactId:null,
+    household_id: picked?picked.householdId:null};
+  // Only call the AI to fill what you did NOT set by hand (contact and/or date) and tidy the text.
+  if(!picked || !manualDue){
+    try{
+      const p=await parseTaskInput(text);
+      if(!picked){
+        const hh=(p.household_id && households.some(h=>h.id===p.household_id))?p.household_id:null;
+        fields.household_id=hh;
+        fields.contact_id=hh?(((households.find(h=>h.id===hh).members)||[])[0]||{}).id||null:null;
+        if(hh) fields.source='ai';
+      }
+      if(!manualDue) fields.due_date=p.due_date||null;
+      if(p.text) fields.text=String(p.text).trim();
+    }catch(e){ /* AI unavailable — keep the manual/plain fields */ }
+  }
+  try{ await createTask(fields); }
+  catch(e){ alert('Could not add task: '+e.message); }
+  inp.value=''; inp.disabled=false; if(btn){ btn.disabled=false; btn.innerHTML=bo; }
+  _taskQuickContact=null;
+  try{ inp.focus(); }catch(e){}
+  try{renderTasksPanel();}catch(e){}
+  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+}
+
+// ── Per-household tasks (rendered inside the profile Activity tab) ──
+async function renderHouseholdTasks(idx){
+  const el=document.getElementById('tasks-block-'+idx);
+  if(!el) return;
+  await loadTasks();
+  const h=households[idx];
+  if(!h){ el.innerHTML=''; return; }
+  const mine=_tasks.filter(t=>t.household_id===h.id);
+  const open=mine.filter(t=>t.status!=='done').sort((a,z)=>String(a.due_date||'9999').localeCompare(String(z.due_date||'9999')));
+  const done=mine.filter(t=>t.status==='done').slice(0,5);
+  let html='<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">'
+    +'<input id="task-hh-input-'+idx+'" placeholder="Add a to-do for this household…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();taskAddForHousehold('+idx+');}" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:.74rem;color:var(--txt);font-family:inherit">'
+    +'<input type="date" id="task-hh-due-'+idx+'" title="Schedule it — due date (optional)" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:5px 6px;font-size:.7rem;color:var(--txt);font-family:inherit">'
+    +'<button onclick="taskAddForHousehold('+idx+')" title="Add to-do" style="flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:0 12px;font-size:.95rem;line-height:1;cursor:pointer">+</button>'
+    +'</div>';
+  if(!open.length && !done.length) html+='<div style="font-size:.72rem;color:var(--txt3)">No tasks for this household yet.</div>';
+  html+=open.map(_taskRowHtml).join('');
+  if(done.length) html+='<details style="margin-top:8px"><summary style="font-family:var(--font-ui);font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);cursor:pointer">Done ('+done.length+')</summary>'+done.map(_taskRowHtml).join('')+'</details>';
+  el.innerHTML=html;
+}
+
+async function taskAddForHousehold(idx){
+  const h=households[idx];
+  if(!h) return;
+  const inp=document.getElementById('task-hh-input-'+idx);
+  if(!inp) return;
+  const text=inp.value.trim();
+  if(!text) return;
+  const due=((document.getElementById('task-hh-due-'+idx)||{}).value)||null;
+  inp.disabled=true;
+  try{ await createTask({text, household_id:h.id, contact_id:((h.members||[])[0]||{}).id||null, due_date:due, source:'manual'}); }
+  catch(e){ alert('Could not add task: '+e.message); }
+  inp.value=''; inp.disabled=false; try{inp.focus();}catch(e){}
+  try{ renderHouseholdTasks(idx); }catch(e){}
+  try{ renderTasksPanel(); }catch(e){}
+}
+
+// A plain "add a to-do" button lives on every contact/profile header — this
+// pops a tiny box, then files the task to the shared to-do list, linked to the
+// contact so completing it later auto-logs an interaction.
+function openAddTaskModal(idx){
+  const h=households[idx];
+  if(!h) return;
+  try{ document.getElementById('addTaskModalBg')?.remove(); }catch(e){}
+  const bg=document.createElement('div');
+  bg.id='addTaskModalBg';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10055;display:flex;align-items:center;justify-content:center;padding:20px';
+  bg.onclick=e=>{ if(e.target===bg) bg.remove(); };
+  bg.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border);border-radius:12px;width:400px;max-width:95vw;padding:20px">'
+    +'<div style="font-family:var(--font-display);font-size:.95rem;color:var(--txt);margin-bottom:4px">Add a to-do</div>'
+    +'<div style="font-size:.68rem;color:var(--txt3);margin-bottom:14px">For '+_escHtml(h.displayName||'this contact')+'</div>'
+    +'<input id="addTaskText" placeholder="e.g. Reach out to schedule coffee" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:9px 11px;font-size:.82rem;color:var(--txt);font-family:inherit;margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="font-size:.7rem;color:var(--txt3)">Due (optional):</span><input type="date" id="addTaskDue" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;font-size:.78rem;color:var(--txt);font-family:inherit"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+      +'<button onclick="document.getElementById(\'addTaskModalBg\').remove()" style="padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:7px;cursor:pointer;font-size:.8rem">Cancel</button>'
+      +'<button id="addTaskSaveBtn" onclick="submitAddTaskModal('+idx+')" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:500">Add to list</button>'
+    +'</div></div>';
+  document.body.appendChild(bg);
+  const ti=document.getElementById('addTaskText');
+  if(ti){ ti.focus(); ti.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); submitAddTaskModal(idx); } }; }
+}
+async function submitAddTaskModal(idx){
+  const h=households[idx];
+  if(!h) return;
+  let text=((document.getElementById('addTaskText')||{}).value||'').trim();
+  if(!text){ const ti=document.getElementById('addTaskText'); if(ti)ti.focus(); return; }
+  const manualDue=((document.getElementById('addTaskDue')||{}).value)||null;
+  const btn=document.getElementById('addTaskSaveBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
+  // AI tidies the wording and resolves a date (e.g. "bring challah friday" -> a
+  // clean task due this Friday). The contact stays fixed to this page, so no
+  // contact matching is done. A date you set by hand always wins.
+  let due=manualDue;
+  try{
+    const p=await parseTaskInput(text);
+    if(p){
+      if(p.text) text=String(p.text).trim();
+      if(!manualDue && p.due_date) due=p.due_date;
+    }
+  }catch(e){ /* AI unavailable — save the text exactly as typed */ }
+  try{
+    await createTask({text, household_id:h.id, contact_id:((h.members||[])[0]||{}).id||null, due_date:due||null, source:'ai'});
+    _taskToast('Added to your to-do list'+(h.displayName?(' · '+h.displayName):''));
+  }catch(e){ alert('Could not add to-do: '+e.message); if(btn){ btn.disabled=false; btn.textContent='Add to list'; } return; }
+  try{ document.getElementById('addTaskModalBg')?.remove(); }catch(e){}
+  try{ renderTasksPanel(); }catch(e){}
+  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+}
+
+function _refreshOpenHouseholdTasks(){
+  document.querySelectorAll('[id^="tasks-block-"]').forEach(el=>{
+    const idx=parseInt(el.id.replace('tasks-block-',''),10);
+    if(!isNaN(idx)) renderHouseholdTasks(idx);
+  });
+}
+
+// Save a task proposed by Quick Capture.
+async function captureSaveTask(i,btn){
+  const cid=(document.getElementById('cap-task-contact-'+i)||{}).value||'';
+  const due=(document.getElementById('cap-task-date-'+i)||{}).value||null;
+  const text=((document.getElementById('cap-task-text-'+i)||{}).value||'').trim();
+  if(!text){ alert('Add a task first (or Dismiss this item).'); return; }
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const h=cid?households.find(hh=>(hh.members||[]).some(m=>m.id===cid)):null;
+    await createTask({text, household_id:h?h.id:null, contact_id:cid||null, due_date:due, source:'capture'});
+    try{renderTasksPanel();}catch(e){}
+    try{_refreshOpenHouseholdTasks();}catch(e){}
+    const card=btn.closest('.capture-item');
+    if(card) card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Task added'+(h?(' &middot; '+_enrichEsc(h.displayName||'')):' (free-floating)')+'</div>';
+  }catch(e){ alert('Save failed: '+e.message); btn.disabled=false; btn.textContent=orig; }
+}
+
 // EVENTS SECTION — internal cockpit for events + registrations.
 // Reads/writes the `events` and `registrations` tables. Manual entry today;
 // the public form pipeline will write registrations here later. Event fees
@@ -13455,7 +13877,8 @@ const PANEL_HELP={
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
   'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
   'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
-  'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',d:()=>`Who's actually reading your mailings. One row per contact per recent email they engaged with — anyone hitting <b>${ENGINE.emailEngOpens}+ opens</b> or <b>${ENGINE.emailEngClicks}+ clicks</b> across your <b>${ENGINE.emailEngWindow} most recent mailings</b>. Opens and clicks are shown separately on purpose: Apple Mail pre-loads images and inflates opens, so clicks are the honest signal of real interest. Click a row to open the household and follow up personally. This panel only reads email data — it never creates interactions or affects Prospect scores or the Daily Five. Thresholds are tunable in Engine settings.`}
+  'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',d:()=>`Who's actually reading your mailings. One row per contact per recent email they engaged with — anyone hitting <b>${ENGINE.emailEngOpens}+ opens</b> or <b>${ENGINE.emailEngClicks}+ clicks</b> across your <b>${ENGINE.emailEngWindow} most recent mailings</b>. Opens and clicks are shown separately on purpose: Apple Mail pre-loads images and inflates opens, so clicks are the honest signal of real interest. Click a row to open the household and follow up personally. This panel only reads email data — it never creates interactions or affects Prospect scores or the Daily Five. Thresholds are tunable in Engine settings.`},
+  'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`Your free-flowing to-do list. Add anything with the + box — type a plain reminder or a natural line like \u201ccoffee with the Golds next week\u201d and it will link the household and set the date for you. Tasks can also arrive from a contact note or from Quick Capture. Open tasks are grouped Overdue / Today / This week / Later / Someday. Check one off and — if it is linked to a contact — it is automatically logged as an interaction on their profile, which resets their reconnect clock. Click a household chip to jump to that profile.`}
 };
 
 function showPanelHelp(panelId){
@@ -13506,6 +13929,7 @@ async function renderAllPanels(){
   await renderRecentActivity();
   await renderActiveTracks();
   await renderEmailEngage();
+  try{await renderTasksPanel();}catch(e){console.warn('[DAAS] renderTasksPanel failed',e);}
 }
 
 async function saveDashLayout(){
@@ -17548,121 +17972,4 @@ async function _mAsEmail(p){
     if(!b||!b.type)return;
     if(b.type==='heading'){const x=_ebNewBlock('heading');x.text=b.text||'';blocks.push(x);}
     else if(b.type==='text'){const x=_ebNewBlock('text');x.text=b.text||'';blocks.push(x);}
-    else if(b.type==='button'){const x=_ebNewBlock('button');x.label=b.label||b.text||'Learn more';x.url=b.url||'';blocks.push(x);}
-    else if(b.type==='divider')blocks.push(_ebNewBlock('divider'));
-    else if(b.type==='spacer')blocks.push(_ebNewBlock('spacer'));
-  });
-  if(blocks.length===1){const t=_ebNewBlock('text');if(p.body)t.text=p.body;blocks.push(t);}
-  blocks.push(_ebNewBlock('footer'));
-  _ecCur={id:null,name:p.name||p.subject||'Assistant draft',subject:p.subject||'',preheader:p.preheader||'',
-    from_name:(_ecFromList[0]||{}).name||'',from_address:(_ecFromList[0]||{}).address||'',group_id:null,
-    audience:{include_groups:inc,exclude_groups:[],exclude_campaigns:[]},status:'draft',
-    blocks,section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card}};
-  _meBind(); _meGo(1);
-  _ebToastMsg('Draft ready \u2014 review the audience, content, and preview, then send.');
-}
-/* SYNC-MIRROR of _rpAiRun()'s prompt + _rpApplyAiConfig()'s config handling
-   (desktop), compiled straight to runFilter and rendered as a tap-through
-   list instead of the Reports builder. */
-/* SYNC-MIRROR of _rpAiRun() + _rpApplyAiConfig() + _rpRunCur() (desktop):
-   build _rpCur from the AI config, then run the SAME rollup → filter →
-   donor-grain → sort pipeline desktop uses, and render as a tap-through
-   list. Earlier this only ran runFilter() on the filters and dropped the
-   sort/grain entirely, so "top 5 donors" (a sort, not a filter) returned
-   every row. Now it honors sort, donor grouping, and a "top N" limit. */
-/* _mParseLimit ("top N" sentence parsing) is a SHARED helper defined in the
-   main <script> block next to _mFallbackSort — desktop pre-fills the builder's
-   Top N from it, mobile sets _rpCur.limit from it. Do not redefine here. */
-// When the AI omits a sort but the sentence clearly implies a ranking, the
-// grain-appropriate sort is picked by _mFallbackSort — a SHARED helper defined
-// in the main <script> block (see _rpApplyAiConfig). The main block loads first,
-// so it is already defined by the time this mobile block runs. Do not redefine.
-async function _mAsSearch(sentence){
-  const results=document.getElementById('as-results'); if(!results)return;
-  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px"><div class="spin" style="width:18px;height:18px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px"></div>Searching\u2026 (the AI sees names only, never your data)</div>';
-  try{
-    if(!_rpDataReady){ await _rpEnsureData(); }
-    const meta='SAVED REPORTS: '+(_rpSaved.map(s=>s.name).join(' | ')||'(none)')
-      +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
-      +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
-    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:1200,
-      system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
-      messages:[{role:'user',content:meta+'\n\nSENTENCE: '+String(sentence||'')}]});
-    if(d.error)throw new Error(d.error.message);
-    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const m=txt.match(/\{[\s\S]*\}/);
-    if(!m)throw new Error('No config in the response.');
-    const cfg=JSON.parse(m[0]);
-    // Build _rpCur exactly like desktop's _rpApplyAiConfig
-    let base=null;
-    if(cfg.base_report){const bn=String(cfg.base_report).toLowerCase();base=_rpSaved.find(s=>(s.name||'').toLowerCase()===bn)||_rpSaved.find(s=>(s.name||'').toLowerCase().includes(bn));}
-    if(base){
-      const bcfg=(typeof base.config==='string')?JSON.parse(base.config):(base.config||{});
-      _rpCur={id:base.id,name:base.name,entity:base.entity,filters:JSON.parse(JSON.stringify(bcfg.filters||[])),columns:(bcfg.columns||_RP_DEFAULT_COLS[base.entity]||[]).slice(),sort:bcfg.sort||null,limit:(parseInt(bcfg.limit)>0)?parseInt(bcfg.limit):null,groupMode:bcfg.groupMode||((base.entity==='donation')?'gift':null)};
-      (cfg.filters||[]).forEach(g=>{if(g&&(g.conds||[]).length)_rpCur.filters.push(g);});
-    }else{
-      const entity=['household','contact','donation','registration'].includes(cfg.entity)?cfg.entity:'household';
-      const gm=(entity==='donation')?(cfg.group_mode==='donor'?'donor':'gift'):null;
-      _rpCur={id:null,name:'',entity,filters:(cfg.filters||[]).filter(g=>g&&(g.conds||[]).length),columns:(Array.isArray(cfg.columns)&&cfg.columns.length)?cfg.columns:_RP_DEFAULT_COLS[entity==='donation'&&gm==='donor'?'donation_donor':entity].slice(),sort:cfg.sort||null,limit:null,groupMode:gm};
-    }
-    _rpCur.filters.forEach(g=>{g.conds=(g.conds||[]).filter(c=>_RP_FIELDS[c.field]);});
-    // If the AI didn't return a sort but the sentence implies a ranking, apply
-    // a grain-appropriate one so "top/recent donors" ranks instead of A–Z.
-    if(!_rpCur.sort){ const fb=_mFallbackSort(sentence,_rpCur); if(fb)_rpCur.sort=fb; }
-    // ONE limit path shared with desktop: set _rpCur.limit and let _rpRunCur
-    // slice after sorting (no separate mobile trim). cfg.limit wins, then the
-    // sentence ("top 5"), then any limit saved on the base report.
-    {const lim=(parseInt(cfg.limit)>0)?parseInt(cfg.limit):_mParseLimit(sentence);
-     if(lim>0)_rpCur.limit=lim;}
-    // Run the SAME pipeline desktop uses (rollups + donor grain + sort + limit)
-    _rpRunCur();
-    const rows=(_rpRun&&_rpRun.rows)?_rpRun.rows.slice():[];
-    _mAsRenderRows(_rpRun.grain||_rpCur.entity,rows,sentence,parseInt(_rpCur.limit)||0,_rpRun.total||rows.length);
-  }catch(e){ results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Search failed: '+_escHtml(e.message||String(e))+'</div>'; }
-}
-function _mAsRenderRows(grain,rows,sentence,limit,fullTotal){
-  const results=document.getElementById('as-results'); if(!results)return;
-  const CAP=100;
-  const shownCap=limit||CAP;
-  const total=rows.length;
-  fullTotal=fullTotal||total; // pre-limit count from _rpRun.total
-  let head='<div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:2px 0 10px"><b>'+fullTotal+'</b> result'+(fullTotal===1?'':'s')+' for \u201c'+_escHtml(String(sentence||''))+'\u201d</div>';
-  if(!total){ results.innerHTML=head+'<div style="font-size:.78rem;color:var(--txt3);padding:6px 2px">Nothing matched. Try rephrasing, or build it in Reports on desktop.</div>'; return; }
-  const items=rows.slice(0,shownCap).map(r=>{
-    // donor grain: r is {_hh,_sum,...}; household: r is the household; else r has _h/_m
-    if(grain==='donor'){
-      const h=r._hh;
-      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(h.id)}')"><span class="mas-n">${_escHtml(h.displayName||'Household')}</span><span class="mas-s">$${_escHtml(String(Math.round(r._sum||0).toLocaleString()))} \u00b7 ${(r._gifts||[]).length} gift${(r._gifts||[]).length===1?'':'s'}</span></div>`;
-    }
-    if(grain==='household'){
-      const agc=getAGCScore(r).total;
-      const gs=(typeof getGivingStats==='function')?getGivingStats(r):null;
-      const meta=(gs&&gs.total)?'$'+Math.round(gs.total).toLocaleString():(r.city||'');
-      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r.id)}')"><span class="mas-n">${_escHtml(r.displayName||'Household')}</span><span class="mas-s">${_escHtml(meta)} \u00b7 ${agc}</span></div>`;
-    }
-    if(grain==='contact'){
-      const nm=((r.first_name||'')+' '+(r.last_name||'')).trim()||r.email||'(no name)';
-      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(r._h.displayName||'')}</span></div>`;
-    }
-    if(grain==='donation'){
-      return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">$${_escHtml(String(Math.round(parseFloat(r.amount)||0).toLocaleString()))} \u00b7 ${_escHtml(r._h.displayName||'')}</span><span class="mas-s">${_escHtml(r.date||'')}</span></div>`;
-    }
-    const nm=((r._m&&r._m.first_name||'')+' '+(r._m&&r._m.last_name||'')).trim()||'(no name)';
-    const ev=(_events||[]).find(e=>e.id===r.event_id);
-    return `<div class="mas-row" onclick="closeAssistant();mOpenSheetById('${_escAttr(r._h.id)}')"><span class="mas-n">${_escHtml(nm)}</span><span class="mas-s">${_escHtml(ev?(ev.name||''):'')}</span></div>`;
-  }).join('');
-  const shown=Math.min(total,shownCap);
-  const more=(fullTotal>shown)?'<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);text-align:center;padding:8px">'+(limit?'Showing top '+shown+' of '+fullTotal+'.':'+'+(fullTotal-shown)+' more \u2014 run it in Reports on desktop for the full list and CSV.')+'</div>':'';
-  results.innerHTML=head+items+more;
-}
-
-/* ===================== ESC / cleanup ===================== */
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mCloseSheet(); mCloseOutcome(); mMenuClose(); document.getElementById('mFindOverlay')?.classList.remove('open'); document.getElementById('mMapTray')?.classList.remove('open'); }});
-/* close sheet on grab swipe-ish (tap grab) */
-document.getElementById('mContactSheet')?.addEventListener('click',e=>{});
-/* ===================== END DAAS MOBILE LAYER ===================== */
-</script>
-
-
-
-</body></html>
+    else if(b.type==='button'){const x=_ebNewBlock('</script></body></html>
