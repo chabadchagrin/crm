@@ -14183,7 +14183,16 @@ async function _computeDailyQueue(){
       : [];
     // Only carry forward households that still exist
     const carried=carry.filter(id=>households.some(h=>h.id===id));
-    _dailySet={date:todayStr,ids:carried.slice(),done:[]};
+    // FOLLOW-UPS FIRST: a due active track is a live thread and must never be
+    // crowded out by carried-over reconnects/prospects. Seed due follow-ups
+    // ahead of carryover, then carryover, then top up from the priority pool.
+    const dueFollowups=activeTracks
+      .map(t=>t.household_id)
+      .filter(id=>!_dailyPins.includes(id)&&households.some(h=>h.id===id));
+    const seed=[];
+    dueFollowups.forEach(id=>{if(!seed.includes(id)&&seed.length<DAILY_TARGET)seed.push(id);});
+    carried.forEach(id=>{if(!seed.includes(id)&&seed.length<DAILY_TARGET)seed.push(id);});
+    _dailySet={date:todayStr,ids:seed,done:[]};
     _fillDailySet(_dailySet);
     setChanged=true;
   } else {
@@ -14364,28 +14373,8 @@ async function saveOutcome(idx){
   if(_dailyPins.includes(h.id)){_dailyPins=_dailyPins.filter(id=>id!==h.id);await _saveDailyPins();}
   // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
   await _markDailyDone(h.id);
-  if(_isReach(outcome)){
-    // Graduate any existing track, no new track needed
-    const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
-    if(existing)await handleTrackOutcome(existing.id,h.id,'Connected');
-    else if(trackId)await handleTrackOutcome(trackId,h.id,'Connected');
-  } else {
-    // Non-connected — create track if none exists, else update
-    let resolvedTrackId=trackId;
-    if(!resolvedTrackId){
-      const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
-      if(existing){
-        resolvedTrackId=existing.id;
-      } else {
-        // Create new active track
-        const nextDue=_addBusinessDays(new Date(),ENGINE.trackCadence[0]);
-        const created=await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'active',step:1,attempts:1,next_due:nextDue}),headers:{'Content-Type':'application/json','Prefer':'return=representation'}});
-        if(created&&created[0])outreachTracks.push(created[0]);
-        resolvedTrackId=null; // already handled inline above
-      }
-    }
-    if(resolvedTrackId)await handleTrackOutcome(resolvedTrackId,h.id,outcome);
-  }
+  // Track lifecycle (reach closes / miss creates-or-advances) — shared with mobile
+  await _applyOutcomeToTrack(h,outcome,trackId);
   document.getElementById(`outcome-tray-${idx}`).style.display='none';
   await loadOutreachTracks();
   renderDailyFive();
@@ -14426,6 +14415,40 @@ function _addBusinessDays(fromDate,days){
   return localDateStr(d);
 }
 // Track cadence now lives in ENGINE.trackCadence (editable in Engine Settings)
+
+// ── SHARED OUTCOME→TRACK LIFECYCLE ──
+// Single source of truth used by BOTH desktop (saveOutcome) and mobile
+// (mSaveOutcome) so outreach logged on either surface behaves identically:
+//   • reach  (Connected / in-person, per REACH_TYPES) → close any active track
+//   • miss   (call / VM / text / email / no-answer)   → advance existing track,
+//             or CREATE one if none exists (so pinned/reconnect follow-ups start
+//             a real track and keep re-surfacing in the Daily Five).
+// trackId is the card's own track when known ('' / null when logging against a
+// pinned or reconnect card that has no track yet).
+async function _applyOutcomeToTrack(h,outcome,trackId){
+  if(_isReach(outcome)){
+    // Graduate any existing track, no new track needed
+    const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+    if(existing)await handleTrackOutcome(existing.id,h.id,'Connected');
+    else if(trackId)await handleTrackOutcome(trackId,h.id,'Connected');
+  } else {
+    // Non-connected — create track if none exists, else advance it
+    let resolvedTrackId=trackId;
+    if(!resolvedTrackId){
+      const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+      if(existing){
+        resolvedTrackId=existing.id;
+      } else {
+        // Create new active track — first miss, next attempt one cadence step out
+        const nextDue=_addBusinessDays(new Date(),ENGINE.trackCadence[0]);
+        const created=await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'active',step:1,attempts:1,next_due:nextDue}),headers:{'Content-Type':'application/json','Prefer':'return=representation'}});
+        if(created&&created[0])outreachTracks.push(created[0]);
+        resolvedTrackId=null; // freshly created with attempts:1 — nothing more to advance
+      }
+    }
+    if(resolvedTrackId)await handleTrackOutcome(resolvedTrackId,h.id,outcome);
+  }
+}
 
 async function handleTrackOutcome(trackId,householdId,outcome){
   const todayStr=localToday();
@@ -16314,6 +16337,13 @@ function _asExecuteSearch(sentence){
       <div class="m-tab-inner">
         <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"></path></svg> Daily Five</div>
         <div class="m-sub">Who to reach out to today.</div>
+        <div style="position:relative;display:flex;gap:8px;margin-bottom:11px">
+          <div style="position:relative;flex:1">
+            <input id="mPinSearchInput" oninput="mPinSearchFilter()" placeholder="Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;color:var(--txt);font-family:var(--font-ui);font-size:.82rem;outline:none">
+            <div id="mPinSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--border2);border-radius:10px;margin-top:4px;z-index:60;max-height:250px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,.28)"></div>
+          </div>
+          <button onclick="mRebuildDailyFive()" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:0 13px;color:var(--txt2);font-family:var(--font-ui);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3M21 3v6h-6M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3M3 21v-6h6"></path></svg> Rebuild</button>
+        </div>
         <div id="mD5host"></div>
         <button class="m-action-card" onclick="openEnrich()">
           <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></span>
@@ -16587,7 +16617,7 @@ function mShowD5Card(){
   if(!card){ mRenderD5(); return; }
   const h=card.item.h;
   const agc=getAGCScore(h);
-  const label={keepwarm:'Reconnect',icebreaker:'Prospect',activetrack:'Active Track',pinned:'Pinned'}[card.type]||'';
+  const label={keepwarm:'Reconnect',icebreaker:'Prospect',activetrack:'Follow-up',pinned:'Pinned',carryover:'Carried over'}[card.type]||'';
   const call=_mD5CallTarget(h);
   const reason=(typeof _whyHTML==='function')?_whyHTML(card):'';
   const sub=h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''));
@@ -16604,10 +16634,17 @@ function mShowD5Card(){
       ${call?`<a class="m-d5-call" href="tel:${_escHtml(call.phone)}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg> Call ${_escHtml(call.name||'')}</a>`:`<div class="m-d5-reason" style="text-align:center">No phone on file</div>`}
       <div class="m-d5-outcomes">
         <button class="m-out-btn" onclick="mOutcome('Connected')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Connected</button>
+        <button class="m-out-btn" onclick="mOutcome('Phone call')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg> Phone call</button>
+        <button class="m-out-btn" onclick="mOutcome('Email / Text')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg> Email / Text</button>
         <button class="m-out-btn" onclick="mOutcome('Left VM')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0ZM15.5 2a6.5 6.5 0 0 1 0 13M2 15h16M2 21h16"/></svg> Left VM</button>
-        <button class="m-out-btn" onclick="mOutcome('Sent Text')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Sent Text</button>
-        <button class="m-out-btn" onclick="mOutcome('Sent Email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg> Sent Email</button>
-        <button class="m-out-btn" style="grid-column:span 2" onclick="mOutcome('No Answer')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 8.63 19M2 2l20 20M9.13 9.13A15.66 15.66 0 0 1 8.06 6.7 2 2 0 0 1 10 4.11"/></svg> No Answer / Hung Up</button>
+        <button class="m-out-btn" style="grid-column:span 2" onclick="mOutcome('Meeting in person')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6M18 20a5 5 0 0 0-3-4.6"/></svg> Meeting in person</button>
+      </div>
+      <div class="m-d5-outcomes" style="margin-top:7px">
+        ${card.type==='pinned'
+          ? `<button class="m-out-btn" style="grid-column:span 2;color:var(--txt3)" onclick="mUnpinCurrent('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Unpin</button>`
+          : `<button class="m-out-btn" style="color:var(--txt3)" onclick="mSnoozeD5(7)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8zM19 5v14"/></svg> Snooze 7d</button>
+             <button class="m-out-btn" style="color:var(--txt3)" onclick="mSnoozeD5(30)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8zM19 5v14"/></svg> Snooze 30d</button>
+             <button class="m-out-btn" style="grid-column:span 2;color:var(--txt3)" onclick="mSnoozeD5(90)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8zM19 5v14"/></svg> Snooze 90d</button>`}
       </div>
       <div class="m-d5-nav">
         <button onclick="mD5Prev()" ${_mD5Pos===0?'disabled':''}><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Prev</button>
@@ -16616,10 +16653,102 @@ function mShowD5Card(){
       </div>
       <div class="m-d5-pos">${_mD5Pos+1} of ${_mD5Cards.length}</div>
     </div>`;
+  _mBindD5Swipe();
 }
 function mD5Next(){ if(_mD5Pos<_mD5Cards.length-1){_mD5Pos++;mShowD5Card();} }
 function mD5Prev(){ if(_mD5Pos>0){_mD5Pos--;mShowD5Card();} }
 function mOpenContactFromD5(hid){ const h=households.find(x=>x.id===hid); if(h) mOpenSheet(h); }
+
+/* ---- Daily Five mobile: snooze / pin / rebuild — parity with desktop ---- */
+async function mSnoozeD5(days){
+  const card=_mD5Cards[_mD5Pos]; if(!card)return;
+  const h=card.item.h; if(!h)return;
+  const snoozeUntil=localToday(days);
+  try{
+    await _markDailyDone(h.id);
+    const track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+    if(track){
+      await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+    } else {
+      await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+    }
+    await loadOutreachTracks();
+  }catch(e){ _ebToastMsg('Snooze failed: '+(e.message||e)); return; }
+  _mD5Cards.splice(_mD5Pos,1);
+  if(_mD5Pos>=_mD5Cards.length)_mD5Pos=Math.max(0,_mD5Cards.length-1);
+  if(_mD5Cards.length===0){ document.getElementById('mD5host').innerHTML='<div class="m-card m-card-pad"><div class="m-empty">All done for today. Nice work.</div></div>'; }
+  else mShowD5Card();
+}
+async function mUnpinCurrent(hid){
+  await unpinHousehold(hid); // updates _dailyPins + saves (renderDailyFive is a no-op on mobile)
+  mRenderD5();
+}
+async function mRebuildDailyFive(){
+  if(!confirm('Rebuild today\u2019s list?\n\nThis clears the current set and picks a fresh five. Anything you already logged today stays logged; this only re-draws the open slots.'))return;
+  _dailySet=null;
+  try{ await sbSetSetting('daily_set',''); }catch(e){ console.warn('daily_set clear failed',e); }
+  mRenderD5();
+}
+async function mPinHousehold(hid){
+  await pinHousehold(hid); // pushes to _dailyPins + saves
+  const inp=document.getElementById('mPinSearchInput'); if(inp)inp.value='';
+  const dd=document.getElementById('mPinSearchResults'); if(dd){ dd.style.display='none'; dd.innerHTML=''; }
+  mRenderD5();
+}
+function mPinSearchFilter(){
+  const inp=document.getElementById('mPinSearchInput');
+  const dd=document.getElementById('mPinSearchResults');
+  if(!inp||!dd)return;
+  const q=inp.value.trim().toLowerCase();
+  if(q.length<2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const matches=households.filter(h=>{
+    if(_dailyPins.includes(h.id))return false;
+    let txt=(h.displayName||'');
+    (h.members||[]).forEach(m=>{txt+=' '+(m.first_name||'')+' '+(m.last_name||'');});
+    return txt.toLowerCase().includes(q);
+  }).slice(0,6);
+  if(!matches.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML=matches.map(h=>{
+    const agc=getAGCScore(h);
+    return `<div onclick="mPinHousehold('${h.id}')" style="padding:11px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+      <span style="font-size:.85rem;color:var(--txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(h.displayName)}</span>
+      <span style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">Prospect ${agc.total}</span>
+      <span style="font-size:.68rem;color:var(--accent)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Pin</span>
+    </div>`;
+  }).join('');
+  dd.style.display='block';
+}
+/* ---- Daily Five mobile: real swipe gestures (buttons kept as well) ---- */
+function _mBindD5Swipe(){
+  const cardEl=document.querySelector('#mD5host .m-d5-card');
+  if(!cardEl)return;
+  let sx=0,sy=0,dx=0,dragging=false,decided=false,horiz=false;
+  cardEl.addEventListener('touchstart',e=>{
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0;
+    dragging=true; decided=false; horiz=false; cardEl.style.transition='none';
+  },{passive:true});
+  cardEl.addEventListener('touchmove',e=>{
+    if(!dragging)return;
+    const t=e.touches[0]; dx=t.clientX-sx; const dy=t.clientY-sy;
+    if(!decided){ if(Math.abs(dx)>8||Math.abs(dy)>8){ decided=true; horiz=Math.abs(dx)>Math.abs(dy); } }
+    if(horiz){
+      if((dx>0&&_mD5Pos===0)||(dx<0&&_mD5Pos>=_mD5Cards.length-1))dx*=0.25; // resist at ends
+      cardEl.style.transform=`translateX(${dx}px) rotate(${dx*0.02}deg)`;
+      cardEl.style.opacity=String(Math.max(0.45,1-Math.abs(dx)/380));
+    }
+  },{passive:true});
+  const end=()=>{
+    if(!dragging)return; dragging=false;
+    cardEl.style.transition='transform .18s ease, opacity .18s ease';
+    if(horiz&&Math.abs(dx)>70){
+      if(dx<0&&_mD5Pos<_mD5Cards.length-1){ cardEl.style.transform='translateX(-120%)'; cardEl.style.opacity='0'; setTimeout(mD5Next,140); return; }
+      if(dx>0&&_mD5Pos>0){ cardEl.style.transform='translateX(120%)'; cardEl.style.opacity='0'; setTimeout(mD5Prev,140); return; }
+    }
+    cardEl.style.transform=''; cardEl.style.opacity='';
+  };
+  cardEl.addEventListener('touchend',end,{passive:true});
+  cardEl.addEventListener('touchcancel',end,{passive:true});
+}
 
 /* ---- Outcome drawer ---- */
 function mOutcome(outcome){
@@ -16628,9 +16757,9 @@ function mOutcome(outcome){
   const h=card.item.h;
   const call=_mD5CallTarget(h)||_mD5EmailTarget(h)||((h.members||[])[0]?{id:h.members[0].id}:null);
   if(!call){ _ebToastMsg('No contact on file to log against.'); return; }
-  _mOutcomeCtx={outcome, contactId:call.id, household:h};
+  _mOutcomeCtx={outcome, contactId:call.id, household:h, trackId:(card.type==='activetrack'&&card.item.t)?card.item.t.id:''};
   document.getElementById('mOutH').textContent=outcome+' · '+(h.displayName||'Household');
-  document.getElementById('mOutSub').textContent='Logs an interaction'+(card.type==='activetrack'?' and advances the track.':'.');
+  document.getElementById('mOutSub').textContent=_isReach(outcome)?('Logs an interaction'+(card.type==='activetrack'?' and closes the follow-up.':'.')):'Logs an interaction and starts/advances a follow-up.';
   document.getElementById('mOutNote').value='';
   document.getElementById('mOutcomeDrawer').classList.add('open');
 }
@@ -16653,6 +16782,8 @@ async function mSaveOutcome(btn){
   }catch(e){ _ebToastMsg('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
   // Capture before mCloseOutcome() nulls the context
   const _doneHid=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
+  const _doneHouse=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household:null;
+  const _doneTrackId=(_mOutcomeCtx&&_mOutcomeCtx.trackId)?_mOutcomeCtx.trackId:'';
   mCloseOutcome();
   // Mirror desktop: clear any pin and mark handled in today's frozen set
   // (leaves the queue, no backfill, no carryover to tomorrow)
@@ -16662,6 +16793,15 @@ async function mSaveOutcome(btn){
       await _markDailyDone(_doneHid);
     }
   }catch(e){console.warn('[DAAS] mobile daily done mark failed',e);}
+  // Track lifecycle — identical to desktop so outreach logged on the phone
+  // starts/advances/closes tracks (previously mobile skipped this entirely,
+  // so pinned contacts never became active and tracks never advanced/closed).
+  try{
+    if(_doneHouse){
+      await _applyOutcomeToTrack(_doneHouse,outcome,_doneTrackId);
+      await loadOutreachTracks();
+    }
+  }catch(e){console.warn('[DAAS] mobile track update failed',e);}
   // remove this card from the queue and advance
   if(_hid)_outcomeSaving.delete(_hid);
   _mD5Cards.splice(_mD5Pos,1);
