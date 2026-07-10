@@ -13224,7 +13224,10 @@ function _ecOpenSend(){
            </div>
            <div id="ecSendErr" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.3);border-radius:6px;color:var(--red);font-family:var(--font-ui);font-size:.72rem"></div>
          </div>`;
-    document.getElementById('ecSendOk').style.display=problems.length?'none':'inline-block';
+    // reset the confirm button — a prior successful send leaves it disabled on "Working…"
+    const okBtn=document.getElementById('ecSendOk');
+    okBtn.style.display=problems.length?'none':'inline-block';
+    okBtn.disabled=false; okBtn.textContent='Send';
     document.getElementById('ecSendModal').style.display='flex';
     // wire up the live preview once inputs exist
     if(!problems.length){
