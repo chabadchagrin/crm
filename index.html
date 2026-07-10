@@ -10703,6 +10703,7 @@ function _copyEmbedCode(btn){
 let _egGroups=[];              // [{id,name,description,created_at, _count}]
 let _egMembersByGroup={};      // group_id -> [contact_id,...]
 let _egUnsub=new Set();        // contact_ids with status='unsubscribed'
+let _egBounced=new Set();      // v8: contact_ids with status='bounced' (dead address — suppressed by webhook)
 let _egLoaded=false;
 let _egView='groups';          // 'groups' (list) | 'group' (one group detail)
 let _egOpenGroupId=null;
@@ -10719,8 +10720,22 @@ async function _egLoad(force){
   _egMembersByGroup={};
   (members||[]).forEach(m=>{ (_egMembersByGroup[m.group_id]||(_egMembersByGroup[m.group_id]=[])).push(m.contact_id); });
   _egUnsub=new Set((subs||[]).filter(s=>s.status==='unsubscribed').map(s=>s.contact_id));
+  _egBounced=new Set((subs||[]).filter(s=>s.status==='bounced').map(s=>s.contact_id)); // v8
   _egGroups.forEach(g=>{ g._count=(_egMembersByGroup[g.id]||[]).length; });
   _egLoaded=true;
+}
+
+// v8 — a bounced contact's address was corrected in DAAS → make them mailable again.
+function _egReactivateBounced(cid){
+  const info=_egContactInfo(cid);
+  _egConfirm('Re-activate Contact','“'+(info.name||'this contact')+'” was suppressed because their email hard-bounced (dead address). Only re-activate AFTER fixing their email address, or the next send will bounce again. Re-activate now?',async()=>{
+    try{
+      await sb('email_subscriptions?contact_id=eq.'+cid,{method:'PATCH',body:JSON.stringify({status:'subscribed'})});
+      _egBounced.delete(cid);
+      if(_egView==='group')_egRenderGroupDetail();
+      _ebToastMsg('Re-activated — they’ll be included in future sends.');
+    }catch(e){ _ebToastMsg('Could not re-activate: '+e.message); }
+  },'Re-activate');
 }
 
 // Resolve a contact_id to a display {name,email,hhId} using the in-memory households.
@@ -10825,14 +10840,16 @@ function _egRenderGroupDetail(){
   const rows=memberIds.map(cid=>{
     const info=_egContactInfo(cid);
     const unsub=_egUnsub.has(cid);
+    const bounced=!unsub&&_egBounced.has(cid); // v8 — distinct from unsubscribed: fixable
     return `<div class="eg-mrow">
-      <div class="nm">${_escHtml(info.name)}${unsub?' <span class="eg-unsub">unsubscribed</span>':''}<div class="em">${info.email?_escHtml(info.email):'<span style="color:var(--red)">no email on file</span>'}${info.hhName?' · '+_escHtml(info.hhName):''}</div></div>
+      <div class="nm">${_escHtml(info.name)}${unsub?' <span class="eg-unsub">unsubscribed</span>':''}${bounced?' <span class="eg-unsub" style="color:var(--amber);border-color:rgba(161,98,7,.4)" title="Email hard-bounced — suppressed from sends. Fix the address, then re-activate.">bounced</span>':''}<div class="em">${info.email?_escHtml(info.email):'<span style="color:var(--red)">no email on file</span>'}${info.hhName?' · '+_escHtml(info.hhName):''}</div></div>
+      ${bounced?`<button class="eg-mini-btn" style="color:var(--amber);border-color:rgba(161,98,7,.35)" onclick="_egReactivateBounced('${_escAttr(cid)}')" title="Re-activate after fixing their email address">Re-activate</button>`:''}
       <button class="eg-mini-btn" onclick="_egRemoveMember('${_escAttr(g.id)}','${_escAttr(cid)}')" title="Remove from group">Remove</button>
     </div>`;
   }).join('')||'<div style="padding:16px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.72rem">No members yet. Use “Add Contacts” to build this list.</div>';
 
   const withEmail=memberIds.filter(cid=>_egContactInfo(cid).email).length;
-  const mailable=memberIds.filter(cid=>_egContactInfo(cid).email&&!_egUnsub.has(cid)).length;
+  const mailable=memberIds.filter(cid=>_egContactInfo(cid).email&&!_egUnsub.has(cid)&&!_egBounced.has(cid)).length;
 
   host.innerHTML=_egTabBar('groups')+`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -12484,7 +12501,7 @@ let _ecLoaded=false;
 async function _ecLoad(force){
   if(_ecLoaded&&!force)return;
   const [camps,fromRows]=await Promise.all([
-    sbAll('email_campaigns?select=id,name,subject,from_name,from_address,group_id,audience,status,scheduled_for,sent_at,stats,updated_at&order=updated_at.desc'),
+    sbAll('email_campaigns?select=id,name,subject,from_name,from_address,group_id,audience,status,scheduled_for,sent_at,stats,updated_at,track_opens,track_clicks&order=updated_at.desc'),
     sbAll('app_settings?key=eq.email_from_addresses&select=value')
   ]);
   _ecCampaigns=camps||[];
@@ -12544,15 +12561,92 @@ function _ecRenderList(){
 function _ecFmtDate(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return iso; } }
 
 // ── audience model + resolver ──────────────────────────────────────
-// A campaign's audience is stored as { include_groups:[gid], exclude_groups:[gid], exclude_campaigns:[cid] }.
+// A campaign's audience is stored as { include_groups:[gid], exclude_groups:[gid],
+//   exclude_campaigns:[cid], exclude_engaged_campaigns:[cid],          ← v8
+//   skip_disengaged:{enabled:bool, unskip:[contact_id]} }              ← v8
 // Backward-compat: if a campaign has no audience but a legacy group_id, treat it as { include_groups:[group_id] }.
+// MIRRORS normAudience() in the email-send Edge Function.
 function _ecNormAudience(a, legacyGroupId){
   a=a&&typeof a==='object'?a:{};
   let inc=Array.isArray(a.include_groups)?a.include_groups.slice():[];
   const exg=Array.isArray(a.exclude_groups)?a.exclude_groups.slice():[];
   const exc=Array.isArray(a.exclude_campaigns)?a.exclude_campaigns.slice():[];
+  const exe=Array.isArray(a.exclude_engaged_campaigns)?a.exclude_engaged_campaigns.slice():[]; // v8
+  const sdRaw=(a.skip_disengaged&&typeof a.skip_disengaged==='object')?a.skip_disengaged:{};   // v8
+  const sd={ enabled:sdRaw.enabled===true, unskip:Array.isArray(sdRaw.unskip)?sdRaw.unskip.slice():[] };
   if(!inc.length&&legacyGroupId)inc=[legacyGroupId];
-  return { include_groups:inc, exclude_groups:exg, exclude_campaigns:exc };
+  return { include_groups:inc, exclude_groups:exg, exclude_campaigns:exc, exclude_engaged_campaigns:exe, skip_disengaged:sd };
+}
+
+// ── v8: ENGAGEMENT-SKIP engine (client mirror of computeSkippable() in email-send) ──
+// Thresholds MUST match the Edge Function.
+const _EC_SKIP={ MIN_SENDS:3, LOOKBACK:5, RECENT_MS:48*3600*1000, NEW_CONTACT_MS:30*24*3600*1000 };
+let _ecEngCache=null;        // { byContact: Map(cid->[{status,opened,clicked,replied,at}] newest-first), createdBy: Map(cid->ms), hasReplied:bool }
+let _ecEngLoading=null;      // in-flight promise (dedupe concurrent loads)
+function _ecInvalidateEngCache(){ _ecEngCache=null; _ecEngLoading=null; }
+async function _ecEnsureEngCache(){
+  if(_ecEngCache)return _ecEngCache;
+  if(_ecEngLoading)return _ecEngLoading;
+  _ecEngLoading=(async()=>{
+    // replied_at may not exist until the v8 SQL is run — fall back gracefully.
+    let rows=null, hasReplied=true;
+    try{ rows=await sbAll('email_sends?select=contact_id,status,opened_at,clicked_at,replied_at,created_at&order=created_at.desc'); }
+    catch(e){ hasReplied=false; rows=await sbAll('email_sends?select=contact_id,status,opened_at,clicked_at,created_at&order=created_at.desc'); }
+    const contacts=await sbAll('contacts?select=id,created_at');
+    const byContact=new Map();
+    (rows||[]).forEach(r=>{
+      if(!r.contact_id)return;
+      let arr=byContact.get(r.contact_id); if(!arr){arr=[];byContact.set(r.contact_id,arr);}
+      arr.push({status:r.status,opened:!!r.opened_at,clicked:!!r.clicked_at,replied:!!r.replied_at,at:r.created_at?Date.parse(r.created_at):0});
+    });
+    const createdBy=new Map();
+    (contacts||[]).forEach(c=>createdBy.set(c.id,c.created_at?Date.parse(c.created_at):Date.now()));
+    _ecEngCache={byContact,createdBy,hasReplied};
+    return _ecEngCache;
+  })();
+  try{ return await _ecEngLoading; } finally{ _ecEngLoading=null; }
+}
+// Which of these contact_ids would the skip toggle drop? SAME rules as the server:
+// ≥MIN_SENDS delivered sends, none of the last LOOKBACK engaged, sends <RECENT_MS
+// don't count, contacts <NEW_CONTACT_MS old never skip, unskip list always kept.
+function _ecComputeSkipped(contactIds, unskip){
+  if(!_ecEngCache)return []; // cache not loaded yet — caller must await _ecEnsureEngCache()
+  const now=Date.now();
+  const unskipSet=new Set(unskip||[]);
+  const engaged=r=>r.opened||r.clicked||r.replied;
+  const delivered=r=>r.status==='delivered'||engaged(r);
+  const out=[];
+  for(const cid of contactIds){
+    if(unskipSet.has(cid))continue;
+    const created=_ecEngCache.createdBy.get(cid);
+    if(created==null||now-created<_EC_SKIP.NEW_CONTACT_MS)continue;
+    const hist=(_ecEngCache.byContact.get(cid)||[]).filter(r=>delivered(r)&&(now-r.at>=_EC_SKIP.RECENT_MS));
+    if(hist.length<_EC_SKIP.MIN_SENDS)continue;
+    if(hist.slice(0,_EC_SKIP.LOOKBACK).some(engaged))continue;
+    out.push(cid);
+  }
+  return out;
+}
+
+// v8: cache of ENGAGED (opened/clicked) contact_ids per past campaign — powers
+// "exclude openers" (resend-to-non-openers). Same fail-safe pattern as the sent cache.
+let _ecEngagedByCampaign={};      // campaign_id -> Set(contact_id)
+let _ecEngagedCacheFailed=false;
+async function _ecEnsureEngagedCache(campaignIds){
+  const need=(campaignIds||[]).filter(id=>id&&!(id in _ecEngagedByCampaign));
+  if(!need.length)return;
+  _ecEngagedCacheFailed=false;
+  try{
+    const inList=need.map(encodeURIComponent).join(',');
+    const rows=await sbAll('email_sends?campaign_id=in.('+inList+')&or=(opened_at.not.is.null,clicked_at.not.is.null)&select=campaign_id,contact_id&order=id.asc');
+    need.forEach(id=>{ _ecEngagedByCampaign[id]=new Set(); });
+    (rows||[]).forEach(r=>{ if(r.contact_id){ (_ecEngagedByCampaign[r.campaign_id]||(_ecEngagedByCampaign[r.campaign_id]=new Set())).add(r.contact_id); } });
+  }catch(e){
+    console.warn('[email] engaged exclusion load failed',e);
+    _ecEngagedCacheFailed=true;
+    need.forEach(id=>{ delete _ecEngagedByCampaign[id]; });
+    _ebToastMsg('Couldn’t load the opener-exclusion list — check your connection.');
+  }
 }
 // Cache of contact_ids sent per past campaign (for exclusion). Lazily filled.
 let _ecSentByCampaign={};   // campaign_id -> Set(contact_id)
@@ -12584,10 +12678,12 @@ function _ecResolveAudience(aud){
   a.include_groups.forEach(gid=>{ (_egMembersByGroup[gid]||[]).forEach(cid=>incl.add(cid)); });
   a.exclude_groups.forEach(gid=>{ (_egMembersByGroup[gid]||[]).forEach(cid=>incl.delete(cid)); });
   a.exclude_campaigns.forEach(cid=>{ const s=_ecSentByCampaign[cid]; if(s)s.forEach(x=>incl.delete(x)); });
-  // dedupe by email + drop no-email / unsubscribed
+  a.exclude_engaged_campaigns.forEach(cid=>{ const s=_ecEngagedByCampaign[cid]; if(s)s.forEach(x=>incl.delete(x)); }); // v8
+  // dedupe by email + drop no-email / unsubscribed / bounced (v8)
   const out=[]; const seenEmail=new Set();
   incl.forEach(cid=>{
     if(_egUnsub.has(cid))return;
+    if(_egBounced.has(cid))return; // v8 — dead addresses suppressed by the webhook
     const info=_egContactInfo(cid);
     const email=(info&&info.email||'').trim().toLowerCase();
     if(!email)return;
@@ -12595,6 +12691,16 @@ function _ecResolveAudience(aud){
     seenEmail.add(email); out.push(cid);
   });
   return out;
+}
+// v8 — resolved audience AFTER the engagement-skip filter, plus who got skipped.
+// Requires _ecEnsureEngCache() awaited when skip is enabled. NOTE: the skip
+// NEVER changes group membership — it filters THIS send only.
+function _ecResolveWithSkip(aud){
+  const a=_ecNormAudience(aud);
+  const base=_ecResolveAudience(a);
+  if(!a.skip_disengaged.enabled)return {send:base,skipped:[]};
+  const skipped=new Set(_ecComputeSkipped(base,a.skip_disengaged.unskip));
+  return {send:base.filter(cid=>!skipped.has(cid)),skipped:[...skipped]};
 }
 // Human summary of an audience (for the compose header chip + campaign list).
 function _ecAudienceSummary(aud, legacyGroupId){
@@ -12605,6 +12711,8 @@ function _ecAudienceSummary(aud, legacyGroupId){
   else parts.push('no groups');
   if(a.exclude_groups.length)parts.push('minus '+a.exclude_groups.map(nm).join(', '));
   if(a.exclude_campaigns.length)parts.push('minus '+a.exclude_campaigns.length+' past mailing'+(a.exclude_campaigns.length===1?'':'s'));
+  if(a.exclude_engaged_campaigns.length)parts.push('minus openers of '+a.exclude_engaged_campaigns.length+' mailing'+(a.exclude_engaged_campaigns.length===1?'':'s')); // v8
+  if(a.skip_disengaged.enabled)parts.push('skipping disengaged'); // v8
   return parts.join(' · ');
 }
 
@@ -12613,9 +12721,11 @@ function _ecOpenSetup(){ _egView='setup'; _ecRenderSetup(); }
 async function _ecRenderSetup(){
   const host=document.getElementById('emailViewInner');
   host.innerHTML='<div style="font-family:var(--font-ui);font-size:.7rem;color:var(--txt3);padding:20px">Loading…</div>';
-  // ensure sent-cache for any pre-selected exclude campaigns (editing case)
+  // ensure caches for any pre-selected exclusions / skip toggle (editing case)
   const aud=_ecNormAudience(_ecCur.audience, _ecCur.group_id);
   await _ecEnsureSentCache(aud.exclude_campaigns);
+  await _ecEnsureEngagedCache(aud.exclude_engaged_campaigns);            // v8
+  if(aud.skip_disengaged.enabled){ try{ await _ecEnsureEngCache(); }catch(e){ console.warn('[email] engagement cache load failed',e); } } // v8
   const fromOpts=_ecFromList.map((f,i)=>{
     const selected=(f.name===_ecCur.from_name&&f.address===_ecCur.from_address);
     return '<option value="'+i+'"'+(selected?' selected':'')+'>'+_escHtml(f.name)+' &lt;'+_escHtml(f.address)+'&gt;</option>';
@@ -12627,12 +12737,24 @@ async function _ecRenderSetup(){
   };
   const incHtml=_egGroups.length?_egGroups.map(g=>grpRow(g,'inc')).join(''):'<div class="ec-aud-empty">No groups yet. Create one on the Groups tab.</div>';
   const exgHtml=_egGroups.length?_egGroups.map(g=>grpRow(g,'exg')).join(''):'';
-  // sent campaigns available for exclusion
+  // sent campaigns available for exclusion. v8: three modes per campaign —
+  // '' (don't exclude) | 'sent' (skip everyone it was sent to) |
+  // 'engaged' (skip only those who OPENED/CLICKED it → resend-to-non-openers).
+  const exeSet=new Set(aud.exclude_engaged_campaigns);
   const sentCamps=_ecCampaigns.filter(c=>c.status==='sent');
   const campHtml=sentCamps.length?sentCamps.map(c=>{
-    const on=excSet.has(c.id);
-    return '<label class="ec-aud-row"><input type="checkbox" '+(on?'checked':'')+' onchange="_ecSetupToggleCamp(\''+_escAttr(c.id)+'\',this.checked)"> <span class="ec-aud-name">'+_escHtml(c.name||'(untitled)')+'</span> <span class="ec-aud-count">'+((c.stats||{}).recipients||'')+'</span></label>';
+    const mode=excSet.has(c.id)?'sent':(exeSet.has(c.id)?'engaged':'');
+    return '<div class="ec-aud-row" style="display:flex;align-items:center;gap:6px">'
+      +'<span class="ec-aud-name" style="flex:1;min-width:0">'+_escHtml(c.name||'(untitled)')+'</span>'
+      +'<span class="ec-aud-count">'+((c.stats||{}).recipients||'')+'</span>'
+      +'<select onchange="_ecSetupSetCampMode(\''+_escAttr(c.id)+'\',this.value)" style="font-family:var(--font-ui);font-size:.64rem;padding:2px 4px;border:1px solid var(--border2);border-radius:5px;background:var(--surf);color:var(--txt);max-width:150px">'
+      +'<option value=""'+(mode===''?' selected':'')+'>—</option>'
+      +'<option value="sent"'+(mode==='sent'?' selected':'')+'>everyone sent</option>'
+      +'<option value="engaged"'+(mode==='engaged'?' selected':'')+'>openers only</option>'
+      +'</select></div>';
   }).join(''):'<div class="ec-aud-empty">No sent campaigns yet to exclude.</div>';
+  // v8 — engagement-skip toggle state for the template below
+  const sdOn=aud.skip_disengaged.enabled;
   host.innerHTML=`
     <div class="ec-sticky">
       <div class="ec-compose-head">
@@ -12653,6 +12775,34 @@ async function _ecRenderSetup(){
       <div class="ec-fields" style="margin-top:0">
         <label class="eb-f" style="flex:1 1 100%"><span>Inbox preview text (optional)</span><input type="text" id="ecsPre" value="${_ebEsc(_ecCur.preheader||'')}" placeholder="Shown after the subject in most inboxes" oninput="_ecCur.preheader=this.value;_ecMark()"></label>
       </div>
+      <div class="ec-fields" style="margin-top:0">
+        <label class="eb-f" style="flex:1 1 100%">
+          <span>Tracking</span>
+          <span style="display:flex;gap:22px;align-items:center;padding:5px 2px;flex-wrap:wrap">
+            <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
+              <input type="checkbox" id="ecsTrackOpens" ${_ecCur.track_opens?'checked':''} onchange="_ecCur.track_opens=this.checked;_ecMark()">
+              Track opens <span style="color:var(--txt3)">(who opened)</span>
+            </label>
+            <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
+              <input type="checkbox" id="ecsTrackClicks" ${_ecCur.track_clicks?'checked':''} onchange="_ecCur.track_clicks=this.checked;_ecMark()">
+              Track clicks <span style="color:var(--txt3)">(who clicked links \u2014 off = best inbox delivery)</span>
+            </label>
+          </span>
+        </label>
+      </div>
+
+      <div class="ec-fields" style="margin-top:0">
+        <label class="eb-f" style="flex:1 1 100%">
+          <span>Protect deliverability</span>
+          <span style="display:flex;flex-direction:column;gap:4px;padding:5px 2px">
+            <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
+              <input type="checkbox" id="ecsSkipDis" ${sdOn?'checked':''} onchange="_ecSetupToggleSkip(this.checked)">
+              Skip disengaged contacts <span style="color:var(--txt3)">(ignored the last ${_EC_SKIP.LOOKBACK} emails \u2014 this send only, nobody is removed)</span>
+            </label>
+            <span id="ecsSkipInfo" style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);padding-left:23px">${sdOn?'Counting\u2026':'ON for routine sends protects your sender reputation. Turn OFF for big moments (holidays, major events) to reach everyone.'}</span>
+          </span>
+        </label>
+      </div>
 
       <div class="ec-aud-grid">
         <div class="ec-aud-col">
@@ -12664,7 +12814,7 @@ async function _ecRenderSetup(){
           <div class="ec-aud-list">${exgHtml||'<div class="ec-aud-empty">No groups.</div>'}</div>
         </div>
         <div class="ec-aud-col">
-          <div class="ec-aud-title">Exclude past mailings <span class="ec-aud-hint">(don’t resend)</span></div>
+          <div class="ec-aud-title">Exclude past mailings <span class="ec-aud-hint">(“openers only” = resend to non-openers)</span></div>
           <div class="ec-aud-list">${campHtml}</div>
         </div>
       </div>
@@ -12684,22 +12834,96 @@ function _ecSetupToggle(kind, gid, on){
   _ecMark();
   _ecSetupUpdateTally();
 }
-async function _ecSetupToggleCamp(cid, on){
+// v8 — three-state exclusion per past campaign: '' | 'sent' | 'engaged'.
+async function _ecSetupSetCampMode(cid, mode){
   const a=_ecSetupAud();
-  const i=a.exclude_campaigns.indexOf(cid);
-  if(on&&i<0)a.exclude_campaigns.push(cid);
-  if(!on&&i>=0)a.exclude_campaigns.splice(i,1);
-  if(on)await _ecEnsureSentCache([cid]);
+  const rm=(arr)=>{ const i=arr.indexOf(cid); if(i>=0)arr.splice(i,1); };
+  rm(a.exclude_campaigns); rm(a.exclude_engaged_campaigns);
+  if(mode==='sent'){ a.exclude_campaigns.push(cid); await _ecEnsureSentCache([cid]); }
+  if(mode==='engaged'){ a.exclude_engaged_campaigns.push(cid); await _ecEnsureEngagedCache([cid]); }
   _ecMark();
+  _ecSetupUpdateTally();
+}
+// v8 — engagement-skip toggle. Loads the engagement cache on first enable.
+async function _ecSetupToggleSkip(on){
+  const a=_ecSetupAud();
+  a.skip_disengaged.enabled=on===true;
+  _ecMark();
+  if(on){
+    const info=document.getElementById('ecsSkipInfo'); if(info)info.textContent='Counting…';
+    try{ await _ecEnsureEngCache(); }
+    catch(e){ _ebToastMsg('Couldn’t load engagement history — the skip preview may be unavailable.'); }
+  }
   _ecSetupUpdateTally();
 }
 function _ecSetupUpdateTally(){
   const el=document.getElementById('ecsTally'); if(!el)return;
   const a=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
-  if(!a.include_groups.length){ el.textContent='Choose at least one group to send to.'; el.className='ec-aud-tally warn'; return; }
-  const n=_ecResolveAudience(a).length;
-  el.innerHTML='<b>'+n+'</b> mailable recipient'+(n===1?'':'s')+' <span style="color:var(--txt3);font-weight:400">(has email · not unsubscribed · de-duped)</span>';
+  if(!a.include_groups.length){ el.textContent='Choose at least one group to send to.'; el.className='ec-aud-tally warn'; const i0=document.getElementById('ecsSkipInfo'); if(i0&&a.skip_disengaged.enabled)i0.textContent=''; return; }
+  const r=_ecResolveWithSkip(a);
+  const n=r.send.length, ns=r.skipped.length;
+  el.innerHTML='<b>'+n+'</b> mailable recipient'+(n===1?'':'s')
+    +(a.skip_disengaged.enabled?' <span style="color:var(--amber);font-weight:600">· skipping '+ns+' disengaged</span>':'')
+    +' <span style="color:var(--txt3);font-weight:400">(has email · not unsubscribed or bounced · de-duped)</span>';
   el.className='ec-aud-tally'+(n===0?' warn':'');
+  const info=document.getElementById('ecsSkipInfo');
+  if(info){
+    if(!a.skip_disengaged.enabled){
+      info.innerHTML='ON for routine sends protects your sender reputation. Turn OFF for big moments (holidays, major events) to reach everyone.';
+    }else if(!_ecEngCache){
+      info.textContent='Counting…';
+    }else{
+      const kept=a.skip_disengaged.unskip.length;
+      info.innerHTML='Skipping <b>'+ns+'</b> contact'+(ns===1?'':'s')+' who haven’t opened, clicked, or replied to their last '+_EC_SKIP.LOOKBACK+' emails'
+        +(kept?' ('+kept+' kept by hand)':'')
+        +' — <a href="#" onclick="_ecOpenSkipPeek();return false" style="color:var(--accent,#0f766e)">see who / override</a>. Nobody is removed from any group.';
+    }
+  }
+}
+// v8 — peek list: who would be skipped, with per-contact "keep anyway" override.
+async function _ecOpenSkipPeek(){
+  try{ await _ecEnsureEngCache(); }catch(e){ _ebToastMsg('Couldn’t load engagement history.'); return; }
+  const a=_ecSetupAud();
+  const base=_ecResolveAudience(a);
+  // show EVERYONE who qualifies as disengaged (ignoring current unskip), so
+  // un-skipped people remain visible and can be re-skipped.
+  const allSkippable=_ecComputeSkipped(base,[]);
+  const unskipSet=new Set(a.skip_disengaged.unskip||[]);
+  const old=document.getElementById('ecSkipPeek'); if(old)old.remove();
+  const rows=allSkippable.map(cid=>{
+    const info=_egContactInfo(cid);
+    const kept=unskipSet.has(cid);
+    return '<label style="display:flex;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);cursor:pointer;font-family:var(--font-ui);font-size:.74rem">'
+      +'<input type="checkbox" '+(kept?'checked':'')+' onchange="_ecSkipPeekToggle(\''+_escAttr(cid)+'\',this.checked)">'
+      +'<span style="flex:1;min-width:0"><b>'+_escHtml(info.name)+'</b> <span style="color:var(--txt3)">'+_escHtml(info.email||'')+'</span></span>'
+      +'</label>';
+  }).join('')||'<div style="padding:14px;text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.72rem">Nobody qualifies as disengaged right now.</div>';
+  const wrap=document.createElement('div');
+  wrap.id='ecSkipPeek';
+  wrap.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  wrap.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border);border-radius:12px;max-width:460px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="padding:14px 16px;border-bottom:1px solid var(--border)">'
+    +'<div style="font-family:var(--font-display);font-size:.95rem;color:var(--txt)">Disengaged contacts ('+allSkippable.length+')</div>'
+    +'<div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);margin-top:3px">These haven’t opened, clicked, or replied to their last '+_EC_SKIP.LOOKBACK+' emails. Check a box to <b>keep someone in this send anyway</b>. Groups are never changed.</div>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:4px 16px">'+rows+'</div>'
+    +'<div style="padding:12px 16px;border-top:1px solid var(--border);text-align:right">'
+    +'<button class="btn btn-pri" style="font-size:.7rem;padding:6px 16px" onclick="_ecCloseSkipPeek()">Done</button>'
+    +'</div></div>';
+  wrap.addEventListener('click',e=>{ if(e.target===wrap)_ecCloseSkipPeek(); });
+  document.body.appendChild(wrap);
+}
+function _ecSkipPeekToggle(cid, keep){
+  const a=_ecSetupAud();
+  const arr=a.skip_disengaged.unskip;
+  const i=arr.indexOf(cid);
+  if(keep&&i<0)arr.push(cid);
+  if(!keep&&i>=0)arr.splice(i,1);
+  _ecMark();
+}
+function _ecCloseSkipPeek(){
+  const el=document.getElementById('ecSkipPeek'); if(el)el.remove();
+  _ecSetupUpdateTally();
 }
 function _ecSetupBack(){
   // Save metadata edits on an existing draft before leaving setup (blocks are
@@ -12709,7 +12933,8 @@ function _ecSetupBack(){
       sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify({
         name:_ecCur.name||'(untitled)', subject:_ecCur.subject||'(no subject)', preheader:_ecCur.preheader||null,
         from_name:_ecCur.from_name||null, from_address:_ecCur.from_address||'',
-        audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id)
+        audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id),
+        track_opens:_ecCur.track_opens!==false, track_clicks:_ecCur.track_clicks===true
       })}).catch(()=>{});
       _ecCur._dirty=false;
     }
@@ -12730,7 +12955,7 @@ function _ecSetupContinue(){
 // ── new / open / duplicate / delete ──
 async function _ecNew(){
   _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
-    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft', track_opens:true, track_clicks:false,
     blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
   _ecOpenSetup();
 }
@@ -12754,6 +12979,7 @@ async function _ecOpen(id){
     let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
     _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
       audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
+      track_opens:c.track_opens!==false, track_clicks:c.track_clicks!==false,
       blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _ecOpenCompose();
   }catch(e){ _ebToastMsg('Could not open campaign: '+e.message); _ecGoCampaigns(); }
@@ -12761,7 +12987,7 @@ async function _ecOpen(id){
 async function _ecDuplicate(id){
   try{
     const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c)return;
-    const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, audience:c.audience||null, mjml:c.mjml, section:c.section, status:'draft' };
+    const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, audience:c.audience||null, track_opens:c.track_opens, track_clicks:c.track_clicks, mjml:c.mjml, section:c.section, status:'draft' };
     await sb('email_campaigns',{method:'POST',body:JSON.stringify(dup)});
     await _ecLoad(true); _ecRenderList();
   }catch(e){ _ebToastMsg('Could not duplicate: '+e.message); }
@@ -12836,6 +13062,7 @@ async function _ecSaveDraft(explicit){
   const payload={ name:_ecCur.name||'(untitled)', subject:_ecCur.subject||'(no subject)', preheader:_ecCur.preheader||null,
     from_name:_ecCur.from_name||null, from_address:_ecCur.from_address||_ecFromList[0]?.address||'', group_id:_ecCur.group_id||null,
     audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id),
+    track_opens:_ecCur.track_opens!==false, track_clicks:_ecCur.track_clicks===true,
     mjml:JSON.stringify(_ebBlocks), html:html, section:_ecCur.section||null };
   try{
     if(_ecCur.id){
@@ -12876,22 +13103,97 @@ window.addEventListener('beforeunload',function(e){
   }catch(_){}
 });
 
+// ── v8: EMAIL HEALTH — pre-send checks on the compiled email ─────────────────
+// Advisory only (never blocks the send). Each check: {level:'ok'|'warn'|'bad', msg, fix}.
+const _EC_GMAIL_CLIP=102*1024; // Gmail clips messages beyond ~102KB of HTML
+function _ecHealthChecks(html){
+  const checks=[];
+  const add=(level,msg,fix)=>checks.push({level,msg,fix:fix||''});
+  const h=html||'';
+  // 1. size vs Gmail clipping (clipped emails hide content AND the unsubscribe link)
+  let bytes=0; try{ bytes=new Blob([h]).size; }catch(e){ bytes=h.length; }
+  const kb=Math.round(bytes/1024);
+  if(bytes>_EC_GMAIL_CLIP)add('bad','Email is '+kb+'KB — Gmail will clip it',
+    'Gmail cuts messages over ~102KB; readers see “[Message clipped]” and your unsubscribe link is hidden (frustrated people hit Spam instead). Shorten the email.');
+  else if(bytes>_EC_GMAIL_CLIP*0.85)add('warn','Email is '+kb+'KB — close to Gmail’s clipping limit (~102KB)','Trim content before it gets clipped.');
+  else add('ok','Size: '+kb+'KB — well under Gmail’s clipping limit');
+  // 2. text vs images balance ("marketing-shaped" emails land in Promotions)
+  const imgs=(h.match(/<img\b/gi)||[]).length;
+  const textLen=h.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().length;
+  if(imgs>0&&textLen<200*imgs)add('warn',imgs+' image'+(imgs===1?'':'s')+' with relatively little text',
+    'Image-heavy emails read as “marketing” to Gmail (→ Promotions tab) and show blank when images are blocked. More real text, fewer images.');
+  else if(imgs>8)add('warn',imgs+' images — a lot for one email','Heavy image counts are a Promotions-tab signal.');
+  else add('ok','Text-to-image balance looks good ('+imgs+' image'+(imgs===1?'':'s')+')');
+  // 3. link count
+  const links=(h.match(/<a\b[^>]*href=/gi)||[]).length;
+  if(links>15)add('warn',links+' links — high','Many links is a spam-filter signal. Keep one clear call-to-action where possible.');
+  else add('ok',links+' link'+(links===1?'':'s'));
+  // 4. URL shorteners — heavily abused by spammers, filters treat them accordingly
+  if(/\b(bit\.ly|tinyurl\.com|goo\.gl|t\.co|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly)\b/i.test(h))
+    add('bad','Shortened URL detected (bit.ly / tinyurl / …)','Spam filters distrust shorteners. Link the full destination address instead.');
+  else add('ok','No URL shorteners');
+  // 5. unsubscribe link in body (send is separately blocked without it)
+  if(/\{unsubscribe\}|%recipient\.unsubscribe_url%|unsubscribe_url/.test(h))add('ok','Unsubscribe link present');
+  else add('bad','No unsubscribe link found in the body','Required by law and by Gmail/Yahoo. Add the {unsubscribe} link to your footer.');
+  // 6. preheader
+  if((_ecCur.preheader||'').trim())add('ok','Inbox preview text is set');
+  else add('warn','No inbox preview text','The gray line after the subject is free space to win the open — set it on the setup page.');
+  // 7. subject sanity
+  const subj=_ecCur.subject||'';
+  if(subj.length>70)add('warn','Subject is '+subj.length+' characters — long','Most inboxes cut subjects around 40-70 characters; front-load the point.');
+  else if((subj.match(/!/g)||[]).length>2||(subj===subj.toUpperCase()&&/[A-Z]{4}/.test(subj)))add('warn','Subject has heavy caps/exclamation marks','Reads “promotional” to filters and people alike.');
+  else if(subj)add('ok','Subject length OK ('+subj.length+' chars)');
+  // 8. click tracking note (rewrites every link through Mailgun's shared domain)
+  if(_ecCur.track_clicks)add('warn','Click tracking is ON','Links are rewritten through Mailgun’s shared tracking domain — a Promotions/spam signal. Fine for events; consider OFF for personal sends (or set up a custom tracking subdomain).');
+  else add('ok','Click tracking off — links stay clean');
+  return checks;
+}
+function _ecHealthPanelHtml(checks, skippedN, skipOn){
+  const icon={ok:'✓',warn:'!',bad:'✕'};
+  const color={ok:'var(--green,#15803d)',warn:'var(--amber,#a16207)',bad:'var(--red,#b91c1c)'};
+  const bads=checks.filter(c=>c.level==='bad').length, warns=checks.filter(c=>c.level==='warn').length;
+  const overall=bads?['Needs attention','var(--red,#b91c1c)']:(warns?['Good — '+warns+' suggestion'+(warns===1?'':'s'),'var(--amber,#a16207)']:['Excellent','var(--green,#15803d)']);
+  const rows=checks.map(c=>'<div style="display:flex;gap:8px;align-items:flex-start;padding:3px 0">'
+    +'<span style="flex-shrink:0;width:15px;text-align:center;font-weight:700;color:'+color[c.level]+'">'+icon[c.level]+'</span>'
+    +'<span style="flex:1;min-width:0"><span'+(c.level!=='ok'?' style="font-weight:600"':'')+'>'+_escHtml(c.msg)+'</span>'
+    +(c.fix&&c.level!=='ok'?'<br><span style="color:var(--txt3);font-size:.66rem">'+_escHtml(c.fix)+'</span>':'')
+    +'</span></div>').join('');
+  const skipLine=skipOn?'<div style="display:flex;gap:8px;align-items:flex-start;padding:3px 0"><span style="flex-shrink:0;width:15px;text-align:center;font-weight:700;color:var(--green,#15803d)">✓</span><span>Engagement-skip ON — leaving out '+skippedN+' disengaged contact'+(skippedN===1?'':'s')+' this send</span></div>'
+    :'<div style="display:flex;gap:8px;align-items:flex-start;padding:3px 0"><span style="flex-shrink:0;width:15px;text-align:center;font-weight:700;color:var(--txt3)">·</span><span style="color:var(--txt3)">Engagement-skip is off — full reach (right for big moments; consider ON for routine sends)</span></div>';
+  return '<div style="margin-bottom:14px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>Email health</b><span style="font-weight:700;color:'+overall[1]+'">'+overall[0]+'</span></div>'
+    +rows+skipLine+'</div>';
+}
+
 // ── send / schedule modal ──
 function _ecOpenSend(){
   _ecSyncFromBuilder();
   const aud=_ecNormAudience(_ecCur.audience,_ecCur.group_id);
-  // make sure exclusion cache is present, then validate + count
-  _ecEnsureSentCache(aud.exclude_campaigns).then(()=>{
+  // make sure exclusion + engagement caches are present, then validate + count
+  Promise.all([
+    _ecEnsureSentCache(aud.exclude_campaigns),
+    _ecEnsureEngagedCache(aud.exclude_engaged_campaigns),
+    aud.skip_disengaged.enabled?_ecEnsureEngCache().catch(e=>{console.warn('[email] engagement cache load failed',e);return null;}):Promise.resolve(null)
+  ]).then(()=>{
     // validation
     const problems=[];
+    if(aud.exclude_engaged_campaigns.length&&_ecEngagedCacheFailed)problems.push('The opener-exclusion list could not be loaded — sending now could re-email people who already engaged with those mailings. Check your connection and reopen this dialog.');
+    if(aud.skip_disengaged.enabled&&!_ecEngCache)problems.push('Engagement history could not be loaded, so the disengaged skip can’t be previewed. Check your connection and reopen this dialog.');
     if(aud.exclude_campaigns.length&&_ecSentCacheFailed)problems.push('The past-mailing exclusion list could not be loaded \u2014 sending now could re-email people who already got those mailings. Check your connection and reopen this dialog.');
     if(!_ecCur.subject||_ecCur.subject==='(no subject)')problems.push('Add a subject line.');
     if(!_ecCur.from_address)problems.push('Choose a From address.');
     if(!aud.include_groups.length)problems.push('Choose at least one group to send to.');
     if(!_ebBlocks.some(b=>b.type==='footer'&&/\{unsubscribe\}/.test(b.text||'')))problems.push('Your footer must contain an {unsubscribe} link (legally required).');
-    const mailable=aud.include_groups.length?_ecResolveAudience(aud).length:0;
-    if(aud.include_groups.length&&mailable===0)problems.push('This audience has no mailable recipients (need an email, not unsubscribed, after exclusions).');
+    const resolved=aud.include_groups.length?_ecResolveWithSkip(aud):{send:[],skipped:[]};
+    const mailable=resolved.send.length, skippedN=resolved.skipped.length;
+    if(aud.include_groups.length&&mailable===0)problems.push('This audience has no mailable recipients (need an email, not unsubscribed or bounced, after exclusions'+(aud.skip_disengaged.enabled?' and the disengaged skip':'')+').');
     const audLabel=_ecAudienceSummary(aud,_ecCur.group_id);
+    // v8 — email health panel (advisory, never blocks)
+    let healthHtml='';
+    try{
+      const compiled=_ebCompile(_ebBlocks,{subject:_ecCur.subject,preheader:_ecCur.preheader,section:_ecCur.section});
+      healthHtml=_ecHealthPanelHtml(_ecHealthChecks(compiled),skippedN,aud.skip_disengaged.enabled);
+    }catch(e){ console.warn('[email] health checks failed',e); }
     // Default the scheduler to "tomorrow at 9:00 AM local", the most common choice.
     const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
     const pad=n=>(n<10?'0':'')+n;
@@ -12899,7 +13201,7 @@ function _ecOpenSend(){
     const defTime=pad(d.getHours())+':'+pad(d.getMinutes());
     document.getElementById('ecSendBody').innerHTML=problems.length
       ? '<div class="eb-hint" style="color:var(--red);font-size:.72rem">Fix these first:</div><ul style="margin:6px 0 0;padding-left:18px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt2)">'+problems.map(p=>'<li>'+_escHtml(p)+'</li>').join('')+'</ul>'
-      : `<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
+      : healthHtml+`<div style="font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.6">
            Sending <b>“${_escHtml(_ecCur.subject)}”</b><br>
            to <b>${_escHtml(audLabel)}</b> — <b>${mailable}</b> mailable recipient${mailable===1?'':'s'}<br>
            from <b>${_escHtml(_ecCur.from_name)} &lt;${_escHtml(_ecCur.from_address)}&gt;</b>
@@ -12972,7 +13274,8 @@ async function _ecConfirmSend(btn){
       // invoke the email-send Edge Function
       const r=await _ecInvokeSend(_ecCur.id);
       document.getElementById('ecSendModal').style.display='none';
-      _ebToastMsg('Sent'+(r&&r.recipients!=null?' — '+r.recipients+' recipient'+(r.recipients===1?'':'s'):''));
+      _ebToastMsg('Sent'+(r&&r.recipients!=null?' — '+r.recipients+' recipient'+(r.recipients===1?'':'s'):'')+(r&&r.skipped?' ('+r.skipped+' disengaged skipped)':''));
+      _ecInvalidateEngCache(); // v8 — send history changed; recount next time
       done=true;
       await _ecLoad(true); _ecGoCampaigns();
     }
@@ -13333,7 +13636,7 @@ async function _etUse(id){
     if(!parsed.blocks.length){ _ebToastMsg('This template has no design blocks saved.'); return; }
     _ecCur={ id:null, name:(t.name||'Campaign'), subject:t.subject||'', preheader:parsed.preheader||'',
       from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
-      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft', track_opens:true, track_clicks:false,
       blocks:JSON.parse(JSON.stringify(parsed.blocks)),
       section:parsed.section?JSON.parse(JSON.stringify(parsed.section)):{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _ecOpenSetup();
@@ -13520,7 +13823,8 @@ function switchView(view){
       sb('email_campaigns?id=eq.'+_ecCur.id,{method:'PATCH',body:JSON.stringify({
         name:_ecCur.name||'(untitled)', subject:_ecCur.subject||'(no subject)', preheader:_ecCur.preheader||null,
         from_name:_ecCur.from_name||null, from_address:_ecCur.from_address||'',
-        audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id)
+        audience:_ecNormAudience(_ecCur.audience,_ecCur.group_id),
+        track_opens:_ecCur.track_opens!==false, track_clicks:_ecCur.track_clicks===true
       })}).catch(()=>{});
       _ecCur._dirty=false;
     }
@@ -17632,7 +17936,7 @@ function _meRenderHome(){
    _ecCur literal identical. */
 function _meNewEmail(){
   _ecCur={ id:null, name:'', subject:'', preheader:'', from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
-    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+    audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft', track_opens:true, track_clicks:false,
     blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
   _meBind(); _meGo(1);
 }
@@ -17664,6 +17968,7 @@ async function _meOpenDraft(id){
     let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
     _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
       audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
+      track_opens:c.track_opens!==false, track_clicks:c.track_clicks!==false,
       blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _meBind(); _meGo(1);
   }catch(e){ _ebToastMsg('Could not open: '+(e.message||e)); _meRenderHome(); }
@@ -17677,7 +17982,7 @@ async function _meUseTemplate(id){
     if(!parsed.blocks.length){ _ebToastMsg('This template has no design blocks saved.'); return; }
     _ecCur={ id:null, name:(t.name||'Campaign'), subject:t.subject||'', preheader:parsed.preheader||'',
       from_name:(_ecFromList[0]||{}).name||'', from_address:(_ecFromList[0]||{}).address||'', group_id:null,
-      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft',
+      audience:{include_groups:[],exclude_groups:[],exclude_campaigns:[]}, status:'draft', track_opens:true, track_clicks:false,
       blocks:JSON.parse(JSON.stringify(parsed.blocks)),
       section:parsed.section?JSON.parse(JSON.stringify(parsed.section)):{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _meBind(); _meGo(1);
