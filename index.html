@@ -298,6 +298,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
   /* Enrich header jump-to dropdown shouldn't overflow */
   #enrichOverlay select{max-width:42vw!important}
 }
+/* Force the full desktop UI even on a narrow viewport (the "Desktop view" toggle).
+   Higher specificity + !important beats the max-width:768px rules above, so this
+   works both on a resized desktop window and (with the viewport widened) on a phone. */
+html.force-desktop #app{display:flex!important}
+html.force-desktop #mobileShell{display:none!important}
 /* ===== MOBILE SHELL (defined outside media query, shown only via #app rule above) ===== */
 #mobileShell{display:none;flex-direction:column;height:100dvh;width:100vw;background:var(--bg);overflow:hidden}
 .m-topbar{display:flex;align-items:center;gap:10px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--sh-sm);z-index:5}
@@ -1194,6 +1199,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
     <button class="sb-item" onclick="closeSidebar();openRabbiContext()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg> Rabbi Context</button>
     <button class="sb-item" onclick="closeSidebar();openSearchContext()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg> Profile Building Context</button>
     <button class="sb-item" onclick="closeSidebar();openAPIKeys()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="m10.5 12.5 9-9M16 6l3 3M14 8l3 3"></path></svg> API Keys</button>
+    <button class="sb-item" onclick="switchToMobileView()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></svg> Switch to Mobile View</button>
     <button class="sb-item" onclick="closeSidebar();deployToGitHub()" style="color:var(--green);font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13c-1.5 1-2 4-2 4s3-.5 4-2M12 15l-3-3a13 13 0 0 1 7-9 1 1 0 0 1 1 1 13 13 0 0 1-5 11Z"></path><circle cx="14.5" cy="9.5" r="1.5"></circle></svg> Deploy to GitHub</button>
 
     <!-- Pin color thresholds -->
@@ -2372,6 +2378,10 @@ async function loadAll(){
     households.forEach((h,i)=>{if(h.lat&&h.lon)placePinAt(i);});
     fitMap();
     renderList();
+    // MOBILE MAP: if the phone's Map tab was opened before this load finished,
+    // its Leaflet layer built against an empty households[] and stayed blank.
+    // Now that households[] is populated, repaint the mobile pins.
+    try{ if(typeof _mMapBuilt!=='undefined'&&_mMapBuilt&&typeof _mSyncMapPins==='function')_mSyncMapPins(); }catch(e){}
 
     // Geocode missing — skip on GitHub Pages (Nominatim is CORS-blocked there).
     // Instead show a quiet dismissible banner naming the households with no coords.
@@ -2820,6 +2830,9 @@ function recolorAll(){
   }
   households.forEach((h,i)=>{if(!markers[i])return;markers[i].setIcon(pinIcon(i,i===activeIdx,getTier(i)));});
   renderList();
+  // Keep the mobile Leaflet pins in step with color/score updates (and cover the
+  // case where AGC aggregates finish loading after a cold Map-tab open).
+  try{ if(typeof _mMapBuilt!=='undefined'&&_mMapBuilt&&typeof _mSyncMapPins==='function')_mSyncMapPins(); }catch(e){}
 }
 
 // ── FILTER ──
@@ -6716,6 +6729,8 @@ function saveAPIKeys(){
 }
 
 window.addEventListener('DOMContentLoaded',async()=>{
+  // Honor a saved "Desktop view" preference before anything paints.
+  try{ if(typeof _initViewMode==='function')_initViewMode(); }catch(e){}
   // Capture the page source BEFORE any JS mutates the DOM — used by Deploy to GitHub.
   _PRISTINE_SRC='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
   // Register service worker (enables Android share target). Safe no-op on unsupported browsers.
@@ -17084,6 +17099,7 @@ function _asExecuteSearch(sentence){
     <button onclick="mMenuGo('contact')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg><span class="m-menu-txt"><b>New Contact</b><span>Add a person you just met</span></span></button>
     <button onclick="mMenuGo('search')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span class="m-menu-txt"><b>Search</b><span>Find by name, note, phone, or profile</span></span></button>
     <button onclick="mMenuGo('enrich')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="m-menu-txt"><b>Build Profiles</b><span id="mEnrichCount">Build research dossiers, top prospects first</span></span></button>
+    <button onclick="mForceDesktop()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg><span class="m-menu-txt"><b>Desktop view</b><span>Full features · wider layout</span></span></button>
   </div>
 
   <div class="m-body">
@@ -17838,6 +17854,38 @@ function mMenuGo(what){
   else if(what==='contact'){ try{ showAddContact(); }catch(e){ _ebToastMsg('Could not open Add Contact.'); } }
   else if(what==='search'){ mFindOpen(); }
   else if(what==='enrich'){ try{ openEnrich(); }catch(e){ _ebToastMsg('Could not open Build Profiles.'); } }
+}
+
+/* ===================== VIEW MODE (mobile ⇄ full desktop) =====================
+   Two mechanisms, because mobile vs desktop layout is driven by the
+   (max-width:768px) media query:
+   1) html.force-desktop CSS override forces #app (full desktop UI) visible and
+      hides #mobileShell regardless of width — this is what makes the toggle work
+      even in a narrow desktop test window, where the viewport meta is ignored.
+   2) Widening the viewport meta to a desktop width makes the media query stop
+      matching on a REAL phone, so the desktop layout renders at a usable width
+      and stays zoomable.
+   The choice is remembered in localStorage and re-applied on the next launch. */
+const _VP_MOBILE='width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no';
+const _VP_DESKTOP='width=1280, viewport-fit=cover, user-scalable=yes';
+function _applyViewMode(desktop){
+  document.documentElement.classList.toggle('force-desktop', !!desktop);
+  const vp=document.querySelector('meta[name="viewport"]');
+  if(vp) vp.setAttribute('content', desktop?_VP_DESKTOP:_VP_MOBILE);
+  try{ localStorage.setItem('daas_forceDesktop', desktop?'1':'0'); }catch(e){}
+  // Let the browser re-layout at the new width across two frames, then fix Leaflet
+  // (a map sized against the old viewport renders blank until invalidateSize()).
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    try{ if(desktop && typeof map!=='undefined' && map){ map.invalidateSize(); if(typeof fitMap==='function')fitMap(); } }catch(e){}
+    try{ if(!desktop && typeof _mMapObj!=='undefined' && _mMapObj){ _mMapObj.invalidateSize(); } }catch(e){}
+  }));
+}
+function mForceDesktop(){ try{ mMenuClose(); }catch(e){} _applyViewMode(true); }
+function switchToMobileView(){ try{ closeSidebar(); }catch(e){} _applyViewMode(false); }
+function _initViewMode(){
+  let pref='0';
+  try{ pref=localStorage.getItem('daas_forceDesktop')||'0'; }catch(e){}
+  if(pref==='1') _applyViewMode(true);
 }
 
 /* ===================== FREEFORM SEARCH (mobile) =====================
