@@ -1037,7 +1037,7 @@ html.force-desktop #mobileShell{display:none!important}
     <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
     <div id="note_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
-      <button class="btn btn-pri" onclick="saveNote()">Save Note</button>
+      <button class="btn btn-pri" onclick="_guardClick(this,saveNote)">Save Note</button>
       <button class="btn btn-sec" onclick="document.getElementById('addNoteModal').style.display='none'">Cancel</button>
     </div>
   </div>
@@ -1366,6 +1366,13 @@ html.force-desktop #mobileShell{display:none!important}
     <h1 id="viewTitle">Dashboard</h1>
     <button class="btn btn-pri" onclick="showAddContact()" style="padding:4px 10px;font-size:.72rem">Add contact</button>
     <button class="btn btn-sec" onclick="loadAll()" style="padding:4px 10px;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg></button>
+    <div style="position:relative;flex-shrink:0" id="undoWrap">
+      <button class="btn btn-sec" id="undoHdrBtn" onclick="toggleUndoPopout()" title="Undo a recent action" style="padding:4px 10px;font-size:.72rem;display:none;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg> Undo</button>
+      <div id="undoPopout" style="display:none;position:absolute;top:calc(100% + 6px);left:0;width:300px;background:var(--surf);border:1px solid var(--border2);border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.13);z-index:9999;overflow:hidden">
+        <div style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);padding:9px 12px 4px">Recent actions</div>
+        <div id="undoPopoutList" style="max-height:260px;overflow-y:auto"></div>
+      </div>
+    </div>
     <div class="prog-wrap" id="geoProgress" style="display:none">
       <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
       <span class="prog-lbl" id="progLbl">Loading…</span>
@@ -1719,7 +1726,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-06.4';
+const BUILD_STAMP='2026-07-14.2'; // + cross-device hardening (merge-safe pins, fresh track reads, undo freshness checks, mobile undo header)
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -4624,18 +4631,20 @@ async function saveInteraction(){
   const status=document.getElementById('li_status');
   if(!date){alert('Please enter a date.');return;}
   status.style.display='block';status.textContent='Saving…';
+  let _logRes=null;
   try{
     if(editId){
-      // Edit mode — update existing record (first checked contact)
+      // Edit mode — update existing record (first checked contact).
+      // Deliberately does NOT touch outreach tracks: editing an old entry's
+      // type must never close a live follow-up (fixed 2026-07-13).
       await sb('interactions?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:checked[0],type,date,notes:notes||null})});
       if(notes)embedAndStore(editId,type+': '+notes);else _clearInteractionEmbedding(editId);
     }else{
-      // Add mode — create one per checked contact
-      for(const contactId of checked){
-        const savedI=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:notes||null,created_at:new Date().toISOString()})});
-        _bumpAGCAgg(contactId,type,date);
-        if(savedI&&savedI[0]){if(notes)embedAndStore(savedI[0].id,type+': '+notes);const _h=households[idx];if(_h)_interToHH[savedI[0].id]=_h.id;}
-      }
+      // Add mode — one row per checked member, but all side effects (single
+      // AGC bump, embedding, daily-five bookkeeping, reach-closes-track,
+      // undo journal) run ONCE per household via the unified logger.
+      const _hh=households[idx]||null;
+      _logRes=await logTouch({contactIds:checked,householdId:_hh?_hh.id:null,type,date,notes,source:'log',trackMode:'close-only',markDaily:true,silent:true,journalLabel:type+(_hh?(' — '+(_hh.displayName||'')):'')});
     }
     // Reset modal to add mode
     document.getElementById('li_edit_id').value='';
@@ -4643,15 +4652,21 @@ async function saveInteraction(){
     document.getElementById('li_save_btn').textContent='Log Interaction';
     document.getElementById('logInteractionModal').style.display='none';
     const hI=households[idx];if(hI){_invHH(hI);refreshAGCScore(hI.id).then(()=>recolorAll());}
-    // Auto-graduate any open track if Connected
-    if(_isReach(type)&&hI){
-      const openTrack=outreachTracks.find(t=>t.household_id===hI.id&&t.status==='active');
-      if(openTrack)await handleTrackOutcome(openTrack.id,hI.id,'Connected');
-    }
+    // (Track close for reach types now happens inside logTouch — and only in
+    // add mode, never when editing an old entry.)
     // Refresh whichever view is open
     const fp=document.getElementById('fullPanel');
     if(fp&&fp.style.display!=='none')openFullPanel(idx);
     else{showTab(idx,'interactions');loadInteractionsTab(idx);}
+    // One toast: Undo + (complete a matching open task) + (start/advance
+    // follow-up when this was a miss-type — you stay in control of tracks).
+    if(_logRes&&hI){
+      const acts=[];
+      const ta=_taskCompleteAction(hI,checked,_logRes.created[0].id,_logRes.undo.id);
+      if(ta)acts.push(ta);
+      if(!_isReach(type)&&type!=='Note')acts.push(_followUpAction(hI.id,type));
+      _daasToast('Logged '+type+' — '+(hI.displayName||''),{undoId:_logRes.undo.id,actions:acts});
+    }
   }catch(e){status.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> '+_escHtml(e.message);}
 }
 
@@ -4667,17 +4682,26 @@ async function loadInteractionsTab(idx){
     _indexInteractions(rows,h);
     if(!rows||!rows.length){el.innerHTML='<div style="font-size:.75rem;color:var(--txt3)">No activity logged yet. Click + Log to add.</div>';return;}
     const fd=_fmtDate;
-    el.innerHTML=rows.map(r=>{
+    // Collapse one logical touch logged against multiple household members
+    // (same type+date+notes) into a single timeline entry: "with David & Sarah".
+    const groups=[];const gmap={};
+    rows.forEach(r=>{
       const member=(h.members||[]).find(m=>m.id===r.contact_id);
-      const memberName=member?member.first_name:'';
+      const nm=member?member.first_name:'';
+      const key=r.type+'|'+r.date+'|'+(r.notes||'');
+      if(gmap[key]){if(nm&&!gmap[key]._names.includes(nm))gmap[key]._names.push(nm);gmap[key]._ids.push(r.id);}
+      else{const g={type:r.type,date:r.date,notes:r.notes,_names:nm?[nm]:[],_ids:[r.id]};gmap[key]=g;groups.push(g);}
+    });
+    el.innerHTML=groups.map(g=>{
+      const withStr=g._names.join(' & ');
       return`<div style="padding:8px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="font-size:.75rem;font-weight:500;color:var(--txt)">${_escHtml(r.type)}</div>
-          <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap;margin-left:8px">${fd(r.date)}</div>
+          <div style="font-size:.75rem;font-weight:500;color:var(--txt)">${_escHtml(g.type)}</div>
+          <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap;margin-left:8px">${fd(g.date)}</div>
         </div>
-        ${r.notes?`<div style="font-size:.7rem;color:var(--txt2);margin-top:3px;line-height:1.5">${_escHtml(r.notes)}</div>`:''}
-        ${memberName?`<div style="font-size:.6rem;color:var(--txt3);margin-top:2px">with ${memberName}</div>`:''}
-        <button onclick="deleteInteraction('${r.id}',${idx})" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;margin-top:2px;padding:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg> delete</button>
+        ${g.notes?`<div style="font-size:.7rem;color:var(--txt2);margin-top:3px;line-height:1.5">${_escHtml(g.notes)}</div>`:''}
+        ${withStr?`<div style="font-size:.6rem;color:var(--txt3);margin-top:2px">with ${_escHtml(withStr)}</div>`:''}
+        <button onclick="deleteInteractionGroup('${g._ids.join(',')}',${idx})" style="font-size:.6rem;color:var(--txt3);background:none;border:none;cursor:pointer;margin-top:2px;padding:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg> delete</button>
       </div>`;
     }).join('');
   }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:.75rem">${_escHtml(e.message)}</div>`;}
@@ -4687,9 +4711,25 @@ async function deleteInteraction(id,idx,tabType){
   if(!confirm('Delete this entry?'))return;
   {const _fix=hIdxByRecord(id,'interaction');if(_fix>=0)idx=_fix;}
   await sb(`interactions?id=eq.${id}`,{method:'DELETE'});
-  {const _h=households[idx];if(_h)_invHH(_h);}
+  try{_clearInteractionEmbedding(id);}catch(e){} // no orphaned vectors
+  {const _h=households[idx];if(_h){_invHH(_h);try{_recalcAGCAggForHH(_h.id);}catch(e){}try{refreshAGCScore(_h.id).then(()=>{try{recolorAll();}catch(_){}});}catch(e){}}}
   if(tabType==='note')loadNotesTab(idx);
   else loadInteractionsTab(idx);
+}
+
+// Delete a deduped timeline entry — removes ALL member copies of the same
+// logical touch (one row per checked member), plus their embeddings.
+async function deleteInteractionGroup(idsCsv,idx){
+  const ids=String(idsCsv||'').split(',').filter(Boolean);
+  if(!ids.length)return;
+  if(!confirm(ids.length>1?('Delete this entry? It was logged for '+ids.length+' household members — all copies are removed.'):'Delete this entry?'))return;
+  {const _fix=hIdxByRecord(ids[0],'interaction');if(_fix>=0)idx=_fix;}
+  for(const id of ids){
+    try{await sb(`interactions?id=eq.${id}`,{method:'DELETE'});}catch(e){console.warn('[DAAS] group delete failed for',id,e);}
+    try{_clearInteractionEmbedding(id);}catch(e){}
+  }
+  {const _h=households[idx];if(_h){_invHH(_h);try{await _recalcAGCAggForHH(_h.id);}catch(e){}try{refreshAGCScore(_h.id).then(()=>{try{recolorAll();}catch(_){}});}catch(e){}}}
+  loadInteractionsTab(idx);
 }
 
 // ── NOTES ──
@@ -4724,10 +4764,9 @@ async function saveNote(){
   status.style.display='block';status.textContent='Saving…';
   const noteDate=date||localToday();
   try{
-    for(const contactId of checked){
-      const savedN=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:'Note',date:noteDate,notes:text,created_at:new Date().toISOString()})});
-      if(savedN&&savedN[0]){if(text)embedAndStore(savedN[0].id,'Note: '+text);_interToHH[savedN[0].id]=h.id;}
-    }
+    // Unified logger: guarded insert per member, single embedding, undo
+    // journal. Notes never touch daily-five state or tracks.
+    await logTouch({contactIds:checked,householdId:h?h.id:null,type:'Note',date:noteDate,notes:text,source:'note',trackMode:'none',markDaily:false,journalLabel:'Note — '+((h&&h.displayName)||'')});
     document.getElementById('addNoteModal').style.display='none';
     if(h)_invHH(h);
     refreshAGCScore(h.id).then(()=>recolorAll());
@@ -4861,6 +4900,7 @@ function openFullPanel(idx){
         <div style="display:flex;gap:6px">
           <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg> Note</button>
           <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg> Activity</button>
+          <button onclick="startFollowUpTrack('${households[idx].id}')" title="Add to outreach follow-up — surfaces in the Daily Five until you connect" style="font-size:.62rem;padding:3px 8px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);color:#7c3aed;border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Follow-up</button>
           <button onclick="byId('openAddDonation','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Donation</button>
           <button onclick="openAddTaskModal(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(67,56,202,.1);border:1px solid rgba(67,56,202,.28);color:#4338ca;border-radius:4px;cursor:pointer" title="Add a to-do for this contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> To-do</button>
         </div>
@@ -8375,37 +8415,85 @@ async function createTask(obj){
   return t;
 }
 
+// Per-task in-flight lock — a fast check/uncheck used to race the network and
+// orphan the auto-logged interaction (the id wasn't linked yet, so the uncheck
+// couldn't clean it up). Locked until the first toggle fully lands.
+const _taskBusy=new Set();
 async function toggleTaskDone(id){
-  const t=_tasks.find(x=>x.id===id);
-  if(!t) return;
-  const nowDone = t.status!=='done';
-  t.status = nowDone?'done':'open';
-  t.completed_at = nowDone? new Date().toISOString() : null;
-  try{renderTasksPanel();}catch(e){}
+  if(_taskBusy.has(id))return;
+  _taskBusy.add(id);
   try{
-    if(nowDone){
-      let loggedId=null;
-      if(t.contact_id){
-        try{
+    const t=_tasks.find(x=>x.id===id);
+    if(!t) return;
+    const nowDone = t.status!=='done';
+    const before={id:t.id,status:t.status,completed_at:t.completed_at||null,logged_interaction_id:t.logged_interaction_id||null};
+    t.status = nowDone?'done':'open';
+    t.completed_at = nowDone? new Date().toISOString() : null;
+    try{renderTasksPanel();}catch(e){}
+    try{
+      if(nowDone){
+        let loggedId=null, undo=null, toastMsg=null;
+        if(t.contact_id){
           const type=t.log_type||_taskLogType(t.text);
           const date=localToday();
-          const saved=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:t.contact_id,type,date,notes:'Task: '+t.text,created_at:new Date().toISOString()})});
-          if(saved&&saved[0]){ loggedId=saved[0].id; if(typeof embedAndStore==='function') embedAndStore(saved[0].id, type+': '+t.text); }
-          if(typeof _bumpAGCAgg==='function') _bumpAGCAgg(t.contact_id,type,date);
           const h=_taskHousehold(t);
-          if(h && typeof refreshAGCScore==='function'){ try{ await refreshAGCScore(h.id); }catch(e){} }
-          _taskToast('Done — logged as '+type+(h?(' on '+(h.displayName||'contact')):''));
-        }catch(e){ console.warn('[DAAS] task auto-log failed', e); }
+          // Workflow B: if a matching interaction was already logged since this
+          // task was created, LINK it instead of writing a duplicate.
+          let linked=null;
+          try{
+            const sinceD=(t.created_at||'').slice(0,10)||date;
+            const rows=await sb('interactions?select=id,type,date,notes&contact_id=eq.'+t.contact_id+'&type=eq.'+encodeURIComponent(type)+'&date=gte.'+sinceD+'&order=date.desc&limit=1');
+            if(rows&&rows.length)linked=rows[0];
+          }catch(e){}
+          if(linked){
+            loggedId=linked.id;
+            toastMsg='Done — linked to the '+type+' you already logged'+(h?(' on '+(h.displayName||'contact')):'')+'.';
+          }else{
+            try{
+              const res=await logTouch({contactIds:[t.contact_id],householdId:h?h.id:null,type,date,notes:'Task: '+t.text,source:'task',trackMode:'close-only',markDaily:true,journal:false});
+              loggedId=(res.created[0]||{}).id||null;
+              undo=res.undo;
+              toastMsg='Done — logged as '+type+(h?(' on '+(h.displayName||'contact')):'');
+              if(h&&typeof refreshAGCScore==='function'){try{refreshAGCScore(h.id).then(()=>{try{recolorAll();}catch(_){}});}catch(e){}}
+            }catch(e){ console.warn('[DAAS] task auto-log failed', e); }
+          }
+        }
+        await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'done',completed_at:t.completed_at,logged_interaction_id:loggedId})});
+        t.logged_interaction_id=loggedId;
+        // One journal entry for the whole action: undo reopens the task and
+        // removes the auto-logged interaction (linked manual logs are kept).
+        const u=undo||_blankUndo(null,t.household_id||null);
+        u.label='Completed task — '+(t.text.length>32?t.text.slice(0,32)+'…':t.text);
+        u.taskBefore=before;
+        u.taskAfter={status:'done',logged_interaction_id:loggedId||null};
+        if(!u.hhId&&t.household_id)u.hhId=t.household_id;
+        _journalPush(u,toastMsg||('Completed task — '+(t.text.length>32?t.text.slice(0,32)+'…':t.text)));
+      }else{
+        // Un-complete: delete the linked interaction ONLY if this task created
+        // it (auto-logs always carry the 'Task: ' notes prefix). A manually
+        // logged interaction that was merely linked is never deleted.
+        if(t.logged_interaction_id){
+          try{
+            const rows=await sb('interactions?select=id,notes&id=eq.'+t.logged_interaction_id+'&limit=1');
+            if(rows&&rows.length&&String(rows[0].notes||'').indexOf('Task: ')===0){
+              await sb('interactions?id=eq.'+t.logged_interaction_id,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+              try{if(typeof _clearInteractionEmbedding==='function')_clearInteractionEmbedding(t.logged_interaction_id);}catch(e){}
+              const h=_taskHousehold(t);
+              if(h){
+                try{await _recalcAGCAggForHH(h.id);}catch(e){}
+                try{refreshAGCScore(h.id).then(()=>{try{recolorAll();}catch(_){}});}catch(e){}
+              }
+            }
+          }catch(e){console.warn('[DAAS] un-complete cleanup failed',e);}
+        }
+        await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'open',completed_at:null,logged_interaction_id:null})});
+        t.logged_interaction_id=null;
       }
-      await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'done',completed_at:t.completed_at,logged_interaction_id:loggedId})});
-      t.logged_interaction_id=loggedId;
-    }else{
-      if(t.logged_interaction_id){ try{ await sb('interactions?id=eq.'+t.logged_interaction_id,{method:'DELETE',headers:{'Prefer':'return=minimal'}}); }catch(e){} }
-      await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'open',completed_at:null,logged_interaction_id:null})});
-      t.logged_interaction_id=null;
-    }
-  }catch(e){ alert('Task update failed: '+e.message); await loadTasks(true); try{renderTasksPanel();}catch(_){} }
-  try{ _refreshOpenHouseholdTasks(); }catch(e){}
+    }catch(e){ alert('Task update failed: '+e.message); await loadTasks(true); try{renderTasksPanel();}catch(_){} }
+    try{ _refreshOpenHouseholdTasks(); }catch(e){}
+  }finally{
+    _taskBusy.delete(id);
+  }
 }
 
 async function deleteTask(id){
@@ -8418,7 +8506,12 @@ async function deleteTask(id){
   try{ _refreshOpenHouseholdTasks(); }catch(e){}
 }
 
-function _taskDueBadge(due){
+function _taskDueBadge(due,done,completedAt){
+  // A finished task is never "overdue" — show when it was done, in grey.
+  if(done){
+    const d=(completedAt||'').slice(0,10)||due;
+    return '<span style="font-size:.58rem;font-weight:600;color:var(--txt3);white-space:nowrap">Done'+(d?(' · '+_fmtDate(d)):'')+'</span>';
+  }
   if(!due) return '';
   const today=localToday();
   let c='var(--txt3)', label=_fmtDate(due);
@@ -8432,13 +8525,51 @@ function _taskRowHtml(t){
   const h=_taskHousehold(t);
   const done=t.status==='done';
   const chip = h ? '<span onclick="_eeOpenHH(\''+t.household_id+'\')" title="Open profile" style="cursor:pointer;font-size:.58rem;color:var(--accent);background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:10px;padding:1px 7px;white-space:nowrap">'+_escHtml(h.displayName||'household')+'</span>' : '';
-  const due=_taskDueBadge(t.due_date);
+  const due=_taskDueBadge(t.due_date,done,t.completed_at);
   const meta=(chip||due)?('<div style="display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap">'+chip+due+'</div>'):'';
-  return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'
+  const editBtn=done?'':'<button onclick="editTaskStart(\''+t.id+'\')" title="Edit text or date" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.7rem;flex-shrink:0;padding:2px 4px;line-height:1"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>';
+  return '<div id="task-row-'+t.id+'" style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'
     +'<input type="checkbox" '+(done?'checked':'')+' onchange="toggleTaskDone(\''+t.id+'\')" style="margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">'
     +'<div style="flex:1;min-width:0"><div style="font-size:.78rem;line-height:1.35;color:'+(done?'var(--txt3)':'var(--txt)')+';'+(done?'text-decoration:line-through':'')+'">'+_escHtml(t.text)+'</div>'+meta+'</div>'
+    +editBtn
     +'<button onclick="deleteTask(\''+t.id+'\')" title="Delete" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.72rem;flex-shrink:0;padding:2px 4px;line-height:1">&#10005;</button>'
     +'</div>';
+}
+
+// ── INLINE TASK EDITOR (text + due date, desktop & mobile rows) ──
+function editTaskStart(id){
+  const t=_tasks.find(x=>x.id===id);
+  if(!t)return;
+  const row=document.getElementById('task-row-'+id)||document.getElementById('m-task-row-'+id);
+  if(!row)return;
+  row.innerHTML='<div style="flex:1;display:flex;flex-direction:column;gap:6px;padding:2px 0">'
+    +'<input id="te-text-'+id+'" value="'+_escHtml(t.text)+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:.78rem;color:var(--txt);font-family:var(--font-ui);outline:none">'
+    +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+      +'<input type="date" id="te-date-'+id+'" value="'+(t.due_date||'')+'" style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:5px 7px;font-size:.72rem;color:var(--txt);font-family:var(--font-ui)">'
+      +'<button onclick="_guardClick(this,()=>editTaskSave(\''+id+'\'))" class="btn btn-pri" style="font-size:.66rem;padding:4px 12px">Save</button>'
+      +'<button onclick="editTaskCancel()" class="btn btn-sec" style="font-size:.66rem;padding:4px 10px">Cancel</button>'
+    +'</div></div>';
+  const ti=document.getElementById('te-text-'+id);
+  if(ti)ti.focus();
+}
+async function editTaskSave(id){
+  const t=_tasks.find(x=>x.id===id);
+  if(!t)return;
+  const textEl=document.getElementById('te-text-'+id);
+  const dateEl=document.getElementById('te-date-'+id);
+  const text=((textEl&&textEl.value)||'').trim();
+  const due=(dateEl&&dateEl.value)||null;
+  if(!text){alert('Task text cannot be empty.');return;}
+  try{
+    await sb('tasks?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({text,due_date:due})});
+    t.text=text;t.due_date=due;
+  }catch(e){alert('Task update failed: '+e.message);}
+  editTaskCancel();
+}
+function editTaskCancel(){
+  try{renderTasksPanel();}catch(e){}
+  try{if(typeof mRenderTasks==='function')mRenderTasks();}catch(e){}
+  try{_refreshOpenHouseholdTasks();}catch(e){}
 }
 
 // Manually-selected contact for the dashboard quick-add (search, not AI).
@@ -10308,7 +10439,14 @@ async function saveEditRegistration(){
     if(_openEventId)_renderEventDetail(_openEventId);
   }catch(e){ status.textContent='Error: '+e.message; }
 }
+// Per-registration lock — two fast clicks on the restore branch used to
+// double-insert "Event attendance" (interaction_id is only linked after the
+// async log completes, so both clicks saw it as missing).
+const _noShowBusy=new Set();
 async function toggleNoShow(rid,hhId){
+  if(_noShowBusy.has(rid))return;
+  _noShowBusy.add(rid);
+  try{
   const found=_findRegById(rid);
   if(!found)return;
   const {r,m,h}=found;
@@ -10329,6 +10467,9 @@ async function toggleNoShow(rid,hhId){
   if(idx>=0&&document.getElementById('interactions-list-'+idx))loadInteractionsTab(idx);
   const fp=document.getElementById('fullPanel');
   if(idx>=0&&fp&&fp.style.display!=='none')openFullPanel(idx);
+  }finally{
+    _noShowBusy.delete(rid);
+  }
 }
 
 async function deleteRegistration(rid,hhId,idx){
@@ -14302,11 +14443,23 @@ async function renderHeatmap(){
   // Fetch last 14 days of interactions
   const since=localDateStr(new Date(Date.now()-14*24*60*60*1000));
   let rows=[];
-  try{rows=await sbAll(`interactions?date=gte.${since}&type=neq.Note&select=date&order=id.asc`)||[];}catch(e){}
+  try{rows=await sbAll(`interactions?date=gte.${since}&type=neq.Note&select=date,type,notes,contact_id&order=id.asc`)||[];}catch(e){}
 
-  // Count by date
-  const counts={};
-  rows.forEach(r=>{if(r.date)counts[r.date]=(counts[r.date]||0)+1;});
+  // Count by date — ONE logical touch per household per (type|date|notes),
+  // so a log written against both spouses counts once (matches the timeline
+  // dedup and the household-level AGC bump).
+  const _c2h={};
+  households.forEach(h=>(h.members||[]).forEach(m=>{_c2h[m.id]=h.id;}));
+  (hiddenHouseholds||[]).forEach(h=>(h.members||[]).forEach(m=>{_c2h[m.id]=h.id;}));
+  const counts={};const _seenHK=new Set();
+  rows.forEach(r=>{
+    if(!r.date)return;
+    const hh=_c2h[r.contact_id]||r.contact_id;
+    const key=hh+'|'+r.type+'|'+r.date+'|'+(r.notes||'');
+    if(_seenHK.has(key))return;
+    _seenHK.add(key);
+    counts[r.date]=(counts[r.date]||0)+1;
+  });
 
   // Build 2-week Sun–Fri grid (skip Saturday)
   const today=new Date();
@@ -14593,7 +14746,7 @@ async function hideHousehold(hhId){
   households=households.filter(x=>x.id!==hhId);
   if(!hiddenHouseholds.some(x=>x.id===hhId))hiddenHouseholds.push(h);
   // Clean out of any queues that referenced it
-  if(_dailyPins.includes(hhId)){_dailyPins=_dailyPins.filter(id=>id!==hhId);_saveDailyPins();}
+  _mutateDailyPins(p=>p.filter(id=>id!==hhId)).catch(()=>{});
   if(_dailySet&&_dailySet.ids){
     if(_dailySet.ids.includes(hhId)){_dailySet.ids=_dailySet.ids.filter(id=>id!==hhId);_dailySet.done=(_dailySet.done||[]).filter(id=>id!==hhId);_saveDailySet();}
   }
@@ -14748,16 +14901,31 @@ async function _saveDailyPins(){
   }catch(e){console.warn('pin save failed',e);}
 }
 
+// Merge-safe pin write (cross-device). Every pin save overwrites the WHOLE
+// list, so a device with a stale copy used to silently erase pins made on the
+// other device. This re-reads the freshest list from the DB first, applies the
+// mutation, then saves. Returns the PRE-mutation list for undo bookkeeping.
+async function _mutateDailyPins(fn){
+  try{
+    const rows=await sb('app_settings?key=eq.daily_pins&limit=1');
+    if(rows&&rows.length&&rows[0].value){try{_dailyPins=JSON.parse(rows[0].value)||[];}catch(e){}}
+  }catch(e){console.warn('[DAAS] pins re-read failed (using local copy)',e);}
+  const before=_dailyPins.slice();
+  const next=fn(_dailyPins.slice());
+  if(Array.isArray(next))_dailyPins=next;
+  await _saveDailyPins();
+  return before;
+}
+
 async function pinHousehold(hhId){
-  if(!_dailyPins.includes(hhId)){_dailyPins.unshift(hhId);await _saveDailyPins();}
+  await _mutateDailyPins(p=>{if(!p.includes(hhId))p.unshift(hhId);return p;});
   const inp=document.getElementById('pinSearchInput');if(inp)inp.value='';
   const dd=document.getElementById('pinSearchResults');if(dd)dd.style.display='none';
   renderDailyFive();
 }
 
 async function unpinHousehold(hhId){
-  _dailyPins=_dailyPins.filter(id=>id!==hhId);
-  await _saveDailyPins();
+  await _mutateDailyPins(p=>p.filter(id=>id!==hhId));
   renderDailyFive();
 }
 
@@ -15119,27 +15287,28 @@ async function saveOutcome(idx){
   if(_saveBtn)_saveBtn.disabled=true;
   try{
   const note=document.getElementById(`outcome-note-${idx}`).value.trim();
-  const todayStr=localToday();
-  // Log interaction
   const contactId=(h.members&&h.members[0])?h.members[0].id:null;
-  if(contactId){
-    try{
-      const savedO=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null}),headers:{'Content-Type':'application/json'}});
-      _bumpAGCAgg(contactId,outcome,todayStr);
-      if(savedO&&savedO[0]&&note)embedAndStore(savedO[0].id,outcome+': '+note);
-    }catch(e){console.warn('Outcome save failed',e);}
+  if(!contactId){_daasToast('No contact on file to log against.');return;}
+  // Unified logger — the insert must succeed BEFORE any daily/track write
+  // (mobile ordering adopted on desktop: a failed save no longer silently
+  // marks the day done and advances the track). Everything is journaled.
+  let res;
+  try{
+    res=await logTouch({contactIds:[contactId],householdId:h.id,type:outcome,notes:note,source:'outcome',trackMode:'auto',trackId:trackId||null,markDaily:true,silent:true,journalLabel:outcome+' — '+(h.displayName||'')});
+  }catch(e){
+    _daasToast('Save failed: '+(e.message||e)+' — nothing was logged.');
+    return;
   }
-  // Logging an outcome clears the pin — the job is done
-  if(_dailyPins.includes(h.id)){_dailyPins=_dailyPins.filter(id=>id!==h.id);await _saveDailyPins();}
-  // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
-  await _markDailyDone(h.id);
-  // Track lifecycle (reach closes / miss creates-or-advances) — shared with mobile
-  await _applyOutcomeToTrack(h,outcome,trackId);
   document.getElementById(`outcome-tray-${idx}`).style.display='none';
   await loadOutreachTracks();
   renderDailyFive();
   await renderActiveTracks();
   await renderWins();
+  // One toast: Undo + complete-a-matching-open-task shortcut.
+  const acts=[];
+  const ta=_taskCompleteAction(h,[contactId],res.created[0].id,res.undo.id);
+  if(ta)acts.push(ta);
+  _daasToast('Logged '+outcome+' — '+(h.displayName||''),{undoId:res.undo.id,actions:acts});
   }finally{
     _outcomeSaving.delete(h.id);
     if(_saveBtn)_saveBtn.disabled=false;
@@ -15147,19 +15316,35 @@ async function saveOutcome(idx){
 }
 async function snoozeDaily(idx,days=7){
   const h=households[idx];if(!h)return;
+  // Double-tap guard (shares the outcome lock) — two fast taps used to insert
+  // two snoozed track rows for one household.
+  if(_outcomeSaving.has(h.id))return;
+  _outcomeSaving.add(h.id);
   const snoozeUntil=localToday(days);
-  // Mark handled in today's frozen set — leaves the queue, no backfill, no carryover
-  await _markDailyDone(h.id);
-  // Check if track exists
-  let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
-  if(track){
-    await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
-  } else {
-    // Create a snoozed track
-    await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+  const undo=_blankUndo('Snoozed '+days+'d — '+(h.displayName||''),h.id);
+  try{
+    const wasDone=!!(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id));
+    await _markDailyDone(h.id);
+    if(!wasDone&&_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id))undo.dailyDoneAdded=true;
+    await _refreshTracksFor(h.id); // cross-device: act on the DB's latest state
+    let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+    if(track){
+      undo.trackBefore=JSON.parse(JSON.stringify(track));
+      await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+      undo.trackAfter={...undo.trackBefore,snooze_until:snoozeUntil,status:'snoozed'};
+    } else {
+      // Create a snoozed track (return=representation so undo can delete it)
+      const created=await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=representation'}});
+      if(created&&created[0]){outreachTracks.push(created[0]);undo.trackCreatedId=created[0].id;undo.trackAfter=JSON.parse(JSON.stringify(created[0]));}
+    }
+    await loadOutreachTracks();
+    renderDailyFive();
+    _journalPush(undo);
+  }catch(e){
+    _daasToast('Snooze failed: '+(e.message||e));
+  }finally{
+    _outcomeSaving.delete(h.id);
   }
-  await loadOutreachTracks();
-  renderDailyFive();
 }
 
 // ── TRACK OUTCOME ENGINE ──
@@ -15235,6 +15420,426 @@ async function handleTrackOutcome(trackId,householdId,outcome){
 async function loadOutreachTracks(){
   try{outreachTracks=await sbAll('outreach_tracks?select=*&order=id.asc')||[];}
   catch(e){console.warn('outreach_tracks load failed',e);}
+}
+
+// Cross-device freshness: re-pull ONE household's track rows and merge them
+// into the local cache, so track math (advance/close/snooze/create) always
+// acts on what is actually in the DB — not on a cache from before your other
+// device touched it. Called right before every track mutation.
+async function _refreshTracksFor(hhId){
+  if(!hhId)return;
+  try{
+    const rows=await sb('outreach_tracks?household_id=eq.'+hhId)||[];
+    outreachTracks=outreachTracks.filter(t=>t.household_id!==hhId).concat(rows);
+  }catch(e){console.warn('[DAAS] track refresh failed (using cache)',e);}
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// UNIFIED TOUCH LOGGER + UNDO JOURNAL (2026-07-13.1)
+// logTouch() is the single choke point for writing interaction rows.
+// Every logging surface (Log modal, Daily Five outcomes desktop+mobile,
+// task completion, notes) routes through it, so the side effects — AGC
+// bump, embedding, daily-five bookkeeping, outreach-track lifecycle, undo
+// journal — can never diverge between surfaces again.
+//
+// INVARIANTS:
+//  • The interaction insert happens FIRST. If it throws, NOTHING else runs
+//    (no daily-done, no pin clear, no track change) — callers must treat a
+//    throw as "nothing happened".
+//  • Multi-member logging writes one row per checked member (by design) but
+//    counts as ONE household touch: AGC is bumped once, the timeline/heatmap
+//    dedup by (type|date|notes), and the note is embedded once.
+//  • type 'Note' never touches daily-five state or tracks.
+//  • Every action lands in the undo journal with the BEFORE-state of any
+//    track row / daily flags it changed, so undoAction() can reverse it.
+// ════════════════════════════════════════════════════════════════════════
+const _undoStack=[]; let _undoBusy=false;
+function _blankUndo(label,hhId){return{id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),label:label||'Action',ts:Date.now(),hhId:hhId||null,interactionIds:[],trackBefore:null,trackCreatedId:null,trackAfter:null,dailyDoneAdded:false,pinRestored:null,taskBefore:null,taskAfter:null};}
+function _journalPush(u,toastMsg){
+  _undoStack.unshift(u);
+  while(_undoStack.length>5)_undoStack.pop();
+  _renderUndoUI();
+  if(toastMsg!==false)_daasToast(toastMsg||u.label,{undoId:u.id});
+}
+
+// General toast — replaces any prior toast; optional Undo + action buttons.
+let _daasToastTimer=null;
+function _daasToast(msg,opts){
+  opts=opts||{};
+  try{document.getElementById('_daasToast')?.remove();}catch(e){}
+  const d=document.createElement('div');d.id='_daasToast';
+  const mob=(typeof isMobile==='function'&&isMobile());
+  d.style.cssText='position:fixed;left:50%;bottom:'+(mob?'86px':'28px')+';transform:translateX(-50%);background:var(--accent,#0f1e33);color:#fff;padding:10px 14px;border-radius:8px;font-family:var(--font-ui,sans-serif);font-size:.78rem;z-index:10060;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:88vw;display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center';
+  const span=document.createElement('span');span.textContent=msg;d.appendChild(span);
+  const mkBtn=(label,fn)=>{
+    const b=document.createElement('button');b.textContent=label;
+    b.style.cssText='background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 12px;font-size:.72rem;cursor:pointer;font-weight:600;flex-shrink:0;font-family:inherit';
+    b.onclick=()=>{try{d.remove();}catch(e){}try{fn();}catch(e){console.warn('[DAAS] toast action failed',e);}};
+    d.appendChild(b);
+  };
+  if(opts.undoId)mkBtn('Undo',()=>undoAction(opts.undoId));
+  (opts.actions||[]).forEach(a=>{if(a&&a.label&&a.fn)mkBtn(a.label,a.fn);});
+  const hasBtns=!!(opts.undoId||(opts.actions&&opts.actions.length));
+  const x=document.createElement('button');x.innerHTML='&#10005;';
+  x.style.cssText='background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:.7rem;padding:0 2px;flex-shrink:0';
+  x.onclick=()=>{try{d.remove();}catch(e){}};
+  d.appendChild(x);
+  document.body.appendChild(d);
+  clearTimeout(_daasToastTimer);
+  const ttl=opts.ttl||(hasBtns?9000:2600);
+  _daasToastTimer=setTimeout(()=>{d.style.transition='opacity .4s';d.style.opacity='0';setTimeout(()=>{try{d.remove();}catch(e){}},420);},ttl);
+}
+
+async function logTouch(o){
+  o=o||{};
+  const type=o.type;
+  const date=o.date||localToday();
+  const notes=(o.notes||'').trim()||null;
+  const ids=(o.contactIds||[]).filter(Boolean);
+  if(!type)throw new Error('No interaction type');
+  if(!ids.length)throw new Error('No contact selected');
+  const h=(o.householdId
+    ? (households.find(x=>x.id===o.householdId)||(hiddenHouseholds||[]).find(x=>x.id===o.householdId))
+    : households.find(hh=>(hh.members||[]).some(m=>m.id===ids[0])))||null;
+  const isNote=(type==='Note');
+  const undo=_blankUndo(o.journalLabel||(type+(h?(' — '+(h.displayName||'')):'')),h?h.id:null);
+  // 1) INSERT — one row per member; a throw on the FIRST row aborts everything.
+  const created=[];
+  for(const cid of ids){
+    const rows=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type,date,notes,created_at:new Date().toISOString()})});
+    const r=(rows&&rows[0])?rows[0]:null;
+    if(r){created.push(r);undo.interactionIds.push(r.id);if(h)_interToHH[r.id]=h.id;}
+  }
+  if(!created.length)throw new Error('Save failed — no row written');
+  // 2) AGC — ONE bump per logical household touch (not per member).
+  try{_bumpAGCAgg(ids[0],type,date);}catch(e){}
+  // 3) Embedding — once, on the first row.
+  try{if(notes&&typeof embedAndStore==='function')embedAndStore(created[0].id,type+': '+notes);}catch(e){}
+  // 4) Daily Five bookkeeping (skip for notes).
+  if(!isNote&&o.markDaily!==false&&h){
+    try{
+      // Merge-safe pin clear (re-reads DB first so the other device's pins survive)
+      const _bp=await _mutateDailyPins(p=>p.filter(x=>x!==h.id));
+      if(_bp.includes(h.id))undo.pinRestored=h.id;
+      const wasDone=!!(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id));
+      await _markDailyDone(h.id);
+      if(!wasDone&&_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id))undo.dailyDoneAdded=true;
+    }catch(e){console.warn('[DAAS] daily bookkeeping failed',e);}
+  }
+  // 5) Track lifecycle (skip for notes / trackMode 'none').
+  //    'auto'       = Daily Five semantics: reach closes, miss creates-or-advances.
+  //    'close-only' = reach closes an open track; a miss leaves tracks alone
+  //                   (profile logging + task completion — the follow-up PROMPT
+  //                   handles miss-tracks there, never silently).
+  const mode=o.trackMode||'auto';
+  if(!isNote&&mode!=='none'&&h){
+    try{
+      if(mode==='auto'||_isReach(type)){
+        // Cross-device: act on the DB's current track state, not this device's cache.
+        await _refreshTracksFor(h.id);
+        let beforeCopy=null;
+        const activeT=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+        if(activeT)beforeCopy=JSON.parse(JSON.stringify(activeT));
+        else if(o.trackId){const tr=outreachTracks.find(t=>t.id===o.trackId);if(tr)beforeCopy=JSON.parse(JSON.stringify(tr));}
+        const beforeIds=new Set(outreachTracks.map(t=>t.id));
+        await _applyOutcomeToTrack(h,type,o.trackId||null);
+        const createdTrack=outreachTracks.find(t=>t.household_id===h.id&&!beforeIds.has(t.id));
+        if(createdTrack){undo.trackCreatedId=createdTrack.id;undo.trackAfter=JSON.parse(JSON.stringify(createdTrack));}
+        else if(beforeCopy){
+          const now=outreachTracks.find(t=>t.id===beforeCopy.id);
+          if(now&&JSON.stringify(now)!==JSON.stringify(beforeCopy)){undo.trackBefore=beforeCopy;undo.trackAfter=JSON.parse(JSON.stringify(now));}
+        }
+      }
+    }catch(e){console.warn('[DAAS] track update failed',e);}
+  }
+  // 6) Journal + toast.
+  if(o.journal!==false)_journalPush(undo,o.silent?false:undefined);
+  return {created,undo,household:h};
+}
+
+// Rebuild the in-memory AGC aggregate for ONE household from the DB — the
+// exact inverse-safe way to "un-bump" after an undo/delete. Mirrors
+// loadAGCInteractionAggregates() (incl. registrations) but scoped + deduped
+// by (type|date|notes) so multi-member rows count once.
+async function _recalcAGCAggForHH(hhId){
+  const h=households.find(x=>x.id===hhId)||(hiddenHouseholds||[]).find(x=>x.id===hhId);
+  if(!h)return;
+  const a={lastContact:null,connected12:0};
+  const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
+  const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+  if(memberIds){
+    const rows=await sbAll(`interactions?select=id,type,date,notes&contact_id=in.(${memberIds})&order=id.asc`)||[];
+    const seen=new Set();
+    rows.forEach(r=>{
+      if(!r.date)return;
+      const key=r.type+'|'+r.date+'|'+(r.notes||'');
+      if(seen.has(key))return;seen.add(key);
+      if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
+      if(_isReach(r.type)&&r.date>=since)a.connected12++;
+    });
+  }
+  (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{
+    const d=r.reg_date;if(!d)return;
+    if(!a.lastContact||d>a.lastContact)a.lastContact=d;
+    if(d>=since)a.connected12++;
+  }));
+  _agcInterAgg[hhId]=a;
+}
+
+// ── UNDO ──
+// Reverses one journal entry: created interactions are deleted (+embeddings),
+// track rows are restored to their before-state (or deleted if created),
+// daily-done/pin flags are put back, a completed task is reopened, and the
+// household's AGC is recomputed server-side (local bump has no inverse).
+async function undoAction(id){
+  if(_undoBusy)return;
+  _undoBusy=true;
+  try{
+    const i=_undoStack.findIndex(e=>e.id===id);
+    if(i<0)return;
+    const e=_undoStack[i];
+    if(i>0&&e.hhId&&_undoStack.slice(0,i).some(x=>x.hhId===e.hhId)){
+      if(!confirm('A newer action touched the same household. Undo this older one anyway?'))return;
+    }
+    // CROSS-DEVICE FRESHNESS: the journal is per-device. If the DB no longer
+    // matches what this action left behind (your other device touched the same
+    // track/task since), warn before overwriting the newer state.
+    try{
+      const _tid=e.trackCreatedId||(e.trackBefore&&e.trackBefore.id);
+      if(_tid&&e.trackAfter){
+        const _cur=await sb('outreach_tracks?id=eq.'+_tid+'&limit=1');
+        const _row=(_cur&&_cur[0])||null;
+        const _KEYS=['status','step','attempts','next_due','snooze_until'];
+        const _changed=!_row||_KEYS.some(k=>String(_row[k]??'')!==String(e.trackAfter[k]??''));
+        if(_changed&&!confirm('This follow-up track changed after this action — possibly from your other device. Undo anyway?'))return;
+      }
+      if(e.taskBefore&&e.taskAfter){
+        const _curT=await sb('tasks?id=eq.'+e.taskBefore.id+'&limit=1');
+        const _rowT=(_curT&&_curT[0])||null;
+        if(_rowT&&(_rowT.status!==e.taskAfter.status||String(_rowT.logged_interaction_id||'')!==String(e.taskAfter.logged_interaction_id||''))){
+          if(!confirm('This task changed after this action — possibly on your other device. Undo anyway?'))return;
+        }
+      }
+    }catch(err){console.warn('[DAAS] undo freshness check failed (continuing)',err);}
+    for(const iid of (e.interactionIds||[])){
+      try{await sb('interactions?id=eq.'+iid,{method:'DELETE',headers:{'Prefer':'return=minimal'}});}catch(err){console.warn('[DAAS] undo: interaction delete failed',err);}
+      try{if(typeof _clearInteractionEmbedding==='function')_clearInteractionEmbedding(iid);}catch(err){}
+    }
+    try{
+      if(e.trackCreatedId){
+        await sb('outreach_tracks?id=eq.'+e.trackCreatedId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+        outreachTracks=outreachTracks.filter(t=>t.id!==e.trackCreatedId);
+      }else if(e.trackBefore){
+        const b=e.trackBefore;
+        const patch={status:b.status,step:b.step||null,attempts:b.attempts||null,next_due:b.next_due||null,snooze_until:b.snooze_until||null};
+        await sb('outreach_tracks?id=eq.'+b.id,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(patch)});
+        outreachTracks=outreachTracks.map(t=>t.id===b.id?{...t,...patch}:t);
+      }
+    }catch(err){console.warn('[DAAS] undo: track restore failed',err);}
+    if(e.dailyDoneAdded&&e.hhId){
+      try{
+        const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
+        if(fresh&&fresh.length&&fresh[0].value){const p=JSON.parse(fresh[0].value);if(p&&p.ids)_dailySet=p;}
+        if(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(e.hhId)){
+          _dailySet.done=_dailySet.done.filter(x=>x!==e.hhId);
+          await _saveDailySet();
+        }
+      }catch(err){console.warn('[DAAS] undo: daily restore failed',err);}
+    }
+    if(e.pinRestored){
+      try{await _mutateDailyPins(p=>{if(!p.includes(e.pinRestored))p.unshift(e.pinRestored);return p;});}catch(err){}
+    }
+    if(e.taskBefore){
+      try{
+        await sb('tasks?id=eq.'+e.taskBefore.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:e.taskBefore.status,completed_at:e.taskBefore.completed_at,logged_interaction_id:e.taskBefore.logged_interaction_id})});
+        const t=_tasks.find(x=>x.id===e.taskBefore.id);
+        if(t){t.status=e.taskBefore.status;t.completed_at=e.taskBefore.completed_at;t.logged_interaction_id=e.taskBefore.logged_interaction_id;}
+      }catch(err){console.warn('[DAAS] undo: task restore failed',err);}
+    }
+    if(e.hhId){
+      try{await _recalcAGCAggForHH(e.hhId);}catch(err){}
+      try{refreshAGCScore(e.hhId).then(()=>{try{recolorAll();}catch(_){}});}catch(err){}
+      const h=households.find(x=>x.id===e.hhId);
+      if(h){try{_invHH(h);}catch(err){}}
+    }
+    _undoStack.splice(i,1);
+    _renderUndoUI();
+    try{await loadOutreachTracks();}catch(err){}
+    if(typeof isMobile==='function'&&isMobile()){
+      try{mRenderD5();}catch(err){} try{mRenderTasks();}catch(err){}
+    }else{
+      try{renderDailyFive();}catch(err){} try{renderTasksPanel();}catch(err){}
+      try{await renderActiveTracks();}catch(err){} try{await renderWins();}catch(err){}
+      try{_refreshOpenHouseholdTasks();}catch(err){}
+    }
+    _daasToast('Undone — '+e.label);
+  }finally{_undoBusy=false;}
+}
+
+// ── UNDO HEADER UI ──
+function _renderUndoUI(){
+  const btn=document.getElementById('undoHdrBtn');
+  if(btn)btn.style.display=_undoStack.length?'inline-flex':'none';
+  const mbtn=document.getElementById('mUndoBtn');
+  if(mbtn)mbtn.style.display=_undoStack.length?'inline-flex':'none';
+  const pop=document.getElementById('undoPopout');
+  if(pop&&pop.style.display!=='none')_renderUndoList();
+  const mpop=document.getElementById('mUndoPopout');
+  if(mpop&&mpop.style.display!=='none')_renderUndoList();
+}
+function _renderUndoList(){
+  const rowsHtml=!_undoStack.length
+    ?'<div style="padding:12px;font-size:.72rem;color:var(--txt3)">Nothing to undo on this device.</div>'
+    :_undoStack.map(e=>{
+      const mins=Math.round((Date.now()-e.ts)/60000);
+      const ago=mins<1?'just now':(mins<60?mins+'m ago':Math.round(mins/60)+'h ago');
+      return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)">'
+        +'<div style="flex:1;min-width:0"><div style="font-size:.76rem;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(e.label)+'</div><div style="font-size:.6rem;color:var(--txt3)">'+ago+'</div></div>'
+        +'<button onclick="_guardClick(this,()=>undoAction(\''+e.id+'\'))" class="btn btn-sec" style="font-size:.68rem;padding:4px 12px;flex-shrink:0">Undo</button>'
+        +'</div>';
+    }).join('');
+  const list=document.getElementById('undoPopoutList');
+  if(list)list.innerHTML=rowsHtml;
+  const mlist=document.getElementById('mUndoList');
+  if(mlist)mlist.innerHTML=rowsHtml;
+}
+function toggleMUndoPopout(){
+  const p=document.getElementById('mUndoPopout');
+  if(!p)return;
+  if(p.style.display!=='none'){p.style.display='none';return;}
+  p.style.display='block';
+  _renderUndoList();
+  setTimeout(()=>{
+    const closer=(ev)=>{
+      if(ev.target&&ev.target.closest&&ev.target.closest('#mUndoWrap'))return;
+      p.style.display='none';
+      document.removeEventListener('click',closer);
+    };
+    document.addEventListener('click',closer);
+  },0);
+}
+function toggleUndoPopout(){
+  const p=document.getElementById('undoPopout');
+  if(!p)return;
+  if(p.style.display!=='none'){p.style.display='none';return;}
+  p.style.display='block';
+  _renderUndoList();
+  setTimeout(()=>{
+    const closer=(ev)=>{
+      if(ev.target&&ev.target.closest&&ev.target.closest('#undoWrap'))return;
+      p.style.display='none';
+      document.removeEventListener('click',closer);
+    };
+    document.addEventListener('click',closer);
+  },0);
+}
+
+// ── TASK ↔ LOG LINKAGE (workflow A) ──
+// After a manual log, offer to complete a matching open task — linking the
+// task to the interaction YOU just logged instead of auto-logging a second one.
+function _taskCompleteAction(h,contactIds,interactionId,undoId){
+  try{
+    const cids=new Set(contactIds||[]);
+    const cand=(_tasks||[]).find(t=>t.status!=='done'&&((t.contact_id&&cids.has(t.contact_id))||(h&&t.household_id&&t.household_id===h.id)));
+    if(!cand)return null;
+    const short=cand.text.length>26?cand.text.slice(0,26)+'…':cand.text;
+    return {label:'✓ Task: “'+short+'”',fn:()=>_completeTaskViaInteraction(cand.id,interactionId,undoId)};
+  }catch(e){return null;}
+}
+async function _completeTaskViaInteraction(taskId,interactionId,undoId){
+  const t=_tasks.find(x=>x.id===taskId);
+  if(!t||t.status==='done')return;
+  const before={id:t.id,status:t.status,completed_at:t.completed_at||null,logged_interaction_id:t.logged_interaction_id||null};
+  t.status='done';t.completed_at=new Date().toISOString();t.logged_interaction_id=interactionId||null;
+  try{
+    await sb('tasks?id=eq.'+taskId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'done',completed_at:t.completed_at,logged_interaction_id:t.logged_interaction_id})});
+    const e=_undoStack.find(x=>x.id===undoId);
+    if(e&&!e.taskBefore){e.taskBefore=before;e.taskAfter={status:'done',logged_interaction_id:interactionId||null};} // undoing the log also reopens the task
+    _daasToast('Task completed — linked to this log.');
+  }catch(err){
+    t.status=before.status;t.completed_at=before.completed_at;t.logged_interaction_id=before.logged_interaction_id;
+    _daasToast('Task update failed: '+(err.message||err));
+  }
+  try{renderTasksPanel();}catch(e){}
+  try{if(typeof mRenderTasks==='function')mRenderTasks();}catch(e){}
+  try{_refreshOpenHouseholdTasks();}catch(e){}
+}
+
+// ── MANUAL FOLLOW-UP TRACKS ──
+// "This person needs follow-up" without waiting for the Daily Five.
+function _followUpAction(hhId,type){
+  const active=outreachTracks.find(t=>t.household_id===hhId&&t.status==='active');
+  return {label:active?'Advance follow-up':'Start follow-up',fn:()=>followUpFromLog(hhId,type)};
+}
+// From the post-log prompt: advance the active track (counts this miss as an
+// attempt) or create one if none exists. Journaled.
+async function followUpFromLog(hhId,type){
+  const h=households.find(x=>x.id===hhId);
+  if(!h)return;
+  await _refreshTracksFor(hhId); // cross-device: act on the DB's latest state
+  const active=outreachTracks.find(t=>t.household_id===hhId&&t.status==='active');
+  const undo=_blankUndo((active?'Advanced':'Started')+' follow-up — '+(h.displayName||''),hhId);
+  if(active)undo.trackBefore=JSON.parse(JSON.stringify(active));
+  const beforeIds=new Set(outreachTracks.map(t=>t.id));
+  try{await _applyOutcomeToTrack(h,type||'Phone call',null);}
+  catch(e){_daasToast('Track update failed: '+(e.message||e));return;}
+  const createdT=outreachTracks.find(t=>t.household_id===hhId&&!beforeIds.has(t.id));
+  if(createdT){undo.trackCreatedId=createdT.id;undo.trackBefore=null;undo.trackAfter=JSON.parse(JSON.stringify(createdT));}
+  else if(undo.trackBefore){const _now=outreachTracks.find(t=>t.id===undo.trackBefore.id);if(_now)undo.trackAfter=JSON.parse(JSON.stringify(_now));}
+  _journalPush(undo);
+  try{await loadOutreachTracks();}catch(e){}
+  try{renderDailyFive();}catch(e){}
+  try{await renderActiveTracks();}catch(e){}
+}
+// Manual add (profile button / Active Tracks search): starts a track at
+// attempts:0 due today — surfaces as FOLLOW-UP in the Daily Five without
+// counting a phantom attempt. Reactivates a snoozed track when one exists.
+async function startFollowUpTrack(hhId){
+  const h=households.find(x=>x.id===hhId);
+  if(!h)return;
+  await _refreshTracksFor(hhId); // cross-device: act on the DB's latest state
+  const active=outreachTracks.find(t=>t.household_id===hhId&&t.status==='active');
+  if(active){_daasToast((h.displayName||'Household')+' is already on an active follow-up (attempt '+(active.attempts||0)+').');return;}
+  const undo=_blankUndo('Started follow-up — '+(h.displayName||''),hhId);
+  try{
+    const snoozed=outreachTracks.find(t=>t.household_id===hhId&&t.status==='snoozed');
+    if(snoozed){
+      undo.trackBefore=JSON.parse(JSON.stringify(snoozed));
+      const patch={status:'active',next_due:localToday(),snooze_until:null};
+      await sb('outreach_tracks?id=eq.'+snoozed.id,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(patch)});
+      outreachTracks=outreachTracks.map(t=>t.id===snoozed.id?{...t,...patch}:t);
+      undo.trackAfter={...undo.trackBefore,...patch};
+    }else{
+      const created=await sb('outreach_tracks',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({household_id:hhId,status:'active',step:1,attempts:0,next_due:localToday()})});
+      if(created&&created[0]){outreachTracks.push(created[0]);undo.trackCreatedId=created[0].id;undo.trackAfter=JSON.parse(JSON.stringify(created[0]));}
+    }
+  }catch(e){_daasToast('Could not start follow-up: '+(e.message||e));return;}
+  _journalPush(undo,'Follow-up started — '+(h.displayName||'')+' (will surface in Daily Five)');
+  try{await renderActiveTracks();}catch(e){}
+  try{renderDailyFive();}catch(e){}
+}
+// Search box on the Active Tracks panel.
+function trackAddFilter(){
+  const inp=document.getElementById('trackAddInput');
+  const dd=document.getElementById('trackAddResults');
+  if(!inp||!dd)return;
+  const q=inp.value.trim().toLowerCase();
+  if(q.length<2){dd.style.display='none';dd.innerHTML='';return;}
+  const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
+  const matches=households.filter(h=>{
+    if(activeIds.has(h.id))return false;
+    let txt=(h.displayName||'');
+    (h.members||[]).forEach(m=>{txt+=' '+(m.first_name||'')+' '+(m.last_name||'');});
+    return txt.toLowerCase().includes(q);
+  }).slice(0,6);
+  if(!matches.length){dd.innerHTML='<div style="padding:8px 12px;font-size:.7rem;color:var(--txt3)">No matches (households already on a track are hidden).</div>';dd.style.display='block';return;}
+  dd.innerHTML=matches.map(h=>`<div onclick="trackAddPick('${h.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.76rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">${_escHtml(h.displayName||'')}</div>`).join('');
+  dd.style.display='block';
+}
+async function trackAddPick(hhId){
+  const dd=document.getElementById('trackAddResults');if(dd){dd.style.display='none';dd.innerHTML='';}
+  const inp=document.getElementById('trackAddInput');if(inp)inp.value='';
+  await startFollowUpTrack(hhId);
 }
 
 // ── COLD FLOOR ──
@@ -15392,8 +15997,12 @@ async function renderActiveTracks(){
   const el=document.getElementById('body-panel-tracks');
   if(!el)return;
   const active=outreachTracks.filter(t=>t.status==='active');
+  const addBar='<div style="position:relative;margin-bottom:8px">'
+    +'<input id="trackAddInput" placeholder="+ Add a household to follow-up — type a name…" oninput="trackAddFilter()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 9px;font-size:.72rem;color:var(--txt);font-family:var(--font-ui);outline:none">'
+    +'<div id="trackAddResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:190px;overflow-y:auto;z-index:30;box-shadow:0 4px 14px rgba(0,0,0,.12)"></div>'
+    +'</div>';
   if(!active.length){
-    el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><p>No active outreach tracks — add contacts from Cold Floor or Daily Five</p></div>';
+    el.innerHTML=addBar+'<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><p>No active outreach tracks — add a household above, from a profile’s Follow-up button, or from the Daily Five</p></div>';
     return;
   }
   const todayStr=localToday();
@@ -15412,7 +16021,7 @@ async function renderActiveTracks(){
     }catch(e){}
   }
 
-  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.72rem">
+  el.innerHTML=addBar+`<table style="width:100%;border-collapse:collapse;font-size:.72rem">
     <thead><tr style="border-bottom:2px solid var(--border)">
       <th style="text-align:left;padding:4px 8px;font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Contact</th>
       <th style="text-align:center;padding:4px 8px;font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;color:var(--txt3);font-weight:500">Step</th>
@@ -17081,6 +17690,13 @@ function _asExecuteSearch(sentence){
   <div class="m-topbar">
     <div class="logo"><svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink:0"><path d="M16 2C13 8 9 12 9 17.5A7 7 0 0 0 16 24.5A7 7 0 0 0 23 17.5C23 12 19 8 16 2Z" fill="none" stroke="#d4a843" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> דעת</div>
     <div class="m-spacer"></div>
+    <div style="position:relative" id="mUndoWrap">
+      <button class="m-iconbtn" id="mUndoBtn" onclick="toggleMUndoPopout()" title="Undo a recent action" style="display:none"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg></button>
+      <div id="mUndoPopout" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:290px;max-width:86vw;background:var(--surf);border:1px solid var(--border2);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:10050;overflow:hidden">
+        <div style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);padding:10px 14px 4px">Recent actions</div>
+        <div id="mUndoList" style="max-height:280px;overflow-y:auto"></div>
+      </div>
+    </div>
     <button class="m-iconbtn" onclick="mSync(this)" title="Sync from CRM"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"></path></svg></button>
     <button class="m-iconbtn" onclick="mMenuToggle()" title="Menu"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg></button>
   </div>
@@ -17502,21 +18118,33 @@ function mOpenContactFromD5(hid){ const h=households.find(x=>x.id===hid); if(h) 
 async function mSnoozeD5(days){
   const card=_mD5Cards[_mD5Pos]; if(!card)return;
   const h=card.item.h; if(!h)return;
+  // Double-tap guard (shared lock with outcomes) — prevents duplicate snoozed rows
+  if(_outcomeSaving.has(h.id))return;
+  _outcomeSaving.add(h.id);
   const snoozeUntil=localToday(days);
+  const undo=_blankUndo('Snoozed '+days+'d — '+(h.displayName||''),h.id);
   try{
+    const wasDone=!!(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id));
     await _markDailyDone(h.id);
+    if(!wasDone&&_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id))undo.dailyDoneAdded=true;
+    await _refreshTracksFor(h.id); // cross-device: act on the DB's latest state
     const track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
     if(track){
+      undo.trackBefore=JSON.parse(JSON.stringify(track));
       await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+      undo.trackAfter={...undo.trackBefore,snooze_until:snoozeUntil,status:'snoozed'};
     } else {
-      await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+      const created=await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=representation'}});
+      if(created&&created[0]){outreachTracks.push(created[0]);undo.trackCreatedId=created[0].id;undo.trackAfter=JSON.parse(JSON.stringify(created[0]));}
     }
     await loadOutreachTracks();
-  }catch(e){ _ebToastMsg('Snooze failed: '+(e.message||e)); return; }
+  }catch(e){ _ebToastMsg('Snooze failed: '+(e.message||e)); _outcomeSaving.delete(h.id); return; }
+  _outcomeSaving.delete(h.id);
   _mD5Cards.splice(_mD5Pos,1);
   if(_mD5Pos>=_mD5Cards.length)_mD5Pos=Math.max(0,_mD5Cards.length-1);
   if(_mD5Cards.length===0){ document.getElementById('mD5host').innerHTML='<div class="m-card m-card-pad"><div class="m-empty">All done for today. Nice work.</div></div>'; }
   else mShowD5Card();
+  _journalPush(undo);
 }
 async function mUnpinCurrent(hid){
   await unpinHousehold(hid); // updates _dailyPins + saves (renderDailyFive is a no-op on mobile)
@@ -17611,42 +18239,31 @@ async function mSaveOutcome(btn){
   if(_hid)_outcomeSaving.add(_hid);
   const note=document.getElementById('mOutNote').value.trim();
   const {outcome, contactId}=_mOutcomeCtx;
+  const _doneHouse=_mOutcomeCtx.household||null;
+  const _doneTrackId=_mOutcomeCtx.trackId||null;
   btn.disabled=true; btn.innerHTML='<div class="spin" style="width:15px;height:15px;border-width:2px"></div> Saving…';
-  const todayStr=(typeof localDateStr==='function')?localDateStr(new Date()):new Date().toISOString().slice(0,10);
+  // Unified logger — insert first (abort on failure), then daily bookkeeping,
+  // track lifecycle, embedding (mobile notes are now embedded too), journal.
+  let res=null;
   try{
-    await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type:outcome,date:todayStr,notes:note||null,created_at:new Date().toISOString()}),headers:{'Content-Type':'application/json'}});
-    _bumpAGCAgg(contactId,outcome,todayStr);
-    // refresh local interaction data so AGC/Daily reflect it
-    if(typeof loadAll==='function'){ /* light touch: just advance */ }
+    res=await logTouch({contactIds:[contactId],householdId:_doneHouse?_doneHouse.id:null,type:outcome,notes:note,source:'outcome',trackMode:'auto',trackId:_doneTrackId,markDaily:true,silent:true,journalLabel:outcome+(_doneHouse?(' — '+(_doneHouse.displayName||'')):'')});
   }catch(e){ _ebToastMsg('Save failed: '+(e.message||e)); btn.disabled=false; btn.innerHTML='Save & Next'; if(_hid)_outcomeSaving.delete(_hid); return; }
-  // Capture before mCloseOutcome() nulls the context
-  const _doneHid=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household.id:null;
-  const _doneHouse=(_mOutcomeCtx&&_mOutcomeCtx.household)?_mOutcomeCtx.household:null;
-  const _doneTrackId=(_mOutcomeCtx&&_mOutcomeCtx.trackId)?_mOutcomeCtx.trackId:'';
   mCloseOutcome();
-  // Mirror desktop: clear any pin and mark handled in today's frozen set
-  // (leaves the queue, no backfill, no carryover to tomorrow)
-  try{
-    if(_doneHid){
-      if(_dailyPins.includes(_doneHid)){_dailyPins=_dailyPins.filter(id=>id!==_doneHid);await _saveDailyPins();}
-      await _markDailyDone(_doneHid);
-    }
-  }catch(e){console.warn('[DAAS] mobile daily done mark failed',e);}
-  // Track lifecycle — identical to desktop so outreach logged on the phone
-  // starts/advances/closes tracks (previously mobile skipped this entirely,
-  // so pinned contacts never became active and tracks never advanced/closed).
-  try{
-    if(_doneHouse){
-      await _applyOutcomeToTrack(_doneHouse,outcome,_doneTrackId);
-      await loadOutreachTracks();
-    }
-  }catch(e){console.warn('[DAAS] mobile track update failed',e);}
+  try{ await loadOutreachTracks(); }catch(e){console.warn('[DAAS] mobile track reload failed',e);}
   // remove this card from the queue and advance
   if(_hid)_outcomeSaving.delete(_hid);
+  btn.disabled=false; btn.innerHTML='Save & Next';
   _mD5Cards.splice(_mD5Pos,1);
   if(_mD5Pos>=_mD5Cards.length) _mD5Pos=Math.max(0,_mD5Cards.length-1);
   if(_mD5Cards.length===0){ document.getElementById('mD5host').innerHTML='<div class="m-card m-card-pad"><div class="m-empty">All done for today. Nice work.</div></div>'; }
   else mShowD5Card();
+  // One toast: Undo + complete-a-matching-open-task shortcut.
+  if(res){
+    const acts=[];
+    const ta=_taskCompleteAction(_doneHouse,[contactId],res.created[0].id,res.undo.id);
+    if(ta)acts.push(ta);
+    _daasToast('Logged '+outcome+(_doneHouse?(' — '+(_doneHouse.displayName||'')):''),{undoId:res.undo.id,actions:acts});
+  }
 }
 
 /* ---- Outcome voice dictation (mirrors enrich voice pattern) ---- */
@@ -18528,11 +19145,13 @@ function _mTaskRowHtml(t){
   const h=_taskHousehold(t);
   const done=t.status==='done';
   const chip = h ? '<span onclick="event.stopPropagation();mOpenSheetById(\''+t.household_id+'\')" title="Open profile" style="cursor:pointer;font-size:.6rem;color:var(--accent);background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.18);border-radius:10px;padding:2px 8px;white-space:nowrap">'+_escHtml(h.displayName||'household')+'</span>' : '';
-  const due=_taskDueBadge(t.due_date);
+  const due=_taskDueBadge(t.due_date,done,t.completed_at);
   const meta=(chip||due)?('<div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">'+chip+due+'</div>'):'';
-  return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
+  const editBtn=done?'':'<button onclick="editTaskStart(\''+t.id+'\')" title="Edit text or date" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.85rem;flex-shrink:0;padding:2px 6px;line-height:1"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>';
+  return '<div id="m-task-row-'+t.id+'" style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">'
     +'<input type="checkbox" '+(done?'checked':'')+' onchange="mToggleTask(\''+t.id+'\')" style="margin-top:2px;width:19px;height:19px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">'
     +'<div style="flex:1;min-width:0"><div style="font-size:.86rem;line-height:1.35;color:'+(done?'var(--txt3)':'var(--txt)')+';'+(done?'text-decoration:line-through':'')+'">'+_escHtml(t.text)+'</div>'+meta+'</div>'
+    +editBtn
     +'<button onclick="mDeleteTask(\''+t.id+'\')" title="Delete" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.9rem;flex-shrink:0;padding:2px 6px;line-height:1">&#10005;</button>'
     +'</div>';
 }
