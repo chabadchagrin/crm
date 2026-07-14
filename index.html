@@ -10812,21 +10812,22 @@ async function _fbDelete(){
 }
 
 // ── EMBED CODE (auto-height iframe) ──
-const FB_FORM_BASE='https://chabadchagrin.github.io/crm/form.html';
+const FB_FORM_ORIGIN='https://forms.jewishchagrinfalls.com';
+const FB_FORM_BASE=FB_FORM_ORIGIN+'/form.html';
 function _fbShowEmbed(slug){
   const url=FB_FORM_BASE+'?slug='+encodeURIComponent(slug);
   const code=
 `<!-- Chabad at the Falls — ${slug} form -->
-<iframe id="daas-form-${slug}" src="${url}"
+<iframe id="cf-form-${slug}" src="${url}"
   style="width:100%;border:none;display:block;min-height:160px;overflow:hidden"
   scrolling="no" title="Chabad at the Falls form"></iframe>
 <script>
   (function(){
-    var f = document.getElementById('daas-form-${slug}');
+    var f = document.getElementById('cf-form-${slug}');
     window.addEventListener('message', function (e) {
-      if (e.origin !== 'https://chabadchagrin.github.io') return;
-      if (e.data && e.data.daasFormHeight && e.data.slug === '${slug}' && f) {
-        f.style.height = e.data.daasFormHeight + 'px';
+      if (e.origin !== '${FB_FORM_ORIGIN}') return;
+      if (e.data && e.data.formHeight && e.data.slug === '${slug}' && f) {
+        f.style.height = e.data.formHeight + 'px';
       }
     });
   })();
