@@ -185,6 +185,58 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .crm-tooltip::before{display:none}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+/* ═══ FULL PANEL v2 — sidebar dossier (contact profile view) ═══ */
+#fullPanelContent.fp-layout{display:grid;grid-template-columns:320px minmax(0,1fr);max-width:1220px;margin:0 auto;width:100%;align-items:start}
+.fp-back{background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 13px;border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;white-space:nowrap}
+.fp-back:hover{border-color:var(--accent);color:var(--accent)}
+.fp-rail{position:sticky;top:50px;background:var(--surf);border-right:1px solid var(--border);border-left:1px solid var(--border);padding:24px 22px 40px;max-height:calc(100vh - 50px);overflow-y:auto}
+.fp-score{width:58px;height:58px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);font-size:1.35rem;font-weight:700;flex-shrink:0}
+.fp-name{font-family:var(--font-display);font-size:1.4rem;font-weight:700;line-height:1.2;color:var(--txt)}
+.fp-addr{font-size:.85rem;color:var(--txt2);margin-top:4px;line-height:1.45}
+.fp-chips{display:flex;flex-direction:column;gap:7px;margin:16px 0 0}
+.fp-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:18px;background:var(--bg);border:1px solid var(--border2);font-size:.84rem;color:var(--accent);text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fp-chip:hover{border-color:var(--accent)}
+.fp-rail-sec{border-top:1px solid var(--border);padding-top:14px;margin-top:16px}
+.fp-sec-h{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-ui);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:8px}
+.fp-person{padding:7px 0;border-bottom:1px solid var(--border)}
+.fp-person:last-child{border-bottom:none}
+.fp-mini{background:none;border:none;cursor:pointer;color:var(--txt3);padding:3px;font-size:.78rem}
+.fp-mini:hover{color:var(--accent)}
+.fp-minibtn{font-size:.68rem;padding:3px 9px;background:var(--accent-soft);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)}
+.fp-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.fp-bar>div{height:100%;border-radius:3px}
+.fp-stat{display:flex;justify-content:space-between;font-size:.84rem;padding:3px 0}
+.fp-stat span:first-child{color:var(--txt3)}
+.fp-stat b{font-weight:700}
+.fp-act{display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.84rem;border:1px solid var(--border2);background:var(--surf);color:var(--txt2);width:100%}
+.fp-act:hover{border-color:var(--accent);color:var(--accent)}
+.fp-act.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fp-act.pri:hover{background:var(--accent-d);color:#fff}
+.fp-main{padding:20px 28px 70px;min-width:0}
+.fp-quote{font-family:var(--font-ui);font-size:.95rem;color:var(--txt);margin:2px 0 18px;line-height:1.6}
+.fp-quote-h{font-family:var(--font-ui);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:3px}
+.fp-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.fp-tab{padding:10px 15px;font-size:.88rem;color:var(--txt3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:var(--font-ui)}
+.fp-tab:hover{color:var(--txt2)}
+.fp-tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.fp-tab .n{font-size:.72rem;color:var(--txt3);margin-left:4px}
+.fp-sec{display:none}
+.fp-sec.on{display:block}
+.fp-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px}
+.fp-tl-item{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--border)}
+.fp-tl-dot{flex-shrink:0;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.72rem;margin-top:1px}
+.fp-tl-title{font-size:.9rem;font-weight:600;color:var(--txt)}
+.fp-tl-date{font-size:.76rem;color:var(--txt3);white-space:nowrap}
+.fp-tl-text{font-size:.86rem;color:var(--txt2);margin-top:3px;line-height:1.55}
+.fp-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+@media(max-width:768px){
+  #fullPanelContent.fp-layout{grid-template-columns:1fr}
+  .fp-rail{position:static;max-height:none;overflow:visible;border-right:none;border-left:none;border-bottom:1px solid var(--border)}
+  .fp-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .fp-tabs::-webkit-scrollbar{display:none}
+  .fp-tab{white-space:nowrap;flex-shrink:0}
+  .fp-main{padding:16px 14px 70px}
+}
 @media(max-width:768px){
   /* Hide desktop chrome */
   .legend{display:none}.toolbar{display:none}
@@ -1692,11 +1744,11 @@ html.force-desktop #mobileShell{display:none!important}
 <!-- FULL SCREEN CONTACT PANEL -->
 <div id="fullPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8000;overflow-y:auto;flex-direction:column">
   <div style="background:var(--surf);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:1">
-    <button onclick="closeFullPanel()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:var(--font-ui);font-size:.65rem">← Back to Map</button>
+    <button id="fullPanelBackBtn" onclick="closeFullPanel()" class="fp-back">← Back</button>
     <div id="fullPanelName" style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--txt)"></div>
     <button id="fullPanelHideBtn" onclick="const id=document.getElementById('fullPanel').dataset.hhid;if(id)hideHousehold(id)" style="margin-left:auto;background:none;border:1px solid var(--border2);color:var(--txt3);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:var(--font-ui);font-size:.65rem;display:flex;align-items:center;gap:5px" title="Hide from all views, call list, and AI"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg> Hide</button>
   </div>
-  <div id="fullPanelContent" style="max-width:900px;margin:0 auto;width:100%;padding:24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div id="fullPanelContent" class="fp-layout">
   </div>
 </div>
 
@@ -1726,7 +1778,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-14.2'; // + cross-device hardening (merge-safe pins, fresh track reads, undo freshness checks, mobile undo header)
+const BUILD_STAMP='2026-07-15.2'; // full-panel v2.1: score badge replaces avatar, plain approach text, de-AI'd profile tab, named email chips
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -4820,6 +4872,15 @@ function openFullPanel(idx){
 
   document.getElementById('fullPanelName').textContent=h.displayName;
   document.getElementById('fullPanel').dataset.hhid=h.id;
+  // Reset to the Timeline tab when opening a DIFFERENT household; re-renders of
+  // the same household (post-log refresh, undo, profile save) keep the open tab.
+  if(window._fpLastHH!==h.id){window._fpActiveTab='timeline';window._fpLastHH=h.id;}
+  // Back button says where it actually goes (dashboard/contacts/map…), not "Map".
+  const _bb=document.getElementById('fullPanelBackBtn');
+  if(_bb){
+    const _vm={dash:'Dashboard',contacts:'Contacts',crm:'Map',email:'Email',events:'Events',forms:'Forms',reports:'Reports'};
+    _bb.textContent='← '+((window.matchMedia&&window.matchMedia('(max-width:768px)').matches)?'Back':(_vm[window._daasView]||'Back'));
+  }
 
   // Load interactions then render
   const memberIds=(h.members||[]).map(m=>'"'+m.id+'"').join(',');
@@ -4842,76 +4903,123 @@ function openFullPanel(idx){
     const timelineHtml=timeline.length?timeline.map(t=>{
       const color=t.type==='note'?'var(--accent)':t.type==='donation'?'var(--amber)':'var(--green)';
       const icon=t.type==='note'?_typeIconSvg('Note'):t.type==='donation'?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg>':_typeIconSvg(t.label);
-      return `<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:.65rem;margin-top:2px">${icon}</div>
-        <div style="flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-size:.72rem;font-weight:600;color:var(--txt)">${t.type==='donation'?fa(t.amount)+(t.method?` <span style="font-size:.58rem;font-weight:500;color:var(--txt3);background:var(--surf2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;vertical-align:1px">${_escHtml(t.method)}</span>`:''):t.label}</div>
+      return `<div class="fp-tl-item">
+        <div class="fp-tl-dot" style="background:${color}">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div class="fp-tl-title">${t.type==='donation'?fa(t.amount)+(t.method?` <span style="font-size:.66rem;font-weight:500;color:var(--txt3);background:var(--surf2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;vertical-align:1px">${_escHtml(t.method)}</span>`:''):t.label}</div>
             <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:.65rem;color:var(--txt3);white-space:nowrap">${fd(t.date)}</div>
-              <button onclick="editTimelineItem('${t.id}','${t.type}',this.dataset.text,'${t.date}',${idx})" data-text="${(t.text||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-              ${t.type==='donation'?`<button onclick="moveDonation('${t.id}')" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Reassign to another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>`:''}
-              <button onclick="deleteTimelineItem('${t.id}','${t.type}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.65rem;color:var(--txt3);padding:1px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              <div class="fp-tl-date">${fd(t.date)}</div>
+              <button onclick="editTimelineItem('${t.id}','${t.type}',this.dataset.text,'${t.date}',${idx})" data-text="${(t.text||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:1px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              ${t.type==='donation'?`<button onclick="moveDonation('${t.id}')" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:1px 3px" title="Reassign to another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>`:''}
+              <button onclick="deleteTimelineItem('${t.id}','${t.type}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--txt3);padding:1px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>
           </div>
-          ${t.text?`<div style="font-size:.75rem;color:var(--txt2);margin-top:3px;line-height:1.5">${t.text}</div>`:''}
+          ${t.text?`<div class="fp-tl-text">${t.text}</div>`:''}
         </div>
       </div>`;
-    }).join(''):'<div style="font-size:.78rem;color:var(--txt3);padding:12px 0">No activity recorded yet.</div>';
+    }).join(''):'<div style="font-size:.88rem;color:var(--txt3);padding:12px 0">No activity recorded yet.</div>';
+
+    // ── FULL PANEL v2: sidebar dossier. Left rail = identity/contact info/people/
+    //    score (always visible); right = tabbed content. Tab state survives the
+    //    re-renders that saveInteraction/undo/etc. trigger via openFullPanel(idx).
+    const fpRegs=getHHRegistrations(h);
+    const multiM=(h.members||[]).length>1;
+    const _icPh='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>';
+    const _icMl='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>';
+    const chips=(h.members||[]).map(m=>{
+      const nm=_escHtml((_daasDisplayName(m)||'').split(' ')[0]);
+      let s='';
+      if(m.phone)s+=`<a class="fp-chip" href="tel:${m.phone.replace(/[^0-9+]/g,'')}">${_icPh} ${_escHtml(m.phone)}${multiM?` <span style="color:var(--txt3)">· ${nm}</span>`:''}</a>`;
+      if(m.email)s+=`<a class="fp-chip" href="mailto:${encodeURIComponent(m.email)}" title="${_escHtml(m.email)}${multiM?' — '+nm:''}">${_icMl} ${_escHtml(m.email)}${multiM?` <span style="color:var(--txt3)">· ${nm}</span>`:''}</a>`;
+      return s;
+    }).join('');
+    const lastTouch=activities.length?fd(activities[0].date):'—';
+    const staleTabDot=fpStale&&fpStale.suggestFull?' <span style="color:var(--red)">●</span>':(fpStale&&fpStale.suggestSoft?' <span style="color:var(--amber)">●</span>':'');
 
     const html=`
-    <!-- Top: Score card -->
-    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;align-items:flex-start;gap:24px">
-      <div style="flex-shrink:0">
-        <div style="font-size:3.5rem;font-weight:700;color:${scoreColor};font-family:var(--font-ui);line-height:1">${score}</div>
-        <div style="font-size:.6rem;color:var(--txt3);font-family:var(--font-ui);margin-bottom:10px">PROSPECT SCORE</div>
-        <div style="width:160px">
+    <!-- LEFT RAIL -->
+    <aside class="fp-rail">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div class="fp-score" style="border-color:${scoreColor};color:${scoreColor}">${score}</div>
+        <div style="font-family:var(--font-ui);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);line-height:1.5">Prospect<br>score</div>
+      </div>
+      <div class="fp-name">${_escHtml(h.displayName)}</div>
+      <div class="fp-addr">${_escHtml(h.address||'')}<br>${_escHtml((h.city||'')+', OH '+(h.zip||''))}</div>
+      ${chips?`<div class="fp-chips">${chips}</div>`:''}
+
+      <div class="fp-rail-sec">
+        <div class="fp-sec-h"><span>People</span><button class="fp-minibtn" onclick="byId('showAddPersonToHousehold','${households[idx].id}',${idx})">Add person</button></div>
+        ${(h.members||[]).map(m=>`<div class="fp-person">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <div style="font-weight:600;font-size:.88rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escHtml(_daasDisplayName(m))} <span style="font-size:.7rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
+            <div style="display:flex;gap:1px;flex-shrink:0">
+              <button class="fp-mini" onclick="openEditContactById('${m.id}')" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <button class="fp-mini" onclick="moveContact('${m.id}')" title="Move to another household"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
+              <button class="fp-mini" onclick="mergeContact('${m.id}')" title="Merge with another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v6M17 4v6M7 10a5 5 0 0 0 5 5 5 5 0 0 0 5-5M12 15v5"/></svg></button>
+              <button class="fp-mini" onclick="deleteContactById('${m.id}',${idx})" title="Delete contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+            </div>
+          </div>
+          ${m.dob?`<div style="font-size:.76rem;margin-top:2px;color:var(--txt3)">${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:
+          (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.76rem;margin-top:2px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated)</span></div>`:'')}
+          <div style="font-size:.66rem;color:var(--txt3);margin-top:1px">Contact #${m.daas_id||'—'}</div>
+        </div>`).join('')}
+      </div>
+
+      <div class="fp-rail-sec">
+        <div class="fp-sec-h"><span>Score breakdown</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px">
           ${[['Affinity','#0f1e33',agc.affinity,35],['Generosity','#15803d',agc.generosity,35],['Capacity','#a16207',agc.capacity,30]].map(([label,color,val,max])=>`
-          <div style="margin-bottom:6px">
-            <div style="display:flex;justify-content:space-between;font-size:.6rem;font-family:var(--font-ui);color:var(--txt3);margin-bottom:2px"><span>${label}</span><span>${val}/${max}</span></div>
-            <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(val/max*100)}%;background:${color};border-radius:3px"></div></div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--txt2);margin-bottom:2px"><span>${label}</span><span>${val}/${max}</span></div>
+            <div class="fp-bar"><div style="width:${Math.round(val/max*100)}%;background:${color}"></div></div>
           </div>`).join('')}
         </div>
       </div>
-      <div style="flex:1">
-        <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:4px">${_escHtml(h.displayName)}</div>
-        <div style="font-size:.8rem;color:var(--txt2);margin-bottom:8px">${_escHtml((h.address||'')+', '+(h.city||'')+', OH '+(h.zip||''))}</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
-          ${h.home_value?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Home Value</div><div style="font-size:.95rem;font-weight:700;color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</div></div>`:''}
-          ${g?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Total Given</div><div style="font-size:.95rem;font-weight:700;color:var(--amber)">$${Math.round(g.total).toLocaleString()}</div></div>`:''}
-          ${g?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Gifts</div><div style="font-size:.95rem;font-weight:700">${g.count}</div></div>`:''}
-          ${g?`<div><div style="font-size:.58rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--txt3)">Last Gift</div><div style="font-size:.95rem;font-weight:700">${fd(g.lastDate)}</div></div>`:''}
-        </div>
-        ${profile?.approach?`<div style="font-size:.78rem;color:var(--txt2);font-style:italic;padding:8px 12px;background:var(--surf2);border-radius:6px;border-left:3px solid var(--accent)">"${profile.approach}"</div>`:''}
+
+      <div class="fp-rail-sec">
+        ${g?`<div class="fp-stat"><span>Total given</span><b style="color:var(--amber)">$${Math.round(g.total).toLocaleString()}</b></div>
+        <div class="fp-stat"><span>Gifts</span><b>${g.count}</b></div>
+        <div class="fp-stat"><span>Last gift</span><b>${fd(g.lastDate)}</b></div>`:'<div class="fp-stat"><span>Giving</span><b>none recorded</b></div>'}
+        <div class="fp-stat"><span>Last touch</span><b>${lastTouch}</b></div>
+        ${h.home_value?`<div class="fp-stat"><span>Home value</span><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
-        <button onclick="byId('openPersonChat','${households[idx].id}',${idx})" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;font-weight:500"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/></svg> Chat</button>
-        ${fpStale&&fpStale.suggestFull?`<div style="padding:4px 8px;border-radius:20px;background:rgba(185,28,28,.1);border:1px solid rgba(185,28,28,.25);color:var(--red);font-family:var(--font-ui);font-size:.57rem;text-align:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> ${fpStale.monthsOld}mo old — Full Rebuild suggested</div>`:fpStale&&fpStale.suggestSoft?`<div style="padding:4px 8px;border-radius:20px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);font-family:var(--font-ui);font-size:.57rem;text-align:center">↺ Quick Update suggested</div>`:''}
-        ${profile?`<button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="padding:8px 14px;background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem">↺ Quick Update</button>`:''}
-        <button onclick="byId('buildProfile','${households[idx].id}',${idx})" style="padding:8px 14px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem">${profile?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Full Rebuild':'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Build Profile'}</button>
-        <button onclick="openEnrich('${households[idx].id}')" style="padding:8px 14px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:6px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Enrich / Add Notes</button>
+
+      <div style="margin-top:18px;display:flex;flex-direction:column;gap:7px">
+        <button class="fp-act pri" onclick="byId('openPersonChat','${households[idx].id}',${idx})"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/></svg> Chat about this household</button>
+        <button class="fp-act" onclick="openEnrich('${households[idx].id}')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Enrich / Add Notes</button>
       </div>
-    </div>
+    </aside>
+
+    <!-- MAIN COLUMN -->
+    <div class="fp-main">
+      ${profile?.approach?`<div><div class="fp-quote-h">How to approach</div><div class="fp-quote">${profile.approach}</div></div>`:''}
+      <div class="fp-tabs">
+        <button class="fp-tab" data-tab="timeline" onclick="_fpShowTab('timeline')">Timeline<span class="n">${timeline.length||''}</span></button>
+        <button class="fp-tab" data-tab="profile" onclick="_fpShowTab('profile')">AI Profile${staleTabDot}</button>
+        <button class="fp-tab" data-tab="family" onclick="_fpShowTab('family')">Family</button>
+        <button class="fp-tab" data-tab="events" onclick="_fpShowTab('events')">Events<span class="n">${fpRegs.length||''}</span></button>
+        <button class="fp-tab" data-tab="emails" onclick="_fpShowTab('emails')">Emails</button>
+        <button class="fp-tab" data-tab="notes" onclick="_fpShowTab('notes')">Notes</button>
+      </div>
 
     <!-- Timeline -->
-    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px;overflow-y:auto;max-height:500px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Full Timeline</div>
-        <div style="display:flex;gap:6px">
-          <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg> Note</button>
-          <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg> Activity</button>
-          <button onclick="startFollowUpTrack('${households[idx].id}')" title="Add to outreach follow-up — surfaces in the Daily Five until you connect" style="font-size:.62rem;padding:3px 8px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);color:#7c3aed;border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Follow-up</button>
-          <button onclick="byId('openAddDonation','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Donation</button>
-          <button onclick="openAddTaskModal(${idx})" style="font-size:.62rem;padding:3px 8px;background:rgba(67,56,202,.1);border:1px solid rgba(67,56,202,.28);color:#4338ca;border-radius:4px;cursor:pointer" title="Add a to-do for this contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> To-do</button>
-        </div>
+    <div class="fp-sec" data-sec="timeline">
+      <div class="fp-actions-row">
+          <button onclick="byId('openAddNote','${households[idx].id}',${idx})" style="font-size:.8rem;padding:7px 13px;font-family:var(--font-ui);background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg> Note</button>
+          <button onclick="byId('openLogInteraction','${households[idx].id}',${idx})" style="font-size:.8rem;padding:7px 13px;font-family:var(--font-ui);background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 11 8 8a2 2 0 0 0-3 3l4 4M13 11l3-3a2 2 0 0 1 3 3l-4 4M5 15l3 5M19 15l-3 5M9 17h6"/></svg> Activity</button>
+          <button onclick="startFollowUpTrack('${households[idx].id}')" title="Add to outreach follow-up — surfaces in the Daily Five until you connect" style="font-size:.8rem;padding:7px 13px;font-family:var(--font-ui);background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);color:#7c3aed;border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Follow-up</button>
+          <button onclick="byId('openAddDonation','${households[idx].id}',${idx})" style="font-size:.8rem;padding:7px 13px;font-family:var(--font-ui);background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Donation</button>
+          <button onclick="openAddTaskModal(${idx})" style="font-size:.8rem;padding:7px 13px;font-family:var(--font-ui);background:rgba(67,56,202,.1);border:1px solid rgba(67,56,202,.28);color:#4338ca;border-radius:4px;cursor:pointer" title="Add a to-do for this contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> To-do</button>
       </div>
       ${timelineHtml}
     </div>
 
     <!-- AI Profile -->
-    <div id="fullpanel-profile-${idx}" style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+    <div class="fp-sec" data-sec="profile">
+    <div id="fullpanel-profile-${idx}" class="fp-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${(fpStale?.suggestFull||fpStale?.suggestSoft)?'6':'12'}px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> AI Profile</div>
+        <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> AI Profile</div>
         <div style="display:flex;align-items:center;gap:6px">
           ${profile?`<button onclick="byId('editProfileInline','${households[idx].id}',${idx},'fullpanel-profile-${idx}')" style="font-size:.62rem;padding:3px 9px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer;font-family:var(--font-ui)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit</button>`:''}
           ${profile?`<button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="font-size:.62rem;padding:3px 9px;background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:var(--green);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">↺ Quick Update</button>`:''}
@@ -4921,80 +5029,58 @@ function openFullPanel(idx){
       </div>
       ${fpStale?.suggestFull?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(185,28,28,.1);border:1px solid rgba(185,28,28,.25);color:var(--red);font-family:var(--font-ui);font-size:.58rem;margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg> Profile is ${fpStale.monthsOld} months old — Full Rebuild suggested</div>`:fpStale?.suggestSoft?`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);font-family:var(--font-ui);font-size:.58rem;margin-bottom:10px">↺ ${fpStale.newInteractions>0?fpStale.newInteractions+' new interaction'+(fpStale.newInteractions>1?'s':'')+(fpStale.newDonations>0?' + '+fpStale.newDonations+' donation'+(fpStale.newDonations>1?'s':''):''):fpStale.newDonations+' new donation'+(fpStale.newDonations>1?'s':'')} since last update — Quick Update suggested</div>`:''}
       ${profile?`
+        <div style="font-size:.95rem;color:var(--txt);line-height:1.7;margin-bottom:14px">${profile.summary||''}</div>
         ${profile.affinityNotes||profile.generosityNotes||profile.capacityNotes?`
-        <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:12px">
-          ${profile.affinityNotes?`<div style="background:rgba(15,30,51,.06);border-left:3px solid var(--accent);padding:8px 10px;border-radius:0 5px 5px 0"><div style="font-size:.55rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--accent);margin-bottom:2px">Affinity</div><div style="font-size:.72rem;color:var(--txt2)">${profile.affinityNotes}</div></div>`:''}
-          ${profile.generosityNotes?`<div style="background:rgba(21,128,61,.06);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 5px 5px 0"><div style="font-size:.55rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--green);margin-bottom:2px">Generosity</div><div style="font-size:.72rem;color:var(--txt2)">${profile.generosityNotes}</div></div>`:''}
-          ${profile.capacityNotes?`<div style="background:rgba(161,98,7,.06);border-left:3px solid var(--amber);padding:8px 10px;border-radius:0 5px 5px 0"><div style="font-size:.55rem;font-family:var(--font-ui);text-transform:uppercase;color:var(--amber);margin-bottom:2px">Capacity</div><div style="font-size:.72rem;color:var(--txt2)">${profile.capacityNotes}</div></div>`:''}
+        <div style="margin-bottom:14px">
+          ${[['Affinity',profile.affinityNotes],['Generosity',profile.generosityNotes],['Capacity',profile.capacityNotes]].map(([lb,tx])=>tx?`
+          <div style="border-top:1px solid var(--border);padding:9px 0">
+            <div style="font-size:.66rem;font-family:var(--font-ui);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:3px">${lb}</div>
+            <div style="font-size:.88rem;color:var(--txt2);line-height:1.55">${tx}</div>
+          </div>`:'').join('')}
         </div>`:''}
-        <div style="font-size:.78rem;color:var(--txt2);line-height:1.65;margin-bottom:10px">${profile.summary||''}</div>
-        ${profile.fedLevel?`<div style="font-size:.72rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 3l9 6M4 9v10M20 9v10M3 21h18M8 12v5M12 12v5M16 12v5"/></svg> <b>Federation:</b> ${profile.fedLevel}</div>`:''}
-        ${profile.businessInfo?`<div style="font-size:.72rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg> <b>Business:</b> ${profile.businessInfo}</div>`:''}
-        ${profile.boardMemberships?`<div style="font-size:.72rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> <b>Boards:</b> ${profile.boardMemberships}</div>`:''}
-        ${profile.philanthropy990?`<div style="font-size:.72rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg> <b>990:</b> ${profile.philanthropy990}</div>`:''}
-        ${profile.pressmentions?`<div style="font-size:.72rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2ZM19 8h1a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2M7 8h7M7 12h7M7 16h4"/></svg> <b>Press:</b> ${profile.pressmentions}</div>`:''}
-        ${profile.builtAt?`<div style="font-size:.6rem;color:var(--txt3);margin-top:8px">Built ${fd(profile.builtAt)}${profile.softBuiltAt?` · Quick Update ${fd(profile.softBuiltAt)}`:''}</div>`:''}
-      `:`<div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
+        ${profile.fedLevel?`<div style="font-size:.82rem;margin-bottom:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 12 3l9 6M4 9v10M20 9v10M3 21h18M8 12v5M12 12v5M16 12v5"/></svg> <b>Federation:</b> ${profile.fedLevel}</div>`:''}
+        ${profile.businessInfo?`<div style="font-size:.82rem;margin-bottom:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg> <b>Business:</b> ${profile.businessInfo}</div>`:''}
+        ${profile.boardMemberships?`<div style="font-size:.82rem;margin-bottom:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> <b>Boards:</b> ${profile.boardMemberships}</div>`:''}
+        ${profile.philanthropy990?`<div style="font-size:.82rem;margin-bottom:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg> <b>990:</b> ${profile.philanthropy990}</div>`:''}
+        ${profile.pressmentions?`<div style="font-size:.82rem;margin-bottom:5px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2ZM19 8h1a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2M7 8h7M7 12h7M7 16h4"/></svg> <b>Press:</b> ${profile.pressmentions}</div>`:''}
+        ${profile.builtAt?`<div style="font-size:.7rem;color:var(--txt3);margin-top:8px">Built ${fd(profile.builtAt)}${profile.softBuiltAt?` · Quick Update ${fd(profile.softBuiltAt)}`:''}</div>`:''}
+      `:`<div style="font-size:.86rem;color:var(--txt3);margin-bottom:12px">No profile built yet.</div>`}
+    </div>
     </div>
 
     <!-- Household Notes (editable) -->
-    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px">
+    <div class="fp-sec" data-sec="notes">
+    <div class="fp-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Household Notes</div>
+        <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> Household Notes</div>
         <div style="display:flex;align-items:center;gap:8px">
           <span id="notes-save-state-${idx}" style="font-size:.62rem;color:var(--txt3)"></span>
           <button onclick="byId('saveHouseholdNotes','${households[idx].id}',${idx},this)" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px">Save</button>
         </div>
       </div>
-      <textarea id="fullpanel-notes-${idx}" oninput="byId('_hhNotesTyped','${households[idx].id}',${idx})" onblur="byId('_hhNotesBlur','${households[idx].id}',${idx})" style="width:100%;min-height:80px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:8px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none">${_escHtml(h.notes||'')}</textarea>
+      <textarea id="fullpanel-notes-${idx}" oninput="byId('_hhNotesTyped','${households[idx].id}',${idx})" onblur="byId('_hhNotesBlur','${households[idx].id}',${idx})" style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:10px;font-family:var(--font-ui);font-size:.88rem;color:var(--txt);resize:vertical;outline:none">${_escHtml(h.notes||'')}</textarea>
+    </div>
     </div>
 
-    <!-- Contacts + Property -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 5a3.5 3.5 0 0 1 0 7M16 14a7 7 0 0 1 6 7"/></svg> People</div>
-          <button onclick="byId('showAddPersonToHousehold','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">Add person</button>
-        </div>
-        ${(h.members||[]).map(m=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);position:relative">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-weight:600;font-size:.82rem">${_escHtml(_daasDisplayName(m))} <span style="font-size:.65rem;color:var(--txt3);font-weight:400">${_escHtml(m.gender||"")}</span></div>
-            <div style="display:flex;gap:2px;flex-shrink:0">
-            <button onclick="openEditContactById('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-            <button onclick="moveContact('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Move to another household"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M2 12h13M19 5l3 3-3 3M22 8h-9M9 21h10a2 2 0 0 0 2-2v-3"/></svg></button>
-            <button onclick="mergeContact('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Merge with another contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v6M17 4v6M7 10a5 5 0 0 0 5 5 5 5 0 0 0 5-5M12 15v5"/></svg></button>
-            <button onclick="deleteContactById('${m.id}',${idx})" style="background:none;border:none;cursor:pointer;font-size:.7rem;color:var(--txt3);padding:2px" title="Delete contact"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
-            </div>
-          </div>
-          ${m.phone?`<div style="font-size:.72rem;margin-top:2px"><a href="tel:${m.phone.replace(/[^0-9+]/g,'')}" style="color:var(--accent);text-decoration:none"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> ${_escHtml(m.phone)}</a></div>`:''}
-          ${m.email?`<div style="font-size:.72rem;margin-top:1px"><a href="mailto:${encodeURIComponent(m.email)}" style="color:var(--accent);text-decoration:none"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> ${_escHtml(m.email)}</a></div>`:''}
-          ${m.dob?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7M4 16c1.5 0 1.5 1 3 1s1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1M12 7v5M12 4v.5"/></svg> ${formatDOB(m.dob)} · Age ${calcAge(m.dob)}</div>`:
-          (h.profile_data&&h.profile_data.approximateAge?`<div style="font-size:.7rem;margin-top:1px;color:var(--txt3)">~Age ${h.profile_data.approximateAge} <span style="opacity:.6">(estimated)</span></div>`:'')}
-          <div style="font-size:.6rem;color:var(--txt3);margin-top:1px">Contact #${m.daas_id||'—'}</div>
-        </div>`).join('')}
-      </div>
-      <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg> Property</div>
-        ${[['Market Value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():null,'grn']].filter(([,v])=>v).map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.73rem"><span style="color:var(--txt3)">${k}</span><span style="font-weight:500;color:${c==='grn'?'var(--green)':'var(--txt)'}">${v}</span></div>`).join('')}
-      </div>
-    </div>
+    <!-- (People + Property now live in the left rail) -->
 
     <!-- Family & Children -->
-    <div style="background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px">
+    <div class="fp-sec" data-sec="family">
+    <div class="fp-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 9c-2 1-3 3-3 6M15 9c2 1 3 3 3 6M9 21h6M10 15h4"/></svg> Family & Children</div>
+        <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="3"/><path d="M9 9c-2 1-3 3-3 6M15 9c2 1 3 3 3 6M9 21h6M10 15h4"/></svg> Family & Children</div>
         <button onclick="byId('editChildrenCard','${households[idx].id}',${idx})" id="children-edit-btn-${idx}" style="font-size:.62rem;padding:2px 8px;background:rgba(161,98,7,.1);border:1px solid rgba(161,98,7,.25);color:var(--amber);border-radius:4px;cursor:pointer;font-family:var(--font-ui)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit</button>
       </div>
       <div id="children-display-${idx}">
         ${(()=>{
           const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
-          if(!kids.length)return '<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
+          if(!kids.length)return '<div style="font-size:.84rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
           const currentYear=new Date().getFullYear();
           return kids.map(c=>{
             const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
-            return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem">
+            return `<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:.88rem">
               <span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span> — ~${age!==null?age+' yrs old':'age unknown'}
-              <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span>
+              <span style="font-size:.76rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span>
             </div>`;
           }).join('');
         })()}
@@ -5022,7 +5108,7 @@ function openFullPanel(idx){
       <!-- Linked Family (cross-household parent/child links for adult children) -->
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Linked Family</div>
+          <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Linked Family</div>
           <button onclick="byId('famLinkOpen','${households[idx].id}',${idx})" style="font-size:.62rem;padding:2px 8px;background:rgba(15,30,51,.1);border:1px solid rgba(15,30,51,.25);color:var(--accent);border-radius:4px;cursor:pointer;font-family:var(--font-ui)">🔗 Link family</button>
         </div>
         <div id="famlink-list-${idx}">${_famLinksHtml(h,idx)}</div>
@@ -5045,13 +5131,15 @@ function openFullPanel(idx){
         </div>
       </div>
     </div>
+    </div>
 
     <!-- Event Registrations -->
-    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px;margin-top:16px">
-      <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Event Registrations${(()=>{const n=getHHRegistrations(h).length;return n?' ('+n+')':'';})()}</div>
+    <div class="fp-sec" data-sec="events">
+    <div class="fp-card">
+      <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2);margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Event Registrations${(()=>{const n=getHHRegistrations(h).length;return n?' ('+n+')':'';})()}</div>
       ${(()=>{
         const regs=getHHRegistrations(h);
-        if(!regs.length)return '<div style="font-size:.76rem;color:var(--txt3);font-style:italic">No event registrations yet.</div>';
+        if(!regs.length)return '<div style="font-size:.86rem;color:var(--txt3);font-style:italic">No event registrations yet.</div>';
         const evName=rid=>{const ev=(_events||[]).find(e=>e.id===rid);return ev?ev.name:'Event';};
         return regs.map(r=>{
           const who=(()=>{const m=(h.members||[]).find(x=>x.id===r.contact_id);return m?_escHtml(_daasDisplayName(m)):'';})();
@@ -5063,12 +5151,12 @@ function openFullPanel(idx){
           return `<div style="padding:8px 0;border-bottom:1px solid var(--border)${noShow?';opacity:.6':''}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
               <div style="flex:1;min-width:0">
-                <div style="font-size:.8rem;font-weight:600;color:var(--txt);cursor:pointer" onclick="_openEventFromContact('${r.event_id}')">${_escHtml(evName(r.event_id))}${noShow?' <span style="font-family:var(--font-ui);font-size:.52rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:1px">No-show</span>':''}</div>
-                <div style="font-family:var(--font-ui);font-size:.64rem;color:var(--txt3)">${who?who+' · ':''}${cnt} attendee${cnt===1?'':'s'}${tier} · ${_fmtDate(r.reg_date)||''}</div>
-                ${r.notes?`<div style="font-size:.68rem;color:var(--txt2);margin-top:2px;font-style:italic">${_escHtml(r.notes)}</div>`:''}
+                <div style="font-size:.9rem;font-weight:600;color:var(--txt);cursor:pointer" onclick="_openEventFromContact('${r.event_id}')">${_escHtml(evName(r.event_id))}${noShow?' <span style="font-family:var(--font-ui);font-size:.52rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);border:1px solid var(--red);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:1px">No-show</span>':''}</div>
+                <div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt3)">${who?who+' · ':''}${cnt} attendee${cnt===1?'':'s'}${tier} · ${_fmtDate(r.reg_date)||''}</div>
+                ${r.notes?`<div style="font-size:.78rem;color:var(--txt2);margin-top:2px;font-style:italic">${_escHtml(r.notes)}</div>`:''}
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                ${fee>0?`<div style="font-size:.76rem;color:var(--amber);font-weight:600">$${fee.toLocaleString()}</div>`:(giftAmt>0?`<div style="font-size:.62rem;color:var(--green);font-weight:600;white-space:nowrap">+$${giftAmt.toLocaleString()} gift</div>`:'<div style="font-size:.62rem;color:var(--txt3)">free</div>')}
+                ${fee>0?`<div style="font-size:.86rem;color:var(--amber);font-weight:600">$${fee.toLocaleString()}</div>`:(giftAmt>0?`<div style="font-size:.72rem;color:var(--green);font-weight:600;white-space:nowrap">+$${giftAmt.toLocaleString()} gift</div>`:'<div style="font-size:.72rem;color:var(--txt3)">free</div>')}
                 <button onclick="toggleNoShow('${r.id}','${h.id}')" style="background:none;border:none;cursor:pointer;color:${noShow?'var(--green)':'var(--txt3)'};padding:2px 3px" title="${noShow?'Mark attended':'Mark no-show'}">${noShow?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'}</button>
                 <button onclick="openEditRegistration('${r.id}','${h.id}',${idx})" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Edit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
                 <button onclick="deleteRegistration('${r.id}','${h.id}',${idx})" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 3px" title="Delete"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/><path d="M10 11v6M14 11v6"/></svg></button>
@@ -5078,18 +5166,24 @@ function openFullPanel(idx){
         }).join('');
       })()}
     </div>
+    </div>
 
     <!-- Email History (campaign sends — read-only, never touches interactions/AGC) -->
-    <div style="grid-column:span 2;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:18px;margin-top:16px">
+    <div class="fp-sec" data-sec="emails">
+    <div class="fp-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:var(--font-ui);font-size:.78rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email History</div>
+        <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email History</div>
         <button class="eg-mini-btn" onclick="_hhEmailLoad('${h.id}',${idx},0)" title="Refresh" style="font-size:.6rem;padding:2px 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg></button>
       </div>
-      <div id="hh-email-${idx}"><div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3)">Loading email history…</div></div>
+      <div id="hh-email-${idx}"><div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt3)">Loading email history…</div></div>
+    </div>
+    </div>
     </div>`;
 
     document.getElementById('fullPanelContent').innerHTML=html;
+    _fpShowTab(window._fpActiveTab||'timeline');
     document.getElementById('fullPanel').style.display='flex';
+    document.getElementById('fullPanel').scrollTop=0;
     window.scrollTo(0,0);
     _hhEmailLoad(h.id,idx,0); // async — fills the Email History section
   };
@@ -5105,6 +5199,14 @@ function openFullPanel(idx){
 }
 function closeFullPanel(){
   document.getElementById('fullPanel').style.display='none';
+}
+// Full-panel tab switcher (sidebar dossier layout). Sections are .fp-sec divs
+// keyed by data-sec; the active tab persists in window._fpActiveTab so the
+// openFullPanel(idx) re-renders triggered by logging/undo keep your place.
+function _fpShowTab(name){
+  window._fpActiveTab=name;
+  document.querySelectorAll('#fullPanelContent .fp-tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('#fullPanelContent .fp-sec').forEach(s=>s.classList.toggle('on',s.dataset.sec===name));
 }
 
 function editChildrenCard(idx){
@@ -13962,6 +14064,7 @@ async function renderEmailEngage(){
 }
 
 function switchView(view){
+  window._daasView=view; // full-panel back button reads this for its label
   // Leaving the email builder with unsaved typing? Save it before the view resets
   // to Campaigns (which discards _ecCur). Fire-and-forget: the draft has an id by
   // now in all but the very first seconds of a brand-new campaign.
