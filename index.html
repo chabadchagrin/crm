@@ -4327,7 +4327,7 @@ async function buildProfileSoft(idx){
 
 Your ONLY job: re-synthesize the "approach" and "summary" fields based on the updated interactions, donations, and notes provided. Also update "estimated_children" if the household notes or private notes mention any children, their names, or milestone events (Bar/Bat Mitzvah years). Everything else must be passed through unchanged.
 
-ESTIMATED CHILDREN RULE: If the household notes or private notes mention a child's Bar Mitzvah or Bat Mitzvah year, calculate estimated_birth_year (Bar Mitzvah year − 13, Bat Mitzvah year − 12). If notes mention a child's current age, calculate estimated_birth_year = current year − stated age. If a child is already in the existing estimated_children array, preserve them unless the notes provide a correction. If no child signals exist in notes, copy the existing estimated_children array unchanged. CRITICAL: If you mention ANY child anywhere in summary or approach, that child MUST appear in estimated_children.
+ESTIMATED CHILDREN RULE: If the household notes or private notes mention a child's Bar Mitzvah or Bat Mitzvah year, calculate estimated_birth_year (Bar Mitzvah year − 13, Bat Mitzvah year − 12). If notes mention a child's current age, calculate estimated_birth_year = current year − stated age. If a child is already in the existing estimated_children array, preserve them unless the notes provide a correction. If no child signals exist in notes, copy the existing estimated_children array unchanged. CRITICAL: If you mention ANY child anywhere in summary or approach, that child MUST appear in estimated_children. PRESERVE MANUAL FIELDS: If an existing child entry has a "gender" or "notes" field, copy those fields through UNCHANGED — these are entered by hand and must never be dropped or altered.
 
 Return ONLY valid JSON, no markdown fences:
 {
@@ -5076,11 +5076,14 @@ function openFullPanel(idx){
           const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
           if(!kids.length)return '<div style="font-size:.84rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
           const currentYear=new Date().getFullYear();
+          const genderLabel=g=>g==='M'?'Male':(g==='F'?'Female':'');
           return kids.map(c=>{
             const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
+            const gl=genderLabel(c.gender);
             return `<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:.88rem">
-              <span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span> — ~${age!==null?age+' yrs old':'age unknown'}
+              <span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span>${gl?` <span style="font-size:.74rem;color:var(--txt3)">(${gl})</span>`:''} — ~${age!==null?age+' yrs old':'age unknown'}
               <span style="font-size:.76rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span>
+              ${c.notes?`<div style="font-size:.8rem;color:var(--txt2);margin-top:3px;white-space:pre-wrap">${_escHtml(c.notes)}</div>`:''}
             </div>`;
           }).join('');
         })()}
@@ -5089,12 +5092,21 @@ function openFullPanel(idx){
         <div id="children-rows-${idx}">
           ${(()=>{
             const kids=(h.profile_data&&h.profile_data.estimated_children)||[];
+            const inpStyle='background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit';
             return kids.map((c,ci)=>`
-              <div class="child-row-${idx}" style="display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center">
-                <input placeholder="Name" value="${_escAttr(c.name||'')}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-                <input type="number" placeholder="Birth Yr" value="${c.estimated_birth_year||''}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-                <input placeholder="Basis (e.g. Bar Mitzvah 2022)" value="${(c.basis||'').replace(/"/g,'&quot;')}" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-                <button onclick="this.closest('.child-row-${idx}').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>
+              <div class="child-row-${idx}" style="border:1px solid var(--border);border-radius:6px;padding:7px;margin-bottom:8px">
+                <div style="display:grid;grid-template-columns:1fr 90px 80px 1fr auto;gap:6px;align-items:center">
+                  <input data-cf="name" placeholder="Name" value="${_escAttr(c.name||'')}" style="${inpStyle}">
+                  <select data-cf="gender" style="${inpStyle}">
+                    <option value=""${!c.gender?' selected':''}>Gender…</option>
+                    <option value="M"${c.gender==='M'?' selected':''}>Male</option>
+                    <option value="F"${c.gender==='F'?' selected':''}>Female</option>
+                  </select>
+                  <input data-cf="birth" type="number" placeholder="Birth Yr" value="${c.estimated_birth_year||''}" style="${inpStyle}">
+                  <input data-cf="basis" placeholder="Basis (e.g. Bar Mitzvah 2022)" value="${(c.basis||'').replace(/"/g,'&quot;')}" style="${inpStyle}">
+                  <button onclick="this.closest('.child-row-${idx}').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>
+                </div>
+                <textarea data-cf="notes" placeholder="Notes (school, allergies, interests…)" rows="2" style="${inpStyle};width:100%;box-sizing:border-box;margin-top:6px;resize:vertical">${_escHtml(c.notes||'')}</textarea>
               </div>`).join('');
           })()}
         </div>
@@ -5223,25 +5235,32 @@ function addChildRow(idx){
   const container=document.getElementById('children-rows-'+idx);
   const row=document.createElement('div');
   row.className='child-row-'+idx;
-  row.style.cssText='display:grid;grid-template-columns:1fr 80px 1fr auto;gap:6px;margin-bottom:6px;align-items:center';
-  row.innerHTML=`<input placeholder="Name" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-    <input type="number" placeholder="Birth Yr" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-    <input placeholder="Basis (e.g. Bar Mitzvah 2022)" style="background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit">
-    <button onclick="this.closest('div').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>`;
+  row.style.cssText='border:1px solid var(--border);border-radius:6px;padding:7px;margin-bottom:8px';
+  const inpStyle='background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-size:.75rem;color:var(--txt);font-family:inherit';
+  row.innerHTML=`<div style="display:grid;grid-template-columns:1fr 90px 80px 1fr auto;gap:6px;align-items:center">
+      <input data-cf="name" placeholder="Name" style="${inpStyle}">
+      <select data-cf="gender" style="${inpStyle}"><option value="">Gender…</option><option value="M">Male</option><option value="F">Female</option></select>
+      <input data-cf="birth" type="number" placeholder="Birth Yr" style="${inpStyle}">
+      <input data-cf="basis" placeholder="Basis (e.g. Bar Mitzvah 2022)" style="${inpStyle}">
+      <button onclick="this.closest('.child-row-${idx}').remove()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:2px 4px">×</button>
+    </div>
+    <textarea data-cf="notes" placeholder="Notes (school, allergies, interests…)" rows="2" style="${inpStyle};width:100%;box-sizing:border-box;margin-top:6px;resize:vertical"></textarea>`;
   container.appendChild(row);
   row.querySelector('input').focus();
 }
 async function saveChildrenEdit(idx){
   const h=households[idx];
   const rows=[...document.querySelectorAll('.child-row-'+idx)];
+  const g=(row,f)=>row.querySelector('[data-cf="'+f+'"]');
   const kids=rows.map(row=>{
-    const inputs=row.querySelectorAll('input');
     return{
-      name:(inputs[0]?.value||'').trim(),
-      estimated_birth_year:parseInt(inputs[1]?.value)||null,
-      basis:(inputs[2]?.value||'').trim()
+      name:(g(row,'name')?.value||'').trim(),
+      gender:(g(row,'gender')?.value||'').trim(),
+      estimated_birth_year:parseInt(g(row,'birth')?.value)||null,
+      basis:(g(row,'basis')?.value||'').trim(),
+      notes:(g(row,'notes')?.value||'').trim()
     };
-  }).filter(c=>c.name||c.estimated_birth_year);
+  }).filter(c=>c.name||c.estimated_birth_year||c.notes);
   const updated={...(h.profile_data||{}),estimated_children:kids};
   try{
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
@@ -5253,10 +5272,12 @@ async function saveChildrenEdit(idx){
     const currentYear=new Date().getFullYear();
     const display=document.getElementById('children-display-'+idx);
     if(display){
+      const genderLabel=gg=>gg==='M'?'Male':(gg==='F'?'Female':'');
       display.innerHTML=kids.length
         ?kids.map(c=>{
           const age=c.estimated_birth_year?currentYear-c.estimated_birth_year:null;
-          return `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem"><span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span> — ~${age!==null?age+' yrs old':'age unknown'}<span style="font-size:.68rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span></div>`;
+          const gl=genderLabel(c.gender);
+          return `<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:.88rem"><span style="font-weight:500">${_escHtml(c.name||'Unknown')}</span>${gl?` <span style="font-size:.74rem;color:var(--txt3)">(${gl})</span>`:''} — ~${age!==null?age+' yrs old':'age unknown'}<span style="font-size:.76rem;color:var(--txt3);margin-left:6px">(Based on: ${_escHtml(c.basis||'—')})</span>${c.notes?`<div style="font-size:.8rem;color:var(--txt2);margin-top:3px;white-space:pre-wrap">${_escHtml(c.notes)}</div>`:''}</div>`;
         }).join('')
         :'<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No children tracking signals discovered in public research.</div>';
     }
@@ -10023,36 +10044,50 @@ let _pickerMode='contact';      // 'contact' | 'household'
 let _pickerOnPick=null;         // callback
 let _pickerExcludeContact=null; // contact id to hide from results
 let _pickerExcludeHH=null;      // household id to hide from results
+let _pickerOnNew=null;          // callback fired by the "create new" action (optional)
+let _pickerNewLabel='';         // label for the "create new" action button
 
 function _openPicker(opts){
   _pickerMode=opts.mode||'contact';
   _pickerOnPick=opts.onPick||null;
   _pickerExcludeContact=opts.excludeContactId||null;
   _pickerExcludeHH=opts.excludeHouseholdId||null;
+  _pickerOnNew=opts.onNew||null;
+  _pickerNewLabel=opts.newLabel||'Create new';
   document.getElementById('picker_title').textContent=opts.title||(_pickerMode==='household'?'Select a household':'Select a contact');
   document.getElementById('picker_sub').textContent=opts.subtitle||'';
   const s=document.getElementById('picker_search');
   s.value='';
-  document.getElementById('picker_results').innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Start typing to search…</div>';
+  document.getElementById('picker_results').innerHTML=_pickerNewBtnHtml()+'<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Start typing to search…</div>';
   document.getElementById('pickerModal').style.display='flex';
   setTimeout(()=>s.focus(),30);
+}
+// Renders the optional "create new" action row shown above search results.
+function _pickerNewBtnHtml(){
+  if(!_pickerOnNew)return '';
+  return `<div onclick="_pickerPickNew()" style="padding:10px 11px;cursor:pointer;border-bottom:1px solid var(--border);background:rgba(15,30,51,.05);display:flex;align-items:center;gap:8px;font-weight:600;font-size:.8rem;color:var(--accent)" onmouseover="this.style.background='rgba(15,30,51,.12)'" onmouseout="this.style.background='rgba(15,30,51,.05)'"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> ${_escHtml(_pickerNewLabel)}</div>`;
+}
+function _pickerPickNew(){
+  const cb=_pickerOnNew;_pickerCancel();if(cb)cb();
 }
 function _pickerCancel(){
   document.getElementById('pickerModal').style.display='none';
   _pickerOnPick=null;
+  _pickerOnNew=null;
 }
 function _pickerSearch(){
   const q=document.getElementById('picker_search').value.toLowerCase().trim();
   const res=document.getElementById('picker_results');
-  if(q.length<2){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Keep typing…</div>';return;}
+  const newBtn=_pickerNewBtnHtml();
+  if(q.length<2){res.innerHTML=newBtn+'<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">Keep typing…</div>';return;}
   if(_pickerMode==='household'){
     const matches=households.filter(h=>{
       if(_pickerExcludeHH&&h.id===_pickerExcludeHH)return false;
       if(h.displayName.toLowerCase().includes(q))return true;
       return (h.members||[]).some(m=>((m.first_name||'')+' '+(m.last_name||'')).toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q));
     }).slice(0,12);
-    if(!matches.length){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
-    res.innerHTML=matches.map(h=>`
+    if(!matches.length){res.innerHTML=newBtn+'<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
+    res.innerHTML=newBtn+matches.map(h=>`
       <div onclick="_pickerPickHousehold('${h.id}')" style="padding:9px 11px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
         <div style="font-weight:600;font-size:.8rem;color:var(--txt)">${_escHtml(h.displayName)}</div>
         <div style="font-size:.68rem;color:var(--txt3)">${_escHtml((h.address||'No address')+(h.city?', '+h.city:''))}</div>
@@ -10068,8 +10103,8 @@ function _pickerSearch(){
       }
     }));
     const matches=rows.slice(0,12);
-    if(!matches.length){res.innerHTML='<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
-    res.innerHTML=matches.map(({m,h,name})=>`
+    if(!matches.length){res.innerHTML=newBtn+'<div style="padding:14px;font-size:.76rem;color:var(--txt3);text-align:center">No matches.</div>';return;}
+    res.innerHTML=newBtn+matches.map(({m,h,name})=>`
       <div onclick="_pickerPickContact('${m.id}')" style="padding:9px 11px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
         <div style="font-weight:600;font-size:.8rem;color:var(--txt)">${_escHtml(name||'(no name)')}${m.email?` <span style="font-weight:400;color:var(--txt3);font-size:.7rem">${_escHtml(m.email)}</span>`:''}</div>
         <div style="font-size:.68rem;color:var(--txt3)">${_escHtml(h.displayName)}${h.address?' · '+_escHtml(h.address):''}</div>
@@ -10154,43 +10189,64 @@ function moveContact(contactId){
     title:'Move Contact',
     subtitle:`Move ${_escHtml(name)} (currently in ${_escHtml(cur.h.displayName)}) into:`,
     excludeHouseholdId:cur.h.id,
-    onPick:async(sel)=>{
-      const oldHH=cur.h, newHHId=sel.householdId;
-      const willEmpty=(oldHH.members||[]).filter(m=>m.id!==contactId).length===0;
-      let removeOld=false;
-      if(willEmpty){
-        removeOld=confirm(`${_escHtml(oldHH.displayName)} will have no contacts left after this move.\n\nDelete the now-empty household (and its property/profile data)?\n\nOK = delete it · Cancel = keep the empty household.`);
-      }
+    newLabel:`New household for ${name}`,
+    // "New household" path: create a fresh household named after the contact,
+    // then run the same move mechanics into it (used for adult children etc.).
+    onNew:async()=>{
       try{
-        await sb('contacts?id=eq.'+contactId,{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
-        // registrations carry their own household_id — keep them consistent.
-        const regIds=(cur.m.registrations||[]).map(r=>r.id);
-        if(regIds.length){
-          await sb('registrations?id=in.('+regIds.join(',')+')',{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
-        }
-        if(removeOld){
-          await sb('households?id=eq.'+oldHH.id,{method:'DELETE'});
-        }
-        // In-memory: move the member object across, fix its registrations' hh id.
-        oldHH.members=(oldHH.members||[]).filter(m=>m.id!==contactId);
-        oldHH.contacts=(oldHH.contacts||[]).filter(c=>c.id!==contactId);
-        cur.m.household_id=newHHId;
-        (cur.m.registrations||[]).forEach(r=>{r.household_id=newHHId;});
-        const newHH=households.find(x=>x.id===newHHId);
-        if(newHH){if(!newHH.members)newHH.members=[];newHH.members.push(cur.m);if(!newHH.contacts)newHH.contacts=[];newHH.contacts.push(cur.m);}
-        if(removeOld){
-          households=households.filter(x=>x.id!==oldHH.id);
-          rebuildHIdxMap();
-        }
-        // Display names depend on membership — rebuild for both.
-        [oldHH,newHH].forEach(h=>{if(h&&!(removeOld&&h.id===oldHH.id))h.displayName=buildDisplayName(h);});
-        _refreshHouseholds(removeOld?[newHHId]:[oldHH.id,newHHId]);
-        const fp=document.getElementById('fullPanel');
-        if(removeOld&&fp&&fp.style.display!=='none'&&fp.dataset.hhid===oldHH.id){closeFullPanel&&closeFullPanel();}
-        _rerenderOpenViews([oldHH.id,newHHId]);
+        const jointName=(cur.m.first_name&&cur.m.last_name)?(cur.m.first_name+' '+cur.m.last_name):(name!=='this contact'?name:null);
+        const hhRes=await sb('households',{method:'POST',body:JSON.stringify({joint_name:jointName,date_added:localToday()})});
+        const newHHRow=Array.isArray(hhRes)?hhRes[0]:hhRes;
+        // Register the brand-new household in the in-memory working set so the
+        // shared move helper can find it as a normal target.
+        const newHH={...newHHRow,joint_name:jointName,members:[],contacts:[],displayName:jointName||'Household'};
+        households.push(newHH);
+        rebuildHIdxMap();
+        await _doMoveContact(cur,contactId,newHH.id,true);
       }catch(e){alert('Move failed: '+e.message);}
+    },
+    onPick:async(sel)=>{
+      await _doMoveContact(cur,contactId,sel.householdId,false);
     }
   });
+}
+// Shared move mechanics. movedToNew=true means the destination was just created
+// (skip the "delete the emptied source" prompt-noise by still offering it).
+async function _doMoveContact(cur,contactId,newHHId,movedToNew){
+  const oldHH=cur.h;
+  const willEmpty=(oldHH.members||[]).filter(m=>m.id!==contactId).length===0;
+  let removeOld=false;
+  if(willEmpty){
+    removeOld=confirm(`${_escHtml(oldHH.displayName)} will have no contacts left after this move.\n\nDelete the now-empty household (and its property/profile data)?\n\nOK = delete it · Cancel = keep the empty household.`);
+  }
+  try{
+    await sb('contacts?id=eq.'+contactId,{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
+    // registrations carry their own household_id — keep them consistent.
+    const regIds=(cur.m.registrations||[]).map(r=>r.id);
+    if(regIds.length){
+      await sb('registrations?id=in.('+regIds.join(',')+')',{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
+    }
+    if(removeOld){
+      await sb('households?id=eq.'+oldHH.id,{method:'DELETE'});
+    }
+    // In-memory: move the member object across, fix its registrations' hh id.
+    oldHH.members=(oldHH.members||[]).filter(m=>m.id!==contactId);
+    oldHH.contacts=(oldHH.contacts||[]).filter(c=>c.id!==contactId);
+    cur.m.household_id=newHHId;
+    (cur.m.registrations||[]).forEach(r=>{r.household_id=newHHId;});
+    const newHH=households.find(x=>x.id===newHHId);
+    if(newHH){if(!newHH.members)newHH.members=[];newHH.members.push(cur.m);if(!newHH.contacts)newHH.contacts=[];newHH.contacts.push(cur.m);}
+    if(removeOld){
+      households=households.filter(x=>x.id!==oldHH.id);
+      rebuildHIdxMap();
+    }
+    // Display names depend on membership — rebuild for both.
+    [oldHH,newHH].forEach(h=>{if(h&&!(removeOld&&h.id===oldHH.id))h.displayName=buildDisplayName(h);});
+    _refreshHouseholds(removeOld?[newHHId]:[oldHH.id,newHHId]);
+    const fp=document.getElementById('fullPanel');
+    if(removeOld&&fp&&fp.style.display!=='none'&&fp.dataset.hhid===oldHH.id){closeFullPanel&&closeFullPanel();}
+    _rerenderOpenViews([oldHH.id,newHHId]);
+  }catch(e){alert('Move failed: '+e.message);}
 }
 
 // ── 3. MERGE TWO CONTACTS ───────────────────────────────────
