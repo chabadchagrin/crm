@@ -917,7 +917,7 @@ html.force-desktop #mobileShell{display:none!important}
       <h2 id="ac_title" style="margin-bottom:0">Add New Contact</h2>
       <button type="button" onclick="_acTogglePresetMgr()" title="Manage address presets" style="background:none;border:none;cursor:pointer;color:var(--txt3);padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg></button>
     </div>
-    <p id="ac_desc">Enter details — the app will look up property data automatically.</p>
+    <p id="ac_desc">Enter details — with a street address, the app looks up property data automatically. Address is optional; leave it blank to just add the contact.</p>
     <div id="ac_hh_note" style="display:none;padding:8px 12px;background:rgba(15,30,51,.08);border:1px solid var(--accent);border-radius:5px;margin-bottom:10px;font-size:.76rem;color:var(--accent)"></div>
     <div id="ac_preset_mgr" style="display:none;background:var(--surf2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-bottom:10px">
       <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Address Presets</div>
@@ -948,9 +948,9 @@ html.force-desktop #mobileShell{display:none!important}
       <div><label>Spouse External ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
       </div>
       <div id="ac_addr_section" style="grid-column:span 2;display:grid;grid-template-columns:1fr;gap:10px">
-      <div><label>Street Address *</label><input type="text" id="ac_street" placeholder="270 Applebrook Dr"></div>
+      <div><label>Street Address <span style="font-weight:400;color:var(--txt3);font-size:.7rem">— optional</span></label><input type="text" id="ac_street" placeholder="270 Applebrook Dr" oninput="_acToggleActionLabel()"></div>
       <div>
-        <label>City *</label>
+        <label>City</label>
         <div id="ac_city_presets" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px"></div>
         <input type="text" id="ac_city" placeholder="Or type city" style="margin-bottom:0">
       </div>
@@ -1778,7 +1778,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-15.2'; // full-panel v2.1: score badge replaces avatar, plain approach text, de-AI'd profile tab, named email chips
+const BUILD_STAMP='2026-07-20.1'; // profile Emails tab: group membership card (view/add/remove); fix frozen 'Adding…' button in group picker; add-contact: address now optional (skip Zillow, add without property)
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -3600,6 +3600,17 @@ function _acApplyMode(){
   btn.innerHTML=isAdd
     ?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Add to Household'
     :'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Look Up Property';
+  if(!isAdd)_acToggleActionLabel();
+}
+// New-contact mode: swap the primary button between "Look Up Property" (address
+// entered → Zillow) and "Add Contact" (no address → skip lookup, just save).
+function _acToggleActionLabel(){
+  if(_acMode==='add')return;
+  const btn=document.getElementById('ac_actionBtn');if(!btn)return;
+  const street=(document.getElementById('ac_street').value||'').trim();
+  btn.innerHTML=street
+    ?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Look Up Property'
+    :'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Add Contact';
 }
 function showAddContact(){_acMode='new';_acTargetHH=null;_acApplyMode();document.getElementById('addContactModal').style.display='flex';document.getElementById('ac_first').focus();document.getElementById('ac_status').style.display='none';_acLoadPresets().then(_acRenderPresets);}
 function showAddPersonToHousehold(idx){
@@ -3695,6 +3706,34 @@ function clearSpouseLink(){
 
 function setZip(zip,el){document.getElementById('ac_zip').value=zip;document.querySelectorAll('[onclick^="setZip"]').forEach(b=>{b.style.background='var(--surf2)';b.style.color='var(--txt)';b.style.borderColor='var(--border2)';});const t=el||((typeof event!=='undefined'&&event)?event.target:null);if(t){t.style.background='var(--accent)';t.style.color='#fff';t.style.borderColor='var(--accent)';}}
 
+// No street address entered → skip the Zillow property lookup entirely and go
+// straight to the confirm step. Creates a household with no property data.
+function _acAddWithoutProperty(){
+  const first=document.getElementById('ac_first').value.trim();
+  const last=document.getElementById('ac_last').value.trim();
+  if(!first||!last){alert('Please enter first and last name.');return;}
+  const city=document.getElementById('ac_city').value.trim();
+  const zip=document.getElementById('ac_zip').value.trim();
+  acFormData={first,last,spouse:document.getElementById('ac_spouse').value.trim(),phone:document.getElementById('ac_phone').value.trim(),email:document.getElementById('ac_email').value.trim(),crmId:document.getElementById('ac_crmid').value.trim(),crmId2:document.getElementById('ac_crmid2').value.trim(),street:'',city,zip};
+  // Minimal result so confirmAddContact() proceeds; no address/property stored.
+  acPropResult={address:null,city:city||null,state:'OH',zip:zip||null,county:null,homeValue:null,source:null};
+  const jn=acFormData.spouse?`${acFormData.first} and ${acFormData.spouse} ${acFormData.last}`:`${acFormData.first} ${acFormData.last}`;
+  document.getElementById('confirm_content').innerHTML=`
+    <div style="background:var(--surf2);border-radius:6px;padding:14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:.88rem;margin-bottom:6px">Contact</div>
+      <div style="font-size:.78rem;color:var(--txt2);line-height:1.8">
+        <b>Name:</b> ${_escHtml(acFormData.first+' '+acFormData.last)}<br>
+        <b>Joint Name:</b> ${_escHtml(jn)}<br>
+        ${acFormData.phone?`<b>Phone:</b> ${_escHtml(acFormData.phone)}<br>`:''}
+        ${acFormData.email?`<b>Email:</b> ${_escHtml(acFormData.email)}<br>`:''}
+        ${acFormData.crmId?`<b>External ID:</b> ${_escHtml(acFormData.crmId)}<br>`:''}
+        ${(city||zip)?`<b>City/ZIP:</b> ${_escHtml([city,zip].filter(Boolean).join(' '))}<br>`:''}
+      </div>
+    </div>
+    <div style="font-size:.74rem;color:var(--txt3);font-style:italic">No street address entered — this contact is being added without property lookup. You can add an address later from their profile.</div>`;
+  document.getElementById('addContactModal').style.display='none';
+  document.getElementById('confirmAddModal').style.display='flex';
+}
 async function lookupByAddress(){
   const first=document.getElementById('ac_first').value.trim();
   const last=document.getElementById('ac_last').value.trim();
@@ -3702,7 +3741,7 @@ async function lookupByAddress(){
   const city=document.getElementById('ac_city').value.trim()||'Chagrin Falls';
   const zip=document.getElementById('ac_zip').value.trim();
   if(!first||!last){alert('Please enter first and last name.');return;}
-  if(!street){alert('Please enter a street address.');return;}
+  if(!street){ _acAddWithoutProperty(); return; } // address optional — skip Zillow, go straight to confirm
   acFormData={first,last,spouse:document.getElementById('ac_spouse').value.trim(),phone:document.getElementById('ac_phone').value.trim(),email:document.getElementById('ac_email').value.trim(),crmId:document.getElementById('ac_crmid').value.trim(),crmId2:document.getElementById('ac_crmid2').value.trim(),street,city,zip};
   const btn=document.getElementById('ac_actionBtn');btn.disabled=true;btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"/></svg> Looking up…';
   const status=document.getElementById('ac_status');status.style.display='block';status.textContent='Fetching from Zillow…';
@@ -3774,8 +3813,8 @@ async function confirmAddContact(){
     const newContactRes=await sb('contacts',{method:'POST',body:JSON.stringify({household_id:householdId,first_name:acFormData.first,last_name:acFormData.last,phone:acFormData.phone||null,email:acFormData.email||null,external_id:acFormData.crmId||null})});
     const newContact=(Array.isArray(newContactRes)?newContactRes[0]:newContactRes)||{};
 
-    // Fire Melissa lookup for DOB/demographics (fire-and-forget)
-    if(newContact){
+    // Fire Melissa lookup for DOB/demographics (fire-and-forget) — needs an address
+    if(newContact&&r.address){
       setTimeout(async()=>{
         const mel=await fetchMelissa(acFormData.first,acFormData.last,r.address,r.city,'OH',r.zip);
         if(mel&&mel.dob){
@@ -5182,6 +5221,13 @@ function openFullPanel(idx){
 
     <!-- Email History (campaign sends — read-only, never touches interactions/AGC) -->
     <div class="fp-sec" data-sec="emails">
+    <div class="fp-card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> Email Groups</div>
+        <button class="eg-mini-btn" onclick="_hhAddToGroup('${h.id}',${idx})" style="font-size:.62rem;padding:3px 10px">＋ Add to group</button>
+      </div>
+      <div id="hh-groups-${idx}"><div style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt3)">Loading groups…</div></div>
+    </div>
     <div class="fp-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email History</div>
@@ -5198,6 +5244,7 @@ function openFullPanel(idx){
     document.getElementById('fullPanel').scrollTop=0;
     window.scrollTo(0,0);
     _hhEmailLoad(h.id,idx,0); // async — fills the Email History section
+    _hhGroupsLoad(h.id,idx);  // async — fills the Email Groups section
   };
 
   // Load interactions async then render
@@ -11721,7 +11768,8 @@ async function _egPickerAddSelected(btn){
     const g=_egGroups.find(x=>x.id===gid); if(g)g._count=_egMembersByGroup[gid].length;
     _egPickerClose();
     _egRenderGroupDetail();
-  }catch(e){ _ebToastMsg('Could not add contacts: '+e.message); btn.disabled=false; btn.textContent=o; }
+  }catch(e){ _ebToastMsg('Could not add contacts: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent=o; } // always restore — the modal + button are reused for the next group (was frozen on 'Adding…')
 }
 
 // ── Bulk add from Contacts view: add all currently-filtered households' emailed
@@ -11759,6 +11807,91 @@ async function _egBulkAddTo(gid,row){
     document.getElementById('egSelectModal').style.display='none';
     _ebToastMsg('Added to “'+g.name+'”. Group now has '+g._count+' member'+(g._count===1?'':'s')+'.');
   }catch(e){ _ebToastMsg('Could not add: '+e.message); if(row){row.style.pointerEvents='';row.style.opacity='';} }
+}
+
+// ── Profile → Emails tab: per-household group membership card ──────────────
+// Reuses the shared email-groups data layer (_egGroups / _egMembersByGroup)
+// and the same insert path (_egBulkAddTo) as the Email view. No new write
+// paths; membership never touches interactions/AGC. Works on mobile too since
+// the mobile profile reuses openFullPanel().
+async function _hhGroupsLoad(hid,idx){
+  const el=document.getElementById('hh-groups-'+idx);
+  if(!el)return;
+  try{ await _egLoad(false); }catch(e){ el.innerHTML='<div style="font-size:.72rem;color:var(--red)">Could not load groups: '+_escHtml(e.message||'')+'</div>'; return; }
+  _hhGroupsRender(hid,idx);
+}
+function _hhGroupsRender(hid,idx){
+  const el=document.getElementById('hh-groups-'+idx);
+  if(!el)return;
+  const i=hIdx(hid); const h=(i>=0?households[i]:null)||households[idx];
+  if(!h){ el.innerHTML=''; return; }
+  const mailable=(h.members||[]).filter(m=>m&&m.email);
+  if(!mailable.length){ el.innerHTML='<div style="font-size:.74rem;color:var(--txt3);font-style:italic">No contacts with an email in this household. Add an email to include them in groups.</div>'; return; }
+  // Build inverse index contact_id -> [group,...] from the loaded membership map.
+  const byContact={};
+  _egGroups.forEach(g=>{ (_egMembersByGroup[g.id]||[]).forEach(cid=>{ (byContact[cid]||(byContact[cid]=[])).push(g); }); });
+  const showName=(m)=>{ const nm=((m.first_name||'')+' '+(m.last_name||'')).trim(); return nm||m.email||'(no name)'; };
+  el.innerHTML=mailable.map(m=>{
+    const gs=(byContact[m.id]||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const chips=gs.length
+      ? gs.map(g=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 4px 2px 9px;border-radius:20px;background:var(--accent-soft,rgba(15,118,110,.1));border:1px solid var(--border2);font-family:var(--font-ui);font-size:.68rem;color:var(--txt2)">${_escHtml(g.name)}<span onclick="_hhRemoveFromGroup('${_escAttr(g.id)}','${_escAttr(m.id)}','${_escAttr(hid)}',${idx})" title="Remove from group" style="cursor:pointer;color:var(--txt3);font-size:.85rem;line-height:1;padding:0 2px">×</span></span>`).join('')
+      : '<span style="font-size:.72rem;color:var(--txt3);font-style:italic">Not in any group</span>';
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.8rem;font-weight:500;color:var(--txt);margin-bottom:5px">${_escHtml(showName(m))}${_egUnsub&&_egUnsub.has&&_egUnsub.has(m.id)?' <span style="font-size:.6rem;font-weight:400;color:var(--red)">(unsubscribed)</span>':''}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">${chips}</div>
+    </div>`;
+  }).join('');
+}
+async function _hhAddToGroup(hid,idx){
+  try{ await _egLoad(false); }catch(e){ _ebToastMsg('Could not load groups: '+e.message); return; }
+  const i=hIdx(hid); const h=(i>=0?households[i]:null)||households[idx];
+  if(!h)return;
+  const seen=new Set(),cids=[];
+  (h.members||[]).forEach(m=>{ if(m&&m.id&&m.email&&!seen.has(m.id)){ seen.add(m.id); cids.push(m.id); } });
+  if(!cids.length){ _ebToastMsg('No contacts with an email in this household.'); return; }
+  _egBulkCids=cids;
+  document.getElementById('egSelectSub').textContent='Add '+cids.length+' contact'+(cids.length===1?'':'s')+' from this household to:';
+  const list=document.getElementById('egSelectList');
+  let html='<div class="eg-picker-row" onclick="_hhSaveAsNewGroup(\''+_escAttr(hid)+'\','+idx+')">'
+    +'<div style="flex:1;min-width:0"><div style="font-size:.86rem;font-weight:600;color:var(--accent)">＋ New group…</div>'
+    +'<div style="font-size:.68rem;color:var(--txt3)">Create a group and add this household</div></div></div>';
+  html+=_egGroups.map(g=>`<div class="eg-picker-row" onclick="_hhBulkAddToGroup('${_escAttr(g.id)}',this,'${_escAttr(hid)}',${idx})">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.86rem;font-weight:500;color:var(--txt)">${_escHtml(g.name)}</div>
+      <div style="font-size:.68rem;color:var(--txt3)">${g._count||0} member${(g._count||0)===1?'':'s'}</div>
+    </div>
+    <svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--txt3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+  </div>`).join('');
+  list.innerHTML=html;
+  document.getElementById('egSelectModal').style.display='flex';
+}
+async function _hhBulkAddToGroup(gid,row,hid,idx){
+  await _egBulkAddTo(gid,row); // shared insert path (closes modal + toast + updates map)
+  _hhGroupsRender(hid,idx);
+}
+function _hhSaveAsNewGroup(hid,idx){
+  document.getElementById('egSelectModal').style.display='none';
+  _daasPrompt('New Email Group','Group name','',async(name)=>{
+    if(!name||!name.trim())return;
+    try{
+      const res=await sb('email_groups',{method:'POST',body:JSON.stringify({name:name.trim()})});
+      const g=Array.isArray(res)?res[0]:res;
+      if(!g||!g.id)throw new Error('No group returned.');
+      g._count=0;_egGroups.push(g);_egGroups.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      await _egBulkAddTo(g.id,null);
+      _hhGroupsRender(hid,idx);
+    }catch(e){_ebToastMsg('Could not create group: '+e.message);}
+  },'Create');
+}
+async function _hhRemoveFromGroup(gid,cid,hid,idx){
+  const g=_egGroups.find(x=>x.id===gid);
+  try{
+    await sb('email_group_members?group_id=eq.'+gid+'&contact_id=eq.'+cid,{method:'DELETE'});
+    _egMembersByGroup[gid]=(_egMembersByGroup[gid]||[]).filter(x=>x!==cid);
+    if(g)g._count=(_egMembersByGroup[gid]||[]).length;
+    _hhGroupsRender(hid,idx);
+    if(_egView==='group'&&typeof _egRenderGroupDetail==='function'){ try{_egRenderGroupDetail();}catch(e){} }
+  }catch(e){ _ebToastMsg('Could not remove: '+e.message); }
 }
 
 // ═══════════════════════ EMAIL BLOCK BUILDER (step 3) ══════════════════════
