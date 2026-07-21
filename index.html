@@ -923,41 +923,41 @@ html.force-desktop #mobileShell{display:none!important}
       <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Address Presets</div>
       <div id="ac_preset_list"></div>
       <div style="display:flex;gap:6px;margin-top:8px">
-        <input type="text" id="ac_preset_city" placeholder="City" style="flex:2;margin-bottom:0">
-        <input type="text" id="ac_preset_zip" placeholder="ZIP" maxlength="5" style="flex:1;margin-bottom:0">
+        <input type="text" id="ac_preset_city" placeholder="City" style="flex:2;margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="ac_preset_zip" placeholder="ZIP" maxlength="5" style="flex:1;margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <button type="button" onclick="_acAddPreset()" style="padding:4px 12px;font-size:.72rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap">Add</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert"></div>
-      <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen"></div>
-      <div id="ac_spouse_wrap"><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth"></div>
+      <div><label>First Name *</label><input type="text" id="ac_first" placeholder="Robert" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div><label>Last Name *</label><input type="text" id="ac_last" placeholder="Cohen" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div id="ac_spouse_wrap"><label>Spouse First Name</label><input type="text" id="ac_spouse" placeholder="Beth" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       <div style="grid-column:span 2" id="ac_spouselink_wrap">
         <label>Or link to existing contact as spouse</label>
         <div style="display:flex;gap:6px">
-          <input type="text" id="ac_spouse_search" placeholder="Search existing contact…" oninput="searchSpouse()" style="margin-bottom:0;flex:1">
+          <input type="text" id="ac_spouse_search" placeholder="Search existing contact…" oninput="searchSpouse()" style="margin-bottom:0;flex:1" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
           <button type="button" onclick="clearSpouseLink()" style="padding:4px 10px;font-size:.7rem;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer;white-space:nowrap">Clear</button>
         </div>
         <div id="ac_spouse_results" style="display:none;border:1px solid var(--border2);border-radius:4px;background:var(--surf);max-height:150px;overflow-y:auto;margin-top:4px"></div>
         <div id="ac_spouse_selected" style="display:none;padding:6px 10px;background:rgba(15,30,51,.08);border:1px solid var(--accent);border-radius:4px;margin-top:4px;font-size:.75rem;color:var(--accent)"></div>
       </div>
-      <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234"></div>
-      <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com"></div>
+      <div><label>Phone</label><input type="tel" id="ac_phone" placeholder="216-555-1234" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div style="grid-column:span 2"><label>Email</label><input type="email" id="ac_email" placeholder="robert@email.com" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       <div id="ac_crm_wrap" style="grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><label>External ID</label><input type="text" id="ac_crmid" placeholder="1073"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
-      <div><label>Spouse External ID</label><input type="text" id="ac_crmid2" placeholder="1074"></div>
+      <div><label>External ID</label><input type="text" id="ac_crmid" placeholder="1073" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
+      <div><label>Spouse External ID</label><input type="text" id="ac_crmid2" placeholder="1074" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       </div>
       <div id="ac_addr_section" style="grid-column:span 2;display:grid;grid-template-columns:1fr;gap:10px">
-      <div><label>Street Address <span style="font-weight:400;color:var(--txt3);font-size:.7rem">— optional</span></label><input type="text" id="ac_street" placeholder="270 Applebrook Dr" oninput="_acToggleActionLabel()"></div>
+      <div><label>Street Address <span style="font-weight:400;color:var(--txt3);font-size:.7rem">— optional</span></label><input type="text" id="ac_street" placeholder="270 Applebrook Dr" oninput="_acToggleActionLabel()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       <div>
         <label>City</label>
         <div id="ac_city_presets" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px"></div>
-        <input type="text" id="ac_city" placeholder="Or type city" style="margin-bottom:0">
+        <input type="text" id="ac_city" placeholder="Or type city" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div>
         <label>ZIP</label>
         <div id="ac_zip_presets" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px"></div>
-        <input type="text" id="ac_zip" placeholder="Or type ZIP" maxlength="5" style="margin-bottom:0">
+        <input type="text" id="ac_zip" placeholder="Or type ZIP" maxlength="5" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       </div>
     </div>
@@ -993,7 +993,7 @@ html.force-desktop #mobileShell{display:none!important}
       <div id="li_contacts" style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2);margin-bottom:0"></div>
     </div>
     <label>Type</label>
-    <select id="li_type" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+    <select id="li_type" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       <option>Connected</option>
       <option>Meeting in person</option>
       <option>Phone call</option>
@@ -1006,9 +1006,9 @@ html.force-desktop #mobileShell{display:none!important}
       <option>Note</option>
     </select>
     <label>Date</label>
-    <input type="date" id="li_date">
+    <input type="date" id="li_date" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <label>Notes</label>
-    <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div id="li_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" id="li_save_btn" onclick="_guardClick(this,saveInteraction)">Log Interaction</button>
@@ -1023,7 +1023,7 @@ html.force-desktop #mobileShell{display:none!important}
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg> Embed on your website</h2>
     <p style="font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin:0 0 8px;line-height:1.5">Paste this into a Squarespace <b>Code block</b>. The form auto-resizes to fit its content (no inner scrollbar), so you don't need to guess a height.</p>
     <div style="position:relative">
-      <textarea id="embed_code" readonly="" style="width:100%;min-height:170px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:var(--txt);resize:vertical;outline:none;line-height:1.45"></textarea>
+      <textarea id="embed_code" readonly="" style="width:100%;min-height:170px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:var(--txt);resize:vertical;outline:none;line-height:1.45" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     </div>
     <div id="embed_preview_link" style="font-family:var(--font-ui);font-size:.7rem;margin-top:8px"></div>
     <div class="modal-btns" style="margin-top:14px">
@@ -1038,17 +1038,17 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="modal" style="width:460px">
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg> Add Registration</h2>
     <label>Contact</label>
-    <input type="text" id="reg_search" placeholder="Search by name or email…" autocomplete="off" oninput="_regSearch()" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none">
+    <input type="text" id="reg_search" placeholder="Search by name or email…" autocomplete="off" oninput="_regSearch()" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div id="reg_results" style="display:none;background:var(--surf);border:1px solid var(--border2);border-radius:6px;margin-top:4px;max-height:230px;overflow-y:auto"></div>
     <div id="reg_selected" style="display:none;padding:8px 10px;background:var(--surf2);border-radius:5px;margin-top:8px;font-size:.76rem;color:var(--txt2)"></div>
     <div style="display:flex;gap:10px;margin-top:12px">
-      <div style="flex:1"><label># Attendees</label><input type="number" id="reg_count" value="1" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
-      <div style="flex:1"><label>Tier label</label><input type="text" id="reg_tier_label" placeholder="e.g. Couple" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
-      <div style="flex:1"><label>Amount paid</label><input type="number" id="reg_tier_amount" placeholder="0" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label># Attendees</label><input type="number" id="reg_count" value="1" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div style="flex:1"><label>Tier label</label><input type="text" id="reg_tier_label" placeholder="e.g. Couple" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div style="flex:1"><label>Amount paid</label><input type="number" id="reg_tier_amount" placeholder="0" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
     </div>
     <div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);margin-top:6px">Manual entry records the amount for tracking only — no card is charged. Leave amount blank for a free RSVP.</div>
     <label style="margin-top:12px">Notes</label>
-    <textarea id="reg_notes" placeholder="Dietary, kids' ages, anything to remember…" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <textarea id="reg_notes" placeholder="Dietary, kids' ages, anything to remember…" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div id="reg_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="_guardClick(this,saveRegistration)">Add Registration</button>
@@ -1062,12 +1062,12 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="modal" style="width:440px">
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Registration</h2>
     <div style="display:flex;gap:10px">
-      <div style="flex:1"><label># Attendees</label><input type="number" id="ereg_count" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
-      <div style="flex:1"><label>Tier label</label><input type="text" id="ereg_tier_label" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
-      <div style="flex:1"><label>Amount</label><input type="number" id="ereg_tier_amount" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none"></div>
+      <div style="flex:1"><label># Attendees</label><input type="number" id="ereg_count" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div style="flex:1"><label>Tier label</label><input type="text" id="ereg_tier_label" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div style="flex:1"><label>Amount</label><input type="number" id="ereg_tier_amount" min="0" step="0.01" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
     </div>
     <label style="margin-top:12px">Notes</label>
-    <textarea id="ereg_notes" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <textarea id="ereg_notes" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div id="ereg_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="_guardClick(this,saveEditRegistration)">Save Changes</button>
@@ -1084,9 +1084,9 @@ html.force-desktop #mobileShell{display:none!important}
     <label>About</label>
     <div id="note_contacts" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:8px 10px;background:var(--surf2);border-radius:5px;border:1px solid var(--border2)"></div>
     <label>Date</label>
-    <input type="date" id="note_date">
+    <input type="date" id="note_date" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <label>Note</label>
-    <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+    <textarea id="note_text" placeholder="What do you know about this person? Interests, family, wealth signals, relationship context, follow-up needed..." style="width:100%;min-height:110px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div id="note_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" onclick="_guardClick(this,saveNote)">Save Note</button>
@@ -1102,37 +1102,37 @@ html.force-desktop #mobileShell{display:none!important}
     <input type="hidden" id="edit_contact_id">
     <input type="hidden" id="edit_household_id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <div><label>First Name</label><input type="text" id="edit_first"></div>
-      <div><label>Last Name</label><input type="text" id="edit_last"></div>
-      <div><label>Phone</label><input type="tel" id="edit_phone"></div>
-      <div><label>Email</label><input type="email" id="edit_email"></div>
-      <div><label>Date of Birth</label><input type="date" id="edit_dob" style="width:100%"></div>
+      <div><label>First Name</label><input type="text" id="edit_first" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div><label>Last Name</label><input type="text" id="edit_last" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div><label>Phone</label><input type="tel" id="edit_phone" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div><label>Email</label><input type="email" id="edit_email" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+      <div><label>Date of Birth</label><input type="date" id="edit_dob" style="width:100%" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       <div><label>Gender</label>
-        <select id="edit_gender" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none">
+        <select id="edit_gender" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
           <option value="">— Unknown —</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
       </div>
-      <div style="grid-column:span 2"><label>External ID</label><input type="text" id="edit_crmid"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
+      <div style="grid-column:span 2"><label>External ID</label><input type="text" id="edit_crmid" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><div style="font-size:.58rem;color:var(--txt3);margin-top:2px">ID from a previous CRM — used to match records on import.</div></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;margin-bottom:10px">
       <label style="margin-bottom:6px;display:block">Household Address <span style="font-weight:400;color:var(--txt3);font-size:.7rem">— applies to the whole household</span></label>
-      <input type="text" id="edit_street" placeholder="Street address" style="margin-bottom:8px">
+      <input type="text" id="edit_street" placeholder="Street address" style="margin-bottom:8px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px">
-        <input type="text" id="edit_city" placeholder="City" style="margin-bottom:0">
-        <input type="text" id="edit_state" placeholder="State" style="margin-bottom:0">
-        <input type="text" id="edit_zip" placeholder="Zip" style="margin-bottom:0">
+        <input type="text" id="edit_city" placeholder="City" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="edit_state" placeholder="State" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="edit_zip" placeholder="Zip" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.72rem;color:var(--txt2);cursor:pointer;font-weight:400">
-        <input type="checkbox" id="edit_regeocode" checked="" style="accent-color:var(--accent)">
+        <input type="checkbox" id="edit_regeocode" checked="" style="accent-color:var(--accent)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         Re-locate map pin if the address changed
       </label>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
       <label style="margin-bottom:6px;display:block">Link as spouse to existing contact</label>
       <div style="display:flex;gap:6px">
-        <input type="text" id="edit_spouse_search" placeholder="Search by name…" oninput="searchEditSpouse()" style="margin-bottom:0;flex:1">
+        <input type="text" id="edit_spouse_search" placeholder="Search by name…" oninput="searchEditSpouse()" style="margin-bottom:0;flex:1" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <button type="button" onclick="clearEditSpouseLink()" style="padding:4px 10px;font-size:.7rem;border:1px solid var(--border2);border-radius:4px;background:var(--surf2);color:var(--txt);cursor:pointer">Clear</button>
       </div>
       <div id="edit_spouse_results" style="display:none;border:1px solid var(--border2);border-radius:4px;background:var(--surf);max-height:130px;overflow-y:auto;margin-top:4px"></div>
@@ -1151,7 +1151,7 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="modal" style="width:460px">
     <h2 id="picker_title" style="margin-bottom:4px">Select</h2>
     <p id="picker_sub" style="margin-bottom:12px;color:var(--txt2)"></p>
-    <input type="text" id="picker_search" placeholder="Search by name or email…" oninput="_pickerSearch()" autocomplete="off" style="margin-bottom:0">
+    <input type="text" id="picker_search" placeholder="Search by name or email…" oninput="_pickerSearch()" autocomplete="off" style="margin-bottom:0" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div id="picker_results" style="border:1px solid var(--border2);border-radius:5px;background:var(--surf);max-height:300px;overflow-y:auto;margin-top:8px"></div>
     <div class="modal-btns" style="margin-top:16px">
       <button class="btn btn-sec" onclick="_pickerCancel()">Cancel</button>
@@ -1186,7 +1186,7 @@ html.force-desktop #mobileShell{display:none!important}
     <div id="imp_format" style="font-size:.72rem;color:var(--txt2);background:var(--surf2);padding:10px;border-radius:6px;margin-bottom:12px;line-height:1.7"></div>
     <div class="import-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="event.preventDefault();event.stopPropagation();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDrop(event)">
       <p>Click to select CSV file<br><strong>or drag and drop here</strong></p>
-      <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(event)">
+      <input type="file" id="csvFile" accept=".csv,.txt" style="display:none" onchange="handleCSV(event)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     </div>
     <div id="imp_map" style="display:none;margin-bottom:12px"></div>
     <div id="imp_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
@@ -1259,55 +1259,55 @@ html.force-desktop #mobileShell{display:none!important}
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Home Value</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green &lt;</span>
-          <input type="number" class="tier-input" id="tier1sb" style="width:90px" oninput="document.getElementById('tier1').value=this.value;recolorAll()">
+          <input type="number" class="tier-input" id="tier1sb" style="width:90px" oninput="document.getElementById('tier1').value=this.value;recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid &lt;</span>
-          <input type="number" class="tier-input" id="tier2sb" style="width:90px" oninput="document.getElementById('tier2').value=this.value;recolorAll()">
+          <input type="number" class="tier-input" id="tier2sb" style="width:90px" oninput="document.getElementById('tier2').value=this.value;recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
       </div>
       <div id="sb-givingTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Giving</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green &lt;</span>
-          <input type="number" class="tier-input" id="gtier1sb" style="width:90px" oninput="document.getElementById('gtier1').value=this.value;recolorAll()">
+          <input type="number" class="tier-input" id="gtier1sb" style="width:90px" oninput="document.getElementById('gtier1').value=this.value;recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid &lt;</span>
-          <input type="number" class="tier-input" id="gtier2sb" style="width:90px" oninput="document.getElementById('gtier2').value=this.value;recolorAll()">
+          <input type="number" class="tier-input" id="gtier2sb" style="width:90px" oninput="document.getElementById('gtier2').value=this.value;recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
       </div>
       <div id="sb-scoreTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Prospect Score</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green ≥</span>
-          <input type="number" class="tier-input" id="stier1sb" value="70" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="stier1sb" value="70" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid ≥</span>
-          <input type="number" class="tier-input" id="stier2sb" value="40" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="stier2sb" value="40" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
       </div>
       <div id="sb-lastcontactTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Last Contact (days)</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green ≤</span>
-          <input type="number" class="tier-input" id="lctier1sb" value="30" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="lctier1sb" value="30" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid ≤</span>
-          <input type="number" class="tier-input" id="lctier2sb" value="90" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="lctier2sb" value="90" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
       </div>
       <div id="sb-giftcountTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Gift Count</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green &lt;</span>
-          <input type="number" class="tier-input" id="gctier1sb" value="3" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="gctier1sb" value="3" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid &lt;</span>
-          <input type="number" class="tier-input" id="gctier2sb" value="6" style="width:70px" oninput="recolorAll()">
+          <input type="number" class="tier-input" id="gctier2sb" value="6" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
       </div>
     </div>
@@ -1326,20 +1326,20 @@ html.force-desktop #mobileShell{display:none!important}
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="m10.5 12.5 9-9M16 6l3 3M14 8l3 3"></path></svg> API Keys</h2>
       <div style="margin-bottom:14px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Anthropic API Key</label>
-        <input type="password" id="apiAnthropicInput" placeholder="sk-ant-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px">
+        <input type="password" id="apiAnthropicInput" placeholder="sk-ant-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div style="margin-bottom:14px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">OpenAI API Key</label>
-        <input type="password" id="apiOpenAIInput" placeholder="sk-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px">
+        <input type="password" id="apiOpenAIInput" placeholder="sk-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div style="margin-bottom:20px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">RapidAPI Key</label>
-        <input type="password" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px">
+        <input type="password" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Used for Zillow property data (Personator age lookup)</div>
       </div>
       <div style="margin-bottom:20px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">GitHub PAT <span style="font-weight:400;text-transform:none;letter-spacing:0">(for <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13c-1.5 1-2 4-2 4s3-.5 4-2M12 15l-3-3a13 13 0 0 1 7-9 1 1 0 0 1 1 1 13 13 0 0 1-5 11Z"></path><circle cx="14.5" cy="9.5" r="1.5"></circle></svg> Deploy)</span></label>
-        <input type="password" id="apiGitHubInput" placeholder="ghp_..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px">
+        <input type="password" id="apiGitHubInput" placeholder="ghp_..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Classic token · repo scope · <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">generate at github.com/settings/tokens</a></div>
       </div>
       <div class="modal-btns">
@@ -1351,8 +1351,8 @@ html.force-desktop #mobileShell{display:none!important}
 
   <!-- Hidden tier inputs needed for recolorAll() logic -->
   <div style="display:none">
-    <input type="number" id="tier1" value="500000"><input type="number" id="tier2" value="1000000">
-    <input type="number" id="gtier1" value="1000"><input type="number" id="gtier2" value="5000">
+    <input type="number" id="tier1" value="500000" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><input type="number" id="tier2" value="1000000" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+    <input type="number" id="gtier1" value="1000" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><input type="number" id="gtier2" value="5000" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div id="valueTiers"></div><div id="givingTiers"></div>
     <button id="prefetchBtn" disabled=""></button>
   </div>
@@ -1362,7 +1362,7 @@ html.force-desktop #mobileShell{display:none!important}
     <div class="modal" style="width:520px">
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg> Rabbi Context</h2>
       <div style="font-size:.72rem;color:var(--txt3);margin-bottom:12px">This is included in every AI search and research session — tell Claude who you are, what you're working on, upcoming events, key relationships.</div>
-      <textarea id="globalContext" placeholder="I am Rabbi Shneur Itzinger of Chabad of Chagrin Falls. We are currently planning our annual gala in November..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+      <textarea id="globalContext" placeholder="I am Rabbi Shneur Itzinger of Chabad of Chagrin Falls. We are currently planning our annual gala in November..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('contextModal').style.display='none'">Cancel</button>
         <button class="btn btn-pri" onclick="saveGlobalContext()">Save</button>
@@ -1376,7 +1376,7 @@ html.force-desktop #mobileShell{display:none!important}
     <div class="modal" style="width:520px">
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg> Profile Building Context</h2>
       <div style="font-size:.72rem;color:var(--txt3);margin-bottom:12px">This guides every profile build — what to search, where to look, and what signals matter. Edit as your community evolves.</div>
-      <textarea id="searchContext" placeholder="Search Cleveland Jewish News, Jewish Federation of Cleveland, ProPublica, LinkedIn, Ohio business records. Look for board memberships, 990 filings, community leadership, and Jewish communal involvement..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px"></textarea>
+      <textarea id="searchContext" placeholder="Search Cleveland Jewish News, Jewish Federation of Cleveland, ProPublica, LinkedIn, Ohio business records. Look for board memberships, 990 filings, community leadership, and Jewish communal involvement..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('searchContextModal').style.display='none'">Cancel</button>
         <button class="btn btn-pri" onclick="saveSearchContext()">Save</button>
@@ -1431,7 +1431,7 @@ html.force-desktop #mobileShell{display:none!important}
     </div>
     <div class="spacer"></div>
     <div id="mapControls" style="display:none;align-items:center;gap:8px">
-      <select id="colorBy" onchange="switchColorMode();updateSidebarTiers();saveUIPrefs()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:var(--font-ui);font-size:.65rem;border-radius:4px;outline:none">
+      <select id="colorBy" onchange="switchColorMode();updateSidebarTiers();saveUIPrefs()" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:4px 7px;font-family:var(--font-ui);font-size:.65rem;border-radius:4px;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <option value="value">Home Value</option>
         <option value="giving">Total Giving</option>
         <option value="score">Prospect Score</option>
@@ -1443,7 +1443,7 @@ html.force-desktop #mobileShell{display:none!important}
     <span class="total" id="totalLbl">Loading…</span>
     <div style="position:relative;flex-shrink:0" id="headerSearchWrap">
       <div style="display:flex;align-items:center;gap:5px">
-        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s" oninput="_headerSearchDebounced();_showSearchPopout()" onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}" onfocus="_showSearchPopout()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:var(--font-ui);font-size:.75rem;border-radius:6px;outline:none;width:240px">
+        <input type="search" id="headerSearch" placeholder="Search names, notes, profiles…" autocomplete="off" name="daas-hdr-s" oninput="_headerSearchDebounced();_showSearchPopout()" onkeydown="if(event.key==='Escape'){_hideSearchPopout();this.blur();}if(event.key==='ArrowDown'){event.preventDefault();document.querySelector('#searchPopout .spop-item')?.focus();}" onfocus="_showSearchPopout()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 10px;font-family:var(--font-ui);font-size:.75rem;border-radius:6px;outline:none;width:240px" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <button onclick="openGlobalAsk()" class="btn btn-sec" style="padding:4px 10px;font-size:.72rem;white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg></button>
       </div>
       <!-- Search popout -->
@@ -1467,14 +1467,14 @@ html.force-desktop #mobileShell{display:none!important}
   <!-- Filter Panel -->
   <!-- FILTER STRIP — always visible on Map + Contacts, hidden on Dashboard. All conditions AND together. -->
   <div id="filterStrip" style="display:flex;background:var(--surf2);border-bottom:1px solid var(--border);padding:7px 14px;flex-wrap:wrap;gap:10px;align-items:flex-end;flex-shrink:0">
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="_applyFilterDebounced()"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Last Gift After</div><input type="date" class="tier-input fs-inp" id="filterDateFrom" style="width:130px" oninput="_applyFilterDebounced()"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Last Gift Before</div><input type="date" class="tier-input fs-inp" id="filterDateTo" style="width:130px" oninput="_applyFilterDebounced()"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)"></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()"></div></div>
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Home Value</div><input type="number" class="tier-input fs-inp" id="minValue" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Prospect</div><input type="number" class="tier-input fs-inp" id="minAGC" placeholder="0–100" style="width:70px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Min Total Giving</div><input type="number" class="tier-input fs-inp" id="minGiving" placeholder="$" style="width:90px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Last Gift After</div><input type="date" class="tier-input fs-inp" id="filterDateFrom" style="width:130px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Last Gift Before</div><input type="date" class="tier-input fs-inp" id="filterDateTo" style="width:130px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div></div>
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
     <button onclick="_rpOpenFromQuickFilters()" title="Carry these filters into the Reports builder" style="align-self:flex-end;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;padding:5px 10px;font-family:var(--font-ui);font-size:.6rem;cursor:pointer;white-space:nowrap">Open in Reports →</button>
     <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px;font-size:.68rem;padding:4px 9px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Clear</button>
     <span id="filterCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
@@ -1496,10 +1496,10 @@ html.force-desktop #mobileShell{display:none!important}
       </div>
     <div class="sidebar">
       <div class="mobile-bar">
-        <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()">
+        <input type="text" id="srch-mobile" placeholder="Search contacts…" oninput="mobileSrch()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <button class="mobile-add-btn" onclick="showAddContact()">Add</button>
       </div>
-      <div class="srch"><input type="search" id="srch" placeholder="Narrow list by name…" autocomplete="off" name="daas-srch-x9z" oninput="_applyFilterDebounced()"></div>
+      <div class="srch"><input type="search" id="srch" placeholder="Narrow list by name…" autocomplete="off" name="daas-srch-x9z" oninput="_applyFilterDebounced()" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
       <div class="clist" id="clist"><div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"></path></svg></div><p>Loading…</p></div></div>
       <div class="ppanel" id="ppanel"><div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"></path></svg></div><p>Select a contact to view details</p></div></div>
     </div>
@@ -1520,7 +1520,7 @@ html.force-desktop #mobileShell{display:none!important}
       <button class="ct-preset" id="ctp-financial" onclick="setContactsPreset('financial')">Financial</button>
       <button class="ct-preset" id="ctp-outreach" onclick="setContactsPreset('outreach')">Outreach</button>
       <div class="spacer" style="flex:1"></div>
-      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off" oninput="_ctSearchDebounced()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:var(--font-ui);font-size:.72rem;border-radius:6px;outline:none;width:160px">
+      <input type="search" id="ctSearch" placeholder="Filter by name…" autocomplete="off" oninput="_ctSearchDebounced()" style="background:var(--surf2);border:1px solid var(--border2);color:var(--txt);padding:4px 9px;font-family:var(--font-ui);font-size:.72rem;border-radius:6px;outline:none;width:160px" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       <span id="ctCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)"></span>
       <button class="btn btn-sec" onclick="_egBulkAddFromContacts()" style="font-size:.66rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 5L2 7"></path></svg> Add to Group</button>
       <button class="btn btn-sec" onclick="exportContactsCSV()" style="font-size:.66rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Export CSV</button>
@@ -1580,7 +1580,7 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="modal" style="width:500px;max-width:95vw;display:flex;flex-direction:column;max-height:85vh">
     <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg> Add Contacts to Group</h2>
     <p style="margin-bottom:10px">Only contacts with an email on file are shown. Tap to select, then add.</p>
-    <input type="search" id="egPickerSearch" placeholder="Search name or email…" autocomplete="off" oninput="_egPickerRender()" style="margin-bottom:10px">
+    <input type="search" id="egPickerSearch" placeholder="Search name or email…" autocomplete="off" oninput="_egPickerRender()" style="margin-bottom:10px" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div id="egPickerList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--surf)"></div>
     <div class="modal-btns" style="margin-top:14px">
       <button class="btn btn-pri" onclick="_egPickerAddSelected(this)">Add Selected</button>
@@ -1593,7 +1593,7 @@ html.force-desktop #mobileShell{display:none!important}
 <div class="modal-bg" id="egNameModal" style="display:none">
   <div class="modal" style="width:400px;max-width:95vw">
     <h2 id="egNameTitle">New Group</h2>
-    <input type="text" id="egNameInput" placeholder="Group name" autocomplete="off" style="margin-bottom:6px" onkeydown="if(event.key==='Enter')_egNameSave()">
+    <input type="text" id="egNameInput" placeholder="Group name" autocomplete="off" style="margin-bottom:6px" onkeydown="if(event.key==='Enter')_egNameSave()" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div class="modal-btns" style="margin-top:14px">
       <button class="btn btn-pri" onclick="_egNameSave()">Save</button>
       <button class="btn btn-sec" onclick="document.getElementById('egNameModal').style.display='none'">Cancel</button>
@@ -1632,13 +1632,13 @@ html.force-desktop #mobileShell{display:none!important}
     <input type="hidden" id="don_edit_id" value="">
     <div id="add_don_name" style="font-size:.85rem;color:var(--txt2);margin-bottom:16px"></div>
     <label>Contact</label>
-    <select id="don_contact" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px"></select>
+    <select id="don_contact" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></select>
     <label>Amount *</label>
-    <input type="number" id="don_amount" placeholder="180.00" step="0.01" min="0">
+    <input type="number" id="don_amount" placeholder="180.00" step="0.01" min="0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <label>Date *</label>
-    <input type="date" id="don_date">
+    <input type="date" id="don_date" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <label>Method</label>
-    <select id="don_method" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px">
+    <select id="don_method" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:9px 11px;font-family:var(--font-ui);font-size:.82rem;border-radius:5px;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       <option value="">—</option>
       <option>Check</option>
       <option>Cash</option>
@@ -1651,7 +1651,7 @@ html.force-desktop #mobileShell{display:none!important}
       <option>Other</option>
     </select>
     <label>Notes</label>
-    <input type="text" id="don_notes" placeholder="Annual gala, etc.">
+    <input type="text" id="don_notes" placeholder="Annual gala, etc." autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" id="don_save_btn" onclick="_guardClick(this,saveDonation)">Save Donation</button>
@@ -1673,7 +1673,7 @@ html.force-desktop #mobileShell{display:none!important}
     </div>
     <div id="personChatMessages" style="flex:1;overflow-y:auto;padding:18px"></div>
     <div style="padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:9px;align-items:flex-end;flex-shrink:0">
-      <textarea id="personChatInput" rows="1" class="chat-input" placeholder="Ask anything about this person…" style="font-size:.84rem;border-radius:13px" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendPersonChat();}" oninput="autoGrowChat(this)"></textarea>
+      <textarea id="personChatInput" rows="1" class="chat-input" placeholder="Ask anything about this person…" style="font-size:.84rem;border-radius:13px" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendPersonChat();}" oninput="autoGrowChat(this)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
       <button onclick="sendPersonChat()" class="btn btn-pri" style="border-radius:12px;padding:11px 14px"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"></path></svg></button>
     </div>
   </div>
@@ -1705,7 +1705,7 @@ html.force-desktop #mobileShell{display:none!important}
       <div class="chat-msgs" id="globalAskMessages"></div>
       <div class="chat-composer">
         <div class="chat-composer-inner">
-          <textarea id="globalAskInput" rows="1" class="chat-input" placeholder="Ask anything about your donor base…" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendGlobalAsk();}" oninput="autoGrowChat(this)"></textarea>
+          <textarea id="globalAskInput" rows="1" class="chat-input" placeholder="Ask anything about your donor base…" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendGlobalAsk();}" oninput="autoGrowChat(this)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
           <button onclick="sendGlobalAsk()" class="btn btn-pri" style="border-radius:12px;padding:11px 16px;align-self:stretch"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"></path></svg></button>
         </div>
         <div class="chat-meta">
@@ -1781,6 +1781,49 @@ html.force-desktop #mobileShell{display:none!important}
 const BUILD_STAMP='2026-07-20.1'; // profile Emails tab: group membership card (view/add/remove); fix frozen 'Adding…' button in group picker; add-contact: address now optional (skip Zillow, add without property)
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
+
+// ── CHROME CREDENTIAL-PROMPT SUPPRESSION ──────────────────────────────────
+// Chrome pops "Save password / username?" and autofill offers whenever it spots
+// a password field or a login-shaped text field. The ONLY place we want it to
+// remember anything is the real login (#loginScreen). Everywhere else — API-key
+// fields, search boxes, every text/email/phone input — we hard-disable autofill
+// and the save bubble. A MutationObserver re-applies this to fields the app
+// injects later via innerHTML, so nothing slips through.
+(function(){
+  function harden(el){
+    if(!el||el.nodeType!==1)return;
+    const tag=el.tagName;
+    if(tag!=='INPUT'&&tag!=='TEXTAREA'&&tag!=='SELECT')return;
+    if(el.closest('#loginScreen'))return;      // leave the real login saveable
+    if(el.type==='hidden')return;
+    if(el.type==='password'){
+      // "new-password" is Chrome's own opt-out: it won't autofill a saved
+      // credential here and won't offer to save this field's value.
+      if(el.getAttribute('autocomplete')!=='new-password')el.setAttribute('autocomplete','new-password');
+    }else if(el.getAttribute('autocomplete')!=='off'){
+      el.setAttribute('autocomplete','off');
+    }
+    // Also silence third-party managers (1Password / LastPass / Bitwarden).
+    if(!el.hasAttribute('data-1p-ignore'))el.setAttribute('data-1p-ignore','');
+    if(!el.hasAttribute('data-lpignore'))el.setAttribute('data-lpignore','true');
+    if(!el.hasAttribute('data-bwignore'))el.setAttribute('data-bwignore','');
+    if(!el.hasAttribute('data-form-type'))el.setAttribute('data-form-type','other');
+  }
+  function sweep(root){(root||document).querySelectorAll('input,textarea,select').forEach(harden);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){sweep();});
+  else sweep();
+  try{
+    new MutationObserver(function(muts){
+      for(const m of muts){
+        for(const n of m.addedNodes){
+          if(n.nodeType!==1)continue;
+          harden(n);
+          if(n.querySelectorAll)n.querySelectorAll('input,textarea,select').forEach(harden);
+        }
+      }
+    }).observe(document.documentElement,{childList:true,subtree:true});
+  }catch(_){}
+})();
 
 // ── SUPABASE AUTH ──
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
@@ -4316,7 +4359,11 @@ async function buildProfileSoft(idx){
   const existingProfile=h.profile_data;
   if(!existingProfile){alert('No existing profile to update. Run a Full Build first.');return;}
 
-  const tabContent=document.getElementById(`tabcontent-profile-${idx}`);
+  // When the full panel is open, the profile content lives in `fullpanel-profile-${idx}`,
+  // NOT `tabcontent-profile-${idx}` — resolve the right one (mirrors the full build) so
+  // the result actually lands in a live DOM node instead of a null/detached element.
+  const fpOpen=document.getElementById('fullPanel')?.style.display!=='none';
+  const tabContent=fpOpen?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
   if(tabContent)tabContent.innerHTML=`<div class="loading-row"><div class="spin"></div><span>Quick Update for ${_escHtml(h.displayName)}…</span></div>`;
   document.getElementById('fullPanelLoading')?.remove();
   const fp=document.getElementById('fullPanel');
@@ -4425,8 +4472,17 @@ Re-synthesize ONLY approach, summary, and estimated_children based on the above.
       })
     });
 
+    if(!resp.ok){
+      let detail='';
+      try{ const ej=await resp.json(); detail=ej?.error?.message||''; }catch(_){}
+      if(resp.status===401) throw new Error('API key rejected (401). Re-check your Anthropic key on desktop.');
+      if(resp.status===429) throw new Error('Rate limited (429). Wait a moment and try again.');
+      if(resp.status>=500) throw new Error('Anthropic server error ('+resp.status+'). Try again in a minute.');
+      throw new Error('Request failed ('+resp.status+')'+(detail?': '+detail:''));
+    }
     const d=await resp.json();
     if(d.error)throw new Error(d.error.message);
+    if(!d.content||!Array.isArray(d.content))throw new Error('Unexpected response shape from Anthropic.');
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const stripped=txt.replace(/```json/g,'').replace(/```/g,'').trim();
     const firstBrace=stripped.indexOf('{');
@@ -4447,14 +4503,17 @@ Re-synthesize ONLY approach, summary, and estimated_children based on the above.
     h.property_data={...h.property_data,profile:updated};
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile:updated}})});
     document.getElementById('fullPanelLoading')?.remove();
-    // Count new interactions for badge
-    const lastTs=updated.softBuiltAt; // just set, so 0 new from here — use old softBuiltAt for display
-    if(tabContent)tabContent.innerHTML=buildProfileDisplay(updated,idx,0);
-    const fp2=document.getElementById('fullPanel');
-    if(fp2&&fp2.style.display!=='none')openFullPanel(idx);
+    // Re-resolve the container after the awaits (the panel may have re-rendered),
+    // so the result always lands in the element that's actually in the DOM.
+    const fpOpen2=document.getElementById('fullPanel')?.style.display!=='none';
+    const freshTab=fpOpen2?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+    if(freshTab)freshTab.innerHTML=buildProfileDisplay(updated,idx,0,0,freshTab.id);
+    if(fpOpen2)openFullPanel(idx);
   }catch(e){
     document.getElementById('fullPanelLoading')?.remove();
-    if(tabContent)tabContent.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> ${_escHtml(e.message)}</div>
+    const fpOpenE=document.getElementById('fullPanel')?.style.display!=='none';
+    const errTab=fpOpenE?document.getElementById(`fullpanel-profile-${idx}`):document.getElementById(`tabcontent-profile-${idx}`);
+    if(errTab)errTab.innerHTML=`<div style="color:var(--red);font-size:.75rem;padding:8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> ${_escHtml(e.message)}</div>
       <button onclick="byId('buildProfileSoft','${households[idx].id}',${idx})" style="margin-top:8px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.75rem">Try Again</button>`;
     else alert('Quick Update failed:\n\n'+e.message);
   }
@@ -14645,7 +14704,7 @@ const PANEL_HELP={
   'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
-  'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
+  'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. Anyone who gave within the last ${ENGINE.sriGapMinMonths} months is held back automatically — they just gave. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
   'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
   'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',d:()=>`Who's actually reading your mailings. One row per contact per recent email they engaged with — anyone hitting <b>${ENGINE.emailEngOpens}+ opens</b> or <b>${ENGINE.emailEngClicks}+ clicks</b> across your <b>${ENGINE.emailEngWindow} most recent mailings</b>. Opens and clicks are shown separately on purpose: Apple Mail pre-loads images and inflates opens, so clicks are the honest signal of real interest. Click a row to open the household and follow up personally. This panel only reads email data — it never creates interactions or affects Prospect scores or the Daily Five. Thresholds are tunable in Engine settings.`},
   'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`Your free-flowing to-do list. Add anything with the + box — type a plain reminder or a natural line like \u201ccoffee with the Golds next week\u201d and it will link the household and set the date for you. Tasks can also arrive from a contact note or from Quick Capture. Open tasks are grouped Overdue / Today / This week / Later / Someday. Check one off and — if it is linked to a contact — it is automatically logged as an interaction on their profile, which resets their reconnect clock. Click a household chip to jump to that profile.`}
@@ -16220,6 +16279,14 @@ async function renderSRI(){
   const scores=[];
   for(const h of households){
     if(snoozedAsk.has(h.id))continue;
+    // Recent-gift floor: someone who gave more recently than the ask-window start
+    // just gave — don't surface them as "ready to ask" regardless of capacity or
+    // warmth. Non-donors (total 0) are unaffected and stay eligible.
+    const gsFloor=getGivingStats(h);
+    if(gsFloor&&gsFloor.total>0&&gsFloor.lastDate){
+      const monthsSinceFloor=(now-new Date(gsFloor.lastDate))/(1000*60*60*24*30);
+      if(monthsSinceFloor<ENGINE.sriGapMinMonths)continue;
+    }
     let score=0;
     const reasons=[];
     // Capacity: home value threshold or profile capacity flag
@@ -17847,7 +17914,7 @@ function _asExecuteSearch(sentence){
   <div style="max-width:640px;margin:0 auto;padding:18px 16px 60px">
     <div style="font-size:.78rem;color:var(--txt3);margin-bottom:12px">Say what you want to <b>make</b> — an email to a group, a new event or form, or a list of people. The right builder opens prefilled; nothing sends or saves until you confirm there. <span style="color:var(--txt3)">(Questions go to Research Chat.)</span></div>
     <div id="as-chips" style="margin-bottom:10px"></div>
-    <textarea id="as-text" rows="4" placeholder="e.g. &quot;Send an email to the Hebrew school parents about the schedule change next week&quot; · &quot;Create a Purim dinner event on March 3, $36 adults $18 kids&quot; · &quot;Who gave last year but not this year?&quot;" style="width:100%;box-sizing:border-box;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:12px;font-size:.85rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+    <textarea id="as-text" rows="4" placeholder="e.g. &quot;Send an email to the Hebrew school parents about the schedule change next week&quot; · &quot;Create a Purim dinner event on March 3, $36 adults $18 kids&quot; · &quot;Who gave last year but not this year?&quot;" style="width:100%;box-sizing:border-box;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:12px;font-size:.85rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button id="as-mic" onclick="assistantRecordVoice(this)" title="Record a voice note" style="width:44px;height:40px;border:1px solid var(--border2);border-radius:8px;background:var(--surf,#fff);color:var(--txt2);cursor:pointer;font-size:1rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
       <button id="as-go" onclick="_asAnalyze(this)" class="btn btn-pri" style="flex:1;font-size:.82rem;padding:9px">Make it →</button>
@@ -17869,13 +17936,13 @@ function _asExecuteSearch(sentence){
 
     <div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
       <div style="position:relative">
-        <textarea id="capture-text" rows="6" placeholder="Type or paste here. e.g. 'Met Carol on the street, she asked about Hebrew school for her grandkids'…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>
+        <textarea id="capture-text" rows="6" placeholder="Type or paste here. e.g. 'Met Carol on the street, she asked about Hebrew school for her grandkids'…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
         <button onclick="captureRecordVoice(this)" id="capture-mic" title="Record a voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
       </div>
       <div id="capture-file-info" style="font-size:.72rem;color:var(--txt3);margin-top:8px;display:none"></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center">
         <label style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"></path></svg> Attach PDF / image
-          <input type="file" id="capture-file" accept="application/pdf,image/*" onchange="captureFilePicked(this)" style="display:none">
+          <input type="file" id="capture-file" accept="application/pdf,image/*" onchange="captureFilePicked(this)" style="display:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </label>
         <span style="flex:1"></span>
         <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">Analyze →</button>
@@ -17887,7 +17954,7 @@ function _asExecuteSearch(sentence){
           <button onclick="captureContactClear()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> clear</button>
         </div>
         <div id="capture-contact-search" style="position:relative">
-          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit">
+          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
           <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
         </div>
       </div>
@@ -17906,7 +17973,7 @@ function _asExecuteSearch(sentence){
       <span id="enrichCounter" style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);white-space:nowrap"></span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;min-width:0">
-      <select id="enrichJump" onchange="enrichJumpTo(this.value)" title="Jump to a specific household" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:6px 8px;border-radius:6px;font-size:.72rem;font-family:inherit;max-width:160px"></select>
+      <select id="enrichJump" onchange="enrichJumpTo(this.value)" title="Jump to a specific household" style="background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:6px 8px;border-radius:6px;font-size:.72rem;font-family:inherit;max-width:160px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></select>
       <button onclick="closeEnrich()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Close</button>
     </div>
   </div>
@@ -17974,7 +18041,7 @@ function _asExecuteSearch(sentence){
 <div id="mFindOverlay">
   <div class="mfind-top">
     <button class="m-iconbtn" onclick="mFindClose()" title="Back"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
-    <input id="mFindInput" type="search" autocomplete="off" placeholder="Search names, notes, profiles…" oninput="mFindRun()">
+    <input id="mFindInput" type="search" autocomplete="off" placeholder="Search names, notes, profiles…" oninput="mFindRun()" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
   </div>
   <div class="mfind-body" id="mFindBody"></div>
 </div>
@@ -18011,7 +18078,7 @@ function _asExecuteSearch(sentence){
         <div class="m-sub">Who to reach out to today.</div>
         <div style="position:relative;display:flex;gap:8px;margin-bottom:11px">
           <div style="position:relative;flex:1">
-            <input id="mPinSearchInput" oninput="mPinSearchFilter()" placeholder="Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;color:var(--txt);font-family:var(--font-ui);font-size:.82rem;outline:none">
+            <input id="mPinSearchInput" oninput="mPinSearchFilter()" placeholder="Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;color:var(--txt);font-family:var(--font-ui);font-size:.82rem;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
             <div id="mPinSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--border2);border-radius:10px;margin-top:4px;z-index:60;max-height:250px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,.28)"></div>
           </div>
           <button onclick="mRebuildDailyFive()" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:0 13px;color:var(--txt2);font-family:var(--font-ui);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:6px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3M21 3v6h-6M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3M3 21v-6h6"></path></svg> Rebuild</button>
@@ -18045,7 +18112,7 @@ function _asExecuteSearch(sentence){
     <!-- CONTACTS TAB -->
     <div class="m-tab" id="mtab-contacts" data-tab="contacts">
       <div class="m-search">
-        <input id="mRosterSearch" type="text" placeholder="Search contacts…" oninput="mRenderRoster()" autocomplete="off">
+        <input id="mRosterSearch" type="text" placeholder="Search contacts…" oninput="mRenderRoster()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div class="m-roster-wrap">
         <div class="m-roster" id="mRoster"></div>
@@ -18088,7 +18155,7 @@ function _asExecuteSearch(sentence){
   <div class="m-drawer">
     <div class="m-drawer-h" id="mOutH">Log outcome</div>
     <div class="m-sub" id="mOutSub"></div>
-    <textarea id="mOutNote" placeholder="Add a quick note (optional)…"></textarea>
+    <textarea id="mOutNote" placeholder="Add a quick note (optional)…" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
     <div style="display:flex;gap:9px;margin-top:8px">
       <button class="m-tool-btn" style="justify-content:center;flex:0 0 auto;width:52px" onclick="mOutcomeVoice(this)" id="mOutVoiceBtn" title="Dictate"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"></path></svg></button>
       <button class="m-tool-btn m-tool-pri" style="justify-content:center;flex:1" onclick="mSaveOutcome(this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Save &amp; Next</button>
