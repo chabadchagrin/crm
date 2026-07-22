@@ -1326,20 +1326,20 @@ html.force-desktop #mobileShell{display:none!important}
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="m10.5 12.5 9-9M16 6l3 3M14 8l3 3"></path></svg> API Keys</h2>
       <div style="margin-bottom:14px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Anthropic API Key</label>
-        <input type="password" id="apiAnthropicInput" placeholder="sk-ant-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="apiAnthropicInput" placeholder="sk-ant-..." style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.72rem; border-radius: 5px; -webkit-text-security: disc;" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div style="margin-bottom:14px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">OpenAI API Key</label>
-        <input type="password" id="apiOpenAIInput" placeholder="sk-..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="apiOpenAIInput" placeholder="sk-..." style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.72rem; border-radius: 5px; -webkit-text-security: disc;" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <div style="margin-bottom:20px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">RapidAPI Key</label>
-        <input type="password" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="apiRapidInput" placeholder="your-rapidapi-key..." style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.72rem; border-radius: 5px; -webkit-text-security: disc;" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Used for Zillow property data (Personator age lookup)</div>
       </div>
       <div style="margin-bottom:20px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">GitHub PAT <span style="font-weight:400;text-transform:none;letter-spacing:0">(for <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13c-1.5 1-2 4-2 4s3-.5 4-2M12 15l-3-3a13 13 0 0 1 7-9 1 1 0 0 1 1 1 13 13 0 0 1-5 11Z"></path><circle cx="14.5" cy="9.5" r="1.5"></circle></svg> Deploy)</span></label>
-        <input type="password" id="apiGitHubInput" placeholder="ghp_..." style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="new-password" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <input type="text" id="apiGitHubInput" placeholder="ghp_..." style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.72rem; border-radius: 5px; -webkit-text-security: disc;" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Classic token · repo scope · <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">generate at github.com/settings/tokens</a></div>
       </div>
       <div class="modal-btns">
@@ -1761,11 +1761,11 @@ html.force-desktop #mobileShell{display:none!important}
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Email</label>
-      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="email" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:var(--font-ui);font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+      <input type="email" id="loginEmail" placeholder="rabbi@jewishchagrinfalls.com" autocomplete="off" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:var(--font-ui);font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
     </div>
     <div style="margin-bottom:20px">
       <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:10px 12px;font-family:var(--font-ui);font-size:.85rem;border-radius:6px;outline:none" onkeydown="if(event.key==='Enter')signIn()">
+      <input type="text" id="loginPassword" placeholder="••••••••" autocomplete="off" style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 10px 12px; font-family: var(--font-ui); font-size: 0.85rem; border-radius: 6px; outline: none; -webkit-text-security: disc;" onkeydown="if(event.key==='Enter')signIn()">
     </div>
     <button onclick="signIn()" id="loginBtn" style="width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:6px;font-family:var(--font-ui);font-size:.88rem;font-weight:500;cursor:pointer;transition:background .15s">
       Sign In
@@ -1790,19 +1790,27 @@ console.log('DAAS build '+BUILD_STAMP);
 // and the save bubble. A MutationObserver re-applies this to fields the app
 // injects later via innerHTML, so nothing slips through.
 (function(){
+  // Turn a password field into a CSS-masked text field so Chrome no longer sees a
+  // credential field at all — this is what actually stops the "Save password?"
+  // bubble (autocomplete tricks do not reliably stop it).
+  function mask(el){
+    if(el.type==='password')el.type='text';
+    el.style.setProperty('-webkit-text-security','disc');
+    el.style.setProperty('text-security','disc');
+  }
+  function unmask(el){
+    el.style.removeProperty('-webkit-text-security');
+    el.style.removeProperty('text-security');
+    if(el.type!=='password')el.type='password';
+  }
   function harden(el){
     if(!el||el.nodeType!==1)return;
     const tag=el.tagName;
     if(tag!=='INPUT'&&tag!=='TEXTAREA'&&tag!=='SELECT')return;
-    if(el.closest('#loginScreen'))return;      // leave the real login saveable
+    if(el.closest('#loginScreen'))return;      // login handled separately below
     if(el.type==='hidden')return;
-    if(el.type==='password'){
-      // "new-password" is Chrome's own opt-out: it won't autofill a saved
-      // credential here and won't offer to save this field's value.
-      if(el.getAttribute('autocomplete')!=='new-password')el.setAttribute('autocomplete','new-password');
-    }else if(el.getAttribute('autocomplete')!=='off'){
-      el.setAttribute('autocomplete','off');
-    }
+    if(el.type==='password')mask(el);
+    if(el.getAttribute('autocomplete')!=='off')el.setAttribute('autocomplete','off');
     // Also silence third-party managers (1Password / LastPass / Bitwarden).
     if(!el.hasAttribute('data-1p-ignore'))el.setAttribute('data-1p-ignore','');
     if(!el.hasAttribute('data-lpignore'))el.setAttribute('data-lpignore','true');
@@ -1810,8 +1818,37 @@ console.log('DAAS build '+BUILD_STAMP);
     if(!el.hasAttribute('data-form-type'))el.setAttribute('data-form-type','other');
   }
   function sweep(root){(root||document).querySelectorAll('input,textarea,select').forEach(harden);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){sweep();});
-  else sweep();
+
+  // ── LOGIN FIELD: the one field we WANT Chrome to remember — but only while the
+  // sign-in screen is actually visible. While you're logged in and using the app,
+  // a live password field anywhere in the DOM makes Chrome offer to "save" on every
+  // text field you touch. So we mask the login password whenever the login screen
+  // is hidden, and restore it to a real, saveable password when it's shown.
+  function syncLogin(){
+    const scr=document.getElementById('loginScreen');
+    const pw=document.getElementById('loginPassword');
+    const em=document.getElementById('loginEmail');
+    if(!scr)return;
+    let visible;
+    try{visible=getComputedStyle(scr).display!=='none';}catch(_){visible=scr.style.display!=='none';}
+    if(visible){
+      if(pw){unmask(pw);pw.setAttribute('autocomplete','current-password');}
+      if(em)em.setAttribute('autocomplete','email');
+    }else{
+      if(pw){mask(pw);pw.setAttribute('autocomplete','off');}
+      if(em)em.setAttribute('autocomplete','off');
+    }
+  }
+  function watchLogin(){
+    const scr=document.getElementById('loginScreen');
+    if(!scr)return;
+    syncLogin();
+    try{new MutationObserver(syncLogin).observe(scr,{attributes:true,attributeFilter:['style','class']});}catch(_){}
+  }
+
+  function init(){sweep();watchLogin();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
   try{
     new MutationObserver(function(muts){
       for(const m of muts){
