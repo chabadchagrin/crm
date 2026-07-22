@@ -1778,7 +1778,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-20.1'; // profile Emails tab: group membership card (view/add/remove); fix frozen 'Adding…' button in group picker; add-contact: address now optional (skip Zillow, add without property)
+const BUILD_STAMP='2026-07-22.1'; // Quick Capture interactions now route through logTouch (close open track / mark Daily Five done / offer task-complete + follow-up / undoable)
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -7637,19 +7637,32 @@ async function captureSaveItem(i,btn){
     return;
   }
 
-  // Interaction mode
+  // Interaction mode — routes through the unified logTouch choke point so a
+  // brain-dump behaves exactly like a profile Log: a genuine reach closes any
+  // open follow-up track, the person is marked done in today's Daily Five (only
+  // when dated today — back-filled notes don't clear today's queue), it lands in
+  // the Undo journal, and the toast offers to complete a matching open task or
+  // start a follow-up on a miss. (close-only: misses never silently make tracks.)
   const contactId=document.getElementById('cap-contact-'+i).value;
   const type=document.getElementById('cap-type-'+i).value;
   const date=document.getElementById('cap-date-'+i).value||localToday();
   if(!contactId){alert('Pick a contact first (or Dismiss this item).');btn.disabled=false;btn.textContent=orig;return;}
+  const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
   try{
-    const savedC=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:contactId,type,date,notes:text,created_at:new Date().toISOString()})});
-    _bumpAGCAgg(contactId,type,date);
-    if(savedC&&savedC[0]&&text)embedAndStore(savedC[0].id,type+': '+text);
-    const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
-    if(h&&typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
+    const res=await logTouch({contactIds:[contactId],householdId:h?h.id:null,type,date,notes:text,source:'capture',trackMode:'close-only',markDaily:(date===localToday()),silent:true,journalLabel:type+(h?(' — '+(h.displayName||'')):'')});
     const card=btn.closest('.capture-item');
     if(card)card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
+    // Standard action toast: Undo + (complete a matching open task) + (start/advance
+    // a follow-up when this was a miss-type). Matches the profile Log flow.
+    if(res){
+      const acts=[];
+      if(h){
+        const ta=_taskCompleteAction(h,[contactId],res.created[0].id,res.undo.id);
+        if(ta)acts.push(ta);
+        if(!_isReach(type)&&type!=='Note')acts.push(_followUpAction(h.id,type));
+      }
+      _daasToast('Logged '+type+(h?(' — '+(h.displayName||'')):''),{undoId:res.undo.id,actions:acts});
+    }
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
 }
 
