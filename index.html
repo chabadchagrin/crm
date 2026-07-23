@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.3'; // AGC reconciliation: client aggregate loader now dedupes couple-logs fully (lifetime+connected12+lastContact), matching corrected server calculate_agc (dedupe, all reach types, event_fee excluded)
+const BUILD_STAMP='2026-07-23.5'; // Daily Five: Warm/Steady/Cool tiers (chip + movement), PROSPECT everywhere, dropped "your alarm" wording. Plus carryover fifth-slot fix (fifth slot re-picks fresh daily so a stale PROSPECT can't block NEW) and a per-household "kids under 15" flag on the profile
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -5001,6 +5001,30 @@ async function loadNotesTab(idx){
 }
 
 // ── FULL PANEL ──
+// ── KIDS-UNDER-15 FLAG ── a per-household relationship signal (families with young
+// kids are a distinct level of relationship). Stored at property_data.kidsUnder15,
+// a sibling of the AI profile so profile rebuilds never clobber it. Deliberately does
+// NOT feed _closenessTier — program signups already arrive as event attendance.
+function _kidsU15Chip(h){
+  const on=!!(h&&h.property_data&&h.property_data.kidsUnder15);
+  return `<span onclick="toggleKidsU15('${h.id}')" title="Click to toggle — families with kids under 15 are a distinct relationship level (does not change Warm/Steady/Cool)" style="cursor:pointer;font-family:var(--font-ui);font-size:.58rem;font-weight:700;padding:1px 8px;border-radius:10px;background:${on?'#7c3aed22':'var(--surf2)'};color:${on?'#7c3aed':'var(--txt3)'};border:1px solid ${on?'#7c3aed44':'var(--border)'}">${on?'Yes':'No'}</span>`;
+}
+async function toggleKidsU15(hhId){
+  const idx=households.findIndex(x=>x.id===hhId);
+  if(idx<0)return;
+  const h=households[idx];
+  const next=!(h.property_data&&h.property_data.kidsUnder15);
+  h.property_data={...h.property_data,kidsUnder15:next};
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:h.property_data})});
+  }catch(e){
+    console.warn('[DAAS] kidsUnder15 save failed',e);
+    h.property_data={...h.property_data,kidsUnder15:!next}; // roll back on failure
+    alert('Could not save the Kids-under-15 flag — check your connection and try again.');
+    return;
+  }
+  if(typeof openFullPanel==='function')openFullPanel(idx); // re-render the panel with the new state
+}
 function openFullPanel(idx){
   const h=households[idx];
   const agc=getAGCScore(h);
@@ -5132,6 +5156,8 @@ function openFullPanel(idx){
         <div class="fp-stat"><span>Gifts</span><b>${g.count}</b></div>
         <div class="fp-stat"><span>Last gift</span><b>${fd(g.lastDate)}</b></div>`:'<div class="fp-stat"><span>Giving</span><b>none recorded</b></div>'}
         <div class="fp-stat"><span>Last touch</span><b>${lastTouch}</b></div>
+        <div class="fp-stat"><span>Relationship</span><b>${_tierChipMove(h.id)}</b></div>
+        <div class="fp-stat"><span>Kids under 15</span><b>${_kidsU15Chip(h)}</b></div>
         ${h.home_value?`<div class="fp-stat"><span>Home value</span><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
       </div>
 
@@ -8556,14 +8582,14 @@ function openEngineSettings(){
     ${numRow('Weekday "full" threshold','heatWeekdayFull',1,'Interactions for a weekday square to go fully dark')}
     ${numRow('Sunday "full" threshold','heatSundayFull',1,'Sundays get a lower bar')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five</div>
-    ${numRow('Regular leash (days)','driftDays',5,'Default quiet-clock: most relationships surface as a reconnect after this')}
-    ${numRow('Close leash (days)','closeLeashDays',5,'Close relationships (frequent contact, kids in programs, multi-year) surface sooner')}
-    ${numRow('Thin leash (days)','thinLeashDays',5,'Acquaintances (little/no contact history) wait longer before surfacing')}
+    ${numRow('Steady window (days)','driftDays',5,'Default quiet-clock: most (Steady) households surface as a reconnect after this')}
+    ${numRow('Warm window (days)','closeLeashDays',5,'Warm households (frequent contact or multi-year giving) surface sooner')}
+    ${numRow('Cool window (days)','thinLeashDays',5,'Cool households (little/no contact history) wait longer before surfacing')}
     ${numRow('New-contact window (days)','newContactWindowDays',1,'Recently added households take the fifth slot as a NEW card for this many days')}
     ${numRow('Pin soft cap','pinSoftCap',1,'Gentle confirm when pinning more than this for one day (set 99 to turn off)')}
     ${numRow('Prospect home value ($)','icebreakerHomeValue',50000,'Never-contacted homes above this surface as cold prospects')}
-    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor (Waiting Room)</div>
-    ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the Waiting Room’s Cold Floor section')}
+    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Prospects (Waiting Room)</div>
+    ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the Waiting Room’s Prospects section')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness</div>
     ${numRow('Capacity threshold ($)','sriCapacityValue',50000,'+40 points if home value is at least this')}
     ${numRow('Engagement window (days)','sriEngagementDays',5,'')}
@@ -14771,7 +14797,7 @@ async function openCallSheet(){
 // ── PANEL HELP — the ? icon in each panel header ──
 const PANEL_HELP={
   'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many touches you logged each day over the last two weeks — calls, texts, meetings, attendance, etc. Standing-info notes don't count. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} touches; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
-  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before who's gone quiet past <i>their own leash</i>. The leash flexes with the relationship: close relationships surface after ${ENGINE.closeLeashDays} days quiet, regular ones after ${ENGINE.driftDays}, acquaintances after ${ENGINE.thinLeashDays}. Longest overshoot first.<br><b>NEW</b> — someone added in the last ${ENGINE.newContactWindowDays} days (a website form lead or a manual add) who needs a first next step. One drips in per day.<br><b>PROSPECT</b> — a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted, as the fallback for the fifth slot.<br><br>The fifth slot holds one new-or-cold card per day (NEW first, cold as fallback) and only when there are enough warm reconnects to spare — thin days just run shorter rather than padding with hard cold calls. You're in charge: <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top, snooze for 7/30/90 days, or open <b>the full queue</b> via "See the full queue →" to see and pin from every waiting bucket. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
+  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before who's gone quiet longer than their closeness warrants. The threshold flexes with the relationship: <b>Warm</b> households resurface after ${ENGINE.closeLeashDays} days quiet, <b>Steady</b> after ${ENGINE.driftDays}, <b>Cool</b> after ${ENGINE.thinLeashDays}. Longest overdue first.<br><b>NEW</b> — someone added in the last ${ENGINE.newContactWindowDays} days (a website form lead or a manual add) who needs a first next step. One drips in per day.<br><b>PROSPECT</b> — a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted, as the fallback for the fifth slot.<br><br>The fifth slot holds one new-or-cold card per day (NEW first, cold as fallback) and only when there are enough warm reconnects to spare — thin days just run shorter rather than padding with hard cold calls. You're in charge: <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top, snooze for 7/30/90 days, or open <b>the full queue</b> via "See the full queue →" to see and pin from every waiting bucket. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
   'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
@@ -15266,6 +15292,9 @@ let _dailyPins=[];
 // On a new day, leftovers (ids not in done) carry over first, then we top up to 5.
 let _dailySet=null;
 const DAILY_TARGET=5;
+// Relationship-temperature movement: hhId -> {from,to,at}. Captured at each logged
+// touch (in logTouch) so the contact page can show ↑/↓ when a touch changes the tier.
+let _tierSnaps={};
 
 async function _saveDailySet(){
   try{
@@ -15287,6 +15316,23 @@ async function _loadDailyState(){
     const setRows=await sb('app_settings?key=eq.daily_set&limit=1');
     if(setRows&&setRows.length&&setRows[0].value)_dailySet=JSON.parse(setRows[0].value)||null;
   }catch(e){console.warn('[DAAS] daily_set load failed',e);}
+  try{
+    const snapRows=await sb('app_settings?key=eq.tier_snaps&limit=1');
+    if(snapRows&&snapRows.length&&snapRows[0].value)_tierSnaps=JSON.parse(snapRows[0].value)||{};
+  }catch(e){console.warn('[DAAS] tier_snaps load failed',e);}
+}
+
+// Persist relationship-temperature snapshots (movement arrows). Fire-and-forget.
+async function _saveTierSnaps(){
+  try{await sbSetSetting('tier_snaps',JSON.stringify(_tierSnaps));}
+  catch(e){console.warn('[DAAS] tier_snaps save failed',e);}
+}
+// Record how a logged touch shifted a household's tier. Stores {from,to}; equal
+// from/to means "no movement" (chip shows, arrow doesn't). Called from logTouch.
+function _recordTierMove(hhId,from,to){
+  if(!hhId||!to)return;
+  _tierSnaps[hhId]={from:from||to,to:to,at:localToday()};
+  _saveTierSnaps();
 }
 
 // Discard today's frozen set and repick from scratch. Handy after logging a batch
@@ -15397,15 +15443,13 @@ function _closenessTier(h){
   const agg=_agcInterAgg[h.id]||{connected12:0,lifetime:0};
   const conn=agg.connected12||0;
   const lifetime=agg.lifetime||0;
-  const p=h.profile_data||{};
-  const kids=p.estimated_children||[];
-  const progRe=/camp|hebrew school|day school|ckids|cteen|jewish life lab|youth program/;
-  const kidNotes=((h.notes||'')+' '+(p.affinityNotes||'')).toLowerCase();
-  const kidsInProg=kids.some(k=>progRe.test(((k.basis||'')+' '+(k.name||'')).toLowerCase()))||progRe.test(kidNotes);
   const g=getGivingStats(h);
   const donArr=(g&&g.donations)||[];
   const multiYear=new Set(donArr.map(d=>(d.date||'').slice(0,4)).filter(Boolean)).size>=2;
-  if(conn>=4||(conn>=2&&(multiYear||kidsInProg)))return'close';
+  // NOTE: "kids in programs" deliberately does NOT feed the tier — a household's kids
+  // get their own flag, and program signups already arrive as event attendance (which
+  // counts toward connected12). Tier is behavioral: contact frequency + multi-year giving.
+  if(conn>=4||(conn>=2&&multiYear))return'close';
   if(conn===0&&lifetime<=1)return'thin';
   return'regular';
 }
@@ -15414,7 +15458,26 @@ function _leashDays(tier){
   if(tier==='thin')return ENGINE.thinLeashDays||120;
   return ENGINE.driftDays;
 }
-function _tierLabel(tier){return tier==='close'?'Close relationship':tier==='thin'?'Acquaintance':'Regular relationship';}
+// Relationship temperature (shown to the user). close→Warm, regular→Steady, thin→Cool.
+function _tierLabel(tier){return tier==='close'?'Warm':tier==='thin'?'Cool':'Steady';}
+function _tierRank(tier){return tier==='close'?3:tier==='thin'?1:2;}
+function _tierColor(tier){return tier==='close'?'#f97316':tier==='thin'?'#3b82f6':'#eab308';} // warm=orange, steady=gold, cool=blue
+// Small colored temperature chip (returns an HTML span).
+function _tierChip(tier){const c=_tierColor(tier);return `<span style="font-family:var(--font-ui);font-size:.58rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${c}22;color:${c};border:1px solid ${c}44">${_tierLabel(tier)}</span>`;}
+// Chip + ↑/↓ movement arrow when the household's most recent logged touch changed the tier
+// (reads _tierSnaps, populated in logTouch). For the contact page.
+function _tierChipMove(hhId){
+  const h=households.find(x=>x.id===hhId);
+  let tier='regular';try{if(h)tier=_closenessTier(h);}catch(e){}
+  const snap=_tierSnaps&&_tierSnaps[hhId];
+  let arrow='';
+  if(snap&&snap.from&&snap.to&&snap.from!==snap.to){
+    const up=_tierRank(snap.to)>_tierRank(snap.from);
+    const ac=up?'#15803d':'#dc2626';
+    arrow=` <span title="${up?'Warmed up':'Cooled off'} from ${_tierLabel(snap.from)} at your last contact" style="color:${ac};font-weight:700">${up?'↑':'↓'}</span><span style="color:var(--txt3);font-size:.9em"> was ${_tierLabel(snap.from)}</span>`;
+  }
+  return _tierChip(tier)+arrow;
+}
 
 // ── CANDIDATE POOLS ── shared by the Daily Five and the Waiting Room so both read
 // ONE selection computation (no duplicated logic). Returns the raw pools; the
@@ -15599,8 +15662,14 @@ async function _computeDailyQueue(){
     const carry=(_dailySet&&Array.isArray(_dailySet.ids))
       ? _dailySet.ids.filter(id=>!(_dailySet.done||[]).includes(id))
       : [];
-    // Only carry forward households that still exist
-    const carried=carry.filter(id=>households.some(h=>h.id===id));
+    // Only carry forward households that still exist AND aren't fifth-slot cards.
+    // The single fifth slot (NEW/PROSPECT) is deliberately NOT carried over — it's
+    // re-picked fresh each day by _fillDailySet Pass 2 (which prefers NEW over cold).
+    // Otherwise a never-actioned PROSPECT re-seeds every day, keeps fifthCount at 1,
+    // and permanently blocks new contacts from the slot. Follow-ups and reconnects
+    // still carry (live threads + warm calls shouldn't churn day to day).
+    const carried=carry.filter(id=>households.some(h=>h.id===id)
+      && !(poolById[id]&&isFifth(poolById[id].type)));
     // FOLLOW-UPS FIRST: a due active track is a live thread and must never be
     // crowded out by carried-over reconnects/prospects. Seed due follow-ups
     // ahead of carryover, then carryover, then top up from the priority pool.
@@ -15712,7 +15781,7 @@ async function openWaitingRoom(){
         ${rows[0]}${more}</div>`;
     };
     const fuRows=followups.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';const due=t.next_due||'—';const dueTxt=due===todayStr?'due today':due<todayStr?'overdue since '+due:'upcoming '+due;return rowCard(h,hIdx(h.id),`Follow-up · step ${t.step||1} · ${dueTxt}`);}).filter(Boolean);
-    const rcRows=keepWarm.map(it=>rowCard(it.h,it.idx,`${_tierLabel(it.tier)} · quiet ${it.daysSince}d · your alarm ${it.leash}d · ${it.overshoot}d over`));
+    const rcRows=keepWarm.map(it=>rowCard(it.h,it.idx,`${_tierChip(it.tier)} · quiet ${it.daysSince}d · ${it.overshoot}d overdue`));
     const ncRows=newContacts.map(it=>{const when=it.ageDays===0?'today':it.ageDays===1?'yesterday':it.ageDays+'d ago';return rowCard(it.h,it.idx,`${it.formLead?'Website form':'Added'} · ${when}`);});
     const cfRows=coldFloor.map(it=>rowCard(it.h,it.idx,`${it.h.home_value?_fmtHomeVal(it.h.home_value)+' home':'—'} · never contacted`));
     const rsRows=resting.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';return rowCard(h,hIdx(h.id),`Resting until ${t.snooze_until}`,true);}).filter(Boolean);
@@ -15720,9 +15789,9 @@ async function openWaitingRoom(){
     const body=document.getElementById('wrBody');
     if(body)body.innerHTML=
       sec('Follow-ups','Live outreach threads — due today first, then upcoming.',fuRows)
-      +sec('Reconnects','Past their leash. Close relationships surface sooner than acquaintances.',rcRows)
+      +sec('Reconnects','Overdue for a touch — Warm households surface sooner than Cool ones.',rcRows)
       +sec('New contacts','Recently added — website form leads and manual adds. One drips into the fifth slot per day.',ncRows)
-      +sec('Cold floor','Untouched high-capacity homes — never contacted, no giving on file.',cfRows)
+      +sec('Prospects','Untouched high-capacity homes — never contacted, no giving on file.',cfRows)
       +sec('Resting','Snoozed for now — they wake back into the queue on these dates.',rsRows);
   }catch(e){
     const body=document.getElementById('wrBody');
@@ -15763,10 +15832,10 @@ function _whyHTML(card){
   let criteria='';
   if(card.type==='keepwarm'){
     const conn=(gs&&gs.total>0)?`Has giving history ($${Math.round(gs.total).toLocaleString()})`:'Connected before (event or interaction)';
-    const tier=card.item.tier||'regular';const leash=card.item.leash||ENGINE.driftDays;
+    const tier=card.item.tier||'regular';
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${conn}<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${_tierLabel(tier)} — quiet ${card.daysSince!==null?card.daysSince:'999+'} days (your alarm for them: ${leash})<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${_tierChip(tier)} · quiet ${card.daysSince!==null?card.daysSince:'999+'} days<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Prospect score ${agc.total}</div>`;
   }else if(card.type==='newcontact'){
     const age=card.item.ageDays;
@@ -15823,7 +15892,7 @@ async function _buildDailyFive(el){
       whyNow='Manually pinned by you — stays here until you log an outcome or unpin';
     } else if(type==='keepwarm'){
       badge='RECONNECT';badgeColor='#f97316';
-      whyNow=`${_tierLabel(item.tier||'regular')} — quiet ${item.daysSince} days (your alarm for them: ${item.leash||ENGINE.driftDays})`;
+      whyNow=`${_tierChip(item.tier||'regular')} · quiet ${item.daysSince} days`;
     } else if(type==='newcontact'){
       badge='NEW';badgeColor='#0d9488';
       const age=item.ageDays;const when=age===0?'today':age===1?'yesterday':age+' days ago';
@@ -16118,7 +16187,11 @@ async function logTouch(o){
   }
   if(!created.length)throw new Error('Save failed — no row written');
   // 2) AGC — ONE bump per logical household touch (not per member).
+  //    Capture relationship-temperature before/after the bump so the contact page can
+  //    show a ↑/↓ arrow when this touch nudged the tier (Cool→Steady→Warm). Non-blocking.
+  let _preTier=null;try{if(h)_preTier=_closenessTier(h);}catch(e){}
   try{_bumpAGCAgg(ids[0],type,date);}catch(e){}
+  try{if(h&&!isNote){const _postTier=_closenessTier(h);_recordTierMove(h.id,_preTier,_postTier);}}catch(e){}
   // 3) Embedding — once, on the first row.
   try{if(notes&&typeof embedAndStore==='function')embedAndStore(created[0].id,type+': '+notes);}catch(e){}
   // 4) Daily Five bookkeeping (skip for notes).
