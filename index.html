@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.5'; // Daily Five: Warm/Steady/Cool tiers (chip + movement), PROSPECT everywhere, dropped "your alarm" wording. Plus carryover fifth-slot fix (fifth slot re-picks fresh daily so a stale PROSPECT can't block NEW) and a per-household "kids under 15" flag on the profile
+const BUILD_STAMP='2026-07-23.8'; // Daily Five: Warm/Steady/Cool tiers (chip + movement), PROSPECT everywhere, dropped "your alarm" wording. Plus carryover fifth-slot fix (fifth slot re-picks fresh daily so a stale PROSPECT can't block NEW). Removed the "kids under 15" flag (redundant with the Kid Age map filter). Full AI profile rebuild now MERGES existing estimated_children instead of overwriting — hand-entered kids can't be wiped by a rebuild
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -4710,7 +4710,8 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
         approach:'Model returned a narrative instead of structured data. Review summary and rebuild if needed.',
         affinityNotes:'',generosityNotes:'',capacityNotes:'',capacity:'',
         fedLevel:null,businessInfo:null,boardMemberships:null,philanthropy990:null,
-        pressmentions:null,approximateAge:null,estimated_children:[],
+        pressmentions:null,approximateAge:null,
+        estimated_children:(h.profile_data&&h.profile_data.estimated_children)||[], // never drop hand-entered kids
         builtAt:new Date().toISOString(),searchHints:researchHints||''
       };
       h.profile_data=fallbackProfile;
@@ -4727,6 +4728,22 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
     catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
     profile.builtAt=new Date().toISOString();
     delete profile.softBuiltAt;
+
+    // PRESERVE EXISTING CHILDREN: the full rebuild is not given the Family-card
+    // entries, so a fresh AI result would otherwise wipe hand-entered kids (and
+    // their hand-typed gender/notes). Keep every existing entry; only ADD an
+    // AI-discovered child if it isn't already present by name.
+    {
+      const prevKids=(h.profile_data&&h.profile_data.estimated_children)||[];
+      const aiKids=Array.isArray(profile.estimated_children)?profile.estimated_children:[];
+      const merged=[...prevKids];
+      aiKids.forEach(k=>{
+        if(!k||!k.name)return;
+        const key=k.name.toLowerCase().trim();
+        if(!merged.some(e=>e&&e.name&&e.name.toLowerCase().trim()===key))merged.push(k);
+      });
+      profile.estimated_children=merged;
+    }
 
     h.profile_data=profile;
     await sb(`households?id=eq.${h.id}`,{method:'PATCH',body:JSON.stringify({property_data:{...h.property_data,profile}})});
@@ -5001,30 +5018,6 @@ async function loadNotesTab(idx){
 }
 
 // ── FULL PANEL ──
-// ── KIDS-UNDER-15 FLAG ── a per-household relationship signal (families with young
-// kids are a distinct level of relationship). Stored at property_data.kidsUnder15,
-// a sibling of the AI profile so profile rebuilds never clobber it. Deliberately does
-// NOT feed _closenessTier — program signups already arrive as event attendance.
-function _kidsU15Chip(h){
-  const on=!!(h&&h.property_data&&h.property_data.kidsUnder15);
-  return `<span onclick="toggleKidsU15('${h.id}')" title="Click to toggle — families with kids under 15 are a distinct relationship level (does not change Warm/Steady/Cool)" style="cursor:pointer;font-family:var(--font-ui);font-size:.58rem;font-weight:700;padding:1px 8px;border-radius:10px;background:${on?'#7c3aed22':'var(--surf2)'};color:${on?'#7c3aed':'var(--txt3)'};border:1px solid ${on?'#7c3aed44':'var(--border)'}">${on?'Yes':'No'}</span>`;
-}
-async function toggleKidsU15(hhId){
-  const idx=households.findIndex(x=>x.id===hhId);
-  if(idx<0)return;
-  const h=households[idx];
-  const next=!(h.property_data&&h.property_data.kidsUnder15);
-  h.property_data={...h.property_data,kidsUnder15:next};
-  try{
-    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:h.property_data})});
-  }catch(e){
-    console.warn('[DAAS] kidsUnder15 save failed',e);
-    h.property_data={...h.property_data,kidsUnder15:!next}; // roll back on failure
-    alert('Could not save the Kids-under-15 flag — check your connection and try again.');
-    return;
-  }
-  if(typeof openFullPanel==='function')openFullPanel(idx); // re-render the panel with the new state
-}
 function openFullPanel(idx){
   const h=households[idx];
   const agc=getAGCScore(h);
@@ -5157,7 +5150,6 @@ function openFullPanel(idx){
         <div class="fp-stat"><span>Last gift</span><b>${fd(g.lastDate)}</b></div>`:'<div class="fp-stat"><span>Giving</span><b>none recorded</b></div>'}
         <div class="fp-stat"><span>Last touch</span><b>${lastTouch}</b></div>
         <div class="fp-stat"><span>Relationship</span><b>${_tierChipMove(h.id)}</b></div>
-        <div class="fp-stat"><span>Kids under 15</span><b>${_kidsU15Chip(h)}</b></div>
         ${h.home_value?`<div class="fp-stat"><span>Home value</span><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
       </div>
 
