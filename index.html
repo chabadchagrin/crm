@@ -1281,12 +1281,13 @@ html.force-desktop #mobileShell{display:none!important}
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Prospect Score</div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--green)">Green ≥</span>
-          <input type="number" class="tier-input" id="stier1sb" value="70" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+          <input type="number" class="tier-input" id="stier1sb" value="70" disabled="" title="Fixed quality scale — green means high" style="width:70px;opacity:.55;cursor:not-allowed" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--amber)">Mid ≥</span>
-          <input type="number" class="tier-input" id="stier2sb" value="40" style="width:70px" oninput="recolorAll()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+          <input type="number" class="tier-input" id="stier2sb" value="40" disabled="" title="Fixed quality scale — green means high" style="width:70px;opacity:.55;cursor:not-allowed" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </div>
+        <div style="font-size:.55rem;color:var(--txt3);margin-top:4px;line-height:1.4">Fixed scale — green = high (≥70), gold 40–69, red &lt;40.</div>
       </div>
       <div id="sb-lastcontactTiers" style="display:none;margin-top:4px">
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:4px">Last Contact (days)</div>
@@ -1705,7 +1706,7 @@ html.force-desktop #mobileShell{display:none!important}
       <div class="chat-msgs" id="globalAskMessages"></div>
       <div class="chat-composer">
         <div class="chat-composer-inner">
-          <textarea id="globalAskInput" rows="1" class="chat-input" placeholder="Ask anything about your donor base…" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendGlobalAsk();}" oninput="autoGrowChat(this)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
+          <textarea id="globalAskInput" rows="1" class="chat-input" placeholder="Ask anything about your constituent base…" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendGlobalAsk();}" oninput="autoGrowChat(this)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
           <button onclick="sendGlobalAsk()" class="btn btn-pri" style="border-radius:12px;padding:11px 16px;align-self:stretch"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"></path></svg></button>
         </div>
         <div class="chat-meta">
@@ -1757,7 +1758,7 @@ html.force-desktop #mobileShell{display:none!important}
   <div style="background:var(--surf);border:1px solid var(--border2);border-radius:14px;padding:40px 36px;width:360px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.08)">
     <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px;gap:10px">
       <img src="logo.png" alt="Daat" style="width:200px;height:auto;object-fit:contain">
-      <div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);letter-spacing:.1em;text-transform:uppercase">Donor Intelligence</div>
+      <div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3);letter-spacing:.1em;text-transform:uppercase">Constituent Intelligence</div>
     </div>
     <div style="margin-bottom:14px">
       <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Email</label>
@@ -1778,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-22.2'; // Chat Context button now opens Rabbi Context (was mis-wired to Profile Building Context)
+const BUILD_STAMP='2026-07-23.3'; // AGC reconciliation: client aggregate loader now dedupes couple-logs fully (lifetime+connected12+lastContact), matching corrected server calculate_agc (dedupe, all reach types, event_fee excluded)
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2222,10 +2223,12 @@ async function signIn(){
     const{data,error}=await _sb.auth.signInWithPassword({email,password});
     if(error)throw error;
     _authToken=data.session.access_token;
-    showApp();
+    await showApp();
   }catch(e){
     err.textContent=e.message||'Sign in failed. Check your email and password.';
     err.style.display='block';
+  }finally{
+    // Always restore the button — a stall/throw inside showApp() used to leave it stuck on "Signing in…"
     btn.textContent='Sign In';btn.disabled=false;
   }
 }
@@ -2778,7 +2781,9 @@ function _bumpAGCAgg(contactId,type,date){
   if(!contactId||!date)return;
   const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
   if(!h)return;
-  const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0});
+  const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
+  if(typeof a.lifetime!=='number')a.lifetime=0;
+  a.lifetime++;
   if(_isTouch(type)&&(!a.lastContact||date>a.lastContact))a.lastContact=date;
   const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
   if(_isReach(type)&&date>=since)a.connected12++;
@@ -2787,16 +2792,25 @@ function _bumpAGCAgg(contactId,type,date){
 async function loadAGCInteractionAggregates(){
   try{
     const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
-    const rows=await sbAll('interactions?select=contact_id,type,date&order=id.asc')||[];
+    const rows=await sbAll('interactions?select=contact_id,type,date,notes&order=id.asc')||[];
     // Map contacts->household across BOTH visible and hidden households so nothing
     // is silently dropped from the aggregate.
     const c2h={};
     households.forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
     (hiddenHouseholds||[]).forEach(h=>(h.members||[]).forEach(m=>{c2h[m.id]=h.id;}));
     _agcInterAgg={};
+    // Dedupe lifetime by the same type|date|notes key _recalcAGCAggForHH uses, so a
+    // multi-member (couple) log counts as ONE lifetime interaction in BOTH paths —
+    // otherwise a full load and a post-undo recalc would disagree.
+    const _seenByHH={};
     rows.forEach(r=>{
       const hh=c2h[r.contact_id];if(!hh||!r.date)return;
-      const a=_agcInterAgg[hh]||(_agcInterAgg[hh]={lastContact:null,connected12:0});
+      const a=_agcInterAgg[hh]||(_agcInterAgg[hh]={lastContact:null,connected12:0,lifetime:0});
+      const seen=_seenByHH[hh]||(_seenByHH[hh]=new Set());
+      const key=r.type+'|'+r.date+'|'+(r.notes||'');
+      if(seen.has(key))return; // dedupe couple-logged rows entirely — one household touch (matches _recalcAGCAggForHH + server calculate_agc)
+      seen.add(key);
+      a.lifetime=(a.lifetime||0)+1;
       if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
@@ -2804,7 +2818,7 @@ async function loadAGCInteractionAggregates(){
     // reach (updates last-contact AND warmth), exactly like a logged interaction.
     households.forEach(h=>(h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{
       const d=r.reg_date;if(!d)return;
-      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0});
+      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
       if(!a.lastContact||d>a.lastContact)a.lastContact=d;
       if(d>=since)a.connected12++;
     })));
@@ -2891,7 +2905,8 @@ function getTier(i){
   if(mode==='score'){
     const s=getProspectScore(h);
     if(s===0)return'grey';
-    if(s<40)return'green';if(s<70)return'gold';return'red';
+    // Quality scale: green = high (unified with reports/contacts). ≥70 green · 40–69 gold · <40 red.
+    if(s<40)return'red';if(s<70)return'gold';return'green';
   }
   if(mode==='giving'){
     const g=getGivingStats(h);if(!g)return'grey';
@@ -6623,7 +6638,7 @@ async function sendGlobalAsk(){
   if(mode==='power'){
     const _estIn=_estTok(_rosterLines('full').map(x=>x.line).join('\n'))+_estTok(globalChatHistory.map(m=>m.content).join(' '))+8000;
     const _estCost=(Math.min(_estIn,170000)/1e6*3).toFixed(2);
-    if(!confirm('Power Search will send ~'+Math.round(Math.min(_estIn,178000)/1000)+'k tokens (~$'+_estCost+' first message; follow-ups within 5 min are ~90% cheaper via caching).'+(_estIn>170000?'\n\n<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg> Roster exceeds the context window — it will be auto-fit: full detail for top households by AGC, compact lines for the rest.':'')+' Continue?'))return;
+    if(!confirm('Power Search will send ~'+Math.round(Math.min(_estIn,178000)/1000)+'k tokens (~$'+_estCost+' first message; follow-ups within 5 min are ~90% cheaper via caching).'+(_estIn>170000?'\n\n<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg> Roster exceeds the context window — it will be auto-fit: full detail for top households by Prospect score, compact lines for the rest.':'')+' Continue?'))return;
   }
 
   input.value='';autoGrowChat(input);
@@ -6658,7 +6673,7 @@ async function sendGlobalAsk(){
     rosterStr='ROSTER:\n'+_fit.text;
   }
   if(_fit&&(_fit.compactN||_fit.omittedN)){
-    msgs.innerHTML+=`<div style="font-size:.65rem;color:var(--txt3);margin-bottom:8px;font-family:var(--font-ui)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg> Context auto-fit: full detail for top ${_fit.fullN} households by AGC, compact for ${_fit.compactN}${_fit.omittedN?', omitted '+_fit.omittedN:''}</div>`;
+    msgs.innerHTML+=`<div style="font-size:.65rem;color:var(--txt3);margin-bottom:8px;font-family:var(--font-ui)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg> Context auto-fit: full detail for top ${_fit.fullN} households by Prospect score, compact for ${_fit.compactN}${_fit.omittedN?', omitted '+_fit.omittedN:''}</div>`;
     _chatScroll();
   }
 
@@ -8479,9 +8494,13 @@ let _dashLoaded=false;
 const ENGINE_DEFAULTS={
   heatWeekdayFull:5,       // Heatmap: interactions that make a weekday "fully dark"
   heatSundayFull:3,        // Heatmap: interactions that make a Sunday "fully dark"
-  driftDays:90,            // Daily Five: days without contact before a connection counts as a reconnect
+  driftDays:90,            // Daily Five: REGULAR-tier leash — days quiet before a reconnect surfaces
+  closeLeashDays:45,       // Daily Five: CLOSE-tier leash — close relationships surface sooner
+  thinLeashDays:120,       // Daily Five: THIN-tier leash — acquaintances surface later
+  newContactWindowDays:14, // Daily Five: how recently a household was added to qualify as a NEW fifth-slot card
+  pinSoftCap:3,            // Daily Five: gentle confirm when pinning more than this many for one day (99 ≈ off)
   icebreakerHomeValue:500000, // Daily Five: minimum home value for never-contacted prospects
-  coldFloorHomeValue:500000,  // Cold Floor: minimum home value to surface untouched households
+  coldFloorHomeValue:500000,  // Cold Floor / Waiting Room: minimum home value to surface untouched households
   sriCapacityValue:750000, // SRI: home value threshold for the +40 capacity marker
   sriEngagementDays:45,    // SRI: trailing window for connected interactions
   sriEngagementCount:2,    // SRI: connected interactions needed in that window for +35
@@ -8537,10 +8556,14 @@ function openEngineSettings(){
     ${numRow('Weekday "full" threshold','heatWeekdayFull',1,'Interactions for a weekday square to go fully dark')}
     ${numRow('Sunday "full" threshold','heatSundayFull',1,'Sundays get a lower bar')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five</div>
-    ${numRow('Drift threshold (days)','driftDays',5,'No contact for this many days = surfaces as a reconnect')}
+    ${numRow('Regular leash (days)','driftDays',5,'Default quiet-clock: most relationships surface as a reconnect after this')}
+    ${numRow('Close leash (days)','closeLeashDays',5,'Close relationships (frequent contact, kids in programs, multi-year) surface sooner')}
+    ${numRow('Thin leash (days)','thinLeashDays',5,'Acquaintances (little/no contact history) wait longer before surfacing')}
+    ${numRow('New-contact window (days)','newContactWindowDays',1,'Recently added households take the fifth slot as a NEW card for this many days')}
+    ${numRow('Pin soft cap','pinSoftCap',1,'Gentle confirm when pinning more than this for one day (set 99 to turn off)')}
     ${numRow('Prospect home value ($)','icebreakerHomeValue',50000,'Never-contacted homes above this surface as cold prospects')}
-    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor</div>
-    ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the panel')}
+    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor (Waiting Room)</div>
+    ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the Waiting Room’s Cold Floor section')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness</div>
     ${numRow('Capacity threshold ($)','sriCapacityValue',50000,'+40 points if home value is at least this')}
     ${numRow('Engagement window (days)','sriEngagementDays',5,'')}
@@ -8583,7 +8606,7 @@ function openEngineSettings(){
 
 async function applyEngineSettings(){
   const num=k=>{const v=parseFloat(document.getElementById('eng_'+k)?.value);return isNaN(v)?ENGINE_DEFAULTS[k]:v;};
-  ['heatWeekdayFull','heatSundayFull','driftDays','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
+  ['heatWeekdayFull','heatSundayFull','driftDays','closeLeashDays','thinLeashDays','newContactWindowDays','pinSoftCap','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
   const cad=(document.getElementById('eng_trackCadence')?.value||'').split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x)&&x>0);
   ENGINE.trackCadence=cad.length?cad:[...ENGINE_DEFAULTS.trackCadence];
   const landSel=document.getElementById('eng_landing');
@@ -8605,12 +8628,11 @@ async function resetEngineSettings(){
 // Bump this whenever DASH_DEFAULT_LAYOUT panels are added/removed/renamed.
 // Saved layouts with a different version are ignored on load (prevents the
 // "doubled panels" bug where stale saved coords clash with new defaults).
-const DASH_LAYOUT_VERSION=7;
+const DASH_LAYOUT_VERSION=8;
 const DASH_DEFAULT_LAYOUT=[
   {id:'panel-heatmap',    x:0, y:0,  w:12, h:3,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',           fn:'renderHeatmap'},
   {id:'panel-activity',   x:0, y:20, w:12, h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',            fn:'renderRecentActivity'},
   {id:'panel-daily5',     x:0, y:3,  w:7,  h:8,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',                 fn:'renderDailyFive'},
-  {id:'panel-coldfloor',  x:7, y:3,  w:5,  h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor',                 fn:'renderColdFloor'},
   {id:'panel-wins',       x:7, y:7,  w:5,  h:4,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',           fn:'renderWins'},
   {id:'panel-gifts',      x:0, y:11, w:6,  h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',               fn:'renderRecentGifts'},
   {id:'panel-sri',        x:6, y:11, w:6,  h:5,  title:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',     fn:'renderSRI'},
@@ -10023,7 +10045,7 @@ function _ecStep3Html(){
   if(isDon){
     // Donation form: 2-col preset amount buttons + custom. No free, no tiers, no pay-later.
     h+='<div class="fb-section"><h3>Donation amounts</h3>'
-      +'<div class="fb-hint">Buttons the donor sees (2-column grid). Label is optional \u2014 e.g. "Chai" for $18.</div>'
+      +'<div class="fb-hint">Buttons the constituent sees (2-column grid). Label is optional \u2014 e.g. "Chai" for $18.</div>'
       +'<div id="ec_don_rows">'+donRowsFree+'</div>'
       +addPresetBtn
       +'<label class="fb-check" style="margin-top:12px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+'> Allow a custom "other amount"</label>'
@@ -10994,7 +11016,7 @@ function _fbRenderEditor(){
 
   // ── pricing section (donation only) ──
   const pricingHtml=`<div class="fb-section"><h3>Donation amounts</h3>
-      <div class="fb-hint">Buttons the donor sees. Label is optional (e.g. "Chai" for $18).</div>
+      <div class="fb-hint">Buttons the constituent sees. Label is optional (e.g. "Chai" for $18).</div>
       ${(c.presets||[]).map((p,i)=>`<div class="fb-row">
         <span style="font-family:var(--font-ui);color:var(--txt3);font-size:.8rem">$</span>
         <input id="fb_preset_amt_${i}" class="fb-in" type="number" min="0" step="1" value="${p.amount||''}" placeholder="36" style="max-width:90px">
@@ -11033,7 +11055,7 @@ function _fbRenderEditor(){
     ${pricingHtml}
 
     <div class="fb-section"><h3>Fields</h3>
-      <div class="fb-hint">first_name, last_name, email, phone are <b>standard</b> — the webhook matches donors on them. Anything else is custom (dedication, # challahs, ages…) and stored without affecting matching.</div>
+      <div class="fb-hint">first_name, last_name, email, phone are <b>standard</b> — the webhook matches constituents on them. Anything else is custom (dedication, # challahs, ages…) and stored without affecting matching.</div>
       ${(d.schema.fields||[]).map((fld,i)=>{
         const std=FB_STD_KEYS.includes(fld.key);
         return `<div style="border:1px solid var(--border);border-radius:7px;padding:10px;margin-bottom:8px;background:var(--bg)">
@@ -14749,8 +14771,7 @@ async function openCallSheet(){
 // ── PANEL HELP — the ? icon in each panel header ──
 const PANEL_HELP={
   'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many touches you logged each day over the last two weeks — calls, texts, meetings, attendance, etc. Standing-info notes don't count. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} touches; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
-  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before (a gift, a call, or an event) with no contact in ${ENGINE.driftDays}+ days, most overdue first.<br><b>PROSPECT</b> — a household with a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted. At most one cold prospect per day.<br><br>The list favors warm reconnects and caps cold outreach at one — if there aren't enough good calls, it shows fewer rather than padding with hard cold calls. You're in charge: use the search bar to <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top of the list (pin clears when you log an outcome), or snooze a suggestion for 7/30/90 days. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
-  'panel-coldfloor':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Cold Floor',d:()=>`High-potential households sitting completely untouched: home worth $${Math.round(ENGINE.coldFloorHomeValue/1000)}k+, zero donations AND zero logged interactions — ever. Anyone you've met, called, or already queued in a track won't appear here. Sorted by home value. Use "Today" or "Tomorrow" to drop them into your call queue. The goal: no high-capacity family should sit on the books with no story.`},
+  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before who's gone quiet past <i>their own leash</i>. The leash flexes with the relationship: close relationships surface after ${ENGINE.closeLeashDays} days quiet, regular ones after ${ENGINE.driftDays}, acquaintances after ${ENGINE.thinLeashDays}. Longest overshoot first.<br><b>NEW</b> — someone added in the last ${ENGINE.newContactWindowDays} days (a website form lead or a manual add) who needs a first next step. One drips in per day.<br><b>PROSPECT</b> — a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted, as the fallback for the fifth slot.<br><br>The fifth slot holds one new-or-cold card per day (NEW first, cold as fallback) and only when there are enough warm reconnects to spare — thin days just run shorter rather than padding with hard cold calls. You're in charge: <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top, snooze for 7/30/90 days, or open <b>the full queue</b> via "See the full queue →" to see and pin from every waiting bucket. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
   'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
@@ -14802,7 +14823,6 @@ async function renderAllPanels(){
   renderHeatmap();
   renderRecentGifts();
   renderDailyFive();
-  renderColdFloor();
   await renderSRI();
   await renderWins();
   await renderRecentActivity();
@@ -15320,6 +15340,12 @@ async function _mutateDailyPins(fn){
 }
 
 async function pinHousehold(hhId){
+  // Soft pin cap (Change 4): gentle, non-blocking confirm past the cap. Never blocks.
+  const _cap=ENGINE.pinSoftCap||3;
+  if(!_dailyPins.includes(hhId)&&_dailyPins.length>=_cap){
+    const _n=_dailyPins.length+1;
+    if(!confirm(`That's ${_n} pinned on top of your five — big morning. Pin anyway?`))return;
+  }
   await _mutateDailyPins(p=>{if(!p.includes(hhId))p.unshift(hhId);return p;});
   const inp=document.getElementById('pinSearchInput');if(inp)inp.value='';
   const dd=document.getElementById('pinSearchResults');if(dd)dd.style.display='none';
@@ -15362,23 +15388,49 @@ function renderDailyFive(){
   _buildDailyFive(el);
 }
 
-async function _computeDailyQueue(){
+// ── CLOSENESS TIER (Change 1: leash-by-closeness) ──
+// Behavioral signals ONLY — deliberately excludes money, last-contact recency,
+// and note keywords (see DAILY-FIVE-V2-SPEC §2). Drives how long a household may
+// stay quiet before it surfaces as a reconnect. Sparse data ⇒ 'regular', so a
+// fresh database behaves exactly like the old flat drift threshold.
+function _closenessTier(h){
+  const agg=_agcInterAgg[h.id]||{connected12:0,lifetime:0};
+  const conn=agg.connected12||0;
+  const lifetime=agg.lifetime||0;
+  const p=h.profile_data||{};
+  const kids=p.estimated_children||[];
+  const progRe=/camp|hebrew school|day school|ckids|cteen|jewish life lab|youth program/;
+  const kidNotes=((h.notes||'')+' '+(p.affinityNotes||'')).toLowerCase();
+  const kidsInProg=kids.some(k=>progRe.test(((k.basis||'')+' '+(k.name||'')).toLowerCase()))||progRe.test(kidNotes);
+  const g=getGivingStats(h);
+  const donArr=(g&&g.donations)||[];
+  const multiYear=new Set(donArr.map(d=>(d.date||'').slice(0,4)).filter(Boolean)).size>=2;
+  if(conn>=4||(conn>=2&&(multiYear||kidsInProg)))return'close';
+  if(conn===0&&lifetime<=1)return'thin';
+  return'regular';
+}
+function _leashDays(tier){
+  if(tier==='close')return ENGINE.closeLeashDays||45;
+  if(tier==='thin')return ENGINE.thinLeashDays||120;
+  return ENGINE.driftDays;
+}
+function _tierLabel(tier){return tier==='close'?'Close relationship':tier==='thin'?'Acquaintance':'Regular relationship';}
+
+// ── CANDIDATE POOLS ── shared by the Daily Five and the Waiting Room so both read
+// ONE selection computation (no duplicated logic). Returns the raw pools; the
+// frozen-set slot-filling lives in _computeDailyQueue.
+async function _computeCandidatePools(){
   const today=new Date();today.setHours(0,0,0,0);
   const now=Date.now();
   const todayStr=localDateStr(today);
 
-  // Fetch most recent interaction date per contact (full history, no date floor)
-  // so daysSince reflects the TRUE last contact, not a 90-day-window sentinel.
+  // Fetch most recent interaction date per contact (full history, no date floor).
   let recentRows=[];
   try{recentRows=await sbAll(`interactions?select=contact_id,date&order=date.desc,id.asc`)||[];}catch(e){}
-
-  // Map contact_id → most recent date
   const lastInteraction={};
   recentRows.forEach(r=>{if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;});
 
-  // Map household → most recent contact across all members. Event registrations
-  // count as contact too (an event signup/attendance is a real touch) — fold in
-  // reg_date so event attendance resets the drift clock, matching AGC's last-contact.
+  // Household → most recent contact across members (event registrations count too).
   const hhLastContact={};
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
@@ -15386,29 +15438,51 @@ async function _computeDailyQueue(){
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
 
-  // ── Reconnect: ANY connection (giving OR any logged contact incl. events),
-  //    gone quiet driftDays+, not snoozed, not already in an active track.
-  //    No giving requirement and no AGC floor — the goal is community connection,
-  //    not donor prospecting. If we've touched them and it's gone quiet, reconnect. ──
   const activeTrackHHIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
+
+  // ── Reconnect (keepwarm): touched before, quiet past THEIR OWN leash (Change 1).
+  //    No giving requirement and no AGC floor — community connection, not prospecting. ──
   const keepWarm=[];
   for(const h of households){
-    if(_dailyPins.includes(h.id))continue; // pinned — already shown at top
-    if(activeTrackHHIds.has(h.id))continue; // already in active track
+    if(_dailyPins.includes(h.id))continue;
+    if(activeTrackHHIds.has(h.id))continue;
     const lastContact=hhLastContact[h.id];
     if(!lastContact)continue; // never touched — that's a cold PROSPECT, not a reconnect
     const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
     if(snoozed)continue;
     const daysSince=Math.floor((now-new Date(lastContact))/(1000*60*60*24));
-    if(daysSince>=ENGINE.driftDays){
+    const tier=_closenessTier(h);
+    const leash=_leashDays(tier);
+    if(daysSince>=leash){
       const agc=getAGCScore(h);
-      keepWarm.push({h,agc,daysSince,idx:hIdx(h.id)});
+      keepWarm.push({h,agc,daysSince,tier,leash,overshoot:daysSince-leash,idx:hIdx(h.id)});
     }
   }
-  // Most-overdue first; AGC breaks ties so stronger relationships edge ahead.
-  keepWarm.sort((a,b)=>(b.daysSince-a.daysSince)||(b.agc.total-a.agc.total));
+  // Longest overshoot (days past their own alarm) first; AGC breaks ties.
+  keepWarm.sort((a,b)=>(b.overshoot-a.overshoot)||(b.agc.total-a.agc.total));
 
-  // ── Icebreaker: no donations, home value > 500k, not snoozed, not already tracked ──
+  // ── NEW contacts (Change 2): households added within the window, oldest-created
+  //    first. Surfaces regardless of whether a first touch was logged. ──
+  const newWindow=ENGINE.newContactWindowDays||14;
+  const newContacts=[];
+  for(const h of households){
+    if(_dailyPins.includes(h.id))continue;
+    if(activeTrackHHIds.has(h.id))continue;
+    if(!h.created_at)continue;
+    const created=new Date(h.created_at);
+    if(isNaN(created.getTime()))continue;
+    const ageDays=Math.floor((now-created.getTime())/(1000*60*60*24));
+    if(ageDays<0||ageDays>newWindow)continue;
+    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
+    if(snoozed)continue;
+    // Real form-origin signal: stripe-webhook / event-register stamp source 'form'
+    // (or 'pay_later') on the registration they create from a public form submission.
+    const formLead=(h.members||[]).some(m=>(m.registrations||[]).some(r=>r&&(r.source==='form'||r.source==='pay_later')));
+    newContacts.push({h,ageDays,created:h.created_at,formLead,idx:hIdx(h.id)});
+  }
+  newContacts.sort((a,b)=>new Date(a.created)-new Date(b.created)); // oldest-created first
+
+  // ── Icebreaker (cold prospect): never touched, no giving, home ≥ threshold ──
   const icebreakers=[];
   for(const h of households){
     if(_dailyPins.includes(h.id))continue;
@@ -15423,13 +15497,21 @@ async function _computeDailyQueue(){
   }
   icebreakers.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
 
-  // ── Active Track ──
+  // Active follow-up tracks due today or earlier.
   const activeTracks=outreachTracks.filter(t=>t.status==='active'&&t.next_due&&t.next_due<=todayStr);
+
+  return {todayStr,now,hhLastContact,activeTrackHHIds,activeTracks,keepWarm,newContacts,icebreakers};
+}
+
+async function _computeDailyQueue(){
+  const {todayStr,now,hhLastContact,activeTracks,keepWarm,newContacts,icebreakers}=await _computeCandidatePools();
 
   // ── Build candidate pool (ordered by priority) + an id→card lookup so we can
   //    reconstruct any frozen id back into a real card with its type/why data.
   //    Priority: active FOLLOW-UPs first (never drop a live thread), then warm
-  //    RECONNECTs (most-overdue first), then cold PROSPECTs (capped to 1/day below). ──
+  //    RECONNECTs (overshoot desc), then NEW contacts, then cold PROSPECTs. NEW
+  //    precedes icebreaker so the single fifth slot prefers a NEW face (poolById
+  //    is first-wins). The fifth-slot 1/day cap is enforced in _fillDailySet. ──
   const pool=[];
   activeTracks.forEach(t=>{
     if(_dailyPins.includes(t.household_id))return;
@@ -15437,6 +15519,7 @@ async function _computeDailyQueue(){
     if(h)pool.push({type:'activetrack',item:{h,t,idx:hIdx(h.id)}});
   });
   keepWarm.forEach(item=>pool.push({type:'keepwarm',item}));
+  newContacts.forEach(item=>pool.push({type:'newcontact',item}));
   icebreakers.forEach(item=>pool.push({type:'icebreaker',item}));
   const poolById={};
   pool.forEach(c=>{if(!poolById[c.item.h.id])poolById[c.item.h.id]=c;});
@@ -15449,39 +15532,44 @@ async function _computeDailyQueue(){
   // day, but you still get a steady "one new face" on healthy days). Follow-ups are
   // never bumped — the guaranteed cold takes a leftover slot, displacing only the
   // lowest-priority reconnect (the ≥4 test ensures there's a reconnect to spare).
+  // The single "fifth slot" holds ONE new/cold card per day (NEW preferred, cold
+  // fallback). Guaranteed only when there are ≥4 reconnects to spare; otherwise it
+  // just fills a leftover slot on thin days. Follow-ups are never bumped.
+  const isFifth=t=>t==='newcontact'||t==='icebreaker';
   const reconnectAvail=pool.filter(c=>c.type==='keepwarm').length;
-  const coldAvail=pool.some(c=>c.type==='icebreaker');
-  const guaranteeCold=reconnectAvail>=4&&coldAvail;
+  const fifthAvail=pool.some(c=>isFifth(c.type));
+  const guaranteeFifth=reconnectAvail>=4&&fifthAvail;
 
-  // Fill `set.ids` up to DAILY_TARGET from `pool`, honoring pins, the 1-cold cap,
-  // and (when guaranteeCold) reserving the final slot for a cold prospect.
+  // Fill `set.ids` up to DAILY_TARGET from `pool`, honoring pins, the 1-fifth cap,
+  // and (when guaranteeFifth) reserving the final slot for the new/cold card.
   function _fillDailySet(set){
     let changed=false;
-    let coldCount=set.ids.filter(id=>poolById[id]&&poolById[id].type==='icebreaker').length;
+    let fifthCount=set.ids.filter(id=>poolById[id]&&isFifth(poolById[id].type)).length;
     const has=id=>set.ids.includes(id)||_dailyPins.includes(id);
-    // Pass 1: fill non-cold (follow-ups + reconnects) first. If guaranteeing a cold,
-    // leave one slot open for it; otherwise fill all the way.
-    const warmCeiling=(guaranteeCold&&coldCount===0)?DAILY_TARGET-1:DAILY_TARGET;
+    // Pass 1: fill non-fifth (follow-ups + reconnects) first. If guaranteeing the
+    // fifth slot, leave one open for it; otherwise fill all the way.
+    const warmCeiling=(guaranteeFifth&&fifthCount===0)?DAILY_TARGET-1:DAILY_TARGET;
     for(const c of pool){
       if(set.ids.length>=warmCeiling)break;
-      if(c.type==='icebreaker')continue;
+      if(isFifth(c.type))continue;
       if(has(c.item.h.id))continue;
       set.ids.push(c.item.h.id);changed=true;
     }
-    // Pass 2: add the one cold prospect (guaranteed slot, or filler if room remains).
-    if(coldCount<1){
+    // Pass 2: add the ONE fifth-slot card. Pool order puts NEW before icebreaker,
+    // so a NEW contact wins the slot when one exists; cold is the fallback.
+    if(fifthCount<1){
       for(const c of pool){
         if(set.ids.length>=DAILY_TARGET)break;
-        if(c.type!=='icebreaker')continue;
+        if(!isFifth(c.type))continue;
         if(has(c.item.h.id))continue;
-        set.ids.push(c.item.h.id);coldCount++;changed=true;break;
+        set.ids.push(c.item.h.id);fifthCount++;changed=true;break;
       }
     }
-    // Pass 3: if we reserved for a cold that didn't materialize and slots remain,
-    // top up with any remaining non-cold so we don't under-fill.
+    // Pass 3: if we reserved for a fifth that didn't materialize and slots remain,
+    // top up with any remaining non-fifth so we don't under-fill.
     for(const c of pool){
       if(set.ids.length>=DAILY_TARGET)break;
-      if(c.type==='icebreaker')continue;
+      if(isFifth(c.type))continue;
       if(has(c.item.h.id))continue;
       set.ids.push(c.item.h.id);changed=true;
     }
@@ -15563,6 +15651,109 @@ async function _computeDailyQueue(){
   return cards;
 }
 
+// ── THE WAITING ROOM (Change 3) ── full-queue page, one click behind the Daily Five.
+// Read-only view over the SAME pools the Daily Five builds (via _computeCandidatePools)
+// so selection logic is never duplicated. Renders as a responsive overlay (works on
+// desktop + mobile). Row actions: pin to today, open profile, start follow-up, snooze.
+async function openWaitingRoom(){
+  document.getElementById('waitingRoomBg')?.remove();
+  const bg=document.createElement('div');
+  bg.id='waitingRoomBg';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:11000;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+  bg.onclick=e=>{if(e.target===bg)bg.remove();};
+  bg.innerHTML=`<div style="background:var(--surf);border:1px solid var(--border);border-radius:12px;width:720px;max-width:96vw;margin:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Waiting Room</h2>
+      <button onclick="document.getElementById('waitingRoomBg').remove()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:1.1rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div style="font-size:.66rem;color:var(--txt3);margin-bottom:14px;line-height:1.5">Your Daily Five is what to do <i>today</i>. This is the whole board — every queue, in order. Pin anyone to today, snooze them, or open their profile.</div>
+    <div id="wrBody"><div class="hint"><div class="hi"><div class="spin" style="width:20px;height:20px;border-width:3px"></div></div><p style="margin-top:8px">Reading the queues…</p></div></div>
+  </div>`;
+  document.body.appendChild(bg);
+  try{
+    const {hhLastContact,keepWarm,newContacts}=await _computeCandidatePools();
+    const todayStr=localToday();
+    const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
+    const snoozeIds=new Set(outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until&&t.snooze_until>todayStr).map(t=>t.household_id));
+    const followups=outreachTracks.filter(t=>t.status==='active').slice().sort((a,b)=>String(a.next_due||'9999').localeCompare(String(b.next_due||'9999')));
+    const coldFloor=[];
+    for(const h of households){
+      if(activeIds.has(h.id)||snoozeIds.has(h.id))continue;
+      if(hhLastContact[h.id])continue;
+      const gs=getGivingStats(h);if(gs&&gs.total>0)continue;
+      if((h.home_value||0)<ENGINE.coldFloorHomeValue)continue;
+      coldFloor.push({h,idx:hIdx(h.id)});
+    }
+    coldFloor.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
+    const resting=outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until).slice().sort((a,b)=>String(a.snooze_until).localeCompare(String(b.snooze_until)));
+
+    const abtn=(label,onclick)=>`<button onclick="${onclick}" style="font-size:.58rem;padding:3px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer">${label}</button>`;
+    const actions=(h,idx,resting)=>`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
+      ${abtn('<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Pin to today',`wrPin('${h.id}')`)}
+      ${abtn('Profile',`wrProfile('${h.id}',${idx})`)}
+      ${resting?'':abtn('Follow-up',`wrFollowUp('${h.id}')`)}
+      ${resting?'':abtn('Snooze 30d',`wrSnooze('${h.id}',30)`)}
+    </div>`;
+    const rowCard=(h,idx,meta,resting)=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:.78rem;font-weight:600;color:var(--txt);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(h.displayName||'Household')}</span>
+        <span style="font-family:var(--font-ui);font-size:.56rem;color:var(--txt3)">Prospect ${getAGCScore(h).total}</span>
+      </div>
+      <div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3);margin-top:2px">${meta}</div>
+      ${actions(h,idx,resting)}
+    </div>`;
+    const sec=(title,desc,rows)=>{
+      if(!rows.length)return `<div style="margin-bottom:16px"><div style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:4px">${title}</div><div style="font-size:.64rem;color:var(--txt3)">Nobody waiting here.</div></div>`;
+      const rest=rows.slice(1);
+      const more=rest.length?`<details style="margin-top:2px"><summary style="cursor:pointer;font-size:.64rem;color:var(--accent);font-family:var(--font-ui);padding:4px 0">Show ${rest.length} more</summary><div style="margin-top:6px">${rest.join('')}</div></details>`:'';
+      return `<div style="margin-bottom:16px">
+        <div style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:3px">${title} <span style="color:var(--txt3)">· ${rows.length}</span></div>
+        <div style="font-size:.6rem;color:var(--txt3);margin-bottom:6px">${desc}</div>
+        ${rows[0]}${more}</div>`;
+    };
+    const fuRows=followups.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';const due=t.next_due||'—';const dueTxt=due===todayStr?'due today':due<todayStr?'overdue since '+due:'upcoming '+due;return rowCard(h,hIdx(h.id),`Follow-up · step ${t.step||1} · ${dueTxt}`);}).filter(Boolean);
+    const rcRows=keepWarm.map(it=>rowCard(it.h,it.idx,`${_tierLabel(it.tier)} · quiet ${it.daysSince}d · your alarm ${it.leash}d · ${it.overshoot}d over`));
+    const ncRows=newContacts.map(it=>{const when=it.ageDays===0?'today':it.ageDays===1?'yesterday':it.ageDays+'d ago';return rowCard(it.h,it.idx,`${it.formLead?'Website form':'Added'} · ${when}`);});
+    const cfRows=coldFloor.map(it=>rowCard(it.h,it.idx,`${it.h.home_value?_fmtHomeVal(it.h.home_value)+' home':'—'} · never contacted`));
+    const rsRows=resting.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';return rowCard(h,hIdx(h.id),`Resting until ${t.snooze_until}`,true);}).filter(Boolean);
+
+    const body=document.getElementById('wrBody');
+    if(body)body.innerHTML=
+      sec('Follow-ups','Live outreach threads — due today first, then upcoming.',fuRows)
+      +sec('Reconnects','Past their leash. Close relationships surface sooner than acquaintances.',rcRows)
+      +sec('New contacts','Recently added — website form leads and manual adds. One drips into the fifth slot per day.',ncRows)
+      +sec('Cold floor','Untouched high-capacity homes — never contacted, no giving on file.',cfRows)
+      +sec('Resting','Snoozed for now — they wake back into the queue on these dates.',rsRows);
+  }catch(e){
+    const body=document.getElementById('wrBody');
+    if(body)body.innerHTML='<div style="font-size:.7rem;color:var(--red);padding:10px">Couldn’t load the queues: '+_escHtml(String(e&&e.message||e))+'</div>';
+  }
+}
+async function wrPin(hhId){ await pinHousehold(hhId); openWaitingRoom(); }
+function wrProfile(hhId,idx){
+  document.getElementById('waitingRoomBg')?.remove();
+  const h=households.find(x=>x.id===hhId);
+  const isMobile=!document.body.classList.contains('force-desktop')&&window.matchMedia&&window.matchMedia('(max-width:768px)').matches;
+  if(isMobile&&h&&typeof mOpenSheet==='function'){ mOpenSheet(h); return; }
+  switchView('crm'); setTimeout(()=>byId('openFullPanel',hhId,idx),150);
+}
+async function wrFollowUp(hhId){ await startFollowUpTrack(hhId); openWaitingRoom(); }
+async function wrSnooze(hhId,days){
+  const snoozeUntil=localToday(days);
+  try{
+    await _refreshTracksFor(hhId);
+    const track=outreachTracks.find(t=>t.household_id===hhId&&(t.status==='active'||t.status==='snoozed'));
+    if(track){
+      await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+    }else{
+      await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:hhId,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
+    }
+    await loadOutreachTracks();
+    if(typeof _ebToastMsg==='function')_ebToastMsg('Snoozed '+days+' days');
+  }catch(e){ if(typeof _ebToastMsg==='function')_ebToastMsg('Snooze failed: '+(e.message||e)); }
+  openWaitingRoom();
+}
+
 // ── WHY BREAKDOWN — client-side explanation of why a card made the list (zero tokens) ──
 function _whyHTML(card){
   const h=card.item.h;
@@ -15572,10 +15763,18 @@ function _whyHTML(card){
   let criteria='';
   if(card.type==='keepwarm'){
     const conn=(gs&&gs.total>0)?`Has giving history ($${Math.round(gs.total).toLocaleString()})`:'Connected before (event or interaction)';
+    const tier=card.item.tier||'regular';const leash=card.item.leash||ENGINE.driftDays;
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${conn}<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.daysSince!==null?card.daysSince:'999+'} days since contact ≥ ${ENGINE.driftDays}-day drift threshold<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${_tierLabel(tier)} — quiet ${card.daysSince!==null?card.daysSince:'999+'} days (your alarm for them: ${leash})<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Prospect score ${agc.total}</div>`;
+  }else if(card.type==='newcontact'){
+    const age=card.item.ageDays;
+    const when=age===0?'today':age===1?'yesterday':age+' days ago';
+    const origin=card.item.formLead?`Came in through your website form ${when}`:`Added ${when} — no next step planned yet`;
+    criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> New to your list — added within the last ${ENGINE.newContactWindowDays} days<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${origin}</div>`;
   }else if(card.type==='icebreaker'){
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value ${_fmtHomeVal(h.home_value)} ≥ ${_fmtHomeVal(ENGINE.icebreakerHomeValue)} threshold<br>
@@ -15591,7 +15790,7 @@ function _whyHTML(card){
     criteria=`<div style="color:var(--txt2);margin-bottom:6px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> You pinned this household to today's queue</div>`;
   }
   return criteria
-    +row('AGC breakdown',`A ${agc.affinity}/35 · G ${agc.generosity}/35 · C ${agc.capacity}/30 = <b>${agc.total}</b>`)
+    +row('Prospect breakdown',`A ${agc.affinity}/35 · G ${agc.generosity}/35 · C ${agc.capacity}/30 = <b>${agc.total}</b>`)
     +row('Home value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown')
     +row('Giving',gs&&gs.total>0?`$${Math.round(gs.total).toLocaleString()} · ${gs.count} gift${gs.count!==1?'s':''} · last ${gs.lastDate}`:'none on file')
     +row('Last contact',card.lastContact?`${card.lastContact} (${card.daysSince}d ago)`:`none in last ${ENGINE.driftDays} days`);
@@ -15608,7 +15807,8 @@ async function _buildDailyFive(el){
     <div id="pinSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf);border:1px solid var(--border2);border-radius:6px;margin-top:3px;z-index:50;max-height:220px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.25)"></div>
     </div>
     <button onclick="rebuildDailyFive()" title="Re-draw today's five from scratch" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--txt2);font-family:var(--font-ui);font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--txt2)'"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 6.7 3M21 3v6h-6M21 12a9 9 0 0 1-9 9 9 9 0 0 1-6.7-3M3 21v-6h6"/></svg> Rebuild</button>
-  </div>`;
+  </div>
+  <div style="text-align:right;margin:-4px 0 8px"><a onclick="openWaitingRoom()" style="font-family:var(--font-ui);font-size:.66rem;color:var(--accent);cursor:pointer">See the full queue →</a></div>`;
 
   if(!cards.length){el.innerHTML=pinBar+'<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg></div><p>No calls needed today — great work!</p></div>';return;}
 
@@ -15623,7 +15823,11 @@ async function _buildDailyFive(el){
       whyNow='Manually pinned by you — stays here until you log an outcome or unpin';
     } else if(type==='keepwarm'){
       badge='RECONNECT';badgeColor='#f97316';
-      whyNow=`Connected before — no contact in ${item.daysSince} days`;
+      whyNow=`${_tierLabel(item.tier||'regular')} — quiet ${item.daysSince} days (your alarm for them: ${item.leash||ENGINE.driftDays})`;
+    } else if(type==='newcontact'){
+      badge='NEW';badgeColor='#0d9488';
+      const age=item.ageDays;const when=age===0?'today':age===1?'yesterday':age+' days ago';
+      whyNow=item.formLead?`Came in through your website form ${when}`:`Added ${when} — no next step planned yet`;
     } else if(type==='icebreaker'){
       badge='PROSPECT';badgeColor='#6b7280';
       whyNow=`High-capacity household (${_fmtHomeVal(h.home_value)} home) — never contacted`;
@@ -15639,7 +15843,7 @@ async function _buildDailyFive(el){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <span style="font-family:var(--font-ui);font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44">${badge}</span>
         <span style="font-size:.8rem;font-weight:600;color:var(--txt);flex:1">${_escHtml(h.displayName)}</span>
-        <span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">AGC ${agcScore.total}</span>
+        <span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">Prospect ${agcScore.total}</span>
       </div>
       <div style="font-size:.68rem;color:var(--txt2);margin-bottom:8px;font-style:italic">${whyNow}</div>
       <div style="display:flex;gap:5px;margin-bottom:8px">
@@ -15966,7 +16170,7 @@ async function logTouch(o){
 async function _recalcAGCAggForHH(hhId){
   const h=households.find(x=>x.id===hhId)||(hiddenHouseholds||[]).find(x=>x.id===hhId);
   if(!h)return;
-  const a={lastContact:null,connected12:0};
+  const a={lastContact:null,connected12:0,lifetime:0};
   const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
   const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
   if(memberIds){
@@ -15976,6 +16180,7 @@ async function _recalcAGCAggForHH(hhId){
       if(!r.date)return;
       const key=r.type+'|'+r.date+'|'+(r.notes||'');
       if(seen.has(key))return;seen.add(key);
+      a.lifetime++; // deduped lifetime interaction count (closeness Thin-tier test)
       if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
@@ -16244,49 +16449,10 @@ async function trackAddPick(hhId){
   await startFollowUpTrack(hhId);
 }
 
-// ── COLD FLOOR ──
-async function renderColdFloor(){
-  const el=document.getElementById('body-panel-coldfloor');
-  if(!el||!households.length){if(el)el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"/></svg></div><p>Loading…</p></div>';return;}
-  const snoozedIds=new Set(outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until&&t.snooze_until>localToday()).map(t=>t.household_id));
-  const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
-  // Truly cold = zero interactions EVER on any household member (not just zero donations)
-  let contactedIds=new Set();
-  try{
-    const rows=await sbAll('interactions?select=contact_id&order=id.asc')||[];
-    contactedIds=new Set(rows.map(r=>r.contact_id));
-  }catch(e){console.warn('cold floor interaction check failed',e);}
-  const coldFloor=[];
-  for(const h of households){
-    if(snoozedIds.has(h.id))continue;
-    if(activeIds.has(h.id))continue; // already queued in an active track
-    const gs=getGivingStats(h);
-    if(gs&&gs.total>0)continue;
-    if((h.home_value||0)<ENGINE.coldFloorHomeValue)continue;
-    if((h.members||[]).some(m=>contactedIds.has(m.id)))continue; // has been contacted — not cold
-    coldFloor.push({h,idx:hIdx(h.id)});
-  }
-  coldFloor.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
-  if(!coldFloor.length){
-    el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 9 9l6 6ZM14 8l1-3M19 9l2-1M16 14l3 1M18 4l.5-1"/></svg></div><p>No cold floor contacts — everyone\'s been touched!</p></div>';
-    return;
-  }
-  const todayStr=localToday();
-  const tomorrowStr=localToday(1);
-  el.innerHTML=coldFloor.slice(0,6).map(({h,idx})=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.76rem;font-weight:500;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="switchView('crm');setTimeout(()=>byId('selectHousehold','${households[idx].id}',${idx}),100)">${_escHtml(h.displayName)}</div>
-        <div style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${h.home_value?_fmtHomeVal(h.home_value)+' home':''}</div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0">
-        <button onclick="byId('addToDaily','${households[idx].id}',${idx},'${todayStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--accent);color:var(--accent);border-radius:4px;background:none;cursor:pointer">Today</button>
-        <button onclick="byId('addToDaily','${households[idx].id}',${idx},'${tomorrowStr}')" style="font-size:.58rem;padding:2px 6px;border:1px solid var(--border2);color:var(--txt2);border-radius:4px;background:none;cursor:pointer">Tomorrow</button>
-      </div>
-    </div>`).join('');
-  if(coldFloor.length>6)el.innerHTML+=`<div style="font-size:.62rem;color:var(--txt3);text-align:center;padding:6px">+${coldFloor.length-6} more cold floor contacts</div>`;
-}
-
+// ── COLD FLOOR ── retired as a dashboard panel in build 2026-07-23; the cold-floor
+// list now lives in the Waiting Room (openWaitingRoom), which recomputes it from the
+// shared pools. renderColdFloor() was removed. addToDaily() is kept — still reachable
+// by name via other flows — but no longer repaints a cold-floor panel.
 async function addToDaily(idx,dueDate){
   const h=households[idx];if(!h)return;
   // Create an active track with next_due = date
@@ -16298,7 +16464,6 @@ async function addToDaily(idx,dueDate){
   }
   await loadOutreachTracks();
   renderDailyFive();
-  renderColdFloor();
 }
 
 // ── SOLICITATION READINESS INDEX ──
@@ -16469,7 +16634,6 @@ async function deleteTrack(trackId){
     outreachTracks=outreachTracks.filter(t=>t.id!==trackId);
     await renderActiveTracks();
     renderDailyFive();
-    renderColdFloor();
   }catch(e){_ebToastMsg('Delete failed: '+e.message);}
 }
 
@@ -16554,7 +16718,7 @@ const _RP_FIELDS={
   has_address:{label:'Has address',level:'h',type:'bool'},
   has_kids:{label:'Has kids',level:'h',type:'bool'},
   kid_age:{label:'Kid age',level:'h',type:'number'},
-  agc:{label:'Prospect score (AGC)',level:'h',type:'number'},
+  agc:{label:'Prospect score',level:'h',type:'number'},
   total_giving:{label:'Total giving',level:'roll',type:'number'},
   gift_count:{label:'# of gifts',level:'roll',type:'number'},
   largest_gift:{label:'Largest gift',level:'roll',type:'number'},
@@ -16808,7 +16972,7 @@ function _rpCols(entity,groupMode){
     const cols=Object.assign({},_rpHCols('',hOf));
     cols.phones={label:'Phones',get:r=>((hOf(r).members||[]).filter(m=>m.phone).map(m=>m.first_name+': '+m.phone).join('; '))};
     cols.emails={label:'Emails',get:r=>((hOf(r).members||[]).filter(m=>m.email).map(m=>m.first_name+': '+m.email).join('; '))};
-    cols.agc={label:'AGC',get:r=>(R().h[hOf(r).id]||{}).agc||0,num:true};
+    cols.agc={label:'Prospect',get:r=>(R().h[hOf(r).id]||{}).agc||0,num:true};
     cols.home_value={label:'Home Value',get:r=>hOf(r).home_value||'',num:true};
     if(entity==='household'){
       cols.total_giving={label:'Total Giving',get:r=>(R().h[r.id]||{}).total||0,num:true};
@@ -16848,7 +17012,7 @@ function _rpCols(entity,groupMode){
       household:{label:'Household',get:r=>r._h.displayName||''}
     };
     Object.assign(cols,_rpHCols('hh_',r=>r._h));
-    cols.agc={label:'AGC',get:r=>(R().h[r._h.id]||{}).agc||0,num:true};
+    cols.agc={label:'Prospect',get:r=>(R().h[r._h.id]||{}).agc||0,num:true};
     cols.c_total_giving={label:'Their Giving',get:r=>(R().c[r.id]||{}).total||0,num:true};
     cols.c_gift_count={label:'Their # Gifts',get:r=>(R().c[r.id]||{}).count||0,num:true};
     cols.c_last_gift={label:'Their Last Gift',get:r=>(R().c[r.id]||{}).lastGift||''};
@@ -16862,7 +17026,7 @@ function _rpCols(entity,groupMode){
       amount:{label:'Amount',get:r=>parseFloat(r.amount)||0,num:true},
       method:{label:'Method',get:r=>r.method||''},
       notes:{label:'Notes',get:r=>r.notes||''},
-      donor:{label:'Donor',get:r=>_daasDisplayName(r._m)},
+      donor:{label:'Constituent',get:r=>_daasDisplayName(r._m)},
       household:{label:'Household',get:r=>r._h.displayName||''}
     };
     Object.assign(cols,_rpHCols('hh_',r=>r._h));
@@ -17371,7 +17535,7 @@ function _rpRenderBuilder(){
   if(_rpCur.entity==='donation'){
     html+='<div class="rp-lbl" style="margin-top:10px">Grouping</div><div style="display:flex;gap:6px">'
       +'<button class="btn '+(_rpCur.groupMode!=='donor'?'btn-pri':'btn-sec')+'" style="font-size:.68rem;padding:4px 12px" onclick="_rpGroupModeChanged(\'gift\')">One row per gift</button>'
-      +'<button class="btn '+(_rpCur.groupMode==='donor'?'btn-pri':'btn-sec')+'" style="font-size:.68rem;padding:4px 12px" onclick="_rpGroupModeChanged(\'donor\')">One row per donor household</button>'
+      +'<button class="btn '+(_rpCur.groupMode==='donor'?'btn-pri':'btn-sec')+'" style="font-size:.68rem;padding:4px 12px" onclick="_rpGroupModeChanged(\'donor\')">One row per constituent household</button>'
       +'</div>';
   }
   html+='</div>';
@@ -18040,7 +18204,7 @@ function _asExecuteSearch(sentence){
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
       <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="5" r="2"></circle><path d="M11 8l-2 4 3 2v5M9 12l-3 1-2 4M14 14l3 1 2 4"></path></svg> Quick <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~10k tokens · cheapest, fastest</span></div>
-      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Skims a one-line summary of every household — name, family members, AGC score, home value, and total giving. It does <b>not</b> read your notes or interactions. Best for fast roster questions like "who are my top-AGC families in Pepper Pike?" Answers in a single paragraph.</p>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Skims a one-line summary of every household — name, family members, Prospect score, home value, and total giving. It does <b>not</b> read your notes or interactions. Best for fast roster questions like "who are my top-scoring families in Pepper Pike?" Answers in a single paragraph.</p>
     </div>
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
@@ -18050,7 +18214,7 @@ function _asExecuteSearch(sentence){
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:6px">
       <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg> Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow &amp; costly (~$0.30)</span></div>
-      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">The deepest look. Reads the <b>full detailed profile</b> of every household — AGC breakdown, gift history, AI research summary, suggested approach, business info — plus the relevant notes. Use for big cross-database thinking like "build me a major-gift prospect list with talking points for each." Asks you to confirm before running because of the cost.</p>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">The deepest look. Reads the <b>full detailed profile</b> of every household — Prospect breakdown, gift history, AI research summary, suggested approach, business info — plus the relevant notes. Use for big cross-database thinking like "build me a major-gift prospect list with talking points for each." Asks you to confirm before running because of the cost.</p>
     </div>
 
     <p style="font-size:.72rem;color:var(--txt3);line-height:1.5;margin:14px 0 0">"Tokens" is roughly how much text the AI reads per question. More tokens = more thorough but slower and more expensive. When unsure, start with Standard.</p>
@@ -18125,7 +18289,7 @@ function _asExecuteSearch(sentence){
     <div class="m-tab active" id="mtab-dash" data-tab="dash">
       <div class="m-tab-inner">
         <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"></path></svg> Daily Five</div>
-        <div class="m-sub">Who to reach out to today.</div>
+        <div class="m-sub">Who to reach out to today. <a onclick="openWaitingRoom()" style="color:var(--accent);cursor:pointer;white-space:nowrap">See the full queue →</a></div>
         <div style="position:relative;display:flex;gap:8px;margin-bottom:11px">
           <div style="position:relative;flex:1">
             <input id="mPinSearchInput" oninput="mPinSearchFilter()" placeholder="Search a name to pin to today's list…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 12px;color:var(--txt);font-family:var(--font-ui);font-size:.82rem;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
@@ -18174,7 +18338,7 @@ function _asExecuteSearch(sentence){
     <div class="m-tab" id="mtab-chat" data-tab="chat">
       <div class="m-tab-inner">
         <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg> Ask DAAS</div>
-        <div class="m-sub">Ask anything about your whole donor base — lapsed givers, who to cultivate, by neighborhood.</div>
+        <div class="m-sub">Ask anything about your whole constituent base — lapsed givers, who to cultivate, by neighborhood.</div>
         <button class="m-action-card" onclick="openGlobalAsk()">
           <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg></span>
           <span class="m-action-txt"><b>Open Chat</b><span>Quick · Standard · Power modes</span></span>
@@ -18482,7 +18646,7 @@ function mShowD5Card(){
   if(!card){ mRenderD5(); return; }
   const h=card.item.h;
   const agc=getAGCScore(h);
-  const label={keepwarm:'Reconnect',icebreaker:'Prospect',activetrack:'Follow-up',pinned:'Pinned',carryover:'Carried over'}[card.type]||'';
+  const label={keepwarm:'Reconnect',newcontact:'New',icebreaker:'Prospect',activetrack:'Follow-up',pinned:'Pinned',carryover:'Carried over'}[card.type]||'';
   const call=_mD5CallTarget(h);
   const reason=(typeof _whyHTML==='function')?_whyHTML(card):'';
   const sub=h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:''));
