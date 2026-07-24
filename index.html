@@ -164,9 +164,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .modal-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--hairline);padding-top:14px;margin-top:4px}
 .mpin{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(16,24,40,.25)}
 .mpin.pin-grey{background:var(--grey)}.mpin.pin-green{background:var(--green)}.mpin.pin-gold{background:var(--amber)}.mpin.pin-red{background:var(--red)}
+.mpin.pin-warm{background:#f97316}.mpin.pin-steady{background:#eab308}.mpin.pin-cool{background:#3b82f6}
 .mpin.active{transform:rotate(-45deg) scale(1.3);border:3px solid var(--navy)}
 .mpin-n{transform:rotate(45deg);font-family:var(--font-ui);font-size:8px;color:#fff;font-weight:500}
-.mpin.pin-gold .mpin-n{color:#333}
+.mpin.pin-gold .mpin-n{color:#333}.mpin.pin-steady .mpin-n{color:#333}
 .pfbar{background:var(--surf2);border-top:1px solid var(--border);padding:7px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0}
 .pf-text{font-family:var(--font-ui);font-size:.6rem;color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pf-stop{font-family:var(--font-ui);font-size:.62rem;color:var(--red-tx);cursor:pointer;background:var(--surf);border:1px solid var(--border2);border-radius:5px;padding:3px 9px}
@@ -1436,8 +1437,7 @@ html.force-desktop #mobileShell{display:none!important}
         <option value="value">Home Value</option>
         <option value="giving">Total Giving</option>
         <option value="score">Prospect Score</option>
-        <option value="lastcontact">Last Contact</option>
-        <option value="giftcount">Gift Count</option>
+        <option value="relationship">Relationship</option>
       </select>
     </div>
     <div class="toolbar-sep"></div>
@@ -1490,10 +1490,10 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="main">
     <div id="map"></div>
     <div class="legend" id="legend">
-        <div class="leg-item"><div class="leg-dot" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div><span id="leg2">Tier 2</span></div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div><span id="leg3">Tier 3</span></div>
+        <div class="leg-item"><div class="leg-dot" id="legdot0" style="background:var(--grey)"></div><span id="leg0">No data</span></div>
+        <div class="leg-item"><div class="leg-dot" id="legdot1" style="background:var(--green)"></div><span id="leg1">Tier 1</span></div>
+        <div class="leg-item"><div class="leg-dot" id="legdot2" style="background:var(--amber)"></div><span id="leg2">Tier 2</span></div>
+        <div class="leg-item"><div class="leg-dot" id="legdot3" style="background:var(--red)"></div><span id="leg3">Tier 3</span></div>
       </div>
     <div class="sidebar">
       <div class="mobile-bar">
@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.10'; // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
+const BUILD_STAMP='2026-07-23.12'; // Unified event-attendance rules: attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2001,6 +2001,11 @@ function _fmtDate(d){try{return _localDate(d).toLocaleDateString('en-US',{month:
 const REACH_TYPES=['Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance'];
 function _isReach(type){return REACH_TYPES.includes(type);}      // win + closes track + warmth
 function _isTouch(type){return type!=='Note';}                   // resets last contact
+// Passive-attendance reaches: they warm the relationship + reset recency, but they are
+// NOT personal outreach, so they must NOT clear the "NEW contact needs a first touch"
+// flag (an RSVP/attendee still deserves a welcome). Used only by the NEW-card test.
+const ATTENDANCE_TYPES=['Event attendance','Shabbat attendance','Class / Program'];
+function _isOutreachTouch(type){return type!=='Note'&&ATTENDANCE_TYPES.indexOf(type)<0;}
 
 // One icon per interaction type, same stroke style, used app-wide (Recent Activity
 // feed, household timeline, anywhere a type is shown). Returns inner SVG paths only;
@@ -2781,6 +2786,9 @@ function _bumpAGCAgg(contactId,type,date){
   if(!contactId||!date)return;
   const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
   if(!h)return;
+  // Future-dated (e.g. an RSVP logged against a future event date) doesn't count for
+  // warmth/recency/depth until the day arrives — matches loadAGCInteractionAggregates.
+  if((''+date).slice(0,10)>localToday())return;
   const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
   if(typeof a.lifetime!=='number')a.lifetime=0;
   a.lifetime++;
@@ -2792,6 +2800,7 @@ function _bumpAGCAgg(contactId,type,date){
 async function loadAGCInteractionAggregates(){
   try{
     const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
+    const todayStr=localToday();
     const rows=await sbAll('interactions?select=contact_id,type,date,notes&order=id.asc')||[];
     // Map contacts->household across BOTH visible and hidden households so nothing
     // is silently dropped from the aggregate.
@@ -2805,6 +2814,7 @@ async function loadAGCInteractionAggregates(){
     const _seenByHH={};
     rows.forEach(r=>{
       const hh=c2h[r.contact_id];if(!hh||!r.date)return;
+      if((''+r.date).slice(0,10)>todayStr)return; // future-dated (e.g. RSVP to a coming event) doesn't count until the day arrives
       const a=_agcInterAgg[hh]||(_agcInterAgg[hh]={lastContact:null,connected12:0,lifetime:0});
       const seen=_seenByHH[hh]||(_seenByHH[hh]=new Set());
       const key=r.type+'|'+r.date+'|'+(r.notes||'');
@@ -2814,20 +2824,16 @@ async function loadAGCInteractionAggregates(){
       if(_isTouch(r.type)&&(!a.lastContact||r.date>a.lastContact))a.lastContact=r.date;
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
-    // Event registrations count as contact too — an event signup/attendance is a
-    // reach (updates last-contact AND warmth), exactly like a logged interaction.
-    households.forEach(h=>(h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{
-      const d=r.reg_date;if(!d)return;
-      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
-      if(!a.lastContact||d>a.lastContact)a.lastContact=d;
-      if(d>=since)a.connected12++;
-    })));
-    // A donation counts as a connection too — for RECENCY only (last-contact). It is
-    // deliberately NOT added to connected12 or lifetime, so giving alone never changes
-    // the Warm/Steady/Cool tier (tier stays a behavioral signal). Keeps last-contact
-    // in step with _computeCandidatePools. Donations are event_fee-excluded at load.
+    // NOTE: event attendance is ALREADY represented as an 'Event attendance' interaction
+    // (every signup path — manual, form, pay-later, Stripe — creates one; a no-show
+    // deletes it). So registration rows are deliberately NOT counted here — that would
+    // double-count attended events and keep no-shows warm. The interaction is the single
+    // source of truth for attendance warmth + recency.
+    // A donation counts as a connection too — for RECENCY only (last-contact), never
+    // connected12/lifetime, so giving alone doesn't change the Warm/Steady/Cool tier.
+    // (Donations are event_fee-excluded at load; future-dated ones don't pre-count.)
     households.forEach(h=>(h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
-      if(!d||!d.date)return;
+      if(!d||!d.date||(''+d.date).slice(0,10)>todayStr)return;
       const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
       if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
     })));
@@ -2911,6 +2917,11 @@ function getProspectScore(h){
 function getTier(i){
   const h=households[i];if(!h)return'grey';
   const mode=document.getElementById('colorBy')?.value||'value';
+  if(mode==='relationship'){
+    const t=_tierWithUnrated(h);
+    if(t==='unrated')return'grey';
+    return t==='close'?'warm':t==='thin'?'cool':'steady';
+  }
   if(mode==='score'){
     const s=getProspectScore(h);
     if(s===0)return'grey';
@@ -2957,7 +2968,22 @@ function switchColorMode(){
 
 function recolorAll(){
   const mode=document.getElementById('colorBy')?.value||'value';
-  if(mode==='score'){
+  // Legend swatches default to the quality palette (green/amber/red). Relationship
+  // mode repaints them Warm/Steady/Cool, so reset to defaults for every other mode.
+  const _ld1=document.getElementById('legdot1'),_ld2=document.getElementById('legdot2'),_ld3=document.getElementById('legdot3'),_l0=document.getElementById('leg0');
+  if(_ld1)_ld1.style.background='var(--green)';
+  if(_ld2)_ld2.style.background='var(--amber)';
+  if(_ld3)_ld3.style.background='var(--red)';
+  if(_l0)_l0.textContent='No data';
+  if(mode==='relationship'){
+    if(_ld1)_ld1.style.background='#f97316';
+    if(_ld2)_ld2.style.background='#eab308';
+    if(_ld3)_ld3.style.background='#3b82f6';
+    if(_l0)_l0.textContent='Unrated';
+    document.getElementById('leg1').textContent='Warm';
+    document.getElementById('leg2').textContent='Steady';
+    document.getElementById('leg3').textContent='Cool';
+  } else if(mode==='score'){
     document.getElementById('leg1').textContent='0–39';
     document.getElementById('leg2').textContent='40–69';
     document.getElementById('leg3').textContent='70–100';
@@ -14517,11 +14543,12 @@ function switchView(view){
 
 // ── CONTACTS VIEW — sortable household table ──
 const CT_PRESETS={
-  default:['name','email','phone','agc','homeValue','lastContact'],
-  financial:['name','agc','totalGiving','lastGift','giftCount','homeValue'],
-  outreach:['name','phone','lastContact','daysSince','agc']
+  default:['tier','name','email','phone','agc','homeValue','lastContact'],
+  financial:['tier','name','agc','totalGiving','lastGift','giftCount','homeValue'],
+  outreach:['tier','name','phone','lastContact','daysSince','agc']
 };
 const CT_COLS={
+  tier:{label:'Rel',val:h=>_tierSortRank(h),csv:h=>_tierWord(h),html:h=>_tierDot(h)},
   name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${_escHtml(h.displayName||'')}</div><div class="ct-sub">${_escHtml(h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:'')))}</div>`},
   email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.email)}</div>`).join('')||'<span class="ct-sub">—</span>'},
   phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.phone)}</div>`).join('')||'<span class="ct-sub">—</span>'},
@@ -14615,7 +14642,7 @@ function exportContactsCSV(){
     lines.push(cols.map(k=>{
       if(k==='phone')return esc((h.members||[]).filter(m=>m.phone).map(m=>m.first_name+': '+m.phone).join(' | '));
       if(k==='email')return esc((h.members||[]).filter(m=>m.email).map(m=>m.first_name+': '+m.email).join(' | '));
-      return esc(CT_COLS[k].val(h));
+      return esc(CT_COLS[k].csv?CT_COLS[k].csv(h):CT_COLS[k].val(h));
     }).join(','));
   });
   const blob=new Blob([lines.join('\n')],{type:'text/csv'});
@@ -14663,7 +14690,10 @@ async function loadUIPrefs(){
   if(CT_PRESETS[_uiPrefs.contactsPreset]){_ctState.preset=_uiPrefs.contactsPreset;
     ['default','financial','outreach'].forEach(x=>document.getElementById('ctp-'+x)?.classList.toggle('active',x===_uiPrefs.contactsPreset));}
   const cb=document.getElementById('colorBy');
-  if(cb&&_uiPrefs.colorBy){cb.value=_uiPrefs.colorBy;switchColorMode();}
+  // Guard against a saved mode that no longer exists (Gift Count / Last Contact were
+  // removed) — fall back to Home Value so the select doesn't land on a dead value.
+  const _validModes=['value','giving','score','relationship'];
+  if(cb&&_uiPrefs.colorBy){cb.value=_validModes.includes(_uiPrefs.colorBy)?_uiPrefs.colorBy:'value';switchColorMode();}
 }
 async function saveUIPrefs(){
   _uiPrefs.contactsPreset=_ctState.preset;
@@ -15006,7 +15036,7 @@ async function renderWins(){
   const thisSunday=new Date(now2);thisSunday.setDate(now2.getDate()-dayOfWeek);
   const sinceStr=localDateStr(thisSunday);
   try{
-    rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${sinceStr}&order=date.desc&limit=10`)||[];
+    rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${sinceStr}&date=lte.${localToday()}&order=date.desc&limit=10`)||[];
   }catch(e){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>Could not load wins</p></div>';return;}
   if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg></div><p>No connected calls logged yet — go make some!</p></div>';return;}
 
@@ -15042,7 +15072,7 @@ async function renderRecentActivity(){
   let rows=[];
   try{
     // Everything that represents a touch — exclude only the standing-info "Note" type.
-    rows=await sb(`interactions?type=neq.Note&order=date.desc,created_at.desc,id.desc&limit=40`)||[];
+    rows=await sb(`interactions?type=neq.Note&date=lte.${localToday()}&order=date.desc,created_at.desc,id.desc&limit=40`)||[];
   }catch(e){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>Could not load recent activity</p></div>';return;}
   if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><p>No interactions logged yet — log a call, text, or visit to see it here.</p></div>';return;}
 
@@ -15479,6 +15509,31 @@ function _tierRank(tier){return tier==='close'?3:tier==='thin'?1:2;}
 function _tierColor(tier){return tier==='close'?'#f97316':tier==='thin'?'#3b82f6':'#eab308';} // warm=orange, steady=gold, cool=blue
 // Small colored temperature chip (returns an HTML span).
 function _tierChip(tier){const c=_tierColor(tier);return `<span style="font-family:var(--font-ui);font-size:.58rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${c}22;color:${c};border:1px solid ${c}44">${_tierLabel(tier)}</span>`;}
+// Tier including an "unrated" state for households with ZERO recorded history —
+// no interactions (incl. notes), no event registrations, no donations. A single
+// gift / registration / interaction is enough to start rating (then _closenessTier).
+// Keeps "Cool" meaning "we've cooled off" rather than "brand new / unknown".
+function _tierWithUnrated(h){
+  if(!h)return'unrated';
+  const agg=_agcInterAgg[h.id]||{};
+  const hasInter=(agg.lifetime||0)>0;
+  const hasReg=(h.members||[]).some(m=>(m.registrations||[]).length);
+  const hasDon=(h.members||[]).some(m=>(m.donations||[]).length);
+  if(!hasInter&&!hasReg&&!hasDon)return'unrated';
+  try{return _closenessTier(h);}catch(e){return'regular';}
+}
+// Small relationship dot for dense lists (contacts table): filled circle in the tier
+// color with the initial (W/S/C); a hollow grey dash when unrated. Tooltip spells it out.
+function _tierDot(h){
+  const t=_tierWithUnrated(h);
+  const base='display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-family:var(--font-ui);font-size:.58rem;font-weight:700;line-height:1';
+  if(t==='unrated')return`<span title="Not enough history yet" style="${base};border:1.5px solid var(--grey);color:var(--grey)">–</span>`;
+  const c=_tierColor(t);const label=_tierLabel(t);const txt=(t==='regular')?'#3a2e05':'#fff';
+  return`<span title="${label} relationship" style="${base};background:${c};color:${txt}">${label[0]}</span>`;
+}
+// Sort rank + CSV word for the contacts "Relationship" column. Warm>Steady>Cool>unrated.
+function _tierSortRank(h){const t=_tierWithUnrated(h);return t==='close'?3:t==='regular'?2:t==='thin'?1:0;}
+function _tierWord(h){const t=_tierWithUnrated(h);return t==='unrated'?'Unrated':_tierLabel(t);}
 // Chip + ↑/↓ movement arrow when the household's most recent logged touch changed the tier
 // (reads _tierSnaps, populated in logTouch). For the contact page.
 function _tierChipMove(hhId){
@@ -15510,25 +15565,26 @@ async function _computeCandidatePools(){
   // you've actually reached out — a registration alone (form lead) does not count.
   let recentRows=[];
   try{recentRows=await sbAll(`interactions?select=contact_id,date,type&order=date.desc,id.asc`)||[];}catch(e){}
-  const lastInteraction={};        // last NON-NOTE interaction date per contact
-  const contactHasTouch=new Set();  // contacts with ≥1 non-Note interaction
+  const lastInteraction={};          // last NON-NOTE, non-future interaction date per contact (recency; attendance DOES count)
+  const contactHasOutreach=new Set(); // contacts with ≥1 OUTREACH touch (excludes attendance) — drives the NEW "reached out?" test
   recentRows.forEach(r=>{
-    if(r.type==='Note')return;     // Notes never count as contact
+    if(r.type==='Note')return;                        // Notes never count as contact
+    if((''+r.date).slice(0,10)>todayStr)return;        // future-dated (RSVP to a coming event) doesn't count until the day arrives
     if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;
-    contactHasTouch.add(r.contact_id);
+    if(_isOutreachTouch(r.type))contactHasOutreach.add(r.contact_id); // attendance ≠ personal outreach → won't clear the NEW card
   });
 
-  // Household → most recent contact across members (event registrations count too).
-  // Notes are already excluded above, so hhLastContact matches the canonical AGC
-  // lastContact. hhHasInteraction (interactions only, no registrations) drives the
-  // NEW-contact "already reached out?" test below.
+  // Household → most recent contact across members. Attendance lives in its 'Event
+  // attendance' interaction (counted above), so registration rows are NOT read here —
+  // single source of truth (no double-count, and a no-show that deleted the interaction
+  // truly stops counting). A donation counts for recency. hhHasOutreach (personal
+  // outreach only) drives the NEW-contact "already reached out?" test below.
   const hhLastContact={};
-  const hhHasInteraction=new Set();
+  const hhHasOutreach=new Set();
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
-    (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{if(r.reg_date)dates.push(r.reg_date);}));
-    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d&&d.date)dates.push(d.date);})); // a gift IS a connection — counts toward recency so a recent donor isn't flagged "quiet" (m.donations is event_fee-excluded at load)
-    if((h.members||[]).some(m=>contactHasTouch.has(m.id)))hhHasInteraction.add(h.id);
+    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d&&d.date&&(''+d.date).slice(0,10)<=todayStr)dates.push(d.date);})); // a gift counts for recency (event_fee-excluded at load; future excluded)
+    if((h.members||[]).some(m=>contactHasOutreach.has(m.id)))hhHasOutreach.add(h.id);
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
 
@@ -15562,7 +15618,7 @@ async function _computeCandidatePools(){
   for(const h of households){
     if(_dailyPins.includes(h.id))continue;
     if(activeTrackHHIds.has(h.id))continue;
-    if(hhHasInteraction.has(h.id))continue; // already reached out — no longer a first-touch NEW card (form leads, who only have a registration, still surface)
+    if(hhHasOutreach.has(h.id))continue; // you've personally reached out (call/text/meeting) — no longer a first-touch NEW card. Attendance/RSVP alone does NOT clear it; form leads still surface.
     if(!h.created_at)continue;
     const created=new Date(h.created_at);
     if(isNaN(created.getTime()))continue;
@@ -16277,12 +16333,13 @@ async function _recalcAGCAggForHH(hhId){
   if(!h)return;
   const a={lastContact:null,connected12:0,lifetime:0};
   const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
+  const todayStr=localToday();
   const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
   if(memberIds){
     const rows=await sbAll(`interactions?select=id,type,date,notes&contact_id=in.(${memberIds})&order=id.asc`)||[];
     const seen=new Set();
     rows.forEach(r=>{
-      if(!r.date)return;
+      if(!r.date||(''+r.date).slice(0,10)>todayStr)return; // future-dated doesn't count yet
       const key=r.type+'|'+r.date+'|'+(r.notes||'');
       if(seen.has(key))return;seen.add(key);
       a.lifetime++; // deduped lifetime interaction count (closeness Thin-tier test)
@@ -16290,14 +16347,11 @@ async function _recalcAGCAggForHH(hhId){
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
     });
   }
-  (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{
-    const d=r.reg_date;if(!d)return;
-    if(!a.lastContact||d>a.lastContact)a.lastContact=d;
-    if(d>=since)a.connected12++;
-  }));
-  // Donations → recency only (mirrors loadAGCInteractionAggregates); tier signals unchanged.
+  // Registration rows are NOT counted — attendance lives in its 'Event attendance'
+  // interaction (single source of truth; see loadAGCInteractionAggregates).
+  // Donations → recency only; future-dated excluded.
   (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
-    if(!d||!d.date)return;
+    if(!d||!d.date||(''+d.date).slice(0,10)>todayStr)return;
     if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
   }));
   _agcInterAgg[hhId]=a;
@@ -16584,7 +16638,7 @@ async function renderSRI(){
   const todayStr=localToday();
   // Fetch recent connected interactions for engagement check
   let connectedRows=[];
-  try{connectedRows=await sbAll(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&select=contact_id&order=id.asc`)||[];}catch(e){}
+  try{connectedRows=await sbAll(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&date=lte.${todayStr}&select=contact_id&order=id.asc`)||[];}catch(e){}
   const connectedContactIds=new Set(connectedRows.map(r=>r.contact_id));
 
   // Build contact→household map
