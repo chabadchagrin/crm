@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.12'; // Unified event-attendance rules: attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
+const BUILD_STAMP='2026-07-24.1'; // FULL-AUDIT FIX PASS (AUDIT-2026-07-24.md F1–F15): (F1) _unlogEventAttendance re-reads the registration from DB and never guesses — the old "most recent Event attendance" fallback could delete a different event's / an imported history row. (F2) The 180-day closed_unresponsive rest is now honored: pools + Waiting Room use _isResting() (snoozed OR closed_unresponsive with live snooze_until); snooze/start-follow-up patch existing resting rows instead of stacking duplicates. (F3) toggleNoShow re-reads the reg link from DB (stale cache double-created attendance) + recalcs the aggregate. (F4) Profile Log marks Daily-done only when dated today (matches Quick Capture). (F5) Donations update recency LIVE (add/edit/delete → _recalcAGCAggForHH). (F6) deleteTimelineItem recalcs aggregate + score in both branches. (F7) Edit-interaction recalcs the aggregate. (F8) Mobile Recent: future-gated + household-deduped. (F9) _computeCandidatePools awaits the aggregates promise (startup race could freeze a mis-drawn set). (F10) Same-day top-up re-reads daily_set (cross-device done[] clobber). (F11) _bumpAGCAgg dedupes via _agcSeenKeys shared with both builders. (F12) Batch enrich routes through logTouch. (F13) _closenessTier comment corrected. (F14) DATES RUN ON EASTERN EVERYWHERE: localDateStr/localToday pin to America/New_York (DAAS_TZ; settings knob parked), new _daysSince() does whole-calendar-day math — all daysSince/ageDays/months-since sites converted. (F15) A reach closes ALL active tracks. PRIOR .12: unified event-attendance rules (attendance lives only in its interaction; future-gated; attendance ≠ personal outreach for NEW card). attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -1975,8 +1975,28 @@ async function sbAll(path,pageSize=1000){
 
 // ── LOCAL DATES — toISOString() is UTC: after 8pm in Ohio it returns TOMORROW's
 // date. These helpers always use the wall-clock local date.
-function localDateStr(d){const x=(d instanceof Date)?d:new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
+// EASTERN EVERYWHERE (2026-07-24.1): all date stamps and day-math run on
+// America/New_York wall-clock, matching the edge functions' todayLocalISO().
+// The app's "day" is the shul's day regardless of what timezone the device is
+// in. (A settings knob for other communities is parked for later.)
+const DAAS_TZ='America/New_York';
+const _estFmt=new Intl.DateTimeFormat('en-CA',{timeZone:DAAS_TZ,year:'numeric',month:'2-digit',day:'2-digit'});
+function localDateStr(d){const x=(d instanceof Date)?d:new Date(d);return _estFmt.format(x);} // Date/timestamp → 'YYYY-MM-DD' in Eastern
 function localToday(offsetDays=0){const d=new Date();if(offsetDays)d.setDate(d.getDate()+offsetDays);return localDateStr(d);}
+// Calendar days between a date-only string and Eastern today. Parses BOTH sides
+// as UTC midnight (Date.parse on bare YYYY-MM-DD) so the difference is an exact
+// whole-day count — no off-by-hours from parsing 'YYYY-MM-DD' as UTC but "now"
+// as local (the old daysSince ran ~4-5h ahead in Eastern). Timestamps are first
+// collapsed to their Eastern calendar date. Future dates → negative. null in → null out.
+function _daysSince(dateStr,asOfStr){
+  if(!dateStr)return null;
+  let s=(''+dateStr);
+  if(s.length>10)s=localDateStr(new Date(s)); // full timestamp → Eastern date
+  else s=s.slice(0,10);
+  const t=Date.parse(s),n=Date.parse(asOfStr||localToday());
+  if(isNaN(t)||isNaN(n))return null;
+  return Math.floor((n-t)/86400000);
+}
 // ── DATE-ONLY PARSE — new Date('2026-06-24') parses as UTC midnight, which
 // then DISPLAYS a day earlier in Eastern time (the "off by one" on donation/
 // interaction dates). _localDate() parses a bare YYYY-MM-DD as LOCAL midnight
@@ -2513,7 +2533,11 @@ async function loadAll(){
     loadSearchContext();
     // Load AGC scores from DB (non-blocking, will overwrite local calc with DB values)
     loadAGCScores();
-    loadAGCInteractionAggregates().then(()=>recolorAll());
+    // Keep the promise so the Daily Five engine can await it — building pools
+    // before the aggregates land made every household look zero-history (wrong
+    // tiers/leashes) and could FREEZE a mis-drawn set for the day.
+    _agcAggPromise=loadAGCInteractionAggregates();
+    _agcAggPromise.then(()=>recolorAll());
     // Preload events so contact-page registrations show real event names even
     // before the Events view is opened.
     _loadEvents().catch(()=>{});
@@ -2778,17 +2802,26 @@ function getAGCScore(h){
 // ── INTERACTION AGGREGATES for AGC scoring (loaded once at startup) ──
 // hhId -> { lastContact: 'YYYY-MM-DD' of last non-Note interaction, connected12: count of 'Connected' in trailing 365d }
 let _agcInterAgg={};
+let _agcAggPromise=null; // set by loadAll; awaited by _computeCandidatePools (startup-race guard)
 // Patch the in-memory aggregate for ONE household after an interaction is logged,
 // so the contact card's "Last Contact" / "Days Since" and Affinity recency update
 // immediately — without waiting for a full page reload to rebuild _agcInterAgg.
 // Resolves the household from contact_id. type 'Note' is excluded from last-contact.
-function _bumpAGCAgg(contactId,type,date){
+// DEDUPED (2026-07-24.1): the live bump now shares the builders' type|date|notes
+// key (_agcSeenKeys), so re-logging an identical touch no longer inflates
+// connected12/lifetime relative to what the next full load would compute.
+const _agcSeenKeys={}; // hhId → Set('type|date|notes') — kept in sync by the two builders below
+function _bumpAGCAgg(contactId,type,date,notes){
   if(!contactId||!date)return;
   const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
   if(!h)return;
   // Future-dated (e.g. an RSVP logged against a future event date) doesn't count for
   // warmth/recency/depth until the day arrives — matches loadAGCInteractionAggregates.
   if((''+date).slice(0,10)>localToday())return;
+  const key=type+'|'+date+'|'+((notes||'').trim()||'');
+  const seen=_agcSeenKeys[h.id]||(_agcSeenKeys[h.id]=new Set());
+  if(seen.has(key))return; // identical logical touch already counted
+  seen.add(key);
   const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
   if(typeof a.lifetime!=='number')a.lifetime=0;
   a.lifetime++;
@@ -2810,8 +2843,10 @@ async function loadAGCInteractionAggregates(){
     _agcInterAgg={};
     // Dedupe lifetime by the same type|date|notes key _recalcAGCAggForHH uses, so a
     // multi-member (couple) log counts as ONE lifetime interaction in BOTH paths —
-    // otherwise a full load and a post-undo recalc would disagree.
-    const _seenByHH={};
+    // otherwise a full load and a post-undo recalc would disagree. The seen-sets are
+    // kept (global _agcSeenKeys) so the live _bumpAGCAgg dedupes against them too.
+    for(const k in _agcSeenKeys)delete _agcSeenKeys[k];
+    const _seenByHH=_agcSeenKeys;
     rows.forEach(r=>{
       const hh=c2h[r.contact_id];if(!hh||!r.date)return;
       if((''+r.date).slice(0,10)>todayStr)return; // future-dated (e.g. RSVP to a coming event) doesn't count until the day arrives
@@ -2858,7 +2893,7 @@ function _calcAGCLocal(h){
   // ── AFFINITY 35 ──
   let affinity=0;
   if(agg.lastContact){
-    const d=(now-new Date(agg.lastContact))/86400000;
+    const d=_daysSince(agg.lastContact)??1e9; // Eastern calendar days (whole-day math)
     if(d<=30)affinity+=6;else if(d<=90)affinity+=4;else if(d<=180)affinity+=2;
   }
   if(agg.connected12>=6)affinity+=8;else if(agg.connected12>=3)affinity+=5;else if(agg.connected12>=1)affinity+=3;
@@ -2876,7 +2911,7 @@ function _calcAGCLocal(h){
   // ── GENEROSITY 35 ──
   let gen=0;
   if(g&&g.lastDate){
-    const mo=(now-new Date(g.lastDate))/(86400000*30);
+    const mo=(_daysSince(g.lastDate)??1e9)/30; // Eastern calendar days
     if(mo<=12)gen+=8;else if(mo<=24)gen+=5;else if(mo<=36)gen+=3;
   }
   if(g){if(g.count>=8)gen+=6;else if(g.count>=5)gen+=5;else if(g.count>=3)gen+=3;else if(g.count>=1)gen+=1;}
@@ -2939,7 +2974,7 @@ function getTier(i){
     if(!lc)return'red';
     const t1=parseFloat(document.getElementById('lctier1sb')?.value)||30;
     const t2=parseFloat(document.getElementById('lctier2sb')?.value)||90;
-    const d=(Date.now()-new Date(lc))/86400000;
+    const d=_daysSince(lc)??1e9;
     if(d<=t1)return'green';if(d<=t2)return'gold';return'red';
   }
   if(mode==='giftcount'){
@@ -4244,6 +4279,7 @@ async function saveDonation(){
     // Refresh AGC score — donations affect generosity and affinity
     const h=households[addDonHouseholdIdx];
     _invHH(h);
+    try{await _recalcAGCAggForHH(h.id);}catch(e){} // a gift counts for RECENCY — update live, not on next reload
     refreshAGCScore(h.id).then(()=>recolorAll());
     // Refresh whichever view is open
     const fp=document.getElementById('fullPanel');
@@ -4893,12 +4929,18 @@ async function saveInteraction(){
       // type must never close a live follow-up (fixed 2026-07-13).
       await sb('interactions?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:checked[0],type,date,notes:notes||null})});
       if(notes)embedAndStore(editId,type+': '+notes);else _clearInteractionEmbedding(editId);
+      // Editing type/date/notes changes warmth inputs — rebuild this household's
+      // aggregate so tier/recency don't stay stale until the next full reload.
+      {const _he=households[idx];if(_he){try{await _recalcAGCAggForHH(_he.id);}catch(e){}}}
     }else{
       // Add mode — one row per checked member, but all side effects (single
       // AGC bump, embedding, daily-five bookkeeping, reach-closes-track,
       // undo journal) run ONCE per household via the unified logger.
       const _hh=households[idx]||null;
-      _logRes=await logTouch({contactIds:checked,householdId:_hh?_hh.id:null,type,date,notes,source:'log',trackMode:'close-only',markDaily:true,silent:true,journalLabel:type+(_hh?(' — '+(_hh.displayName||'')):'')});
+      // markDaily only when dated TODAY (matches Quick Capture): a back-filled or
+      // future-dated log (e.g. an RSVP logged for the event's date) must not
+      // clear today's Daily Five card for this household.
+      _logRes=await logTouch({contactIds:checked,householdId:_hh?_hh.id:null,type,date,notes,source:'log',trackMode:'close-only',markDaily:(date===localToday()),silent:true,journalLabel:type+(_hh?(' — '+(_hh.displayName||'')):'')});
     }
     // Reset modal to add mode
     document.getElementById('li_edit_id').value='';
@@ -5733,11 +5775,18 @@ async function deleteTimelineItem(id, type, idx){
       if(_h){
         (_h.members||[]).forEach(m=>{if(m.donations)m.donations=m.donations.filter(d=>d.id!==id);});
         _invHH(_h);
+        try{await _recalcAGCAggForHH(_h.id);}catch(e){} // donation feeds recency — un-count it live
         refreshAGCScore(_h.id).then(()=>recolorAll()).catch(()=>{});
       }
     }else{
       await sb('interactions?id=eq.'+id,{method:'DELETE'});
-      if(_h)_invHH(_h);
+      // Mirror deleteInteraction: rebuild the aggregate + refresh the score so
+      // warmth/tier don't stay stale until reload (this branch previously did neither).
+      if(_h){
+        _invHH(_h);
+        try{await _recalcAGCAggForHH(_h.id);}catch(e){}
+        try{refreshAGCScore(_h.id).then(()=>{try{recolorAll();}catch(_){}});}catch(e){}
+      }
     }
     // Refresh whichever view is actually open — full panel OR sidebar.
     // (Previously always called openFullPanel, so a delete from the sidebar
@@ -7757,6 +7806,7 @@ async function captureSaveDonation(i,btn){
         member.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
       }
       _invHH(h);
+      try{await _recalcAGCAggForHH(h.id);}catch(e){} // gift = recency, live
       if(typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
       try{renderList();}catch(e){}
     }
@@ -8358,17 +8408,19 @@ async function _enrichSaveAllChunks(idx){
         await createTask({text:text.trim(),household_id:h.id,contact_id:tcid,due_date:tdue,source:'note'});
         try{renderTasksPanel();}catch(e){}
       }else if(dateEl){
-        // interaction
+        // interaction — through the unified logTouch choke point (2026-07-24.1):
+        // deduped AGC bump, embedding, daily-five bookkeeping (only when dated
+        // today), reach-closes-track. journal:false — a batch of chunks would
+        // flood the 5-slot undo stack.
         const cid=personEl?personEl.value:(members[0]||{}).id;
         const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
-        const savedB=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type:iType,date:dateEl.value||today,notes:text.trim(),created_at:new Date().toISOString()})});
-        _bumpAGCAgg(cid,iType,dateEl.value||today);
-        if(savedB&&savedB[0])embedAndStore(savedB[0].id,iType+': '+text.trim());
+        const iDate=dateEl.value||today;
+        await logTouch({contactIds:[cid],householdId:h.id,type:iType,date:iDate,notes:text.trim(),source:'enrich',trackMode:'close-only',markDaily:(iDate===today),silent:true,journal:false});
       }else if(personEl){
-        // note (person-specific, no date picker)
+        // note (person-specific, no date picker) — logTouch skips daily/track
+        // state for Notes but keeps the deduped lifetime bump + embedding.
         const cid=personEl.value||(members[0]||{}).id;
-        const savedB2=await sb('interactions',{method:'POST',body:JSON.stringify({contact_id:cid,type:'Note',date:today,notes:text.trim(),created_at:new Date().toISOString()})});
-        if(savedB2&&savedB2[0])embedAndStore(savedB2[0].id,'Note: '+text.trim());
+        await logTouch({contactIds:[cid],householdId:h.id,type:'Note',date:today,notes:text.trim(),source:'enrich',trackMode:'none',markDaily:false,silent:true,journal:false});
       }else{
         // household note — append to existing
         const existing=h.notes||'';
@@ -10730,27 +10782,28 @@ async function _logEventAttendance(reg,contactId,eventId){
     await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:inter.id})});
     reg.interaction_id=inter.id;
     if(inter.notes)embedAndStore(inter.id,'Event attendance: '+inter.notes);
-    _bumpAGCAgg(contactId,'Event attendance',when);
+    _bumpAGCAgg(contactId,'Event attendance',when,note);
     return inter.id;
   }catch(e){return null;}
 }
 
 // Remove the attendance interaction linked to a registration (no-show / delete).
-// Falls back to finding it by contact + type when interaction_id is missing or
-// stale (e.g. webhook/pay-later rows whose link wasn't hydrated in the cache),
-// so the row is actually removed from the DB and timeline — not just the UI.
+// CROSS-DEVICE / STALE-CACHE SAFE (2026-07-24.1): re-reads the registration row
+// from the DB first, so a link created by the webhook / the other device is
+// found even when this device's cache is stale. If the DB has no linked
+// interaction, NOTHING is deleted — the old "most recent Event attendance for
+// this contact" fallback could delete a DIFFERENT event's row or one of the
+// imported attendance-history rows, silently cooling the household.
 async function _unlogEventAttendance(reg){
   if(!reg)return;
   let targetId=reg.interaction_id;
   try{
-    if(!targetId){
-      // Find the attendance interaction for this contact (best-effort match).
-      const rows=await sb('interactions?select=id,date&contact_id=eq.'+reg.contact_id
-        +'&type=eq.'+encodeURIComponent('Event attendance')+'&order=date.desc&limit=10');
-      if(rows&&rows.length)targetId=rows[0].id;
-    }
+    try{
+      const fresh=await sb('registrations?select=interaction_id&id=eq.'+reg.id+'&limit=1');
+      if(fresh&&fresh.length)targetId=fresh[0].interaction_id; // DB is the truth (may be null)
+    }catch(e){ console.warn('[DAAS] reg re-read failed (using cached link)',e); }
     if(targetId){
-      await sb('interactions?id=eq.'+targetId,{method:'DELETE'});
+      await sb('interactions?id=eq.'+targetId,{method:'DELETE'}); // FK sets registrations.interaction_id null too
       await sb('registrations?id=eq.'+reg.id,{method:'PATCH',body:JSON.stringify({interaction_id:null})});
     }
   }catch(e){ console.warn('[DAAS] un-log attendance failed',e); throw e; }
@@ -10840,6 +10893,13 @@ async function toggleNoShow(rid,hhId){
   if(!found)return;
   const {r,m,h}=found;
   try{
+    // CROSS-DEVICE: the no-show state is derived from interaction_id, so act on
+    // the DB's current link — not this device's cache. A stale-null cache used
+    // to make "restore" create a SECOND attendance interaction (double warmth).
+    try{
+      const fresh=await sb('registrations?select=interaction_id&id=eq.'+rid+'&limit=1');
+      if(fresh&&fresh.length)r.interaction_id=fresh[0].interaction_id;
+    }catch(e){ console.warn('[DAAS] reg re-read failed (using cache)',e); }
     if(r.interaction_id){
       // Currently attending → mark no-show: delete the attendance interaction.
       await _unlogEventAttendance(r);
@@ -10849,6 +10909,7 @@ async function toggleNoShow(rid,hhId){
     }
   }catch(e){ alert('Could not update attendance: '+e.message); return; }
   _invHH(h);
+  try{await _recalcAGCAggForHH(h.id);}catch(e){} // keep warmth/recency/tier live (was stale until reload)
   refreshAGCScore(h.id).then(()=>recolorAll()).catch(()=>{});
   if(_openEventId)_renderEventDetail(_openEventId);
   // If a contact view for this household is open, refresh its activity tab + profile panel.
@@ -10869,7 +10930,7 @@ async function deleteRegistration(rid,hhId,idx){
     // rows may carry a stale or missing interaction_id in the cache.
     if(found)try{await _unlogEventAttendance(found.r);}catch(e){console.warn('[DAAS] unlog on delete',e);}
     await sb('registrations?id=eq.'+rid,{method:'DELETE'});
-    if(found){found.m.registrations=(found.m.registrations||[]).filter(x=>x.id!==rid);_invHH(found.h);refreshAGCScore(found.h.id).then(()=>recolorAll()).catch(()=>{});}
+    if(found){found.m.registrations=(found.m.registrations||[]).filter(x=>x.id!==rid);_invHH(found.h);try{await _recalcAGCAggForHH(found.h.id);}catch(e){}refreshAGCScore(found.h.id).then(()=>recolorAll()).catch(()=>{});}
     if(idx!=null&&households[idx])selectHousehold(idx);
     if(_openEventId)_renderEventDetail(_openEventId);
   }catch(e){ alert('Delete failed: '+e.message); }
@@ -14555,7 +14616,7 @@ const CT_COLS={
   agc:{label:'Prospect',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);font-weight:700;color:${c}">${t}</span>`;}},
   homeValue:{label:'Home Value',val:h=>h.home_value||0,html:h=>h.home_value?'$'+Math.round(h.home_value).toLocaleString():'<span class="ct-sub">—</span>'},
   lastContact:{label:'Last Contact',val:h=>(_agcInterAgg[h.id]||{}).lastContact||'',html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc||'<span class="ct-sub">never</span>';}},
-  daysSince:{label:'Days Since',val:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc?Math.floor((Date.now()-new Date(lc))/86400000):99999;},html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return '<span style="color:var(--red);font-family:var(--font-ui)">never</span>';const d=Math.floor((Date.now()-new Date(lc))/86400000);const c=d<=30?'var(--green)':d<=90?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);color:${c}">${d}d</span>`;}},
+  daysSince:{label:'Days Since',val:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;const d=_daysSince(lc);return d==null?99999:d;},html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return '<span style="color:var(--red);font-family:var(--font-ui)">never</span>';const d=_daysSince(lc)??0;const c=d<=30?'var(--green)':d<=90?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);color:${c}">${d}d</span>`;}},
   totalGiving:{label:'Total Giving',val:h=>{const g=getGivingStats(h);return g?g.total:0;},html:h=>{const g=getGivingStats(h);return g&&g.total>0?'$'+Math.round(g.total).toLocaleString():'<span class="ct-sub">—</span>';}},
   lastGift:{label:'Last Gift',val:h=>{const g=getGivingStats(h);return (g&&g.lastDate)||'';},html:h=>{const g=getGivingStats(h);return (g&&g.lastDate)||'<span class="ct-sub">—</span>';}},
   giftCount:{label:'Gifts',val:h=>{const g=getGivingStats(h);return g?g.count:0;},html:h=>{const g=getGivingStats(h);return g&&g.count?g.count:'<span class="ct-sub">0</span>';}}
@@ -15482,8 +15543,10 @@ function renderDailyFive(){
 // ── CLOSENESS TIER (Change 1: leash-by-closeness) ──
 // Behavioral signals ONLY — deliberately excludes money, last-contact recency,
 // and note keywords (see DAILY-FIVE-V2-SPEC §2). Drives how long a household may
-// stay quiet before it surfaces as a reconnect. Sparse data ⇒ 'regular', so a
-// fresh database behaves exactly like the old flat drift threshold.
+// stay quiet before it surfaces as a reconnect. Sparse data (0 reaches and ≤1
+// lifetime interaction) ⇒ 'thin' (Cool, the LONG leash) — barely-known households
+// wait longest; zero-history households show as Unrated in the UI via
+// _tierWithUnrated and never reconnect anyway (no last contact).
 function _closenessTier(h){
   const agg=_agcInterAgg[h.id]||{connected12:0,lifetime:0};
   const conn=agg.connected12||0;
@@ -15549,13 +15612,28 @@ function _tierChipMove(hhId){
   return _tierChip(tier)+arrow;
 }
 
+// A track that puts its household to REST, keeping it out of the Daily Five
+// pools until snooze_until: a manual snooze OR a closed_unresponsive track
+// (3rd miss writes snooze_until = +trackSnoozeDays). Before 2026-07-24.1 only
+// status 'snoozed' was checked, so the 180-day unresponsive rest was silently
+// ignored and the household re-entered reconnect after its normal leash.
+// (SRI already treated any track with a live snooze_until as resting — the
+// pools now agree with it.)
+function _isResting(t,todayStr){
+  return (t.status==='snoozed'||t.status==='closed_unresponsive')&&t.snooze_until&&t.snooze_until>todayStr;
+}
+
 // ── CANDIDATE POOLS ── shared by the Daily Five and the Waiting Room so both read
 // ONE selection computation (no duplicated logic). Returns the raw pools; the
 // frozen-set slot-filling lives in _computeDailyQueue.
 async function _computeCandidatePools(){
+  // STARTUP-RACE GUARD: tiers/leashes read _agcInterAgg. Never compute (let alone
+  // freeze) a daily set from a half-loaded aggregate. loadAGCInteractionAggregates
+  // never rejects (it catches internally), so this await is safe.
+  try{if(_agcAggPromise)await _agcAggPromise;}catch(e){}
   const today=new Date();today.setHours(0,0,0,0);
   const now=Date.now();
-  const todayStr=localDateStr(today);
+  const todayStr=localToday();
 
   // Fetch most recent interaction date per contact (full history, no date floor).
   // Pull `type` so standing-info Notes can be excluded: a Note "counts for nothing"
@@ -15598,9 +15676,9 @@ async function _computeCandidatePools(){
     if(activeTrackHHIds.has(h.id))continue;
     const lastContact=hhLastContact[h.id];
     if(!lastContact)continue; // never touched — that's a cold PROSPECT, not a reconnect
-    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
+    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&_isResting(t,todayStr));
     if(snoozed)continue;
-    const daysSince=Math.floor((now-new Date(lastContact))/(1000*60*60*24));
+    const daysSince=_daysSince(lastContact,todayStr)??0; // Eastern whole-day math
     const tier=_closenessTier(h);
     const leash=_leashDays(tier);
     if(daysSince>=leash){
@@ -15622,9 +15700,9 @@ async function _computeCandidatePools(){
     if(!h.created_at)continue;
     const created=new Date(h.created_at);
     if(isNaN(created.getTime()))continue;
-    const ageDays=Math.floor((now-created.getTime())/(1000*60*60*24));
+    const ageDays=_daysSince(h.created_at,todayStr)??0; // timestamp → Eastern date → whole days
     if(ageDays<0||ageDays>newWindow)continue;
-    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
+    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&_isResting(t,todayStr));
     if(snoozed)continue;
     // Real form-origin signal: stripe-webhook / event-register stamp source 'form'
     // (or 'pay_later') on the registration they create from a public form submission.
@@ -15642,7 +15720,7 @@ async function _computeCandidatePools(){
     if(gs&&gs.total>0)continue;
     if(hhLastContact[h.id])continue; // has a logged interaction — not a cold prospect
     if((h.home_value||0)<ENGINE.icebreakerHomeValue)continue;
-    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&t.status==='snoozed'&&t.snooze_until>todayStr);
+    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&_isResting(t,todayStr));
     if(snoozed)continue;
     icebreakers.push({h,idx:hIdx(h.id)});
   }
@@ -15774,7 +15852,19 @@ async function _computeDailyQueue(){
     // Same day: only top up if the set is under target with NOTHING done yet
     // (e.g. first build of a fresh install). Frozen otherwise — no backfill.
     if(_dailySet.ids.length<DAILY_TARGET&&(_dailySet.done||[]).length===0){
-      setChanged=_fillDailySet(_dailySet);
+      // CROSS-DEVICE: re-read the freshest set before topping up + saving — a
+      // stale local copy (empty done[]) used to overwrite the other device's
+      // done marks on under-filled days. (New-day path already re-reads.)
+      try{
+        const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
+        if(fresh&&fresh.length&&fresh[0].value){
+          const p=JSON.parse(fresh[0].value);
+          if(p&&p.date===todayStr&&Array.isArray(p.ids))_dailySet=p;
+        }
+      }catch(e){console.warn('[DAAS] daily_set re-check (top-up) failed',e);}
+      if(_dailySet.ids.length<DAILY_TARGET&&(_dailySet.done||[]).length===0){
+        setChanged=_fillDailySet(_dailySet);
+      }
     }
   }
   if(setChanged)await _saveDailySet();
@@ -15803,7 +15893,7 @@ async function _computeDailyQueue(){
   cards.forEach(c=>{
     const lc=hhLastContact[c.item.h.id]||null;
     c.lastContact=lc;
-    c.daysSince=lc?Math.floor((now-new Date(lc))/(1000*60*60*24)):null;
+    c.daysSince=_daysSince(lc,todayStr);
   });
   return cards;
 }
@@ -15831,7 +15921,7 @@ async function openWaitingRoom(){
     const {hhLastContact,keepWarm,newContacts}=await _computeCandidatePools();
     const todayStr=localToday();
     const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
-    const snoozeIds=new Set(outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until&&t.snooze_until>todayStr).map(t=>t.household_id));
+    const snoozeIds=new Set(outreachTracks.filter(t=>_isResting(t,todayStr)).map(t=>t.household_id));
     const followups=outreachTracks.filter(t=>t.status==='active').slice().sort((a,b)=>String(a.next_due||'9999').localeCompare(String(b.next_due||'9999')));
     const coldFloor=[];
     for(const h of households){
@@ -15842,7 +15932,7 @@ async function openWaitingRoom(){
       coldFloor.push({h,idx:hIdx(h.id)});
     }
     coldFloor.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
-    const resting=outreachTracks.filter(t=>t.status==='snoozed'&&t.snooze_until).slice().sort((a,b)=>String(a.snooze_until).localeCompare(String(b.snooze_until)));
+    const resting=outreachTracks.filter(t=>(t.status==='snoozed'||t.status==='closed_unresponsive')&&t.snooze_until).slice().sort((a,b)=>String(a.snooze_until).localeCompare(String(b.snooze_until)));
 
     const abtn=(label,onclick)=>`<button onclick="${onclick}" style="font-size:.58rem;padding:3px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer">${label}</button>`;
     const actions=(h,idx,resting)=>`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
@@ -15899,7 +15989,8 @@ async function wrSnooze(hhId,days){
   const snoozeUntil=localToday(days);
   try{
     await _refreshTracksFor(hhId);
-    const track=outreachTracks.find(t=>t.household_id===hhId&&(t.status==='active'||t.status==='snoozed'));
+    const track=outreachTracks.find(t=>t.household_id===hhId&&t.status==='active')
+      ||outreachTracks.find(t=>t.household_id===hhId&&(t.status==='snoozed'||t.status==='closed_unresponsive'));
     if(track){
       await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
     }else{
@@ -16090,7 +16181,10 @@ async function snoozeDaily(idx,days=7){
     await _markDailyDone(h.id);
     if(!wasDone&&_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id))undo.dailyDoneAdded=true;
     await _refreshTracksFor(h.id); // cross-device: act on the DB's latest state
-    let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+    // Patch an existing row (don't stack a second track row) — the ACTIVE row
+    // wins when both an active and a resting row exist.
+    let track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active')
+      ||outreachTracks.find(t=>t.household_id===h.id&&(t.status==='snoozed'||t.status==='closed_unresponsive'));
     if(track){
       undo.trackBefore=JSON.parse(JSON.stringify(track));
       await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
@@ -16135,10 +16229,11 @@ function _addBusinessDays(fromDate,days){
 // pinned or reconnect card that has no track yet).
 async function _applyOutcomeToTrack(h,outcome,trackId){
   if(_isReach(outcome)){
-    // Graduate any existing track, no new track needed
-    const existing=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
-    if(existing)await handleTrackOutcome(existing.id,h.id,'Connected');
-    else if(trackId)await handleTrackOutcome(trackId,h.id,'Connected');
+    // Graduate ALL active tracks (duplicates can exist via the 2-device race),
+    // no new track needed.
+    const existings=outreachTracks.filter(t=>t.household_id===h.id&&t.status==='active');
+    for(const tr of existings)await handleTrackOutcome(tr.id,h.id,'Connected');
+    if(!existings.length&&trackId)await handleTrackOutcome(trackId,h.id,'Connected');
   } else {
     // Non-connected — create track if none exists, else advance it
     let resolvedTrackId=trackId;
@@ -16278,7 +16373,7 @@ async function logTouch(o){
   //    Capture relationship-temperature before/after the bump so the contact page can
   //    show a ↑/↓ arrow when this touch nudged the tier (Cool→Steady→Warm). Non-blocking.
   let _preTier=null;try{if(h)_preTier=_closenessTier(h);}catch(e){}
-  try{_bumpAGCAgg(ids[0],type,date);}catch(e){}
+  try{_bumpAGCAgg(ids[0],type,date,notes);}catch(e){}
   try{if(h&&!isNote){const _postTier=_closenessTier(h);_recordTierMove(h.id,_preTier,_postTier);}}catch(e){}
   // 3) Embedding — once, on the first row.
   try{if(notes&&typeof embedAndStore==='function')embedAndStore(created[0].id,type+': '+notes);}catch(e){}
@@ -16335,9 +16430,9 @@ async function _recalcAGCAggForHH(hhId){
   const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
   const todayStr=localToday();
   const memberIds=(h.members||[]).map(m=>`"${m.id}"`).join(',');
+  const seen=new Set(); // rebuilt scoped seen-set; published to _agcSeenKeys below
   if(memberIds){
     const rows=await sbAll(`interactions?select=id,type,date,notes&contact_id=in.(${memberIds})&order=id.asc`)||[];
-    const seen=new Set();
     rows.forEach(r=>{
       if(!r.date||(''+r.date).slice(0,10)>todayStr)return; // future-dated doesn't count yet
       const key=r.type+'|'+r.date+'|'+(r.notes||'');
@@ -16355,6 +16450,7 @@ async function _recalcAGCAggForHH(hhId){
     if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
   }));
   _agcInterAgg[hhId]=a;
+  _agcSeenKeys[hhId]=seen; // keep the live-bump dedupe in sync with this rebuild
 }
 
 // ── UNDO ──
@@ -16573,7 +16669,9 @@ async function startFollowUpTrack(hhId){
   if(active){_daasToast((h.displayName||'Household')+' is already on an active follow-up (attempt '+(active.attempts||0)+').');return;}
   const undo=_blankUndo('Started follow-up — '+(h.displayName||''),hhId);
   try{
-    const snoozed=outreachTracks.find(t=>t.household_id===hhId&&t.status==='snoozed');
+    // Reactivate a resting row (manual snooze OR unresponsive-rest) instead of
+    // stacking a second track row for the same household.
+    const snoozed=outreachTracks.find(t=>t.household_id===hhId&&(t.status==='snoozed'||(t.status==='closed_unresponsive'&&t.snooze_until&&t.snooze_until>localToday())));
     if(snoozed){
       undo.trackBefore=JSON.parse(JSON.stringify(snoozed));
       const patch={status:'active',next_due:localToday(),snooze_until:null};
@@ -16668,7 +16766,7 @@ async function renderSRI(){
     // warmth. Non-donors (total 0) are unaffected and stay eligible.
     const gsFloor=getGivingStats(h);
     if(gsFloor&&gsFloor.total>0&&gsFloor.lastDate){
-      const monthsSinceFloor=(now-new Date(gsFloor.lastDate))/(1000*60*60*24*30);
+      const monthsSinceFloor=(_daysSince(gsFloor.lastDate)??1e9)/30;
       if(monthsSinceFloor<ENGINE.sriGapMinMonths)continue;
     }
     let score=0;
@@ -16689,7 +16787,7 @@ async function renderSRI(){
     // Giving gap: has donated before but currently lapsed
     const gs=getGivingStats(h);
     if(gs&&gs.total>0){
-      const monthsSinceLast=gs.lastDate?(now-new Date(gs.lastDate))/(1000*60*60*24*30):999;
+      const monthsSinceLast=gs.lastDate?(_daysSince(gs.lastDate)??1e9)/30:999;
       if(monthsSinceLast>=ENGINE.sriGapMinMonths&&monthsSinceLast<=ENGINE.sriGapMaxMonths){
         score+=25;
         reasons.push(`+25 — giving gap: last gift ${gs.lastDate} (${Math.round(monthsSinceLast)} mo ago) — inside the ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} mo ask window`);
@@ -16777,7 +16875,7 @@ async function renderActiveTracks(){
       const info=hhMap[t.household_id];
       if(!info)return'';
       const isOverdue=t.next_due&&t.next_due<todayStr;
-      const daysOverdue=isOverdue?Math.floor((Date.now()-new Date(t.next_due))/(1000*60*60*24)):0;
+      const daysOverdue=isOverdue?(_daysSince(t.next_due)??0):0;
       const last=lastInteractionMap[t.household_id];
       const lastStr=last?`<span style="color:var(--txt)">${last.type}</span> <span style="color:var(--txt3)">${last.date}</span>${last.notes?`<br><span style="color:var(--txt2);font-size:.62rem">${_escHtml(last.notes.substring(0,50))}${last.notes.length>50?'…':''}</span>`:''}`:'-';
       return`<tr style="border-bottom:1px solid var(--border)">
@@ -17042,7 +17140,7 @@ function _rpCondPass(cond,entity,row,R){
     case 'in_group':{const r=_rpRollFor(cond,entity,row,R);const one=id=>!!(r&&r.groups.has(id));const hit=(op==='in_list'||op==='not_in_list')?_rpListVals(v).some(one):one(v);return (op==='is_not'||op==='not_in_list')?!hit:hit;}
     case 'mailable':{const r=_rpRollFor(cond,entity,row,R);const mm=!!(r&&r.mailable);return op==='is_true'?mm:!mm;}
     case 'last_contact':{const r=_rpRollFor(cond,entity,row,R);return _rpOpDate(op,r?r.lastContact:'',v,v2);}
-    case 'days_since_contact':{const r=_rpRollFor(cond,entity,row,R);const lc=r&&r.lastContact;const days=lc?(Date.now()-new Date(lc))/86400000:Infinity;return _rpOpNum(op,days,v,v2);}
+    case 'days_since_contact':{const r=_rpRollFor(cond,entity,row,R);const lc=r&&r.lastContact;const days=lc?(_daysSince(lc)??Infinity):Infinity;return _rpOpNum(op,days,v,v2);}
     // contact attributes — at household grain: ANY member
     case 'c_name':return members.some(m=>_rpOpText(op,((m.first_name||'')+' '+(m.last_name||'')).trim(),v));
     case 'c_email':return members.some(m=>_rpOpText(op,m.email||'',v));
@@ -18765,11 +18863,16 @@ async function mRenderRecent(){
   const el=document.getElementById('mRecentHost'); if(!el) return;
   el.innerHTML='<div class="m-empty" style="padding:14px">Loading…</div>';
   let rows=[];
-  try{ rows=await sb('interactions?type=neq.Note&select=id,contact_id,type,notes,date&order=date.desc,id.desc&limit=15')||[]; }
+  // date=lte.today: future-dated rows (an RSVP to a coming event) are not "recent
+  // activity" yet — matches the desktop feed. Fetch extra, dedupe couple-logged
+  // copies (one row per member) down to one entry per household touch, keep 15.
+  try{ rows=await sb('interactions?type=neq.Note&date=lte.'+localToday()+'&select=id,contact_id,type,notes,date&order=date.desc,id.desc&limit=30')||[]; }
   catch(e){ el.innerHTML='<div class="m-empty" style="padding:14px">Could not load recent activity.</div>'; return; }
   if(!rows.length){ el.innerHTML='<div class="m-empty" style="padding:14px">No interactions logged yet.</div>'; return; }
   const contactMap={};
   households.forEach(h=>(h.members||[]).forEach(m=>{ contactMap[m.id]={displayName:h.displayName,id:h.id}; }));
+  {const seen=new Set();
+   rows=rows.filter(r=>{const hh=(contactMap[r.contact_id]||{}).id||r.contact_id;const k=hh+'|'+r.type+'|'+r.date+'|'+(r.notes||'');if(seen.has(k))return false;seen.add(k);return true;}).slice(0,15);}
   el.innerHTML=rows.map(r=>{
     const info=contactMap[r.contact_id]||{displayName:'Unknown',id:''};
     const note=r.notes?_escHtml(r.notes.length>90?r.notes.substring(0,90)+'…':r.notes):'';
@@ -18870,7 +18973,9 @@ async function mSnoozeD5(days){
     await _markDailyDone(h.id);
     if(!wasDone&&_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id))undo.dailyDoneAdded=true;
     await _refreshTracksFor(h.id); // cross-device: act on the DB's latest state
-    const track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
+    // Patch an existing row (don't stack a second track row) — ACTIVE row wins.
+    const track=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active')
+      ||outreachTracks.find(t=>t.household_id===h.id&&(t.status==='snoozed'||t.status==='closed_unresponsive'));
     if(track){
       undo.trackBefore=JSON.parse(JSON.stringify(track));
       await sb(`outreach_tracks?id=eq.${track.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil,status:'snoozed'}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
