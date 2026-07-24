@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.9'; // Dashboard audit: (1) NEW fifth-slot cards now drop off once you log a real touch — a contact you've already connected with stops resurfacing daily (form leads with only a registration still show). (2) Standing-info Notes no longer reset the reconnect clock or mask a cold PROSPECT in the Daily Five — _computeCandidatePools now excludes Note-type interactions, matching _isTouch and the three AGC aggregate builders
+const BUILD_STAMP='2026-07-23.10'; // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2821,6 +2821,15 @@ async function loadAGCInteractionAggregates(){
       const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
       if(!a.lastContact||d>a.lastContact)a.lastContact=d;
       if(d>=since)a.connected12++;
+    })));
+    // A donation counts as a connection too — for RECENCY only (last-contact). It is
+    // deliberately NOT added to connected12 or lifetime, so giving alone never changes
+    // the Warm/Steady/Cool tier (tier stays a behavioral signal). Keeps last-contact
+    // in step with _computeCandidatePools. Donations are event_fee-excluded at load.
+    households.forEach(h=>(h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
+      if(!d||!d.date)return;
+      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]={lastContact:null,connected12:0,lifetime:0});
+      if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
     })));
   }catch(e){console.warn('AGC interaction aggregates failed',e);}
 }
@@ -15518,6 +15527,7 @@ async function _computeCandidatePools(){
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
     (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{if(r.reg_date)dates.push(r.reg_date);}));
+    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d&&d.date)dates.push(d.date);})); // a gift IS a connection — counts toward recency so a recent donor isn't flagged "quiet" (m.donations is event_fee-excluded at load)
     if((h.members||[]).some(m=>contactHasTouch.has(m.id)))hhHasInteraction.add(h.id);
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
@@ -16284,6 +16294,11 @@ async function _recalcAGCAggForHH(hhId){
     const d=r.reg_date;if(!d)return;
     if(!a.lastContact||d>a.lastContact)a.lastContact=d;
     if(d>=since)a.connected12++;
+  }));
+  // Donations → recency only (mirrors loadAGCInteractionAggregates); tier signals unchanged.
+  (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
+    if(!d||!d.date)return;
+    if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
   }));
   _agcInterAgg[hhId]=a;
 }
