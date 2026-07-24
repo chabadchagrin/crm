@@ -1779,7 +1779,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-23.8'; // Daily Five: Warm/Steady/Cool tiers (chip + movement), PROSPECT everywhere, dropped "your alarm" wording. Plus carryover fifth-slot fix (fifth slot re-picks fresh daily so a stale PROSPECT can't block NEW). Removed the "kids under 15" flag (redundant with the Kid Age map filter). Full AI profile rebuild now MERGES existing estimated_children instead of overwriting — hand-entered kids can't be wiped by a rebuild
+const BUILD_STAMP='2026-07-23.9'; // Dashboard audit: (1) NEW fifth-slot cards now drop off once you log a real touch — a contact you've already connected with stops resurfacing daily (form leads with only a registration still show). (2) Standing-info Notes no longer reset the reconnect clock or mask a cold PROSPECT in the Daily Five — _computeCandidatePools now excludes Note-type interactions, matching _isTouch and the three AGC aggregate builders
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -15287,6 +15287,11 @@ const DAILY_TARGET=5;
 // Relationship-temperature movement: hhId -> {from,to,at}. Captured at each logged
 // touch (in logTouch) so the contact page can show ↑/↓ when a touch changes the tier.
 let _tierSnaps={};
+// "Snooze Ask" store (SRI panel): hhId -> 'YYYY-MM-DD'. DELIBERATELY separate from
+// outreach tracks. Suppressing a solicitation suggestion must NOT create/modify a
+// track — a snoozed track would also drop the household out of the Daily Five
+// reconnect queue. This store hides them from SRI only; reconnect is untouched.
+let _sriSnoozes={};
 
 async function _saveDailySet(){
   try{
@@ -15312,6 +15317,15 @@ async function _loadDailyState(){
     const snapRows=await sb('app_settings?key=eq.tier_snaps&limit=1');
     if(snapRows&&snapRows.length&&snapRows[0].value)_tierSnaps=JSON.parse(snapRows[0].value)||{};
   }catch(e){console.warn('[DAAS] tier_snaps load failed',e);}
+  try{
+    const sriRows=await sb('app_settings?key=eq.sri_snoozes&limit=1');
+    if(sriRows&&sriRows.length&&sriRows[0].value)_sriSnoozes=JSON.parse(sriRows[0].value)||{};
+  }catch(e){console.warn('[DAAS] sri_snoozes load failed',e);}
+}
+// Persist "Snooze Ask" store. Fire-and-forget, like the tier snapshots.
+async function _saveSriSnoozes(){
+  try{await sbSetSetting('sri_snoozes',JSON.stringify(_sriSnoozes));}
+  catch(e){console.warn('[DAAS] sri_snoozes save failed',e);}
 }
 
 // Persist relationship-temperature snapshots (movement arrows). Fire-and-forget.
@@ -15480,16 +15494,31 @@ async function _computeCandidatePools(){
   const todayStr=localDateStr(today);
 
   // Fetch most recent interaction date per contact (full history, no date floor).
+  // Pull `type` so standing-info Notes can be excluded: a Note "counts for nothing"
+  // (matches _isTouch + all three AGC aggregate builders) and must NOT reset the
+  // reconnect clock or disqualify a cold prospect. Also track which contacts have a
+  // REAL (non-Note) logged interaction, so a NEW contact drops off the list once
+  // you've actually reached out — a registration alone (form lead) does not count.
   let recentRows=[];
-  try{recentRows=await sbAll(`interactions?select=contact_id,date&order=date.desc,id.asc`)||[];}catch(e){}
-  const lastInteraction={};
-  recentRows.forEach(r=>{if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;});
+  try{recentRows=await sbAll(`interactions?select=contact_id,date,type&order=date.desc,id.asc`)||[];}catch(e){}
+  const lastInteraction={};        // last NON-NOTE interaction date per contact
+  const contactHasTouch=new Set();  // contacts with ≥1 non-Note interaction
+  recentRows.forEach(r=>{
+    if(r.type==='Note')return;     // Notes never count as contact
+    if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;
+    contactHasTouch.add(r.contact_id);
+  });
 
   // Household → most recent contact across members (event registrations count too).
+  // Notes are already excluded above, so hhLastContact matches the canonical AGC
+  // lastContact. hhHasInteraction (interactions only, no registrations) drives the
+  // NEW-contact "already reached out?" test below.
   const hhLastContact={};
+  const hhHasInteraction=new Set();
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
     (h.members||[]).forEach(m=>(m.registrations||[]).forEach(r=>{if(r.reg_date)dates.push(r.reg_date);}));
+    if((h.members||[]).some(m=>contactHasTouch.has(m.id)))hhHasInteraction.add(h.id);
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
 
@@ -15523,6 +15552,7 @@ async function _computeCandidatePools(){
   for(const h of households){
     if(_dailyPins.includes(h.id))continue;
     if(activeTrackHHIds.has(h.id))continue;
+    if(hhHasInteraction.has(h.id))continue; // already reached out — no longer a first-touch NEW card (form leads, who only have a registration, still surface)
     if(!h.created_at)continue;
     const created=new Date(h.created_at);
     if(isNaN(created.getTime()))continue;
@@ -16553,8 +16583,13 @@ async function renderSRI(){
     if(hhid)recentConnected[hhid]=(recentConnected[hhid]||0)+1;
   });
 
-  // Snoozed households
+  // Ask-suppression set. Two independent sources:
+  //  1) Households resting from OUTREACH (snoozed / closed-unresponsive tracks) —
+  //     don't solicit someone you've set aside or who's gone unresponsive.
+  //  2) The dedicated "Snooze Ask" store (_sriSnoozes) — suppresses ONLY the ask
+  //     suggestion and never touches tracks, so it can't silence the reconnect queue.
   const snoozedAsk=new Set(outreachTracks.filter(t=>t.snooze_until&&t.snooze_until>todayStr).map(t=>t.household_id));
+  Object.keys(_sriSnoozes||{}).forEach(hhId=>{if(_sriSnoozes[hhId]&&_sriSnoozes[hhId]>todayStr)snoozedAsk.add(hhId);});
 
   const scores=[];
   for(const h of households){
@@ -16621,14 +16656,13 @@ async function renderSRI(){
 
 async function snoozeSRI(idx){
   const h=households[idx];if(!h)return;
-  const snoozeUntil=localToday(60);
-  const existing=outreachTracks.find(t=>t.household_id===h.id);
-  if(existing){
-    await sb(`outreach_tracks?id=eq.${existing.id}`,{method:'PATCH',body:JSON.stringify({snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
-  } else {
-    await sb('outreach_tracks',{method:'POST',body:JSON.stringify({household_id:h.id,status:'snoozed',snooze_until:snoozeUntil}),headers:{'Content-Type':'application/json','Prefer':'return=minimal'}});
-  }
-  await loadOutreachTracks();
+  // Ask-only snooze: write to the dedicated store, NEVER an outreach track. This
+  // hides the solicitation suggestion for 60 days while leaving the household fully
+  // active in the Daily Five reconnect queue (fixes the old coupling where snoozing
+  // an ask silently created a track that suppressed reconnect).
+  _sriSnoozes[h.id]=localToday(60);
+  await _saveSriSnoozes();
+  if(typeof _daasToast==='function')_daasToast('Ask snoozed 60 days — '+(h.displayName||'')+' (still in your reconnect queue)');
   renderSRI();
 }
 
