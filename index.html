@@ -341,7 +341,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
   #captureOverlay [onclick*="openSidebar"], #enrichOverlay [onclick*="openSidebar"]{display:none!important}
   #captureOverlay [style*="max-width:680px"]{max-width:none!important;padding:14px 14px calc(90px + env(safe-area-inset-bottom))!important}
   #captureOverlay #capture-text{font-size:16px!important;min-height:120px!important}
-  #captureOverlay textarea, #captureOverlay input[type="text"]{font-size:16px!important}
+  /* iOS zooms the viewport on focus for any control under 16px. The old rule
+     covered textarea + text inputs only, so the batch type/date controls would
+     have zoomed and wrecked the layout. Cover every focusable field. */
+  #captureOverlay textarea, #captureOverlay input[type="text"], #captureOverlay input[type="date"],
+  #captureOverlay input[type="number"], #captureOverlay select{font-size:16px!important}
+  /* Sticky batch bar must clear the 56px bottom nav + the safe-area inset */
+  #captureOverlay #capture-batch-bar{bottom:calc(12px + env(safe-area-inset-bottom))!important}
+  /* Keep a long pin list from eating the whole screen */
+  #captureOverlay #capture-pin-chips{max-height:30vh!important}
+  #captureOverlay #capture-contact-results{max-height:32vh!important}
 
   /* ===== OVERLAY REFLOW — Enrich (Build Profiles) full-screen mobile ===== */
   #enrichOverlay [style*="max-width"]{max-width:none!important}
@@ -1779,7 +1788,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-24.1'; // FULL-AUDIT FIX PASS (AUDIT-2026-07-24.md F1–F15): (F1) _unlogEventAttendance re-reads the registration from DB and never guesses — the old "most recent Event attendance" fallback could delete a different event's / an imported history row. (F2) The 180-day closed_unresponsive rest is now honored: pools + Waiting Room use _isResting() (snoozed OR closed_unresponsive with live snooze_until); snooze/start-follow-up patch existing resting rows instead of stacking duplicates. (F3) toggleNoShow re-reads the reg link from DB (stale cache double-created attendance) + recalcs the aggregate. (F4) Profile Log marks Daily-done only when dated today (matches Quick Capture). (F5) Donations update recency LIVE (add/edit/delete → _recalcAGCAggForHH). (F6) deleteTimelineItem recalcs aggregate + score in both branches. (F7) Edit-interaction recalcs the aggregate. (F8) Mobile Recent: future-gated + household-deduped. (F9) _computeCandidatePools awaits the aggregates promise (startup race could freeze a mis-drawn set). (F10) Same-day top-up re-reads daily_set (cross-device done[] clobber). (F11) _bumpAGCAgg dedupes via _agcSeenKeys shared with both builders. (F12) Batch enrich routes through logTouch. (F13) _closenessTier comment corrected. (F14) DATES RUN ON EASTERN EVERYWHERE: localDateStr/localToday pin to America/New_York (DAAS_TZ; settings knob parked), new _daysSince() does whole-calendar-day math — all daysSince/ageDays/months-since sites converted. (F15) A reach closes ALL active tracks. PRIOR .12: unified event-attendance rules (attendance lives only in its interaction; future-gated; attendance ≠ personal outreach for NEW card). attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
+const BUILD_STAMP='2026-07-27.1'; // QUICK CAPTURE: BATCH LOGGING + INLINE UNDO + VOICE-TO-PINS (PLAN-QUICKCAPTURE-BATCH.md). (1) FIXED THE REPORTED BUG: captureAnalyze ran at max_tokens:1500, so ~9+ people overflowed the budget, the JSON was cut mid-item, the greedy brace match grabbed a partial object and JSON.parse threw a raw 'JSON Parse error' in red. Now 8000 tokens, an explicit stop_reason==='max_tokens' guard with plain-English advice, a schema-trim instruction (emit only the *_fields block relevant to save_as - was ~175 output tokens/person of empty padding), and a friendly catch for a partial parse. (2) captureAnalyze migrated off the bare api.anthropic.com fetch onto _aiComplete (key server-side, 90s abort; it previously had NO timeout). (3) MULTI-PIN: _captureContact (object) -> _captureContacts (array). The search box no longer hides itself after one pick - it stays mounted and focused with the keyboard up, which is what makes 12 names usable on a phone. Wrapping chips w/ 44px remove targets, count, Clear all, 25+ soft notice, 0-pin discoverability hint. All pins now ship as a pre-selected SET to the AI (it used to send only the first). (4) BATCH LOG (no AI): 2+ pins reveals a sticky 'Log <type> to N people' bar (one-tap Shabbat attendance / Class-Program / Event attendance + full dropdown + date picker). _captureGroupByHousehold groups pins by household and calls logTouch ONCE PER HOUSEHOLD (own recency/bump/track-close each; spouses collapse to one household touch), sequentially so the daily-set read-modify-write can't clobber. markDaily only when dated today. Progress per household, partial-failure keeps the failed people pinned for Retry, two-stage confirm at 5+ showing household count and how many follow-ups will close. (5) BATCH UNDO: logTouch already accepted journal:false and returned its undo object, so the batch collects N undos into ONE journal entry (batch[]) - a 15-person batch takes 1 of the 5 slots, not 15, and fires one toast instead of 15. undoAction's restore body extracted to _undoApplyOne(e,{confirmStale}) and replayed per sub-entry. (6) NO DEAD UNDO BUTTONS: every Quick Capture confirmation is now a persistent inline 'Confirmed + Undo' box (the toast auto-replaces, so confirming several cards in a row lost the undo for the earlier ones). The five non-logTouch paths got REAL undo via new _blankUndo snapshot fields: hhNotesBefore, donationCreatedId/ContactId, contactFieldBefore, hhPropertyBefore, taskCreatedId. Donation undo recalcs the aggregate (a gift feeds recency, F5). Contact-field restore maps '' back to NULL. Children restores the whole prior property_data/profile_data (kids merge by name, so a diff wouldn't reverse). (7) BUGFIX captureSaveDonation never rendered a confirmation and never re-enabled its button - a SUCCESSFUL gift looked like a permanent 'Saving...' hang (data was always correct; verified no duplicate gifts in live data). (8) BUGFIX captureConfirmChildren auto-hid its card after 1.5s, which would have taken the Undo with it. (9) BUGFIX logTouch captured only the FIRST active track via .find() while _applyOutcomeToTrack graduates ALL of them, so undo left extra tracks closed - now snapshots every active track (undo.tracksBefore) and restores all. (10) BUGFIX openCapture never cleared pins (only closeCapture did), so mobile nav-away left stale pins on the next open. (11) VOICE-TO-PINS: Whisper now gets a roster-biased prompt (top 120 first names) so Hebrew/Yiddish names stop coming back mangled - helps every voice capture. A transcript that reads as a list offers a non-destructive 'Pin them / Keep as text' banner; matching is local and deterministic (_captureNormName collapses ch/kh/h, tz/z, doubles, trailing y/i/ie/ey + an alias table). Confident -> pinned; ambiguous within one household ('the Golds') -> all pinned; ambiguous across households -> amber pick-one chip; no match -> grey chip. Nothing heard is ever silently dropped. (12) The batch bar carries its own Notes field - same wording and behaviour as the Log Interaction modal (always present, always optional). It is deliberately NOT wired to the AI dump box above: that box exists to build proposal cards, this is a plain note that lands on each logged interaction ("Bagels and Tefillin event"). (13) MOBILE: iOS 16px zoom guard extended to select/date/number (it covered only textarea+text, so the new controls would have zoomed); sticky batch bar clears the 56px bottom nav + safe-area inset; pin list and results dropdown capped in vh so neither hides behind the keyboard. PRIOR 2026-07-24.1: // FULL-AUDIT FIX PASS (AUDIT-2026-07-24.md F1–F15): (F1) _unlogEventAttendance re-reads the registration from DB and never guesses — the old "most recent Event attendance" fallback could delete a different event's / an imported history row. (F2) The 180-day closed_unresponsive rest is now honored: pools + Waiting Room use _isResting() (snoozed OR closed_unresponsive with live snooze_until); snooze/start-follow-up patch existing resting rows instead of stacking duplicates. (F3) toggleNoShow re-reads the reg link from DB (stale cache double-created attendance) + recalcs the aggregate. (F4) Profile Log marks Daily-done only when dated today (matches Quick Capture). (F5) Donations update recency LIVE (add/edit/delete → _recalcAGCAggForHH). (F6) deleteTimelineItem recalcs aggregate + score in both branches. (F7) Edit-interaction recalcs the aggregate. (F8) Mobile Recent: future-gated + household-deduped. (F9) _computeCandidatePools awaits the aggregates promise (startup race could freeze a mis-drawn set). (F10) Same-day top-up re-reads daily_set (cross-device done[] clobber). (F11) _bumpAGCAgg dedupes via _agcSeenKeys shared with both builders. (F12) Batch enrich routes through logTouch. (F13) _closenessTier comment corrected. (F14) DATES RUN ON EASTERN EVERYWHERE: localDateStr/localToday pin to America/New_York (DAAS_TZ; settings knob parked), new _daysSince() does whole-calendar-day math — all daysSince/ageDays/months-since sites converted. (F15) A reach closes ALL active tracks. PRIOR .12: unified event-attendance rules (attendance lives only in its interaction; future-gated; attendance ≠ personal outreach for NEW card). attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -7181,6 +7190,18 @@ function openCapture(){
   document.getElementById('capture-results').innerHTML='';
   _captureFile=null;
   const fi=document.getElementById('capture-file-info'); fi.style.display='none'; fi.textContent='';
+  // Pins were only ever cleared by closeCapture(), so navigating away on mobile
+  // (which doesn't call it) left stale pins on the next open. Clear them here too.
+  _captureContacts=[];
+  _capturePending=[];
+  _captureBatchArmed=false;
+  _captureBatchType='Shabbat attendance';
+  const bt=document.getElementById('capture-batch-text'); if(bt)bt.value='';
+  const bd=document.getElementById('capture-batch-date'); if(bd)bd.value=localToday();
+  const ci=document.getElementById('capture-contact-input'); if(ci)ci.value='';
+  const cr=document.getElementById('capture-contact-results'); if(cr){cr.style.display='none';cr.innerHTML='';}
+  const vb=document.getElementById('capture-voice-banner'); if(vb)vb.style.display='none';
+  try{_captureRenderPins();}catch(e){}
 }
 function closeCapture(){
   _captureStopVoice();
@@ -7207,17 +7228,33 @@ function captureFilePicked(input){
   reader.onerror=()=>alert('Could not read that file.');
   reader.readAsDataURL(f);
 }
-// ── Optional contact pre-selection — skips AI guesswork when the rabbi already
-// knows who the dump is about. If left empty (or the content involves other
-// people too), the AI matches against the roster as before.
-let _captureContact=null; // {householdId, contactId, name, householdName}
+// ── Contact pre-selection (MULTI) ────────────────────────────────────────────
+// Pinning skips AI guesswork when you already know who the dump is about. Pin
+// ONE and the AI files everything to them; pin TWO OR MORE and a second, non-AI
+// save path appears ("Log to all N") that groups by household and calls
+// logTouch once per household. Matching a name to a contact_id is a string
+// lookup, not an ambiguity problem — doing it locally has no token ceiling and
+// can't silently mis-match, which is what broke a 12-name capture before.
+// 0–1 pinned = the overlay behaves exactly as it always did.
+let _captureContacts=[];   // [{householdId, contactId, name, householdName}]
+// Unresolved voice-heard names live alongside the pins (§7.3) so nothing a
+// person said is ever silently dropped: {raw, candidates:[{contactId,name,householdName}]}
+let _capturePending=[];
+const CAPTURE_PIN_SOFT_CAP=25;
+
+function captureSearchFocus(){
+  // Keep the field (and its dropdown) clear of the mobile keyboard.
+  try{document.getElementById('capture-contact-search').scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+}
 function captureContactFilter(){
   const q=(document.getElementById('capture-contact-input').value||'').trim().toLowerCase();
   const dd=document.getElementById('capture-contact-results');
   if(q.length<2){dd.style.display='none';dd.innerHTML='';return;}
+  const already=new Set(_captureContacts.map(p=>p.contactId));
   const hits=[];
   for(const h of households){
     for(const m of (h.members||[])){
+      if(already.has(m.id))continue; // don't offer someone already pinned
       const full=((m.first_name||'')+' '+(m.last_name||'')).toLowerCase();
       if(full.includes(q)||(h.displayName||'').toLowerCase().includes(q)){
         hits.push({m,h});
@@ -7227,30 +7264,398 @@ function captureContactFilter(){
     if(hits.length>=8)break;
   }
   if(!hits.length){dd.style.display='none';dd.innerHTML='';return;}
-  dd.innerHTML=hits.map(({m,h})=>`<div onclick="captureContactPick('${m.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
+  dd.innerHTML=hits.map(({m,h})=>`<div onclick="captureContactPick('${m.id}')" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.8rem" onmouseover="this.style.background='var(--surf2)'" onmouseout="this.style.background=''">
     <span style="font-weight:600">${_escHtml(_daasDisplayName(m))}</span>
     <span style="font-size:.68rem;color:var(--txt3);margin-left:6px">${_escHtml(h.displayName||'')}</span>
   </div>`).join('');
   dd.style.display='block';
 }
+// Pin one person. THE MOBILE-CRITICAL PART: the search box stays mounted and
+// focused and the keyboard stays up, so 12 names is type-3-chars → tap → repeat.
+// (It used to hide itself after one pick, which capped you at one by construction.)
 function captureContactPick(contactId){
   for(const h of households){
     const m=(h.members||[]).find(x=>x.id===contactId);
     if(m){
-      _captureContact={householdId:h.id,contactId:m.id,name:(m.first_name||'')+' '+(m.last_name||''),householdName:h.displayName||''};
-      document.getElementById('capture-contact-name').textContent=_captureContact.name+' · '+_captureContact.householdName;
-      document.getElementById('capture-contact-chip').style.display='flex';
-      document.getElementById('capture-contact-search').style.display='none';
-      document.getElementById('capture-contact-input').value='';
-      document.getElementById('capture-contact-results').style.display='none';
+      if(!_captureContacts.some(p=>p.contactId===m.id)){
+        _captureContacts.push({householdId:h.id,contactId:m.id,name:((m.first_name||'')+' '+(m.last_name||'')).trim(),householdName:h.displayName||''});
+      }
+      const inp=document.getElementById('capture-contact-input');
+      const dd=document.getElementById('capture-contact-results');
+      if(dd){dd.style.display='none';dd.innerHTML='';}
+      if(inp){inp.value='';try{inp.focus({preventScroll:true});}catch(e){try{inp.focus();}catch(_){}}}
+      _captureRenderPins();
       return;
     }
   }
 }
+function captureUnpin(contactId){
+  _captureContacts=_captureContacts.filter(p=>p.contactId!==contactId);
+  _captureRenderPins();
+}
 function captureContactClear(){
-  _captureContact=null;
-  document.getElementById('capture-contact-chip').style.display='none';
-  document.getElementById('capture-contact-search').style.display='block';
+  _captureContacts=[];
+  _capturePending=[];
+  _captureRenderPins();
+}
+// Drop an unresolved voice name without pinning anyone.
+function captureDropPending(idx){
+  _capturePending.splice(idx,1);
+  _captureRenderPins();
+}
+// Resolve an ambiguous voice name to one of its candidates.
+function captureResolvePin(idx,contactId){
+  const p=_capturePending[idx];
+  if(!p)return;
+  _capturePending.splice(idx,1);
+  if(contactId)captureContactPick(contactId); // also re-renders
+  else _captureRenderPins();
+}
+// Single render for chips + counter + hint + batch bar. Every mutation calls this.
+function _captureRenderPins(){
+  const wrap=document.getElementById('capture-pin-chips');
+  const cnt=document.getElementById('capture-pin-count');
+  const clr=document.getElementById('capture-pin-clear');
+  const hint=document.getElementById('capture-pin-hint');
+  if(!wrap)return;
+  const n=_captureContacts.length, pend=_capturePending.length;
+  let html=_captureContacts.map(p=>'<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.16);border-radius:16px;padding:5px 5px 5px 11px;font-size:.76rem;color:var(--accent);max-width:100%">'
+      +'<span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(p.name)+'</span>'
+      +(p.householdName?'<span style="font-size:.63rem;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(p.householdName)+'</span>':'')
+      +'<button onclick="captureUnpin(\''+p.contactId+'\')" aria-label="Remove" style="background:none;border:none;color:var(--txt3);cursor:pointer;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;padding:0">×</button>'
+    +'</span>').join('');
+  // Unresolved voice names — amber = pick one, grey = no match, never silently dropped.
+  html+=_capturePending.map((p,i)=>{
+    const amber=(p.candidates&&p.candidates.length>0);
+    const bg=amber?'rgba(161,98,7,.10)':'rgba(100,116,139,.12)';
+    const bd=amber?'#fcd34d':'var(--border2)';
+    const col=amber?'#a16207':'var(--txt2)';
+    let inner='<span style="font-weight:600">'+_escHtml(p.raw)+'</span>';
+    if(amber){
+      inner+='<select onchange="captureResolvePin('+i+',this.value)" style="background:var(--surf,#fff);border:1px solid '+bd+';border-radius:5px;font-family:inherit;color:var(--txt);max-width:44vw">'
+        +'<option value="">Which one?</option>'
+        +p.candidates.map(c=>'<option value="'+c.contactId+'">'+_escHtml(c.name)+(c.householdName?(' — '+_escHtml(c.householdName)):'')+'</option>').join('')
+        +'</select>';
+    }else{
+      inner+='<span style="font-size:.63rem;color:var(--txt3)">no match — search above</span>';
+    }
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:'+bg+';border:1px dashed '+bd+';border-radius:16px;padding:5px 5px 5px 11px;font-size:.76rem;color:'+col+';max-width:100%">'
+      +inner
+      +'<button onclick="captureDropPending('+i+')" aria-label="Dismiss" style="background:none;border:none;color:var(--txt3);cursor:pointer;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;padding:0">×</button>'
+    +'</span>';
+  }).join('');
+  wrap.innerHTML=html;
+  wrap.style.display=(n||pend)?'flex':'none';
+  if(cnt){cnt.style.display=n?'inline':'none';cnt.textContent=n+' pinned';}
+  if(clr)clr.style.display=(n||pend)?'inline':'none';
+  if(hint)hint.style.display=(n||pend)?'none':'block';
+  _captureBatchArmed=false; // any change to the pin set re-arms the confirm step
+  _captureRenderBatchBar();
+}
+
+// ── BATCH LOG (non-AI) ───────────────────────────────────────────────────────
+// Appears only at 2+ pins. Groups the pinned people by household and calls
+// logTouch ONCE PER HOUSEHOLD — so each household gets its own recency reset,
+// its own score bump and its own track close, while two spouses at the same
+// Shabbat table collapse into one household touch (the existing multi-member
+// semantic). No AI, no token ceiling, no silent mis-matching.
+const CAPTURE_BATCH_TYPES=['Email / Text','Phone call','Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance','Left VM','Other','Note'];
+const CAPTURE_BATCH_QUICK=['Shabbat attendance','Class / Program','Event attendance'];
+// The batch note is exactly the note field from the Log Interaction modal — same
+// wording, always present, always optional. It is NOT connected to the AI dump
+// box above (that box builds proposal cards; this is a plain note).
+function captureBatchNoteInput(){ _captureRenderBatchBar(); }
+let _captureBatchType='Shabbat attendance';
+let _captureBatchArmed=false;
+let _captureBatchBusy=false;
+
+function captureSetBatchType(t){
+  if(CAPTURE_BATCH_TYPES.includes(t))_captureBatchType=t;
+  _captureBatchArmed=false;
+  _captureRenderBatchBar();
+}
+// Group pinned contacts by household. One entry per household, carrying every
+// pinned member of it — exactly the shape logTouch's contactIds expects.
+function _captureGroupByHousehold(){
+  const by=new Map();
+  for(const p of _captureContacts){
+    const key=p.householdId||('solo:'+p.contactId);
+    if(!by.has(key))by.set(key,{householdId:p.householdId||null,label:p.householdName||p.name,contactIds:[],names:[]});
+    const g=by.get(key);
+    g.contactIds.push(p.contactId);
+    g.names.push(p.name);
+  }
+  return [...by.values()];
+}
+function _captureRenderBatchBar(){
+  const bar=document.getElementById('capture-batch-bar');
+  if(!bar)return;
+  const n=_captureContacts.length;
+  if(n<2||_captureBatchBusy){ if(!_captureBatchBusy)bar.style.display='none'; return; }
+  bar.style.display='block';
+  // One-tap chips for the common attendance cases; full list in the dropdown.
+  const chips=document.getElementById('capture-batch-type-chips');
+  if(chips){
+    chips.innerHTML=CAPTURE_BATCH_QUICK.map(t=>{
+      const on=(t===_captureBatchType);
+      return '<button onclick="captureSetBatchType(\''+t.replace(/'/g,"\\'")+'\')" style="padding:7px 12px;border-radius:16px;cursor:pointer;font-family:inherit;font-size:.74rem;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?'var(--accent)':'var(--border2)')+';background:'+(on?'var(--accent)':'var(--surf,#fff)')+';color:'+(on?'#fff':'var(--txt2)')+'">'+_escHtml(t)+'</button>';
+    }).join('');
+  }
+  const sel=document.getElementById('capture-batch-type');
+  if(sel){
+    sel.innerHTML=CAPTURE_BATCH_TYPES.map(t=>'<option'+(t===_captureBatchType?' selected':'')+'>'+_escHtml(t)+'</option>').join('');
+    sel.value=_captureBatchType;
+  }
+  const dateEl=document.getElementById('capture-batch-date');
+  if(dateEl&&!dateEl.value)dateEl.value=localToday(); // Eastern, per DAAS_TZ
+  const date=(dateEl&&dateEl.value)||localToday();
+  const groups=_captureGroupByHousehold();
+  const note=document.getElementById('capture-batch-note');
+  const btn=document.getElementById('capture-batch-btn');
+  const nb=document.getElementById('capture-batch-text');
+  const batchTextVal=nb?(nb.value||'').trim():'';
+  if(note){
+    let msg='';
+    if(_captureBatchArmed){
+      // Confirm summary — say plainly what is about to change, incl. track closes.
+      let closing=0;
+      if(_isReach(_captureBatchType)){
+        for(const g of groups){ if(g.householdId&&(outreachTracks||[]).some(t=>t.household_id===g.householdId&&t.status==='active'))closing++; }
+      }
+      msg='<strong>'+n+' '+(n===1?'person':'people')+' · '+groups.length+' household'+(groups.length===1?'':'s')+'</strong> · '+_escHtml(_captureBatchType)+' · '+_escHtml(date)
+        +(closing?(' · closes '+closing+' open follow-up'+(closing===1?'':'s')):'')
+        +(date!==localToday()?' · back-dated, so it won\u2019t clear today\u2019s Daily Five':'');
+    }else{
+      msg=groups.length!==n
+        ? (n+' people across '+groups.length+' households — spouses count as one household touch.')
+        : (n+' households, one touch each.');
+      if(n>=CAPTURE_PIN_SOFT_CAP)msg+=' That\u2019s a lot — consider making this an Event instead.';
+      msg+=batchTextVal?' The note is saved to each of them.':' No note — that\u2019s fine for attendance.';
+    }
+    note.innerHTML=msg;
+  }
+  if(btn)btn.textContent=_captureBatchArmed?('Confirm — log all '+n):('Log '+_captureBatchType+' to '+n+' people');
+}
+
+async function captureBatchLog(btn){
+  if(_captureBatchBusy)return;
+  const n=_captureContacts.length;
+  if(n<2)return;
+  const type=_captureBatchType;
+  const date=((document.getElementById('capture-batch-date')||{}).value)||localToday();
+  const notes=((document.getElementById('capture-batch-text')||{}).value||'').trim();
+  // Two-stage confirm at 5+: first press shows the summary, second press writes.
+  if(n>=5&&!_captureBatchArmed){ _captureBatchArmed=true; _captureRenderBatchBar(); return; }
+  const groups=_captureGroupByHousehold();
+  _captureBatchBusy=true;
+  const orig=btn.textContent;
+  btn.disabled=true;
+  const prog=document.getElementById('capture-batch-progress');
+  const subs=[], failed=[];
+  for(let i=0;i<groups.length;i++){
+    const g=groups[i];
+    if(prog){prog.style.display='block';prog.textContent='Logging… '+(i+1)+' of '+groups.length+' · '+g.label;}
+    btn.textContent='Logging '+(i+1)+' of '+groups.length+'…';
+    try{
+      // journal:false — collect the undo objects and push ONE batch entry below,
+      // so a 15-person batch takes one of the five journal slots, not fifteen.
+      const res=await logTouch({contactIds:g.contactIds,householdId:g.householdId,type,date,notes:notes||null,
+        source:'capture-batch',trackMode:'close-only',markDaily:(date===localToday()),journal:false});
+      if(res&&res.undo)subs.push(res.undo);
+    }catch(e){
+      failed.push(g);
+      console.warn('[DAAS] batch log failed for '+g.label,e);
+    }
+  }
+  const savedPeople=groups.length-failed.length;
+  let entryId=null;
+  if(subs.length){
+    const entry=_blankUndo(type+' — '+subs.length+' household'+(subs.length===1?'':'s'),null);
+    entry.batch=subs;
+    _journalPush(entry,false); // no toast; the inline Confirmed box carries the Undo
+    entryId=entry.id;
+  }
+  // Failures stay pinned so Retry re-runs only them.
+  const failedIds=new Set();
+  failed.forEach(g=>g.contactIds.forEach(id=>failedIds.add(id)));
+  const results=document.getElementById('capture-results');
+  let summary=_escHtml(String(savedPeople))+' household'+(savedPeople===1?'':'s')+' · '+_escHtml(type);
+  if(failed.length)summary+=' — <strong style="color:var(--red)">'+failed.length+' failed</strong>: '+failed.map(g=>_escHtml(g.label)).join(', ');
+  if(results&&subs.length)results.insertAdjacentHTML('afterbegin',_captureConfirmHTML(summary,entryId));
+  else if(results&&failed.length)results.insertAdjacentHTML('afterbegin','<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.8rem;color:var(--red)">Nothing saved. '+_escHtml(failed.map(g=>g.label).join(', '))+'</div>');
+  _captureBatchBusy=false;
+  btn.disabled=false;
+  btn.textContent=orig;
+  if(prog){prog.style.display='none';prog.textContent='';}
+  _captureContacts=_captureContacts.filter(p=>failedIds.has(p.contactId));
+  _captureBatchArmed=false;
+  if(!_captureContacts.length){
+    const ta=document.getElementById('capture-text');if(ta)ta.value='';
+    const nb=document.getElementById('capture-batch-text');if(nb)nb.value='';
+  }
+  _captureRenderPins();
+}
+
+// ── Shared inline "Confirmed" box (§5.4) ─────────────────────────────────────
+// The toast auto-dismisses and auto-replaces, so when you confirm several cards
+// in a row on a phone the undo for card 1 is gone before you finish card 2.
+// This box sits still and waits. `msg` must already be escaped by the caller.
+function _captureConfirmHTML(msg,undoId){
+  return '<div class="capture-confirmed" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
+    +'<span style="font-size:.8rem;font-weight:700;color:#15803d;white-space:nowrap">\u2705 Confirmed</span>'
+    +'<span style="font-size:.78rem;color:var(--txt2);flex:1;min-width:110px">'+msg+'</span>'
+    +(undoId?('<button onclick="captureUndoFromBox(this,\''+undoId+'\')" style="flex-shrink:0;background:var(--surf,#fff);border:1px solid #86efac;color:#15803d;border-radius:6px;padding:7px 13px;cursor:pointer;font-size:.76rem;font-weight:600;font-family:inherit;min-height:34px">Undo</button>'):'')
+    +'</div>';
+}
+async function captureUndoFromBox(btn,undoId){
+  if(!undoId)return;
+  btn.disabled=true;
+  const prev=btn.textContent;
+  btn.textContent='Undoing…';
+  try{
+    await undoAction(undoId);
+    const box=btn.closest('.capture-confirmed');
+    if(box){
+      box.style.background='var(--surf2,#f3f4f6)';
+      box.style.borderColor='var(--border2)';
+      box.innerHTML='<span style="font-size:.8rem;font-weight:600;color:var(--txt2)">Undone</span>';
+    }
+  }catch(e){
+    btn.disabled=false;btn.textContent=prev;
+    alert('Could not undo: '+e.message);
+  }
+}
+
+// ── VOICE → PINS (§7) ────────────────────────────────────────────────────────
+// "Yossi, Dovid, Shloimy and the Golds came to shul" → four pinned chips.
+// Whisper transcribes; the NAME MATCHING stays deterministic and local. Using an
+// LLM to match names is what produced the original token-ceiling bug, and it can
+// mis-match silently — a local matcher can only be wrong out loud.
+
+// Normalise a heard name so Whisper's manglings converge on the roster spelling:
+// Shloimy/Shloime, Chaya/Khaya/Haya, Yossi/Yossie/Yossey all collapse together.
+function _captureNormName(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z]/g,'')
+    .replace(/kh|ch/g,'h')
+    .replace(/tz/g,'z')
+    .replace(/ck/g,'k')
+    .replace(/ph/g,'f')
+    .replace(/(.)\1+/g,'$1')
+    .replace(/(ie|ey|ee|y|i)$/,'y');
+}
+// Seed this as you hit real misses — it is deliberately a plain lookup.
+const CAPTURE_NAME_ALIASES={howy:'howard',hary:'harold',moe:'morris',shloimy:'shlomo',shloimey:'shlomo',srualy:'yisroel',yisroely:'yisroel',mendy:'menachem',mushky:'mushka',chany:'chana',beny:'benjamin',dovy:'dovid',duvy:'dovid',avy:'avraham',eliy:'eliyahu'};
+
+// Match one heard fragment against the roster. Returns a candidate array:
+// 0 = no match, 1 = confident, >1 = ambiguous (the caller decides what that means).
+function _captureMatchName(raw){
+  const base=_captureNormName(String(raw||'').replace(/^\s*(the|and|plus|with)\s+/i,''));
+  if(base.length<2)return [];
+  // Try as heard, then DE-PLURALISED — a family is nearly always said in the
+  // plural ("the Golds", "the Cohens", "the Weisses") but stored singular.
+  // Order matters: as-heard wins first, so a name that really ends in s
+  // (Marks, Weiss) still matches itself rather than being stripped.
+  const variants=[];
+  const push=v=>{
+    if(!v||v.length<2)return;
+    const a=CAPTURE_NAME_ALIASES[v]||v;
+    if(!variants.includes(a))variants.push(a);
+    if(a!==v&&!variants.includes(v))variants.push(v);
+  };
+  push(base);
+  if(/es$/.test(base))push(base.slice(0,-2));
+  if(/s$/.test(base))push(base.slice(0,-1));
+  const already=new Set(_captureContacts.map(p=>p.contactId));
+  for(const q of variants){
+    const first=[],last=[],house=[];
+    for(const h of households){
+      const hn=_captureNormName(h.displayName||'');
+      for(const m of (h.members||[])){
+        if(already.has(m.id))continue;
+        const cand={contactId:m.id,name:((m.first_name||'')+' '+(m.last_name||'')).trim(),householdName:h.displayName||'',householdId:h.id};
+        const fn=_captureNormName(m.first_name||'');
+        const ln=_captureNormName(m.last_name||'');
+        if(fn&&fn===q)first.push(cand);
+        else if(ln&&ln===q)last.push(cand);
+        else if(hn&&q.length>=4&&hn.includes(q))house.push(cand);
+      }
+    }
+    if(first.length)return first;
+    if(last.length)return last;   // "the Golds" → every Gold
+    if(house.length)return house;
+  }
+  return [];
+}
+// Try the whole fragment, then progressively shorter leading word-runs, so
+// "the Golds came to shul" still resolves on "Golds".
+function _captureMatchFragment(frag){
+  const words=String(frag||'').trim().split(/\s+/).filter(Boolean);
+  for(let take=Math.min(words.length,3);take>=1;take--){
+    const attempt=words.slice(0,take).join(' ');
+    const hits=_captureMatchName(attempt);
+    if(hits.length)return{raw:attempt,candidates:hits};
+  }
+  return{raw:words.slice(0,2).join(' ')||String(frag||'').trim(),candidates:[]};
+}
+// Does this transcript read as a roster of people rather than prose?
+// Deliberately conservative — a false positive would nag during normal dictation.
+function _captureLooksLikeNameList(text){
+  const t=String(text||'').trim();
+  if(!t||t.length>400)return null;
+  const parts=t.split(/[,;\n]|\band\b|\bplus\b/i).map(s=>s.trim().replace(/[.!?]+$/,'')).filter(Boolean);
+  if(parts.length<3)return null;
+  const resolved=parts.map(_captureMatchFragment).filter(r=>r.candidates.length);
+  if(resolved.length<Math.max(2,Math.ceil(parts.length*0.5)))return null;
+  return parts;
+}
+// Bias Whisper toward the names it would otherwise mangle. The prompt field is
+// capped (~224 tokens), so send the most common first names, not all 800.
+function _captureWhisperPrompt(){
+  const freq=new Map();
+  households.forEach(h=>(h.members||[]).forEach(m=>{
+    const f=(m.first_name||'').trim();
+    if(f.length>1)freq.set(f,(freq.get(f)||0)+1);
+  }));
+  const names=[...freq.entries()].sort((a,b)=>b[1]-a[1]).map(e=>e[0]).slice(0,120);
+  return names.length?('Names that may appear: '+names.join(', ')+'.'):'';
+}
+let _captureVoiceParts=null;
+function _captureOfferVoicePins(text){
+  const parts=_captureLooksLikeNameList(text);
+  const banner=document.getElementById('capture-voice-banner');
+  const txt=document.getElementById('capture-voice-banner-txt');
+  if(!parts||!banner){if(banner)banner.style.display='none';return;}
+  _captureVoiceParts=parts;
+  if(txt)txt.textContent='Heard what sounds like '+parts.length+' names. Pin them instead of sending this to the AI?';
+  banner.style.display='flex';
+}
+function captureVoiceDismiss(){
+  _captureVoiceParts=null;
+  const b=document.getElementById('capture-voice-banner');
+  if(b)b.style.display='none';
+}
+// Resolve every heard fragment. Confident → pinned. Ambiguous within ONE
+// household ("the Golds") → pin them all, that's a family reference. Ambiguous
+// across households → an amber chip you tap to pick. No match → a grey chip.
+// Nothing said is ever silently dropped.
+function captureVoicePinAll(){
+  const parts=_captureVoiceParts||[];
+  for(const frag of parts){
+    const r=_captureMatchFragment(frag);
+    if(!r.candidates.length){
+      if(r.raw&&r.raw.length>1&&!_capturePending.some(p=>p.raw===r.raw))_capturePending.push({raw:r.raw,candidates:[]});
+      continue;
+    }
+    if(r.candidates.length===1){ captureContactPick(r.candidates[0].contactId); continue; }
+    const hhIds=new Set(r.candidates.map(c=>c.householdId));
+    if(hhIds.size===1){ r.candidates.forEach(c=>captureContactPick(c.contactId)); continue; }
+    if(!_capturePending.some(p=>p.raw===r.raw))_capturePending.push({raw:r.raw,candidates:r.candidates});
+  }
+  captureVoiceDismiss();
+  _captureRenderPins();
+  try{document.getElementById('capture-pin-chips').scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
 }
 function captureClearFile(){
   _captureFile=null;
@@ -7293,10 +7698,17 @@ async function _captureTranscribe(){
     const ext=(blob.type.indexOf('mp4')>=0)?'mp4':'webm';
     fd.append('file',blob,'note.'+ext);
     fd.append('model','whisper-1');
+    // Bias decoding toward roster first names — without this, Hebrew and Yiddish
+    // names come back mangled (Shloimy→"Solomy", Chaya→"Haya"), which is exactly
+    // the vocabulary that matters here. Helps every voice capture, not just pins.
+    try{const wp=_captureWhisperPrompt();if(wp)fd.append('prompt',wp);}catch(e){}
     const tr=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+OPENAI_KEY},body:fd});
     const d=await tr.json();
     if(d.error)throw new Error(d.error.message);
-    ta.value=(prev?prev+'\n':'')+(d.text||'').trim();
+    const heard=(d.text||'').trim();
+    ta.value=(prev?prev+'\n':'')+heard;
+    // Non-destructive: the text stays put; we only OFFER to turn it into pins.
+    try{_captureOfferVoicePins(heard);}catch(e){}
   }catch(e){ ta.value=prev; alert('Transcription failed: '+e.message); }
 }
 
@@ -7315,10 +7727,13 @@ function _captureRoster(){
 async function captureAnalyze(btn){
   const text=document.getElementById('capture-text').value.trim();
   if(!text && !_captureFile){alert('Add some text, a file, or a voice note first.');return;}
-  if(!ANTHROPIC_KEY){_keyNudge(document.getElementById('capture-results')||null,'Anthropic','captureAnalyze(document.getElementById(\'capture-analyze-btn\'))');return;}
   const results=document.getElementById('capture-results');
   const orig=btn.textContent; btn.disabled=true; btn.textContent='Analyzing…';
-  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">'+(_captureContact?('Reading — filing to '+_captureContact.name+'…'):'Reading and matching to a contact…')+'</div>';
+  const _pinNames=_captureContacts.map(p=>p.name);
+  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">'
+    +(_pinNames.length===1?('Reading — filing to '+_escHtml(_pinNames[0])+'…')
+      :_pinNames.length>1?('Reading — filing across '+_pinNames.length+' pinned people…')
+      :'Reading and matching to a contact…')+'</div>';
 
   const today=localToday();
   const roster=_captureRoster();
@@ -7329,9 +7744,10 @@ async function captureAnalyze(btn){
     +'Use contact_update when the content gives a NEW or CORRECTED value for one basic field of an EXISTING contact that was matched with HIGH confidence — e.g. a new cell number, a new email address, a date of birth, a gender, or a spelling fix to their first or last name. Allowed fields are ONLY: phone, email, dob, gender, first_name, last_name. Set update_fields.field to one of those exact strings and update_fields.new_value to the new value (dob as YYYY-MM-DD). ADDRESS CHANGES ARE NEVER a contact_update — a move or new address must be save_as household with the new address details in the text (address changes cascade into property data and household identity and need the household editor). If the person match is not high-confidence, do NOT propose contact_update — fall back to an interaction or household note describing the information instead. '
     +'Use add_person when the content introduces a NEW person who belongs in an EXISTING matched household — e.g. a previously unrecorded spouse or adult child of a contact in the roster (\u201cDanny\u2019s wife is Sarah, her email is\u2026\u201d). Set add_person_fields.anchor_contact_id to the roster contact_id of the existing household member, and fill first_name (required), last_name (default to the anchor\u2019s last name if not stated), relationship, phone, email from the content. If the household match is not confident, use new_contact instead. Never use add_person for young children \u2014 children and their ages go in children_fields via save_as children. '
     +'Choosing the interaction type: an email or text message = \"Email / Text\"; an outbound phone call where you reached them or any in-person live conversation = \"Connected\"; an attempted call that went to voicemail or unanswered = \"Left VM\"; a scheduled or in-person sit-down meeting = \"Meeting in person\"; Shabbat/service attendance = \"Shabbat attendance\"; a class or learning program = \"Class / Program\"; an event or program they came to = \"Event attendance\"; a class, kids program, or youth program they attended = \"Class / Program\"; only use \"Note\" for standing background facts that are NOT a touch, and prefer \"save_as\":\"household\" for those. Use exactly one of these type strings verbatim. '
-    +'If a PRE-SELECTED CONTACT is provided in the content, the rabbi has already identified who this concerns: file items to that contact_id by default (match_confidence high) and do NOT second-guess the match. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
+    +'If PRE-SELECTED CONTACTS are provided in the content, the rabbi has already identified who this concerns: file items to those contact_ids by default (match_confidence high) and do NOT second-guess the match. When several are pre-selected and the content describes one shared thing (e.g. "they all came to Shabbat"), return ONE item per pre-selected contact_id. Only deviate for a chunk that clearly and explicitly concerns a different person — in that case match that chunk against the roster as usual. '
     +'Use task when the content states a forward-looking action the rabbi intends to do \u2014 a follow-up, a promise, or a plan (e.g. "told Howard I\'ll reach out next week to schedule coffee", "need to send the tuition form", "call the Cohens after the holiday"). Put a clean imperative in text (e.g. "Reach out to Howard to schedule coffee"), set contact_id to the person it involves if matched (else null for a free-floating to-do), and set task_fields.due_date to a concrete YYYY-MM-DD if a timeframe is implied ("next week" = the coming Monday) else null. A task is about the FUTURE; a past event is still an interaction. '
-    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). A donation item requires an explicit amount actually stated in the content; never estimate amounts, and never propose a donation for someone not matched in the roster (use new_contact or interaction text instead). If the content covers multiple distinct events or people, return multiple items (a gift plus a conversation can be two items: one donation, one interaction). TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'.';
+    +'Rules: Use a contact_id ONLY if it appears verbatim in the roster. If unsure between people, set match_confidence to low or medium and pick the most likely. NEVER invent dates or dollar amounts — only use a date if it is clearly in the content; otherwise null (the app will default to today). A donation item requires an explicit amount actually stated in the content; never estimate amounts, and never propose a donation for someone not matched in the roster (use new_contact or interaction text instead). If the content covers multiple distinct events or people, return multiple items (a gift plus a conversation can be two items: one donation, one interaction). TODAY\'S YEAR for age calculations: '+new Date().getFullYear()+'. '
+    +'OUTPUT SIZE — IMPORTANT: the field blocks above document every field that EXISTS, not fields you must always send. Include ONLY the keys relevant to the save_as you chose, and OMIT the other *_fields blocks entirely rather than returning them empty. Never pad an item with empty objects, empty strings or nulls for fields that do not apply. Always emit complete, valid JSON — if you are covering many people, keep each item minimal so the whole object closes properly.';
 
   // Build user content (text + optional file)
   const userContent=[];
@@ -7342,24 +7758,36 @@ async function captureAnalyze(btn){
       userContent.push({type:'image',source:{type:'base64',media_type:_captureFile.mediaType,data:_captureFile.base64}});
     }
   }
-  const preSel=_captureContact?('PRE-SELECTED CONTACT: contact_id='+_captureContact.contactId+' | '+_captureContact.name+' | household: '+_captureContact.householdName+'\n\n'):'';
+  // All pinned people become the pre-selected SET (it used to send only the first).
+  const preSel=_captureContacts.length
+    ?('PRE-SELECTED CONTACTS ('+_captureContacts.length+'):\n'
+      +_captureContacts.map(p=>'contact_id='+p.contactId+' | '+p.name+' | household: '+p.householdName).join('\n')+'\n\n')
+    :'';
   userContent.push({type:'text',text:'TODAY: '+today+'\n\n'+preSel+'ROSTER:\n'+roster+'\n\nDUMPED CONTENT:\n'+(text||'(see attached file)')});
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:sys,messages:[{role:'user',content:userContent}]})
-    });
-    const d=await resp.json();
+    // Routed through the ai-proxy Edge Function (key stays server-side) and given
+    // a real timeout — this used to be a bare fetch to api.anthropic.com with the
+    // browser key and NO abort. Several other AI call sites in this file are still
+    // direct fetches; they should migrate the same way (tracked in the plan doc).
+    const d=await _aiComplete({model:'claude-sonnet-4-6',max_tokens:8000,system:sys,messages:[{role:'user',content:userContent}]},{timeoutMs:90000});
     if(d.error)throw new Error(d.error.message);
-    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    // TRUNCATION GUARD: at the old 1500-token ceiling a list of ~9+ people ran past
+    // the budget, the JSON was cut mid-item, the greedy brace match grabbed a partial
+    // object and JSON.parse threw — surfacing as a raw "JSON Parse error" in red.
+    // Say something useful instead, and point at the path that has no limit.
+    if(d.stop_reason==='max_tokens'){
+      throw new Error('That was too much to read in one go, so the answer got cut off. For a group like this, pin them instead — use “Pin people” below, add everyone, then press “Log to all”. That way has no limit.');
+    }
+    const txt=((d.content)||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
     const m=txt.match(/\{[\s\S]*\}/);
     if(!m)throw new Error('Could not read a proposal from the response.');
-    const parsed=JSON.parse(m[0]);
+    let parsed;
+    try{parsed=JSON.parse(m[0]);}
+    catch(_){throw new Error('The answer came back incomplete, so nothing was saved. Try fewer people at once — or pin them and press “Log to all”.');}
     _captureRenderProposals(parsed);
   }catch(e){
-    results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px">Analysis failed: '+_enrichEsc(e.message)+'</div>';
+    results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px;line-height:1.5">Analysis failed: '+_enrichEsc(e.message)+'</div>';
   }
   btn.disabled=false; btn.textContent=orig;
 }
@@ -7703,6 +8131,10 @@ async function captureConfirmChildren(i,btn){
   const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
   try{
     const existing=(targetHousehold.profile_data&&targetHousehold.profile_data.estimated_children)||[];
+    // Snapshot the WHOLE prior objects — kids are merged by name, so a
+    // "remove what I just added" diff would not reliably reverse this.
+    const propBefore=targetHousehold.property_data?JSON.parse(JSON.stringify(targetHousehold.property_data)):null;
+    const profBefore=targetHousehold.profile_data?JSON.parse(JSON.stringify(targetHousehold.profile_data)):null;
     const merged=[...existing];
     kids.forEach(newKid=>{
       const idx=merged.findIndex(e=>e.name&&newKid.name&&e.name.toLowerCase()===newKid.name.toLowerCase());
@@ -7716,8 +8148,11 @@ async function captureConfirmChildren(i,btn){
       households[targetHhIdx].profile_data=updatedProfile;
       households[targetHhIdx].property_data={...households[targetHhIdx].property_data,profile:updatedProfile};
     }
-    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Saved!'; btn.style.background='var(--green)';
-    setTimeout(()=>{card.style.display='none';},1500);
+    const u=_blankUndo('Children — '+(targetHousehold.displayName||''),targetHousehold.id);
+    u.hhPropertyBefore={hhId:targetHousehold.id,property_data:propBefore,profile_data:profBefore};
+    _journalPush(u,false);
+    // The card used to auto-hide after 1.5s; that would take the Undo with it.
+    if(card)card.innerHTML=_captureConfirmHTML(kids.length+' child'+(kids.length===1?'':'ren')+' saved to '+_enrichEsc(targetHousehold.displayName||'household'),u.id);
   }catch(e){
     btn.disabled=false; btn.textContent=orig;
     alert('Save failed: '+e.message);
@@ -7744,12 +8179,17 @@ async function captureSaveItem(i,btn){
     try{
       // Append to existing household notes with a dated prefix
       const stamp=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const existingRaw=(h&&h.notes)?h.notes:null; // exact prior value, for undo
       const existing=(h&&h.notes)?h.notes.trim():'';
       const combined=existing?(existing+'\n\n['+stamp+'] '+text):('['+stamp+'] '+text);
       await sb('households?id=eq.'+hid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
       if(h){h.notes=combined;_invHH(h);}
+      // This path never went through logTouch, so it had no undo entry. Give it one.
+      const u=_blankUndo('Household note — '+(h?(h.displayName||''):''),hid);
+      u.hhNotesBefore={hhId:hid,notes:existingRaw};
+      _journalPush(u,false);
       const card=btn.closest('.capture-item');
-      if(card)card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Saved to '+_enrichEsc(h?h.displayName:'household')+' notes</div>';
+      if(card)card.innerHTML=_captureConfirmHTML('Saved to '+_enrichEsc(h?h.displayName:'household')+' notes',u.id);
     }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
     return;
   }
@@ -7768,7 +8208,7 @@ async function captureSaveItem(i,btn){
   try{
     const res=await logTouch({contactIds:[contactId],householdId:h?h.id:null,type,date,notes:text,source:'capture',trackMode:'close-only',markDaily:(date===localToday()),silent:true,journalLabel:type+(h?(' — '+(h.displayName||'')):'')});
     const card=btn.closest('.capture-item');
-    if(card)card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Saved to '+_enrichEsc(h?h.displayName:'contact')+'</div>';
+    if(card)card.innerHTML=_captureConfirmHTML(_enrichEsc(type)+' saved to '+_enrichEsc(h?h.displayName:'contact'),res&&res.undo?res.undo.id:null);
     // Standard action toast: Undo + (complete a matching open task) + (start/advance
     // a follow-up when this was a miss-type). Matches the profile Log flow.
     if(res){
@@ -7810,7 +8250,21 @@ async function captureSaveDonation(i,btn){
       if(typeof refreshAGCScore==='function'){try{await refreshAGCScore(h.id);}catch(e){}}
       try{renderList();}catch(e){}
     }
+    // BUGFIX: this path used to grab the card and then do nothing with it — no
+    // confirmation was ever rendered and the button was never re-enabled, so a
+    // SUCCESSFUL save looked like a permanent "Saving…" hang. The gift did save.
+    const newId=(savedD&&savedD[0]&&savedD[0].id)||null;
+    let undoId=null;
+    if(newId){
+      const u=_blankUndo('Donation $'+amount+(h?(' — '+(h.displayName||'')):''),h?h.id:null);
+      u.donationCreatedId=newId;
+      u.donationContactId=contactId;
+      _journalPush(u,false);
+      undoId=u.id;
+    }
     const card=btn.closest('.capture-item');
+    if(card)card.innerHTML=_captureConfirmHTML('Gift of $'+_enrichEsc(String(amount))+' recorded'+(h?(' for '+_enrichEsc(h.displayName||'')):''),undoId);
+    else{btn.disabled=false;btn.textContent=orig;}
   }catch(e){alert('Save failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
 }
 
@@ -7846,8 +8300,12 @@ async function captureSaveContactUpdate(i,btn){
     if(h)_invHH(h);
     try{renderList();}catch(e){}
     const FIELD_LABELS={phone:'Phone',email:'Email',dob:'Date of Birth',gender:'Gender',first_name:'First Name',last_name:'Last Name'};
+    // No logTouch here either \u2014 snapshot the prior field value so Undo can put it back.
+    const u=_blankUndo('Updated '+(FIELD_LABELS[field]||field)+(h?(' \u2014 '+(h.displayName||'')):''),h?h.id:null);
+    u.contactFieldBefore={contactId:cid,field,value:oldVal};
+    _journalPush(u,false);
     const card=btn.closest('.capture-item');
-    if(card)card.innerHTML='<div style="font-size:.82rem;color:#6d28d9;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Updated '+_enrichEsc(member?_daasDisplayName(member):'contact')+' \u2014 '+(FIELD_LABELS[field]||field)+': <s style="color:var(--txt3)">'+_enrichEsc(oldVal||'(empty)')+'</s> \u2192 <strong>'+_enrichEsc(newVal)+'</strong></div>';
+    if(card)card.innerHTML=_captureConfirmHTML(_enrichEsc(member?_daasDisplayName(member):'contact')+' \u2014 '+(FIELD_LABELS[field]||field)+': <s style="color:var(--txt3)">'+_enrichEsc(oldVal||'(empty)')+'</s> \u2192 <strong>'+_enrichEsc(newVal)+'</strong>',u.id);
   }catch(e){alert('Update failed: '+e.message);btn.disabled=false;btn.textContent=orig;}
 }
 // Address deflection: open the contact editor (household address lives there,
@@ -9213,11 +9671,19 @@ async function captureSaveTask(i,btn){
   const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
   try{
     const h=cid?households.find(hh=>(hh.members||[]).some(m=>m.id===cid)):null;
-    await createTask({text, household_id:h?h.id:null, contact_id:cid||null, due_date:due, source:'capture'});
+    // createTask returns the saved row — keep the id so Undo can delete it.
+    const createdT=await createTask({text, household_id:h?h.id:null, contact_id:cid||null, due_date:due, source:'capture'});
     try{renderTasksPanel();}catch(e){}
     try{_refreshOpenHouseholdTasks();}catch(e){}
+    let undoId=null;
+    if(createdT&&createdT.id){
+      const u=_blankUndo('Task — '+text.slice(0,40),h?h.id:null);
+      u.taskCreatedId=createdT.id;
+      _journalPush(u,false);
+      undoId=u.id;
+    }
     const card=btn.closest('.capture-item');
-    if(card) card.innerHTML='<div style="font-size:.82rem;color:#15803d;padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Task added'+(h?(' &middot; '+_enrichEsc(h.displayName||'')):' (free-floating)')+'</div>';
+    if(card) card.innerHTML=_captureConfirmHTML('Task added'+(h?(' &middot; '+_enrichEsc(h.displayName||'')):' (free-floating)'),undoId);
   }catch(e){ alert('Save failed: '+e.message); btn.disabled=false; btn.textContent=orig; }
 }
 
@@ -16312,7 +16778,16 @@ async function _refreshTracksFor(hhId){
 //    track row / daily flags it changed, so undoAction() can reverse it.
 // ════════════════════════════════════════════════════════════════════════
 const _undoStack=[]; let _undoBusy=false;
-function _blankUndo(label,hhId){return{id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),label:label||'Action',ts:Date.now(),hhId:hhId||null,interactionIds:[],trackBefore:null,trackCreatedId:null,trackAfter:null,dailyDoneAdded:false,pinRestored:null,taskBefore:null,taskAfter:null};}
+// Undo entry factory. All fields default null/empty, so adding a field here is
+// inert for every existing caller — a path opts in by filling the one it needs.
+//   hhNotesBefore     {hhId,notes}                  household-notes PATCH (capture household branch)
+//   donationCreatedId / donationContactId           a donation row this action inserted
+//   contactFieldBefore{contactId,field,value}       one whitelisted contacts field PATCH
+//   hhPropertyBefore  {hhId,property_data,profile_data}  nested property_data.profile PATCH (children)
+//   taskCreatedId                                   a task row this action inserted
+//   tracksBefore      [track,…]                     ALL active tracks a reach graduated (see logTouch)
+//   batch             [subEntry,…]                  one entry standing in for N household touches
+function _blankUndo(label,hhId){return{id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),label:label||'Action',ts:Date.now(),hhId:hhId||null,interactionIds:[],trackBefore:null,trackCreatedId:null,trackAfter:null,tracksBefore:null,dailyDoneAdded:false,pinRestored:null,taskBefore:null,taskAfter:null,hhNotesBefore:null,donationCreatedId:null,donationContactId:null,contactFieldBefore:null,hhPropertyBefore:null,taskCreatedId:null,batch:null};}
 function _journalPush(u,toastMsg){
   _undoStack.unshift(u);
   while(_undoStack.length>5)_undoStack.pop();
@@ -16399,17 +16874,23 @@ async function logTouch(o){
       if(mode==='auto'||_isReach(type)){
         // Cross-device: act on the DB's current track state, not this device's cache.
         await _refreshTracksFor(h.id);
-        let beforeCopy=null;
-        const activeT=outreachTracks.find(t=>t.household_id===h.id&&t.status==='active');
-        if(activeT)beforeCopy=JSON.parse(JSON.stringify(activeT));
-        else if(o.trackId){const tr=outreachTracks.find(t=>t.id===o.trackId);if(tr)beforeCopy=JSON.parse(JSON.stringify(tr));}
+        // _applyOutcomeToTrack graduates ALL active tracks on a reach, so snapshot
+        // ALL of them — capturing only the first left the rest unrestorable on undo.
+        let activesBefore=outreachTracks.filter(t=>t.household_id===h.id&&t.status==='active').map(t=>JSON.parse(JSON.stringify(t)));
+        let beforeCopy=activesBefore[0]||null;
+        if(!beforeCopy&&o.trackId){const tr=outreachTracks.find(t=>t.id===o.trackId);if(tr){beforeCopy=JSON.parse(JSON.stringify(tr));activesBefore=[beforeCopy];}}
         const beforeIds=new Set(outreachTracks.map(t=>t.id));
         await _applyOutcomeToTrack(h,type,o.trackId||null);
         const createdTrack=outreachTracks.find(t=>t.household_id===h.id&&!beforeIds.has(t.id));
         if(createdTrack){undo.trackCreatedId=createdTrack.id;undo.trackAfter=JSON.parse(JSON.stringify(createdTrack));}
-        else if(beforeCopy){
-          const now=outreachTracks.find(t=>t.id===beforeCopy.id);
-          if(now&&JSON.stringify(now)!==JSON.stringify(beforeCopy)){undo.trackBefore=beforeCopy;undo.trackAfter=JSON.parse(JSON.stringify(now));}
+        else if(activesBefore.length){
+          const changed=activesBefore.filter(b=>{const now=outreachTracks.find(t=>t.id===b.id);return now&&JSON.stringify(now)!==JSON.stringify(b);});
+          if(changed.length){
+            undo.tracksBefore=changed;
+            undo.trackBefore=changed[0]; // kept for the existing freshness check
+            const now0=outreachTracks.find(t=>t.id===changed[0].id);
+            if(now0)undo.trackAfter=JSON.parse(JSON.stringify(now0));
+          }
         }
       }
     }catch(e){console.warn('[DAAS] track update failed',e);}
@@ -16458,6 +16939,129 @@ async function _recalcAGCAggForHH(hhId){
 // track rows are restored to their before-state (or deleted if created),
 // daily-done/pin flags are put back, a completed task is reopened, and the
 // household's AGC is recomputed server-side (local bump has no inverse).
+// Restore ONE undo entry. Split out of undoAction so a batch entry (§4.4) can
+// replay the exact same logic per sub-entry. Returns false only when the user
+// declined a cross-device freshness warning; opts.confirmStale=false suppresses
+// those dialogs (a 15-household batch must not throw 15 confirms).
+async function _undoApplyOne(e,opts){
+  opts=opts||{};
+  const askStale=(opts.confirmStale!==false);
+  // CROSS-DEVICE FRESHNESS: the journal is per-device. If the DB no longer
+  // matches what this action left behind (your other device touched the same
+  // track/task since), warn before overwriting the newer state.
+  if(askStale){
+    try{
+      const _tid=e.trackCreatedId||(e.trackBefore&&e.trackBefore.id);
+      if(_tid&&e.trackAfter){
+        const _cur=await sb('outreach_tracks?id=eq.'+_tid+'&limit=1');
+        const _row=(_cur&&_cur[0])||null;
+        const _KEYS=['status','step','attempts','next_due','snooze_until'];
+        const _changed=!_row||_KEYS.some(k=>String(_row[k]??'')!==String(e.trackAfter[k]??''));
+        if(_changed&&!confirm('This follow-up track changed after this action — possibly from your other device. Undo anyway?'))return false;
+      }
+      if(e.taskBefore&&e.taskAfter){
+        const _curT=await sb('tasks?id=eq.'+e.taskBefore.id+'&limit=1');
+        const _rowT=(_curT&&_curT[0])||null;
+        if(_rowT&&(_rowT.status!==e.taskAfter.status||String(_rowT.logged_interaction_id||'')!==String(e.taskAfter.logged_interaction_id||''))){
+          if(!confirm('This task changed after this action — possibly on your other device. Undo anyway?'))return false;
+        }
+      }
+    }catch(err){console.warn('[DAAS] undo freshness check failed (continuing)',err);}
+  }
+  for(const iid of (e.interactionIds||[])){
+    try{await sb('interactions?id=eq.'+iid,{method:'DELETE',headers:{'Prefer':'return=minimal'}});}catch(err){console.warn('[DAAS] undo: interaction delete failed',err);}
+    try{if(typeof _clearInteractionEmbedding==='function')_clearInteractionEmbedding(iid);}catch(err){}
+  }
+  try{
+    if(e.trackCreatedId){
+      await sb('outreach_tracks?id=eq.'+e.trackCreatedId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      outreachTracks=outreachTracks.filter(t=>t.id!==e.trackCreatedId);
+    }else if(e.tracksBefore&&e.tracksBefore.length){
+      // A reach graduates ALL active tracks, so restore ALL of them (not just the first).
+      for(const b of e.tracksBefore){
+        const patch={status:b.status,step:b.step||null,attempts:b.attempts||null,next_due:b.next_due||null,snooze_until:b.snooze_until||null};
+        await sb('outreach_tracks?id=eq.'+b.id,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(patch)});
+        outreachTracks=outreachTracks.map(t=>t.id===b.id?{...t,...patch}:t);
+      }
+    }else if(e.trackBefore){
+      const b=e.trackBefore;
+      const patch={status:b.status,step:b.step||null,attempts:b.attempts||null,next_due:b.next_due||null,snooze_until:b.snooze_until||null};
+      await sb('outreach_tracks?id=eq.'+b.id,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(patch)});
+      outreachTracks=outreachTracks.map(t=>t.id===b.id?{...t,...patch}:t);
+    }
+  }catch(err){console.warn('[DAAS] undo: track restore failed',err);}
+  if(e.dailyDoneAdded&&e.hhId){
+    try{
+      const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
+      if(fresh&&fresh.length&&fresh[0].value){const p=JSON.parse(fresh[0].value);if(p&&p.ids)_dailySet=p;}
+      if(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(e.hhId)){
+        _dailySet.done=_dailySet.done.filter(x=>x!==e.hhId);
+        await _saveDailySet();
+      }
+    }catch(err){console.warn('[DAAS] undo: daily restore failed',err);}
+  }
+  if(e.pinRestored){
+    try{await _mutateDailyPins(p=>{if(!p.includes(e.pinRestored))p.unshift(e.pinRestored);return p;});}catch(err){}
+  }
+  if(e.taskBefore){
+    try{
+      await sb('tasks?id=eq.'+e.taskBefore.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:e.taskBefore.status,completed_at:e.taskBefore.completed_at,logged_interaction_id:e.taskBefore.logged_interaction_id})});
+      const t=_tasks.find(x=>x.id===e.taskBefore.id);
+      if(t){t.status=e.taskBefore.status;t.completed_at=e.taskBefore.completed_at;t.logged_interaction_id=e.taskBefore.logged_interaction_id;}
+    }catch(err){console.warn('[DAAS] undo: task restore failed',err);}
+  }
+  // ── Non-logTouch capture paths (§5.4a) — each stores its own "before" snapshot ──
+  if(e.hhNotesBefore){
+    try{
+      const {hhId,notes}=e.hhNotesBefore;
+      await sb('households?id=eq.'+hhId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:notes||null})});
+      const h=households.find(x=>x.id===hhId)||(hiddenHouseholds||[]).find(x=>x.id===hhId);
+      if(h){h.notes=notes||null;try{_invHH(h);}catch(_){}}
+    }catch(err){console.warn('[DAAS] undo: household notes restore failed',err);}
+  }
+  if(e.donationCreatedId){
+    try{
+      await sb('donations?id=eq.'+e.donationCreatedId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      const cid=e.donationContactId;
+      const h=cid?households.find(hh=>(hh.members||[]).some(m=>m.id===cid)):null;
+      if(h){
+        const member=(h.members||[]).find(m=>m.id===cid);
+        if(member&&Array.isArray(member.donations))member.donations=member.donations.filter(d=>d.id!==e.donationCreatedId);
+        try{_invHH(h);}catch(_){}
+      }
+    }catch(err){console.warn('[DAAS] undo: donation delete failed',err);}
+  }
+  if(e.contactFieldBefore){
+    try{
+      const {contactId,field,value}=e.contactFieldBefore;
+      const body={};body[field]=(value===''||value==null)?null:value; // '' would silently overwrite a NULL column
+      await sb('contacts?id=eq.'+contactId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+      for(const hh of households){const mm=(hh.members||[]).find(x=>x.id===contactId);if(mm){mm[field]=body[field];try{_invHH(hh);}catch(_){}break;}}
+    }catch(err){console.warn('[DAAS] undo: contact field restore failed',err);}
+  }
+  if(e.hhPropertyBefore){
+    try{
+      const {hhId,property_data,profile_data}=e.hhPropertyBefore;
+      await sb('households?id=eq.'+hhId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:property_data||null})});
+      const h=households.find(x=>x.id===hhId);
+      if(h){h.property_data=property_data||null;h.profile_data=profile_data||null;try{_invHH(h);}catch(_){}}
+    }catch(err){console.warn('[DAAS] undo: children/profile restore failed',err);}
+  }
+  if(e.taskCreatedId){
+    try{
+      await sb('tasks?id=eq.'+e.taskCreatedId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      _tasks=_tasks.filter(t=>t.id!==e.taskCreatedId);
+    }catch(err){console.warn('[DAAS] undo: task delete failed',err);}
+  }
+  if(e.hhId){
+    try{await _recalcAGCAggForHH(e.hhId);}catch(err){}
+    try{refreshAGCScore(e.hhId).then(()=>{try{recolorAll();}catch(_){}});}catch(err){}
+    const h=households.find(x=>x.id===e.hhId);
+    if(h){try{_invHH(h);}catch(err){}}
+  }
+  return true;
+}
+
 async function undoAction(id){
   if(_undoBusy)return;
   _undoBusy=true;
@@ -16468,66 +17072,18 @@ async function undoAction(id){
     if(i>0&&e.hhId&&_undoStack.slice(0,i).some(x=>x.hhId===e.hhId)){
       if(!confirm('A newer action touched the same household. Undo this older one anyway?'))return;
     }
-    // CROSS-DEVICE FRESHNESS: the journal is per-device. If the DB no longer
-    // matches what this action left behind (your other device touched the same
-    // track/task since), warn before overwriting the newer state.
-    try{
-      const _tid=e.trackCreatedId||(e.trackBefore&&e.trackBefore.id);
-      if(_tid&&e.trackAfter){
-        const _cur=await sb('outreach_tracks?id=eq.'+_tid+'&limit=1');
-        const _row=(_cur&&_cur[0])||null;
-        const _KEYS=['status','step','attempts','next_due','snooze_until'];
-        const _changed=!_row||_KEYS.some(k=>String(_row[k]??'')!==String(e.trackAfter[k]??''));
-        if(_changed&&!confirm('This follow-up track changed after this action — possibly from your other device. Undo anyway?'))return;
+    if(Array.isArray(e.batch)&&e.batch.length){
+      // Batch entry (§4.4): one journal slot standing in for N household touches.
+      // Freshness dialogs are suppressed per sub-entry — a batch is same-session
+      // and immediate, and 15 confirms would be unusable.
+      if(!confirm('Undo all '+e.batch.length+' of them?'))return;
+      for(const sub of e.batch){
+        try{await _undoApplyOne(sub,{confirmStale:false});}
+        catch(err){console.warn('[DAAS] batch undo: one household failed',err);}
       }
-      if(e.taskBefore&&e.taskAfter){
-        const _curT=await sb('tasks?id=eq.'+e.taskBefore.id+'&limit=1');
-        const _rowT=(_curT&&_curT[0])||null;
-        if(_rowT&&(_rowT.status!==e.taskAfter.status||String(_rowT.logged_interaction_id||'')!==String(e.taskAfter.logged_interaction_id||''))){
-          if(!confirm('This task changed after this action — possibly on your other device. Undo anyway?'))return;
-        }
-      }
-    }catch(err){console.warn('[DAAS] undo freshness check failed (continuing)',err);}
-    for(const iid of (e.interactionIds||[])){
-      try{await sb('interactions?id=eq.'+iid,{method:'DELETE',headers:{'Prefer':'return=minimal'}});}catch(err){console.warn('[DAAS] undo: interaction delete failed',err);}
-      try{if(typeof _clearInteractionEmbedding==='function')_clearInteractionEmbedding(iid);}catch(err){}
-    }
-    try{
-      if(e.trackCreatedId){
-        await sb('outreach_tracks?id=eq.'+e.trackCreatedId,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-        outreachTracks=outreachTracks.filter(t=>t.id!==e.trackCreatedId);
-      }else if(e.trackBefore){
-        const b=e.trackBefore;
-        const patch={status:b.status,step:b.step||null,attempts:b.attempts||null,next_due:b.next_due||null,snooze_until:b.snooze_until||null};
-        await sb('outreach_tracks?id=eq.'+b.id,{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(patch)});
-        outreachTracks=outreachTracks.map(t=>t.id===b.id?{...t,...patch}:t);
-      }
-    }catch(err){console.warn('[DAAS] undo: track restore failed',err);}
-    if(e.dailyDoneAdded&&e.hhId){
-      try{
-        const fresh=await sb('app_settings?key=eq.daily_set&limit=1');
-        if(fresh&&fresh.length&&fresh[0].value){const p=JSON.parse(fresh[0].value);if(p&&p.ids)_dailySet=p;}
-        if(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(e.hhId)){
-          _dailySet.done=_dailySet.done.filter(x=>x!==e.hhId);
-          await _saveDailySet();
-        }
-      }catch(err){console.warn('[DAAS] undo: daily restore failed',err);}
-    }
-    if(e.pinRestored){
-      try{await _mutateDailyPins(p=>{if(!p.includes(e.pinRestored))p.unshift(e.pinRestored);return p;});}catch(err){}
-    }
-    if(e.taskBefore){
-      try{
-        await sb('tasks?id=eq.'+e.taskBefore.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:e.taskBefore.status,completed_at:e.taskBefore.completed_at,logged_interaction_id:e.taskBefore.logged_interaction_id})});
-        const t=_tasks.find(x=>x.id===e.taskBefore.id);
-        if(t){t.status=e.taskBefore.status;t.completed_at=e.taskBefore.completed_at;t.logged_interaction_id=e.taskBefore.logged_interaction_id;}
-      }catch(err){console.warn('[DAAS] undo: task restore failed',err);}
-    }
-    if(e.hhId){
-      try{await _recalcAGCAggForHH(e.hhId);}catch(err){}
-      try{refreshAGCScore(e.hhId).then(()=>{try{recolorAll();}catch(_){}});}catch(err){}
-      const h=households.find(x=>x.id===e.hhId);
-      if(h){try{_invHH(h);}catch(err){}}
+    }else{
+      const ok=await _undoApplyOne(e,{confirmStale:true});
+      if(ok===false)return;
     }
     _undoStack.splice(i,1);
     _renderUndoUI();
@@ -18412,7 +18968,7 @@ function _asExecuteSearch(sentence){
     <button onclick="closeCapture()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Close</button>
   </div>
   <div style="max-width:680px;margin:0 auto;padding:16px 16px 80px">
-    <p style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.</p>
+    <p style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.<br><span style="color:var(--txt3)">Logging a group after a program? Pin everyone under <strong>Pin people</strong> and log them all in one go — no limit on how many.</span></p>
 
     <div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
       <div style="position:relative">
@@ -18427,17 +18983,47 @@ function _asExecuteSearch(sentence){
         <span style="flex:1"></span>
         <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">Analyze →</button>
       </div>
-      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px">Pin to contact <span style="text-transform:none;letter-spacing:0">(optional — skip and it'll figure it out)</span></div>
-        <div id="capture-contact-chip" style="display:none;align-items:center;gap:8px">
-          <span id="capture-contact-name" style="font-size:.8rem;font-weight:600;color:var(--accent);background:rgba(15,30,51,.08);padding:4px 10px;border-radius:14px"></span>
-          <button onclick="captureContactClear()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.72rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> clear</button>
-        </div>
-        <div id="capture-contact-search" style="position:relative">
-          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-          <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
-        </div>
+      <!-- Offered after a voice note that reads like a list of people. Non-destructive:
+           the transcript stays in the box either way. -->
+      <div id="capture-voice-banner" style="display:none;align-items:center;gap:9px;flex-wrap:wrap;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:10px">
+        <span id="capture-voice-banner-txt" style="font-size:.78rem;color:#a16207;flex:1;min-width:120px;line-height:1.45"></span>
+        <button onclick="captureVoicePinAll()" style="flex-shrink:0;background:#a16207;color:#fff;border:none;border-radius:6px;padding:8px 13px;cursor:pointer;font-size:.76rem;font-weight:600;font-family:inherit;min-height:34px">Pin them</button>
+        <button onclick="captureVoiceDismiss()" style="flex-shrink:0;background:none;border:1px solid #fcd34d;color:#a16207;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:.76rem;font-family:inherit;min-height:34px">Keep as text</button>
       </div>
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+          <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Pin people <span style="text-transform:none;letter-spacing:0">(optional — add as many as you like)</span></div>
+          <span style="flex:1"></span>
+          <span id="capture-pin-count" style="display:none;font-size:.66rem;color:var(--accent);font-weight:600"></span>
+          <button id="capture-pin-clear" onclick="captureContactClear()" style="display:none;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.66rem;padding:2px 4px">Clear all</button>
+        </div>
+        <!-- Pinned chips accumulate here; scrolls internally so it can never push the action bar off-screen -->
+        <div id="capture-pin-chips" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;max-height:34vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+        <div id="capture-contact-search" style="position:relative">
+          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" onfocus="captureSearchFocus()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+          <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
+        </div>
+        <!-- Shown only at 0 pins: this is what makes the batch path findable -->
+        <div id="capture-pin-hint" style="font-size:.68rem;color:var(--txt3);margin-top:7px;line-height:1.45">Logging a group all at once? Pin them and skip the AI.</div>
+      </div>
+    </div>
+
+    <!-- BATCH BAR — appears only at 2+ pins (progressive disclosure). Sticky so it
+         stays reachable on mobile no matter how many chips are stacked above it. -->
+    <div id="capture-batch-bar" style="display:none;background:var(--surf,#fff);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:14px;position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:6;box-shadow:0 -2px 14px rgba(0,0,0,.07)">
+      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:7px">Log the same thing to everyone pinned</div>
+      <div id="capture-batch-type-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <select id="capture-batch-type" onchange="captureSetBatchType(this.value)" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 9px;color:var(--txt);font-family:inherit" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></select>
+        <input type="date" id="capture-batch-date" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:6px 8px;color:var(--txt);font-family:inherit" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+      </div>
+      <!-- Same Notes field as the Log Interaction modal: always here, always optional.
+           Separate from the AI dump box above, which exists to build proposal cards. -->
+      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:9px 0 4px">Notes <span style="text-transform:none;letter-spacing:0">(optional)</span></div>
+      <textarea id="capture-batch-text" rows="2" oninput="captureBatchNoteInput()" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:8px 9px;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
+      <div id="capture-batch-note" style="font-size:.68rem;color:var(--txt3);margin-top:7px;line-height:1.45"></div>
+      <div id="capture-batch-progress" style="display:none;font-size:.76rem;color:var(--accent);margin-top:9px;font-weight:500"></div>
+      <button id="capture-batch-btn" onclick="captureBatchLog(this)" style="width:100%;margin-top:9px;padding:11px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.86rem;font-weight:600"></button>
     </div>
 
     <div id="capture-results"></div>
@@ -18580,7 +19166,7 @@ function _asExecuteSearch(sentence){
     <div class="m-tab" id="mtab-capture" data-tab="capture">
       <div class="m-tab-inner">
         <div class="m-section-h"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg> Quick Capture</div>
-        <div class="m-sub">Dump a note, voice memo, or screenshot from the field. AI files it to the right contact.</div>
+        <div class="m-sub">Dump a note, voice memo, or screenshot from the field. AI files it to the right contact — or pin a group and log them all at once.</div>
         <button class="m-action-card" onclick="openCapture()">
           <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg></span>
           <span class="m-action-txt"><b>New Capture</b><span>Text, voice, PDF, or image</span></span>
