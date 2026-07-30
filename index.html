@@ -1489,6 +1489,18 @@ html.force-desktop #mobileShell{display:none!important}
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div></div>
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
+    <!-- §9.2 DISCREPANCY PRESETS — next to "Min Prospect", because that is where a
+         filtered list actually gets worked. PRESETS, NOT FREE-FORM SLIDERS: arbitrary
+         pillar ranges invite combinations that mean nothing and put the burden of
+         knowing what to ask on the user. This is the answer to "how much should the
+         score influence?" — the score earns its keep by predicting who might become
+         warmer or a bigger giver, not by taking over the call queue. -->
+    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Gap</div><select class="tier-input fs-inp" id="filterGap" style="width:190px" onchange="applyFilter()" title="Find the gap between what a household could be and what it currently is." autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+      <option value="">Any</option>
+      <option value="capNotAff">High capacity, low affinity — could give, doesn’t know us</option>
+      <option value="affNotGen">High affinity, low generosity — loves us, never asked properly</option>
+      <option value="genNotContact">High generosity, low contact — gives elsewhere, no relationship here</option>
+    </select></div>
     <button onclick="_rpOpenFromQuickFilters()" title="Carry these filters into the Reports builder" style="align-self:flex-end;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;padding:5px 10px;font-family:var(--font-ui);font-size:.6rem;cursor:pointer;white-space:nowrap">Open in Reports →</button>
     <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px;font-size:.68rem;padding:4px 9px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Clear</button>
     <span id="filterCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
@@ -1666,6 +1678,13 @@ html.force-desktop #mobileShell{display:none!important}
     </select>
     <label>Notes</label>
     <input type="text" id="don_notes" placeholder="Annual gala, etc." autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+    <!-- §9.1 — bookkeeping only. This checkbox does NOT feed recency, warmth or the
+         Prospect Score. Log the actual thank-you call as an interaction; that is what
+         the engine reads. A mailed receipt is not an interaction. -->
+    <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;margin-bottom:12px;font-weight:400">
+      <input type="checkbox" id="don_thanked" style="accent-color:var(--accent);margin-top:2px;flex-shrink:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+      <span style="font-size:.76rem;color:var(--txt2);line-height:1.35"><b style="color:var(--txt)">Thanked</b><br><span style="color:var(--txt3);font-size:.68rem">Just bookkeeping — who still needs acknowledging. It doesn’t affect any score or queue. Log the actual thank-you call or visit as an interaction.</span></span>
+    </label>
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
       <button class="btn btn-pri" id="don_save_btn" onclick="_guardClick(this,saveDonation)">Save Donation</button>
@@ -1792,7 +1811,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-29.2'; // AI PROFILE FIX PASS — two reported bugs plus the facts UI. (1) QUICK UPDATE "Malformed JSON in response": buildProfileSoft required the model to return every ground-truth research field VERBATIM (affinityNotes, generosityNotes, capacityNotes, businessInfo, boardMemberships, philanthropy990, pressmentions, approximateAge, fedLevel, capacity, searchHints) on top of a freshly written summary and approach, inside max_tokens:2000. On a well-researched household the copy alone overran the budget, the response was cut mid-string, the greedy firstBrace/lastBrace slice grabbed a partial object and JSON.parse threw — so the failure scaled with how GOOD the profile was and hit the households that matter most. Same defect and same fix as captureAnalyze in 2026-07-27.1. THE MODEL NOW RETURNS THREE KEYS ONLY (approach, summary, estimated_children) and the pass-through is done in code by merging over existingProfile, so ground truth is preserved BY CONSTRUCTION rather than by instruction — a model retyping several paragraphs could always quietly reword or truncate them, and those fields are read by the Prospect Score in BOTH _calcAGCLocal and calculate_agc. max_tokens 2000->4000, an explicit stop_reason==='max_tokens' guard that names the cause, a shape guard, and per-field acceptance so a blank or wrong-typed value cannot overwrite a good one (an EMPTY estimated_children array is still accepted — it is a legitimate answer). Nothing about what is WRITTEN to property_data.profile changed. (2) VERIFIED FACTS VANISHED UNTIL RELOAD: efEvidenceHTML returned '' for a pillar with no verified facts, so no #efEv- anchor existed in the DOM, and _efRepaint — which can only replace nodes it finds — had nowhere to write when a click created a pillar's FIRST piece of evidence. The row left the pending panel and appeared nowhere until a reload rebuilt the card. The anchor is now ALWAYS emitted (invisible when empty), the pillar wrappers test efHasEvidence() rather than the markup, and _efRepaint gained a _efRerenderProfile fallback for the two remaining cases where the pillar CARD itself is absent or left empty (a pillar with no prose note). All three pillars are repainted now, Affinity included, so mapping a future fact type to it in EF_PILLAR cannot leave a stale block. (3) VERIFY BOX RESTYLED: the amber border and the '⚠ N findings to check' warning treatment are gone — grey hairline, plain sentence, disclosure arrow. Four coloured state pills collapsed to one line of plain words in type colour (verified green / no source link red / 'not checked' grey / rejected struck through); not-yet-checked is the ordinary condition of a new finding, not a warning. Word-buttons became 20px icon controls via a shared _efIcoBtn. (4) VERIFIED EVIDENCE IS NOW COLLAPSED behind a small '▶ N verified' arrow inside each pillar card, per household per pillar, closed by default — settled evidence should not be re-read every time the profile is opened. (5) THE FACT'S OWN WORDS ARE THE LINK (_efHeadHTML), on both surfaces; the separate trailing 'source' link is gone. A fact with no source_url stays plain text. (6) A VERIFIED FACT CAN BE UNDONE: a small ✕ on each evidence row calls the existing efUnverify, closing the gap recorded in FACT-VERIFICATION.md where evidence carried no controls and a mis-click on Verify was unrecoverable from the UI. UNCHANGED: the three fact states and their meaning, the AI-cannot-self-verify trigger, _efKey dedupe, efWriteAiFacts, _efProseHidden, the IRS lookup/adopt path, and all Prospect Score logic in both implementations. VERIFIED: both script blocks node --check clean; both sentinels present; VM harness against the REAL extracted functions covering the first-evidence repaint (the reported bug), the anchor-always-present invariant, collapse/expand state, unverify returning a fact to pending, the linked-vs-plain head, no yellow left in either surface, and the soft-build merge (truncated JSON, omitted fields, blank overwrite, empty children array). NOT YET EYEBALLED IN A BROWSER. PRIOR 2026-07-29.1: // PROSPECT SCORE REBUILD COMPLETE - PHASES B AND C (PLAN-AGC-REBUILD.md sections 4, 5 and 6; specification "The Prospect Score.docx"). WEIGHTS Affinity 40 (was 35) / Generosity 30 (was 35) / Capacity 30 (unchanged). Server function calculate_agc is v5; _calcAGCLocal here mirrors it exactly and tools/agc-parity-harness.mjs proves it - 618 households, 64 assertions, 0 failures. THE BIG ONE: the Affinity frequency test is SPLIT. Personal contact (Connected / Meeting in person) scores 12/8/4; passive attendance (Shabbat / Class / Event) scores 4/3/2. A family at every programme you have never spoken to used to score identically to one you telephone monthly. Live data says the split matters: 112 households have attendance in the last 12 months, only 33 have any personal contact. New helpers _isPersonalContact / _isPassiveAttendance are DERIVED from REACH_TYPES minus ATTENDANCE_TYPES so the division cannot drift; the aggregate gained personal12 / attend12 / significant alongside connected12, which is UNCHANGED and still feeds _closenessTier (Warm/Steady/Cool is deliberately untouched by this rebuild). TESTS DELETED, NOT ZEROED (their detail keys are gone): participation keywords (3, fired on "asked if he could attend but could not"); warmth keywords (4, fired on "not close with the family"); the children keyword scan; Capacity's second reading of the philanthropy text (5); and Generosity's own largest-gift test - gift SIZE is wealth evidence so it now lives once, in Capacity, graded 4/3/2/1. Multi-year loyalty moved Affinity->Generosity (4->2). "Chose to support us" 6->4 flat, so money is 10% of Affinity rather than 29%. FACTS FIRST, PROSE SECOND, per signal per household - 615 of 618 households have prose and no facts, so a hard switch would have dropped nearly every score to zero. TRUST BY DEFAULT: a found fact scores immediately; confirming is a note that someone checked, not permission. Two lines held - NO source_url scores zero, dismissed scores zero. CAPACITY EXCLUDES a missing home value instead of scoring it 0 and returns partial:{capacity:true}; 253 households (41%) have no home value and every one of those is a missing street address, not a cheap house. SIGNAL COUNT: every score now carries "N of 9 signals" - evidence FOUND, not approved - on the profile, the daily card, the enrich briefing and the Why breakdown. Return shape gained partial and signals ONLY; total/affinity/generosity/capacity/detail are unchanged for the ~30 call sites, and _agcShape() normalises older cache entries so no call site needs to be defensive. PHASE C: interactions.significant added ("This mattered" checkbox in the Log Interaction modal, the Daily Five outcome tray on desktop AND mobile, editable from the timeline, shown there as a "mattered" chip) - routed through logTouch, never around it. Worth 4 Affinity points if a household has ANY. Zero interactions are marked today, so Affinity runs at 36 of 40 in practice - expected, and NOT backfilled with a guess. board_service facts gained org_type (jewish_communal | other): the RESEARCHER classifies it, the user is never asked, a MISSING org_type reads as "other" rather than being guessed, and there is deliberately no keyword classifier - matching "jewish" against org names misses Park Synagogue and catches half the general organisations. NEAR-DUPLICATE FACTS: _efKeyMatches adds token-subset containment for board seats, which catches all four live duplicates (Kol Israel / Kol Israel (Beachwood), Gross Schechter / (Pepper Pike), Jewish Federation / its Allocations Committee, University Hospitals / its Development Committee - ten rows describing six seats). SUBSET, NOT SUBSTRING, so RINI still does not match TRINITY; and deliberately NO stopword list, because stripping "foundation" would have merged "Cleveland Foundation" into "Cleveland Clinic". The builder prompt now receives EVERY live fact, not only confirmed ones, with an instruction to reuse existing phrasing - it could not reuse wording it had never been shown. THREE DEFECTS FOUND AND FIXED WHILE VERIFYING, none of them in the plan: (a) an AMBIGUOUS COLUMN REFERENCE - enrichment_facts.household_id collided with the function's own parameter and broke calculate_agc for EVERY household, caught within minutes by the self-test; (b) THE DOLLAR PARSER COULD NOT READ MILLIONS - it handled $25k but read "$2 million" as the number TWO, and 7 of the 37 households with any philanthropy text write their LARGEST gifts that way, so the biggest external donors were scoring the lowest band. New shared parser agc_max_money() / _agcMaxMoney() understands k / m / mm / million / bn / billion and is ordered longest-first so "$5 monthly" still reads as 5; (c) age() STILL RAN ON UTC after v5 pinned everything else to Eastern, so a member born 1950-07-29 was 55-75 on one side of midnight and not on the other. The business keyword regex HERE also gained the word boundaries the server always had - unbounded, "owner" matched "ownership" inside "no business ownership was identified", awarding 6 points of wealth evidence off a sentence saying there is none, on 5 of the 7 households where the two implementations disagreed. DISTRIBUTION, all 618, v3 -> v5: mean 14.14 -> 10.57, max 85 -> 58, 424 fell, 12 rose, 182 unchanged, zeros 131 -> 161. Rank correlation 0.981, so the ORDERING - the score's only real job today, breaking ties between equally overdue households - is essentially preserved while the inflated keyword points are gone. CALIBRATION NOTE FOR THE OWNER, NOT A BUG: nothing now reaches the >=70 green band (was 4 households) and only 16 reach >=40 amber (was 47). The docx assumed the display thresholds would carry over unchanged; arithmetically they do, but in practice the roster tops out at 58 and will stay there until significant moments get marked and facts accumulate. Re-banding the colours is a calibration decision and was deliberately NOT taken here. VERIFIED: new re-runnable Postgres self-test agc_selftest() - 18 assertions covering pillar caps by construction (40/30/30=100), unsourced scores zero, dismissed scores zero, prose fallback carries a household with no live facts, graded-not-presence outside giving, partial capacity, and the signal count on rich and sparse households; tools/agc-parity-harness.mjs - 618 households, 64 assertions, client vs server on total, all three pillars, signal count AND partial flag; every prose regex and the money parser compared PostgreSQL-dialect vs JavaScript-dialect across all 618 rows (0 divergences) and every v5 aggregate input recomputed with the client's rules against the server's detail across all 618 (0 mismatches); removed tests confirmed ABSENT from detail rather than reporting 0; both script blocks node --check clean; both sentinels present. Snapshot table agc_phase_a_before still holds the pre-rebuild numbers - keep it until this is eyeballed and deployed. NOT DEPLOYED AND NOT YET EYEBALLED IN A BROWSER, but the scores are ALREADY LIVE for every user: household_agc_scores is computed on read. PRIOR 2026-07-28.8: // PROSPECT SCORE REBUILD, PHASE A (PLAN-AGC-REBUILD.md section 3; "The Prospect Score.docx" decision 6). DATABASE-ONLY CHANGE - NOT ONE LINE OF SCORING LOGIC IN THIS FILE MOVED. The score is computed twice, and the copy users actually see is the database one: household_agc_scores is a LATERAL view over calculate_agc(), loadAGCScores reads that view, and _calcAGCLocal below is only the fallback for when that read fails. Three corrections had been made HERE and never carried across, so the authoritative copy was the wrong one. calculate_agc is now v4 and matches this file on all three: (1) EVENT REGISTRATIONS no longer count toward last-contact or warmth - attendance already lives in its own 'Event attendance' interaction, so counting the registration row too double-counts an attended event and keeps a no-show warm; (2) A DONATION now counts toward last-contact - a gift is contact - RECENCY ONLY, never added to the 12-month reach count, so giving alone still cannot move a household's Warm/Steady/Cool tier; (3) FUTURE-DATED ROWS are excluded until their date arrives, so an RSVP to a coming event cannot pre-warm a household. BEFORE/AFTER, all 618 households, snapshotted into the table agc_phase_a_before: 602 unchanged, 16 moved, every one upward, every one Affinity-only, largest move +4, NONE more than a few points. Generosity and Capacity did not move at all. Mean total 14.144 -> 14.215. All 16 are households whose most recent gift is more recent than their most recent interaction (14 of the 16 have no interaction on file at all), and in every case the whole delta is the Affinity recency band alone - which is exactly and only correction 2. Corrections 1 and 3 moved nothing, as predicted: the live database still holds 0 events, 0 registrations and 0 future-dated interactions or donations, so they are correctness-before-the-fact rather than fixes with visible effect today. VERIFIED: all 618 before/after totals and pillars diffed in SQL; every prose test (kids-programme, participation, warmth, business tier 1 and tier 2, philanthropy990 presence, Federation presence, Jewish-boards LIKE) and the dollar-figure parser compared PostgreSQL-dialect against JavaScript-dialect across all 618 rows; and a new tools/agc-parity-harness.mjs scores 48 households through the REAL _calcAGCLocal extracted from this file in a stubbed VM (movers, top scorers, busiest, the 3 fact households, zero-score households) against the server's output - 10 assertions, 0 failures, both script blocks parse clean, both sentinels present. THE TWO IMPLEMENTATIONS ARE DELIBERATELY NOT MERGED: the local copy exists precisely for when the database is unreachable, so it cannot call the database. They are kept in step by the harness instead - if you touch one, run it. TWO KNOWN DIVERGENCES REMAIN, BOTH LEFT ALONE ON PURPOSE AND BOTH AWAITING A DECISION: (a) THE BUSINESS-ROLE KEYWORD TEST. This file tests /owner|founder|...|president|principal/ with NO word boundaries; the database word-bounds all of them. On live data that is 7 households where this file awards 6 Capacity points and the database awards 0 - and on 5 of the 7 the matched text is the word "ownership" inside the sentence "no business ownership was identified", i.e. the local fallback scores 6 points of wealth evidence off a sentence saying the household has none. The database is the more correct copy here, which is the opposite direction from the three above, so propagating this file's version would have INTRODUCED a defect. Left as-is; the docx names this test as a defect and Phase B replaces it with the business fact plus a prose fallback. (b) TIMEZONE. This file pins every date to America/New_York (DAAS_TZ, F14); the database uses current_date, which is UTC, so for roughly five hours every evening the server scores a day ahead of the client. Measured right now that is 1 household sitting on an Affinity recency boundary. Not fixed in Phase A because Phase A's whole value is that its movement is attributable to a named cause. PHASE B AND C ARE NOT STARTED - no re-weighting, no fact-based scoring, no significant-moment marker, no signal count. Also noted for Phase B: _calcAGCLocal returns no `detail` object at all while the server does, so a household scored by the fallback shows an empty pillar breakdown; PLAN-AGC-REBUILD.md section 7 requires detail on the return shape. PRIOR 2026-07-28.7: // DISPLAY ONLY - consolidated the facts UI, organised by WHETHER SOMETHING NEEDS A DECISION rather than by category. The single flat card sat at the TOP of the profile listing every fact regardless of state, so the owner scrolled past settled evidence to reach the Affinity/Generosity/Capacity breakdown - which is what he opens the profile for. A verified fact needs nothing from him again, so it should not hold prime space. efCardHTML is SPLIT: efPendingHTML(idx) is the decision surface - renders NOTHING when nothing is undecided (not an empty box, not a heading), otherwise ONE collapsed line ('3 findings to check') that expands to the existing controls unchanged (verify / reject / IRS lookup / adopt). efEvidenceHTML(idx,pillar) renders VERIFIED facts only, as compact one-liners inside the pillar card, visually subordinate to the pillar's prose note, keeping the source link. REJECTED facts live behind a 'show rejected (N)' disclosure INSIDE the expanded pending panel - they are neither pending nor evidence, but they must stay reachable because a rejection is what blocks re-insertion (bury it and the owner cannot see why a finding stopped coming back). BOTH surfaces now sit at the A/G/C block - pending immediately above it, evidence inside the pillar cards. NOTHING about facts renders near the top any more. PILLAR MAPPING, one fact one place: giving_vehicle / outside_gift / board_service / federation -> Generosity; business -> Capacity; AFFINITY GETS NONE, deliberately - it is driven entirely by the app's own contact and giving history, and its notes card is untouched with no placeholder. giving_vehicle shows its asset amount inline under Generosity and is NOT also rendered under Capacity: build .6 removed duplicate rendering and this does not reintroduce it. EMPTY STATES: a pillar with no verified facts renders exactly as before, and there is no 'no verified facts yet' text anywhere - it would be noise on 560 of 618 households. Pillar wrappers use efHasEvidence() so a verified fact is not swallowed when its prose note happens to be empty. _efRepaint now repaints the pending panel AND every pillar's evidence block, and re-inserts the pending panel before #efPillars if verifying the last open fact had removed it. KNOWN GAP, now recorded in BUILD-PLAN.md section 8: because evidence carries no controls, a verified fact currently has NO undo (efUnverify is orphaned) and a verified giving vehicle cannot be re-checked against the IRS file. A mis-click on Verify is unrecoverable from the UI. Two harness assertions pin this as deliberate rather than accidental. UNCHANGED: _efProseHidden and the .6 conditional prose suppression; everything the builder writes (every prose field still lands in property_data.profile, because _calcAGCLocal and calculate_agc both read them and the scoring switchover is still open); Prospect Score logic; the three states, the trigger, the dedupe, _efKey and efWriteAiFacts. Verified: 93 harness assertions against the real extracted source; both blocks node --check clean; sentinels intact. PRIOR 2026-07-28.6: // DISPLAY ONLY - merged the duplicate cards. The builder writes BOTH the prose fields and the discrete facts from the same research, so Federation / Business / Boards / 990 Giving were rendering twice: as rows in the facts card and again as prose immediately below it. Each of those four prose lines is now suppressed ONLY when a LIVE fact of the matching type exists - philanthropy990 hides behind giving_vehicle OR outside_gift, boardMemberships behind board_service, businessInfo behind business, fedLevel behind federation - via _efProseHidden(idx,field), applied in buildProfileDisplay and the full panel (the profile tab delegates to buildProfileDisplay, so two edit sites keep all three surfaces in step). CONDITIONAL IS LOAD-BEARING: efCardHTML renders nothing for a household with no facts, so hiding the prose outright would leave the 53 profiles built before facts existed showing a blank where their 990 giving used to be. Each household transitions the first time it is rebuilt; no bulk pass. A REJECTED fact deliberately does NOT suppress its prose line - if the owner has thrown out the only board_service row the discrete representation has been repudiated, and suppressing the prose too would leave less on screen than before, which is the same failure the conditional exists to prevent. summary, approach, affinityNotes, generosityNotes, capacityNotes and pressmentions always render - no fact equivalent. NOTHING ABOUT WHAT IS WRITTEN CHANGED: every prose field still lands in property_data.profile exactly as before, because _calcAGCLocal and calculate_agc both read them and the scoring switchover is still open. Also removed the unmeasured '30-90 second' figure from BUILD-PLAN.md section 3 - full rebuilds are slower now that the prompt emits the facts array on top of all the prose it already produced, so the race is described as theoretical on the grounds that a rebuild is a deliberate single-household action, without quoting a duration. Verified: 69 harness assertions against the real extracted source; both blocks node --check clean; sentinels intact. PRIOR 2026-07-28.5: // FIX: the "a rejected fact cannot resurrect" guarantee was CLIENT-SIDE ONLY and could fail silently. efWriteAiFacts deduped against the in-memory _efFacts cache, but loadEnrichmentFacts() at startup is fire-and-forget - if it had not resolved or had failed, _efFor() returned [], the seen set was empty, and EVERY fact re-inserted including ones the owner had rejected. Same hole across devices: reject on one, rebuild on another against a stale cache. The database backstopped only giving_vehicle rows carrying an EIN (the partial enrichment_facts_doc_uniq index); board_service, outside_gift, business and federation have no source_doc_id and so nothing caught them at all. NOW: new _efRefreshFor(hid) re-reads that ONE household's facts straight from the database immediately before the seen set is built, and merges them into the cache - the same pattern and the same reason as _refreshTracksFor(hhId) before a track mutation and the daily_set re-read before a rebuild. If that read fails the write ABORTS rather than proceeding blind: losing a rebuild's facts is recoverable, silently resurrecting a rejected one is not. ALSO: facts now insert ONE ROW PER REQUEST. As a single array POST a single unique violation rejected the whole batch, and because the caller only console.warns, the profile saved while the owner silently got zero facts and no explanation. A duplicate key is now treated as the expected outcome it is (another device already recorded it), a genuine failure loses only its own row, and a partial failure raises a toast instead of only a console line - as does an aborted write. HONEST LIMIT, now documented in BUILD-PLAN.md section 3 and HANDOFF.md rather than claimed absolutely: this is a read-then-write check, NOT a constraint. Two rebuilds of the same household racing each other could still both pass it. In practice a rebuild is a deliberate 30-90s action on one household at a time, so the race is theoretical. Verified: 59 harness assertions against the real extracted source, including the exact reported hole (empty cache + rejection present in the DB -> not resurrected), the stale cross-device cache, the scoped re-read, one-row-per-request, a duplicate not aborting the batch, a hard failure losing only its own row, and a failed re-read aborting with no write. PRIOR 2026-07-28.4: // CANDIDATE MATCHING REMOVED, REPLACED BY FACT-LEVEL VERIFICATION. The IRS giving-vehicle detector shipped in .2 worked correctly and was well tested, and is gone anyway: it left 181 households holding ~1,032 pending candidates (5.8 each) and in live use the owner adjudicated TWO of them - one confirm, one dismiss, 0.2%. The judgement is also irreducibly hard (a foundation where the son is listed as secretary but the parents own it; an identical surname with no relationship) and ranking cannot fix it - the earlier tuning pass already cut 26,651 candidates to 1,032 and it still went unused. NEW PRINCIPLE: verification attaches to a fact WE ARE ASSERTING, not to a list of candidates the user must adjudicate. One surface - the profile cards already in daily use. No queue, no nav badge, no standing count, no backfill. STRIPPED: the whole IRS GIVING VEHICLES block (~387 lines), navVehQueue + its badge, all three vehCardHTML render sites, and the match_bmf_vehicles / refresh_bmf_lookup functions plus the 618 enrichment_lookups rows. KEPT: bmf_vehicles (157,467 rows) and tools/bmf-load.ps1 - the table is now a VERIFICATION LOOKUP queried on request, never a detector; both real fact decisions; the zip->state backfill and its reversible log; the fetchProp() state fix; and enrichment_lookups as an empty table for Zillow's unknown-vs-absent later. BUILT: discrete facts in enrichment_facts, one row per checkable item (giving_vehicle / outside_gift / board_service / business / federation), emitted by the full-build prompt as a facts[] array ALONGSIDE the prose. THREE STATES - unverified (amber) / verified (green, dated) / rejected (struck through, grey); a rejected fact must NEVER render like one nobody has looked at, and _efKey natural-key matching stops a rebuild resurrecting it. A FOURTH rendering state, 'unsourced claim' (red), for an AI fact with no source_url: with a link, verifying is click-read-tick in thirty seconds; without one it means redoing the research, so it will not happen. Unsourced findings are kept and flagged rather than dropped - silently discarding a real finding is worse than labelling it. efBmfLookup queries the local IRS table on request for one household at a time, and efAdopt corrects the fact in place and verifies it in the same motion. THE SAFEGUARD INVERTED: the source CHECK deliberately contained no AI value so an AI write failed at the database. That is now backwards, so the guarantee moved to a BEFORE INSERT trigger - AI may write but only ever arrives unverified, while the owner can still verify afterwards (a CHECK cannot express insert-only). CAUGHT IN THE REBUILD: enrichment_facts_doc_uniq keyed on coalesce(source_doc_id,''), which capped a household at ONE board_service / outside_gift / business row per source and would have silently broken the whole design; it is now partial, where source_doc_id is not null. ADDITIVE ON PURPOSE: philanthropy990, fedLevel, boardMemberships, businessInfo and capacity are read by the Prospect Score in BOTH _calcAGCLocal and the calculate_agc function, so nothing here writes to them and the prose fields are untouched. How the score switches over to verified facts is a separate, open decision. Verified: 45 harness assertions against the real extracted source plus 6 database self-tests (AI accepted / forced unverified / owner can still verify / multiple same-type facts allowed / duplicate EIN still blocked / new fact types); both blocks node --check clean; sentinels intact. PRIOR 2026-07-28.3: // GIVING-VEHICLE PERF + UNDO FIX. Deciding a candidate used to cost TWO sequential round-trips - the enrichment_facts write, then a full re-match purely to recompute a status the client already knew (measured 449ms for MILLER, 900ms for the single-letter 'K' surname, ~1.5s per click end to end). refresh_bmf_lookup now stores the FULL ranked candidate list (capped at 60, with the true total alongside) as the immutable output of the last match, and the UNDECIDED view is derived client-side from the fact rows - so confirm/dismiss is ONE insert behind an already-repainted card, and a re-match only happens on an explicit re-check or widen. The card and the nav count both read the derived open set rather than the stored status, so they move on the click; the stored status is patched in the background, un-awaited, purely so other devices agree. A failed write rolls the optimistic change back. ALSO FIXED: 'Undo' on a confirmed vehicle routed through dismiss, which buried the entity permanently - a mis-click could never be taken back. New vehUnconfirm DELETES the fact row so the candidate returns to the review list. Candidate cards now link ProPublica Nonprofit Explorer for EIN lookup. PRIOR 2026-07-28.2: // IRS GIVING-VEHICLE DETECTION COMPLETE (BUILD-PLAN.md Steps 1-5). BMF LOADED: 157,467 in-scope orgs from all 53 IRS state files (1,983,563 rows scanned, 7.94% kept, version 2026-07-14) via tools/bmf-load.ps1 (standalone PowerShell, run by the owner; NOT deployed, NOT an edge function, has a -SelfTest that proves the parser offline). STEP 2c: zip_state built from the unfiltered zip/state pairs; 221 of 222 households holding city+zip recovered a state (all OH), so checkable went 261 -> 482 and not_checkable fell to 127 (118 no_state + 9 no_surname). Rows touched are logged in household_state_backfill_log so the derivation is reversible. THE STEP 2b GATE CHANGED THE DESIGN: measured nationally, surname matching returned 26,651 candidates across 327 households (worst single household 1,579) because surnames that are also ordinary words - CHRISTIAN 761, BROWN 711, MILLER 621, DAVIS 543 - match hundreds of unrelated orgs. Unreviewable. match_bmf_vehicles now takes a scope arg DEFAULTING TO THE HOUSEHOLD'S OWN STATE (1,032 candidates / 179 households / 5.8 avg), with an explicit per-household "Search all 50 states" widen so nothing is excluded, only deferred. Two further corrections from real data: state-match now outranks entity class (a Texas GREER GARSON ENDOWMENT FUND was sorting above the actual Cleveland GARSON FAMILY FOUNDATION), and the city rank term is GONE (exactly 1 household in 609 ever had a city-matching candidate - Chagrin Falls families file in Cleveland and Beachwood). A null state now returns ZERO rows rather than silently falling back to national, which had flooded the 84 households we know least about with 6,888 junk candidates. STEP 4b: refresh_bmf_lookup(uuid,scope) writes exactly one of the six honest states per household and is re-runnable for the widen and for a stale no_match after a newer BMF; backfilled all 618 -> 179 needs_review / 303 no_match / 118 no_state / 9 no_surname. STEP 4c: the confirm card (vehCardHTML) renders in the profile tab, buildProfileDisplay and the full panel, ABOVE the profile so a fact can be confirmed BEFORE a build runs; it names the surnames searched in the no_match copy ("No match for Cohen / Levy in OH" - a family vehicle is often named for the wife's side, so a null result is only as good as the names on file), labels an ICO-only hit as the weaker evidence it is, shows the custodian as "held at Jewish Federation of Cleveland", caps the visible list at 8 while disclosing how many are hidden, and NEVER auto-picks. Confirm/dismiss write an enrichment_facts row keyed to the EIN, so a dismissed candidate can never resurface. A standing count in the nav (navVehQueue + openVehicleQueue) stops 179 pending matches from accumulating unseen. STEP 5: a confirmed vehicle is passed into BOTH buildProfile and buildProfileSoft prompts as ground truth on the same footing as the rabbi's own notes, so the model states it rather than trying to discover it. Verified: 30 harness assertions against the real extracted source covering all six states, the hidden-household exclusion, HTML escaping of a hostile org name, the busy guard and a failed network write; both blocks node --check clean; sentinels intact. Reference checks pass - WULIGER 346527281, GARSON 341916905, ZELMAN 383876650, and RINI returns both Rini entities with no TRINITY. PRIOR 2026-07-28.1: // IRS GIVING-VEHICLE DETECTION, part 1 of BUILD-PLAN.md (Steps 1, 2, 3, 4a). DB side is live: bmf_vehicles (public IRS reference data, no PII, not covered by the purge), bmf_zip_scratch (raw unfiltered zip/state pairs for the Step 2c state backfill), enrichment_lookups (one current verdict per household per source; a CHECK forces a reason whenever status='not_checkable') and enrichment_facts (deterministic facts only — the source CHECK list deliberately contains no AI source, so an AI write is rejected by the DATABASE, not by convention). name_tokens/ico_tokens are GENERATED columns rather than a loader UPDATE, so the tokenise pass cannot be skipped and leave the matcher silently returning nothing. RPC match_bmf_vehicles(surnames[], state, city) token-matches NAME or ICO for ANY household surname — geography RANKS candidates (name>ico, private_foundation>supporting_organization, state, city) but NEVER excludes them; always advisory, never auto-confirms. Verified: the three §3 reference EINs resolve, and 'Rini' no longer drags in 'TRINITY' the way a LIKE '%RINI%' would. purge_household_enrichment(uuid) added for deletion requests. tools/bmf-load.mjs (standalone, NOT deployed, NOT an edge function) streams all 53 state CSVs. THE ONLY index.html CHANGE THIS BUILD is the fetchProp() one-liner below: the hardcoded 'OH' became ${h.state||'OH'}, so an out-of-state household finally produces a correctly addressed Zillow query while unknown-state behaviour is unchanged. Steps 2b/2c/4b/4c/5 are blocked on the BMF load + the Step 2b yield gate, which decides how much confirm UI to build. PRIOR 2026-07-27.1: // QUICK CAPTURE: BATCH LOGGING + INLINE UNDO + VOICE-TO-PINS (PLAN-QUICKCAPTURE-BATCH.md). (1) FIXED THE REPORTED BUG: captureAnalyze ran at max_tokens:1500, so ~9+ people overflowed the budget, the JSON was cut mid-item, the greedy brace match grabbed a partial object and JSON.parse threw a raw 'JSON Parse error' in red. Now 8000 tokens, an explicit stop_reason==='max_tokens' guard with plain-English advice, a schema-trim instruction (emit only the *_fields block relevant to save_as - was ~175 output tokens/person of empty padding), and a friendly catch for a partial parse. (2) captureAnalyze migrated off the bare api.anthropic.com fetch onto _aiComplete (key server-side, 90s abort; it previously had NO timeout). (3) MULTI-PIN: _captureContact (object) -> _captureContacts (array). The search box no longer hides itself after one pick - it stays mounted and focused with the keyboard up, which is what makes 12 names usable on a phone. Wrapping chips w/ 44px remove targets, count, Clear all, 25+ soft notice, 0-pin discoverability hint. All pins now ship as a pre-selected SET to the AI (it used to send only the first). (4) BATCH LOG (no AI): 2+ pins reveals a sticky 'Log <type> to N people' bar (one-tap Shabbat attendance / Class-Program / Event attendance + full dropdown + date picker). _captureGroupByHousehold groups pins by household and calls logTouch ONCE PER HOUSEHOLD (own recency/bump/track-close each; spouses collapse to one household touch), sequentially so the daily-set read-modify-write can't clobber. markDaily only when dated today. Progress per household, partial-failure keeps the failed people pinned for Retry, two-stage confirm at 5+ showing household count and how many follow-ups will close. (5) BATCH UNDO: logTouch already accepted journal:false and returned its undo object, so the batch collects N undos into ONE journal entry (batch[]) - a 15-person batch takes 1 of the 5 slots, not 15, and fires one toast instead of 15. undoAction's restore body extracted to _undoApplyOne(e,{confirmStale}) and replayed per sub-entry. (6) NO DEAD UNDO BUTTONS: every Quick Capture confirmation is now a persistent inline 'Confirmed + Undo' box (the toast auto-replaces, so confirming several cards in a row lost the undo for the earlier ones). The five non-logTouch paths got REAL undo via new _blankUndo snapshot fields: hhNotesBefore, donationCreatedId/ContactId, contactFieldBefore, hhPropertyBefore, taskCreatedId. Donation undo recalcs the aggregate (a gift feeds recency, F5). Contact-field restore maps '' back to NULL. Children restores the whole prior property_data/profile_data (kids merge by name, so a diff wouldn't reverse). (7) BUGFIX captureSaveDonation never rendered a confirmation and never re-enabled its button - a SUCCESSFUL gift looked like a permanent 'Saving...' hang (data was always correct; verified no duplicate gifts in live data). (8) BUGFIX captureConfirmChildren auto-hid its card after 1.5s, which would have taken the Undo with it. (9) BUGFIX logTouch captured only the FIRST active track via .find() while _applyOutcomeToTrack graduates ALL of them, so undo left extra tracks closed - now snapshots every active track (undo.tracksBefore) and restores all. (10) BUGFIX openCapture never cleared pins (only closeCapture did), so mobile nav-away left stale pins on the next open. (11a) Voice no-match chips are filtered: splitting on 'and' also chops a sentence's descriptive tail ('...came to the bagels and tefillin event'), which used to surface as a grey 'no match' chip and look like a lost person. _captureIsLikelyName gates it on <=2 words, no ordinary stop-words, and capitalisation when the transcript has any - so 'Bracha' (a real name not on file) still shows while 'tefillin' does not; an all-lowercase transcript falls back to the stop-word test rather than dropping a name. (11) VOICE-TO-PINS: Whisper now gets a roster-biased prompt (top 120 first names) so Hebrew/Yiddish names stop coming back mangled - helps every voice capture. A transcript that reads as a list offers a non-destructive 'Pin them / Keep as text' banner; matching is local and deterministic (_captureNormName collapses ch/kh/h, tz/z, doubles, trailing y/i/ie/ey + an alias table). Confident -> pinned; ambiguous within one household ('the Golds') -> all pinned; ambiguous across households -> amber pick-one chip; no match -> grey chip. Nothing heard is ever silently dropped. (12) The batch bar carries its own Notes field - same wording and behaviour as the Log Interaction modal (always present, always optional). It is deliberately NOT wired to the AI dump box above: that box exists to build proposal cards, this is a plain note that lands on each logged interaction ("Bagels and Tefillin event"). (13) MOBILE: iOS 16px zoom guard extended to select/date/number (it covered only textarea+text, so the new controls would have zoomed); sticky batch bar clears the 56px bottom nav + safe-area inset; pin list and results dropdown capped in vh so neither hides behind the keyboard. PRIOR 2026-07-24.1: // FULL-AUDIT FIX PASS (AUDIT-2026-07-24.md F1–F15): (F1) _unlogEventAttendance re-reads the registration from DB and never guesses — the old "most recent Event attendance" fallback could delete a different event's / an imported history row. (F2) The 180-day closed_unresponsive rest is now honored: pools + Waiting Room use _isResting() (snoozed OR closed_unresponsive with live snooze_until); snooze/start-follow-up patch existing resting rows instead of stacking duplicates. (F3) toggleNoShow re-reads the reg link from DB (stale cache double-created attendance) + recalcs the aggregate. (F4) Profile Log marks Daily-done only when dated today (matches Quick Capture). (F5) Donations update recency LIVE (add/edit/delete → _recalcAGCAggForHH). (F6) deleteTimelineItem recalcs aggregate + score in both branches. (F7) Edit-interaction recalcs the aggregate. (F8) Mobile Recent: future-gated + household-deduped. (F9) _computeCandidatePools awaits the aggregates promise (startup race could freeze a mis-drawn set). (F10) Same-day top-up re-reads daily_set (cross-device done[] clobber). (F11) _bumpAGCAgg dedupes via _agcSeenKeys shared with both builders. (F12) Batch enrich routes through logTouch. (F13) _closenessTier comment corrected. (F14) DATES RUN ON EASTERN EVERYWHERE: localDateStr/localToday pin to America/New_York (DAAS_TZ; settings knob parked), new _daysSince() does whole-calendar-day math — all daysSince/ageDays/months-since sites converted. (F15) A reach closes ALL active tracks. PRIOR .12: unified event-attendance rules (attendance lives only in its interaction; future-gated; attendance ≠ personal outreach for NEW card). attendance lives ONLY in its 'Event attendance' interaction — registration rows are no longer counted for warmth/recency in loadAGCInteractionAggregates, _recalcAGCAggForHH, or _computeCandidatePools (kills the future double-count; a no-show that deletes the interaction now truly stops counting). Warmth/recency/depth are future-gated everywhere (a future-dated RSVP doesn't pre-count) incl. _bumpAGCAgg + Wins/Recent Activity/SRI display. Attendance (Event/Shabbat/Class) no longer clears the NEW card — only personal outreach does (ATTENDANCE_TYPES/_isOutreachTouch). PRIOR .11: // Relationship temperature surfaced in the UI: leftmost sortable "Rel" column in the contacts table (W/S/C dot, grey dash = unrated), and a "Relationship" option on the map colorBy (orange/gold/blue, grey=unrated) replacing Gift Count + Last Contact. New _tierWithUnrated: a household with zero history (no interactions incl notes, no registrations, no donations) shows Unrated; a single gift/registration/interaction starts rating it. PRIOR .10: // Dashboard audit cont'd: (1) NEW cards drop off once a real touch is logged (form leads still show). (2) Notes no longer reset the reconnect clock or mask a cold PROSPECT. (3) "Snooze Ask" (SRI) uses its own store — no longer creates a track that silenced the reconnect queue. (4) A DONATION now counts as contact for RECENCY across _computeCandidatePools + both AGC aggregate builders, so a recent giver isn't flagged "quiet"/overdue — recency only, tier (Warm/Steady/Cool) deliberately unchanged
+const BUILD_STAMP='2026-07-30.1'; // THE DASHBOARD + PROSPECT SCORE v6 BUILD — the whole of `The Dashboard.docx` rev 5 §11 and `The Prospect Score.docx` rev 5, in one pass. THE ENGINE: (1) The check-in window replaces the 45/90/120 tier leash entirely — a household's window is now its OWN average interval between real connections, clamped 30-180d (may tighten toward the floor, never loosen past the ceiling), computed on a rolling window so a long unlogged stretch doesn't distort it; below 3 logged connections the fallback table applies (180 radar / 120 personal-only / 60 one-or-two attendances / 120 three-plus) which is DELIBERATELY NOT MONOTONIC — both extremes get a long window for opposite reasons and the short window belongs to the middle, where a call changes the trajectory; a per-household manual override beats both and is surfaced on the card and the profile. The label now DESCRIBES, the window SCHEDULES; conflating them was the defect. (2) A GIFT STOPS COUNTING AS CONTACT everywhere — all four recency computations and the server RPC. Contact means a conversation, not a cheque; the thank-you call is logged as a real interaction and that is what resets the clock. Donations still drive Generosity and the largest-gift Capacity test. No backfill: 73 households whose last 'contact' was a gift now read as never spoken to, which is the point. (3) Composite Warm label — personal / communal / both — with the giving-loyalty path (2+ connections plus giving in two calendar years) retained. (4) Trajectory label, last 90d vs the previous 90d, on the profile and in the Rel column. Labels only: neither influences the daily list. (5) Yom Tov-aware cadence: a self-computing arithmetic Hebrew calendar (molad + four dechiyot, no live dependency, no annual upkeep) blocks only TRUE Yom Tov, diaspora two-day — RH, YK, Sukkot 15-16, Shmini Atzeret/Simchat Torah, Pesach 15-16 + 21-22, Shavuot 6-7. Chanukah, Purim, minor fasts, Lag BaOmer and Chol Hamoed are working days. 49 calendar assertions across three years incl. a leap year. THE SCORE (v6): Affinity's two contact tests MERGE into one 'real connection' test 16/11/6 — v5 scored personal contact at three times attendance on the theory that a call is inherently deeper than showing up, which doesn't survive how the labels are actually used: with Phone call and Email/Text carved out separately, 'Connected' is a catch-all spanning a two-minute pickup and an hour of real conversation, while attendance means exactly one thing. Ranking an unreliable signal above a reliable one was the mistake, not the coefficient. 'Phone call' joins the real-connection set. Pillars stay 40/30/30. THE DEFECTS: couples de-duplicated in Wins of the Week and the SRI warmth marker (one call logged against both spouses was clearing the '2 or more' bar alone — 35 points for a single call); SRI now requires a NON-capacity marker (capacity says wealthy, not ready — dozens qualified who had never been contacted and never given, and the recent-gift floor cannot catch them because by construction it only applies to donors) and grades capacity on the AMOUNT rather than on the presence of text (the last surviving instance of that defect); ONE prospect threshold at $800k replacing two that disagreed, so a household can no longer be today's cold card and absent from the full prospect list; the Resting list checks expiry; dead keepWarmMinAGC removed from code AND from app_settings. NEW SURFACES, all extending existing screens per the standing rule (nine panels is enough): discrepancy presets in the Contacts filter strip — high capacity/low affinity, high affinity/low generosity, high generosity/low contact — with an explicit caveat when a capacity-based preset is hiding partial-evidence households; an Unwelcomed Attendees section in the Waiting Room reusing the NEW card's outreach test past its 14-day window; a Thanked checkbox on donations (bookkeeping ONLY — feeds no score and no queue); the growth-cards-per-day knob; cold prospects ranked by Prospect Score (measured honestly: rank correlation 0.91 with home-value order, so it barely changes anything — it stops one screen contradicting another). Also fixed in passing: _addBusinessDays UTC-skewed a string date. VERIFIED: agc_selftest 25/25, client-server parity 66 assertions over 37 stratified households, a new engine harness at 71 assertions (incl. the doc's explicit check that a Note-only household falls to the 180d radar window and that nothing reads the old tier lookup), both blocks node --check clean, both sentinels present. NOT YET EYEBALLED IN A BROWSER.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2027,25 +2046,31 @@ function _fmtDate(d){try{return _localDate(d).toLocaleDateString('en-US',{month:
 // ── CANONICAL INTERACTION TYPES ────────────────────────────────────────────
 // One source of truth for how each type behaves. Used by the aggregator, Wins,
 // SRI engagement, track-closing, and the Daily Five outcome logic.
-//   REACH_TYPES  = you actually reached them (live or in person): counts as a
+//   REACH_TYPES  = a REAL CONNECTION (per The Dashboard.docx §1): counts as a
 //                  "win", adds to warmth (connected12), and CLOSES a follow-up track.
+//                  v6 adds 'Phone call' — with Phone call and Email / Text carved out
+//                  as their own types, "Connected" is a catch-all; a completed phone
+//                  call is a real conversation. 'Left VM' / 'Email / Text' stay misses.
 //   All non-Note types reset "last contact" (kill the red "never contacted").
 //   Note         = standing info only; counts for nothing.
-const REACH_TYPES=['Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance'];
+const REACH_TYPES=['Connected','Meeting in person','Phone call','Shabbat attendance','Class / Program','Event attendance'];
 function _isReach(type){return REACH_TYPES.includes(type);}      // win + closes track + warmth
 function _isTouch(type){return type!=='Note';}                   // resets last contact
 // Passive-attendance reaches: they warm the relationship + reset recency, but they are
 // NOT personal outreach, so they must NOT clear the "NEW contact needs a first touch"
-// flag (an RSVP/attendee still deserves a welcome). Used only by the NEW-card test.
+// flag (an RSVP/attendee still deserves a welcome). Used only by the NEW-card test
+// and the Waiting Room's "unwelcomed attendees" check — deliberately nowhere else.
+// (The Dashboard.docx §1: personal-vs-attendance is NOT a warmth distinction; it
+// survives only where the question is "has the rabbi done his part?". Do not
+// "tidy these away" — they are the one place the distinction belongs.)
 const ATTENDANCE_TYPES=['Event attendance','Shabbat attendance','Class / Program'];
 function _isOutreachTouch(type){return type!=='Note'&&ATTENDANCE_TYPES.indexOf(type)<0;}
-// Prospect Score v5 splits the old single frequency test in two. Derived from the
-// two constants above rather than a third list, so the division can never drift:
-// personal contact is REACH_TYPES minus ATTENDANCE_TYPES.
-// A family at every programme you have never actually spoken to used to score
-// identically to one you telephone monthly. Separating them is what makes
-// "frequent attendee, no real relationship" findable at all.
-// NOT the same test as _isOutreachTouch, which also counts Call / Text / Voicemail —
+// Personal-vs-attendance split. The Prospect Score v6 no longer ranks these against
+// each other (one merged "real connection" test, 16/11/6) — but the split still feeds
+// (a) the check-in-window FALLBACK table (attendance count vs personal count decide
+//     the 60/120/180-day window when there isn't enough history to average), and
+// (b) the composite Warm-label kind: personal / communal / both.
+// NOT the same test as _isOutreachTouch, which also counts Text / Voicemail —
 // that one answers "have you personally reached out?" for the NEW card.
 function _isPersonalContact(type){return _isReach(type)&&ATTENDANCE_TYPES.indexOf(type)<0;}
 function _isPassiveAttendance(type){return _isReach(type)&&ATTENDANCE_TYPES.indexOf(type)>=0;}
@@ -2862,13 +2887,28 @@ const _agcSeenKeys={}; // hhId → Set('type|date|notes') — kept in sync by th
 // One shape, three builders. Adding a field here without adding it to
 // loadAGCInteractionAggregates, _recalcAGCAggForHH AND _bumpAGCAgg is how these
 // drift apart, which is the bug class this whole aggregate has a history of.
-//   lastContact  most recent non-Note interaction OR donation (Notes never count)
-//   connected12  ALL reach types in 365d — feeds _closenessTier ONLY, untouched by v5
-//   personal12   Connected / Meeting in person in 365d — Prospect Score, 12 pts
-//   attend12     Shabbat / Class / Event attendance in 365d — Prospect Score, 4 pts
+//   lastContact  most recent non-Note interaction. A GIFT NO LONGER COUNTS AS
+//                CONTACT (The Dashboard.docx §1, decided 2026-07-29): contact means
+//                a conversation, not a cheque. Thank-yous are logged as interactions;
+//                the gift itself feeds only giving recency in Generosity.
+//   connected12  ALL reach types (incl. Phone call, v6) in 365d — feeds
+//                _closenessTier AND the score's merged real-connection test (16/11/6)
+//   personal12   personal reaches in 365d — check-in fallback table + label kind
+//   attend12     attendance reaches in 365d — check-in fallback table + label kind
+//   reachDates   deduped, sorted UNIQUE dates of past reach-type interactions —
+//                feeds the learned check-in window (own average, clamped) and the
+//                trajectory label (last 90d vs previous 90d)
 //   lifetime     deduped interaction count incl. Notes — closeness Thin-tier test
 //   significant  any interaction flagged "this mattered" — Prospect Score, 4 pts
-function _blankAGCAgg(){return{lastContact:null,connected12:0,personal12:0,attend12:0,lifetime:0,significant:false};}
+function _blankAGCAgg(){return{lastContact:null,connected12:0,personal12:0,attend12:0,reachDates:[],lifetime:0,significant:false};}
+// Insert a reach date into agg.reachDates keeping it unique + sorted ascending.
+function _aggAddReachDate(a,date){
+  const d=(''+date).slice(0,10);
+  if(!Array.isArray(a.reachDates))a.reachDates=[];
+  if(a.reachDates.includes(d))return;
+  a.reachDates.push(d);
+  a.reachDates.sort();
+}
 function _bumpAGCAgg(contactId,type,date,notes,significant){
   if(!contactId||!date)return;
   const h=households.find(hh=>(hh.members||[]).some(m=>m.id===contactId));
@@ -2885,12 +2925,13 @@ function _bumpAGCAgg(contactId,type,date,notes,significant){
   a.lifetime++;
   if(_isTouch(type)&&(!a.lastContact||date>a.lastContact))a.lastContact=date;
   const since=localDateStr(new Date(Date.now()-365*24*60*60*1000));
-  // connected12 counts ALL reach types and feeds _closenessTier (Warm/Steady/Cool),
-  // which this rebuild deliberately does not touch. personal12/attend12 are the
-  // split the Prospect Score uses. Keep all three — they are not interchangeable.
+  // connected12 counts ALL reach types (incl. Phone call, v6) and feeds BOTH
+  // _closenessTier (Warm/Steady/Cool) and the score's merged real-connection test.
+  // personal12/attend12 feed the check-in fallback table + composite label kind.
   if(_isReach(type)&&date>=since)a.connected12++;
   if(_isPersonalContact(type)&&date>=since)a.personal12++;
   if(_isPassiveAttendance(type)&&date>=since)a.attend12++;
+  if(_isReach(type))_aggAddReachDate(a,date); // learned cadence + trajectory
   if(significant)a.significant=true;
 }
 
@@ -2928,20 +2969,19 @@ async function loadAGCInteractionAggregates(){
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
       if(_isPersonalContact(r.type)&&r.date>=since)a.personal12++;
       if(_isPassiveAttendance(r.type)&&r.date>=since)a.attend12++;
+      if(_isReach(r.type))_aggAddReachDate(a,r.date); // learned cadence + trajectory
     });
     // NOTE: event attendance is ALREADY represented as an 'Event attendance' interaction
     // (every signup path — manual, form, pay-later, Stripe — creates one; a no-show
     // deletes it). So registration rows are deliberately NOT counted here — that would
     // double-count attended events and keep no-shows warm. The interaction is the single
     // source of truth for attendance warmth + recency.
-    // A donation counts as a connection too — for RECENCY only (last-contact), never
-    // connected12/lifetime, so giving alone doesn't change the Warm/Steady/Cool tier.
-    // (Donations are event_fee-excluded at load; future-dated ones don't pre-count.)
-    households.forEach(h=>(h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
-      if(!d||!d.date||(''+d.date).slice(0,10)>todayStr)return;
-      const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]=_blankAGCAgg());
-      if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
-    })));
+    // A GIFT NO LONGER COUNTS AS CONTACT (Dashboard.docx §1, built 2026-07-29):
+    // contact means a conversation, not a cheque. The old donation→lastContact merge
+    // was a stand-in for unrecorded thank-yous; the thank-you call is now logged as a
+    // real interaction (and the donation carries a bookkeeping "thanked" checkbox).
+    // No backfill: gift-only households will read as never contacted — deliberately.
+    // Donations still feed giving recency/lifetime/largest-gift in the score.
   }catch(e){console.warn('AGC interaction aggregates failed',e);}
 }
 
@@ -3075,13 +3115,23 @@ function _calcAGCLocal(h){
   const aDet={},gDet={},cDet={};
 
   // ── AFFINITY 40 ──
+  // Last contact = most recent non-Note INTERACTION. A gift is no longer contact
+  // (Dashboard.docx §1) — donations feed giving recency in Generosity instead.
   aDet.recency=(()=>{ if(!agg.lastContact)return 0;
     const d=_daysSince(agg.lastContact)??1e9;         // Eastern whole-calendar days
     return d<=30?8:d<=90?5:d<=180?2:0; })();
-  // THE MOST IMPORTANT CHANGE IN THE REBUILD. Personal contact is worth three
-  // times passive attendance; they used to be counted identically.
-  aDet.personal_contact=(agg.personal12>=6?12:agg.personal12>=3?8:agg.personal12>=1?4:0);
-  aDet.attendance      =(agg.attend12  >=6? 4:agg.attend12  >=3?3:agg.attend12  >=1?2:0);
+  // v6 REVERSES v5's headline change: ONE merged "real connection" test, 16/11/6.
+  // Personal contact and attendance are counted TOGETHER, not ranked against each
+  // other. v5 scored personal contact three times as heavily, on the theory that a
+  // call or a meeting is inherently deeper than showing up. That theory doesn't
+  // survive contact with how the labels are actually used: with Phone call and
+  // Email / Text carved out as their own types, "Connected" is a catch-all spanning
+  // a two-minute pickup and an hour of real conversation — a label that was never
+  // carrying the intensity it was being scored for. Attendance, by contrast, means
+  // exactly one thing: they turned up. Ranking an unreliable signal above a reliable
+  // one was the actual mistake, not the coefficient.
+  // connected12 counts ALL reach types (incl. Phone call as of v6) in trailing 365d.
+  aDet.real_connection=(agg.connected12>=6?16:agg.connected12>=3?11:agg.connected12>=1?6:0);
   // Child RECORDS only — structured and reliable. The notes scan is gone.
   const kids=p.estimated_children||[];
   const progRe=/camp|hebrew school|day school|ckids|cteen|jewish life lab|youth program/;
@@ -3096,8 +3146,16 @@ function _calcAGCLocal(h){
   aDet.jewish_board=fBoardJewish?4
     :((!fBoardJewish&&!fBoardOther&&String(p.boardMemberships||'').toLowerCase().includes('jewish'))?4:0);
   // Replaces the warmth keyword test with data the user set on purpose.
+  // FLAT 4, AND IT STAYS FLAT. It was queried once the personal-vs-attendance split
+  // was removed and this became the only place depth is signalled. It stays flat for
+  // two reasons: the check-in window no longer depends on it (that is computed from
+  // contact pattern and the household's own average interval, so the marker is not
+  // carrying a second job), and with almost no interactions marked there is nothing
+  // to calibrate a graded scale against. Revisit once the marker has genuine usage —
+  // grading by how many interactions are marked is the obvious first thing to try.
   aDet.significant_moment=agg.significant?4:0;
-  const affinity=Math.min(40,aDet.recency+aDet.personal_contact+aDet.attendance
+  // 8 + 16 + 4 + 4 + 4 + 4 = 40.
+  const affinity=Math.min(40,aDet.recency+aDet.real_connection
     +aDet.kids_programs+aDet.chose_chabad+aDet.jewish_board+aDet.significant_moment);
 
   // ── GENEROSITY 30 ──
@@ -3318,7 +3376,37 @@ function _filterBase(){
   let base=runFilter('household',_rpQuickFilterJSON(),{households});
   // "Show on map" bridge from Reports: narrow to the report's household set.
   if(window._reportPinSet)base=base.filter(h=>window._reportPinSet.has(h.id));
+  // ── §9.2 DISCREPANCY PRESETS ── the gap between what a household COULD be and
+  // what it currently IS. This became possible in July and was not before: the old
+  // pillars overlapped (Affinity took 10 of its 35 points from money), so "loves us
+  // but has not given" partly compared giving against giving. The rebuild cut that to
+  // a single flat 4-point signal, which is what makes the second preset mean anything.
+  const gap=document.getElementById('filterGap')?.value||'';
+  if(gap)base=base.filter(h=>_gapMatch(h,gap));
   return base;
+}
+// Pillar thresholds for the presets. Expressed as a share of each pillar's cap so
+// they survive a re-weighting, and kept deliberately coarse — these are questions
+// ("could give, doesn't know us"), not a numeric query language.
+function _gapMatch(h,preset){
+  const s=getAGCScore(h);
+  const aff=s.affinity/40, gen=s.generosity/30, cap=s.capacity/30;
+  const HI=0.5, LO=0.3;
+  if(preset==='capNotAff')return cap>=HI&&aff<LO;       // could give, does not know us
+  if(preset==='affNotGen')return aff>=HI&&gen<LO;       // loves us, never asked properly
+  if(preset==='genNotContact'){                          // gives elsewhere, no relationship here
+    const conn=(_agcInterAgg[h.id]||{}).connected12||0;
+    return gen>=HI&&conn===0;
+  }
+  return true;
+}
+// A preset resting on Capacity silently excludes households flagged partial for want
+// of an address. THE FILTER MUST SAY SO rather than quietly returning a subset (§9.2).
+function _gapCaveat(preset){
+  if(preset!=='capNotAff')return'';
+  const n=households.filter(h=>getAGCScore(h).partial&&getAGCScore(h).partial.capacity).length;
+  if(!n)return'';
+  return `This filter rests on Capacity, and ${n} household${n!==1?'s':''} ${n!==1?'have':'has'} no home value on file (usually no street address) — their capacity is scored on partial evidence, so they cannot appear here. This is a subset, not the whole answer.`;
 }
 
 // Header search NEVER narrows the map / list / contacts — it only drives the
@@ -3349,12 +3437,21 @@ function applyFilter(){
   });
   const fc=document.getElementById('filterCount');
   if(fc)fc.textContent=anyActive?`${filtered.length} of ${households.length}`:'';
+  // Say out loud when a Capacity-based gap preset is hiding partial-evidence households.
+  const _gapSel=document.getElementById('filterGap')?.value||'';
+  let _cav=document.getElementById('gapCaveat');
+  if(!_cav&&_gapSel){
+    _cav=document.createElement('div');_cav.id='gapCaveat';
+    _cav.style.cssText='flex-basis:100%;font-family:var(--font-ui);font-size:.6rem;color:var(--amber);line-height:1.45;padding:2px 0 0';
+    document.getElementById('filterStrip')?.appendChild(_cav);
+  }
+  if(_cav){const txt=_gapCaveat(_gapSel);_cav.textContent=txt;_cav.style.display=txt?'block':'none';}
   renderList();
   if(document.getElementById('contactsView')?.classList.contains('active'))renderContacts();
 }
 
 function clearFilter(){
-  ['minValue','minAGC','minGiving','filterDateFrom','filterDateTo','minDaysSince','filterKidAgeMin','filterKidAgeMax','filterCity','srch','headerSearch','ctSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['minValue','minAGC','minGiving','filterDateFrom','filterDateTo','minDaysSince','filterKidAgeMin','filterKidAgeMax','filterCity','filterGap','srch','headerSearch','ctSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   _hideSearchPopout();
   applyFilter();
 }
@@ -5131,6 +5228,7 @@ function showAddDonation(idx){
   document.getElementById('don_amount').value = '';
   document.getElementById('don_method').value = '';
   document.getElementById('don_notes').value = '';
+  {const _t=document.getElementById('don_thanked');if(_t)_t.checked=false;} // §9.1 bookkeeping flag — never sticky between opens
   document.getElementById('don_status').style.display = 'none';
   document.getElementById('addDonationModal').style.display = 'flex';
 }
@@ -5141,13 +5239,14 @@ async function saveDonation(){
   const date = document.getElementById('don_date').value;
   const method = document.getElementById('don_method').value||null;
   const notes = document.getElementById('don_notes').value.trim();
+  const thanked = !!(document.getElementById('don_thanked')||{}).checked; // §9.1 — bookkeeping only, feeds nothing
   const contactId = document.getElementById('don_contact').value;
   const status = document.getElementById('don_status');
   if(!amount||!date){alert('Please enter amount and date.');return;}
   status.style.display='block';status.textContent='Saving…';
   try{
     if(editId){
-      await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null})});
+      await sb('donations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null,thanked})});
       // Update local state (was missing entirely — edits showed stale until reload)
       const hE=households[addDonHouseholdIdx];
       (hE.members||[]).forEach(m=>{
@@ -5160,16 +5259,16 @@ async function saveDonation(){
           const tgt=hE.members.find(x=>x.id===contactId);
           if(tgt){
             if(!tgt.donations)tgt.donations=[];
-            tgt.donations.unshift({...d,contact_id:contactId,amount,date,method,notes:notes||null});
+            tgt.donations.unshift({...d,contact_id:contactId,amount,date,method,notes:notes||null,thanked});
             tgt.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
           }
         }else{
-          d.amount=amount;d.date=date;d.method=method;d.notes=notes||null;
+          d.amount=amount;d.date=date;d.method=method;d.notes=notes||null;d.thanked=thanked;
           m.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
         }
       });
     }else{
-      const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null})});
+      const savedD=await sb('donations',{method:'POST',body:JSON.stringify({contact_id:contactId,amount,date,method,notes:notes||null,thanked})});
       // Update local state for new donation — keep the DB row (with its id!) so
       // edit/delete work immediately. Previously the id was discarded, leaving
       // the new donation un-deletable and un-editable until a full reload.
@@ -5177,7 +5276,7 @@ async function saveDonation(){
       const memberNew=hNew.members.find(m=>m.id===contactId);
       if(memberNew){
         if(!memberNew.donations)memberNew.donations=[];
-        memberNew.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,method,notes});
+        memberNew.donations.unshift(savedD&&savedD[0]?savedD[0]:{contact_id:contactId,amount,date,method,notes,thanked});
         memberNew.donations.sort((a,b)=>new Date(b.date)-new Date(a.date));
       }
     }
@@ -6225,7 +6324,7 @@ function openFullPanel(idx){
       <div class="fp-rail-sec">
         <div class="fp-sec-h"><span>Score breakdown</span></div>
         <div style="display:flex;flex-direction:column;gap:7px">
-          ${[['Affinity','#0f1e33',agc.affinity,35],['Generosity','#15803d',agc.generosity,35],['Capacity','#a16207',agc.capacity,30]].map(([label,color,val,max])=>`
+          ${[['Affinity','#0f1e33',agc.affinity,40],['Generosity','#15803d',agc.generosity,30],['Capacity','#a16207',agc.capacity,30]].map(([label,color,val,max])=>`
           <div>
             <div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--txt2);margin-bottom:2px"><span>${label}</span><span>${val}/${max}</span></div>
             <div class="fp-bar"><div style="width:${Math.round(val/max*100)}%;background:${color}"></div></div>
@@ -6239,6 +6338,10 @@ function openFullPanel(idx){
         <div class="fp-stat"><span>Last gift</span><b>${fd(g.lastDate)}</b></div>`:'<div class="fp-stat"><span>Giving</span><b>none recorded</b></div>'}
         <div class="fp-stat"><span>Last touch</span><b>${lastTouch}</b></div>
         <div class="fp-stat"><span>Relationship</span><b>${_tierChipMove(h.id)}</b></div>
+        <!-- §2/§9.4 — the window that schedules, shown next to the label that describes.
+             Click to set a manual override; it takes precedence over both the learned
+             average and the fallback table. -->
+        <div class="fp-stat"><span>Check in</span><b style="cursor:pointer" title="How often this household should hear from you. Click to set it by hand." onclick="byId('setCadenceOverride','${households[idx].id}',${idx})">${(()=>{const w=_checkInWindow(h);return `every ${w.days}d <span style="font-weight:400;color:var(--txt3);font-size:.86em">${w.basis==='override'?'· set by hand':w.basis==='learned'?'· their rhythm':'· default'}</span>`;})()}</b></div>
         ${h.home_value?`<div class="fp-stat"><span>Home value</span><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
       </div>
 
@@ -6750,6 +6853,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       document.getElementById('don_date').value=d.date||'';
       document.getElementById('don_method').value=d.method||'';
       document.getElementById('don_notes').value=d.notes||'';
+      {const _t=document.getElementById('don_thanked');if(_t)_t.checked=!!d.thanked;} // §9.1
       document.getElementById('don_status').style.display='none';
       document.getElementById('addDonationModal').style.display='flex';
     }catch(e){alert('Load failed: '+e.message);}
@@ -10098,13 +10202,19 @@ let _dashLoaded=false;
 const ENGINE_DEFAULTS={
   heatWeekdayFull:5,       // Heatmap: interactions that make a weekday "fully dark"
   heatSundayFull:3,        // Heatmap: interactions that make a Sunday "fully dark"
-  driftDays:90,            // Daily Five: REGULAR-tier leash — days quiet before a reconnect surfaces
-  closeLeashDays:45,       // Daily Five: CLOSE-tier leash — close relationships surface sooner
-  thinLeashDays:120,       // Daily Five: THIN-tier leash — acquaintances surface later
+  // ── THE CHECK-IN WINDOW (Dashboard.docx §2/§9.4/§10) ──
+  // The old driftDays / closeLeashDays / thinLeashDays tier→leash lookup is GONE.
+  // A household's window is its own average interval between real connections,
+  // clamped between the floor and ceiling; the fallback table applies until there
+  // are 3 logged connections to average.
+  cadenceFloorDays:30,     // tightest a learned average may go
+  cadenceCeilingDays:180,  // loosest a learned average may go
+  cadenceLearnWindowDays:730, // rolling window the average is computed over (not cumulative)
+  fallbackWindows:{radar:180,personalOnly:120,attendSome:60,attendMany:120}, // per the §2 table — deliberately NOT monotonic
   newContactWindowDays:14, // Daily Five: how recently a household was added to qualify as a NEW fifth-slot card
+  growthCardsPerDay:1,     // Daily Five: new-or-cold ("growth") cards per day. §9.6 — mature community may want 1, a new Chabad house more
   pinSoftCap:3,            // Daily Five: gentle confirm when pinning more than this many for one day (99 ≈ off)
-  icebreakerHomeValue:500000, // Daily Five: minimum home value for never-contacted prospects
-  coldFloorHomeValue:500000,  // Cold Floor / Waiting Room: minimum home value to surface untouched households
+  prospectHomeValue:800000,// ONE prospect threshold for BOTH the Daily Five cold card and the Waiting Room (§8). Was two settings ($500k/$800k) that disagreed
   sriCapacityValue:750000, // SRI: home value threshold for the +40 capacity marker
   sriEngagementDays:45,    // SRI: trailing window for connected interactions
   sriEngagementCount:2,    // SRI: connected interactions needed in that window for +35
@@ -10119,32 +10229,58 @@ const ENGINE_DEFAULTS={
 };
 let ENGINE={...ENGINE_DEFAULTS};
 
+// Settings that no longer exist. Stripped on load AND on save so a stale saved blob
+// can't resurrect them, and so nobody inspecting app_settings reasonably concludes a
+// rule is in force that nothing reads.
+//   keepWarmMinAGC  — left over from when reconnects required a minimum score. Read by
+//                     nothing since; a stored 40 implied a score floor on the queue (§10).
+//   driftDays / closeLeashDays / thinLeashDays — the tier→leash lookup, replaced by the
+//                     per-household check-in window.
+//   icebreakerHomeValue / coldFloorHomeValue   — two prospect thresholds that disagreed,
+//                     collapsed into prospectHomeValue (§8).
+const ENGINE_DEAD_KEYS=['keepWarmMinAGC','driftDays','closeLeashDays','thinLeashDays','icebreakerHomeValue','coldFloorHomeValue'];
+
 async function loadEngineSettings(){
   try{
     const rows=await sb('app_settings?key=eq.engine_settings&limit=1');
     if(rows&&rows.length&&rows[0].value){
       const saved=JSON.parse(rows[0].value);
+      // MIGRATION: carry the higher of the two old prospect thresholds into the single
+      // new one, once, so an existing install doesn't silently widen its prospect pool.
+      if(typeof saved.prospectHomeValue==='undefined'){
+        const old=Math.max(parseFloat(saved.coldFloorHomeValue)||0,parseFloat(saved.icebreakerHomeValue)||0);
+        if(old>0)saved.prospectHomeValue=Math.max(old,ENGINE_DEFAULTS.prospectHomeValue);
+      }
+      ENGINE_DEAD_KEYS.forEach(k=>{delete saved[k];});
       ENGINE={...ENGINE_DEFAULTS,...saved};
       if(!Array.isArray(ENGINE.trackCadence)||!ENGINE.trackCadence.length)ENGINE.trackCadence=[...ENGINE_DEFAULTS.trackCadence];
+      // fallbackWindows is an object, so a spread merge would drop a missing key.
+      ENGINE.fallbackWindows={...ENGINE_DEFAULTS.fallbackWindows,...(saved.fallbackWindows||{})};
+      ENGINE_DEAD_KEYS.forEach(k=>{delete ENGINE[k];});
     }
   }catch(e){console.warn('engine settings load failed',e);}
 }
 
 async function saveEngineSettings(){
   try{
-    await sbSetSetting('engine_settings',JSON.stringify(ENGINE));
+    const out={...ENGINE};
+    ENGINE_DEAD_KEYS.forEach(k=>{delete out[k];}); // never write a dead setting back
+    await sbSetSetting('engine_settings',JSON.stringify(out));
   }catch(e){console.warn('engine settings save failed',e);}
 }
 
 function openEngineSettings(){
   document.getElementById('engineModalBg')?.remove();
+  // 'fb_<name>' keys read/write ENGINE.fallbackWindows[<name>] (the §2 table) rather
+  // than a top-level ENGINE key, so the four fallback numbers edit like any other.
+  const engVal=k=>k.startsWith('fb_')?(ENGINE.fallbackWindows||{})[k.slice(3)]:ENGINE[k];
   const numRow=(label,key,step,hint)=>`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <div style="flex:1">
         <div style="font-size:.72rem;color:var(--txt);font-weight:500">${label}</div>
         ${hint?`<div style="font-size:.58rem;color:var(--txt3)">${hint}</div>`:''}
       </div>
-      <input type="number" id="eng_${key}" value="${ENGINE[key]}" step="${step||1}" min="0" style="width:95px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 8px;color:var(--txt);font-family:var(--font-ui);font-size:.72rem;outline:none;text-align:right">
+      <input type="number" id="eng_${key}" value="${engVal(key)}" step="${step||1}" min="0" style="width:95px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:5px 8px;color:var(--txt);font-family:var(--font-ui);font-size:.72rem;outline:none;text-align:right">
     </div>`;
   const bg=document.createElement('div');
   bg.id='engineModalBg';
@@ -10160,14 +10296,19 @@ function openEngineSettings(){
     ${numRow('Weekday "full" threshold','heatWeekdayFull',1,'Interactions for a weekday square to go fully dark')}
     ${numRow('Sunday "full" threshold','heatSundayFull',1,'Sundays get a lower bar')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five</div>
-    ${numRow('Steady window (days)','driftDays',5,'Default quiet-clock: most (Steady) households surface as a reconnect after this')}
-    ${numRow('Warm window (days)','closeLeashDays',5,'Warm households (frequent contact or multi-year giving) surface sooner')}
-    ${numRow('Cool window (days)','thinLeashDays',5,'Cool households (little/no contact history) wait longer before surfacing')}
-    ${numRow('New-contact window (days)','newContactWindowDays',1,'Recently added households take the fifth slot as a NEW card for this many days')}
+    ${numRow('New-contact window (days)','newContactWindowDays',1,'Recently added households take the growth slot as a NEW card for this many days')}
+    ${numRow('Growth cards per day','growthCardsPerDay',1,'How many new-or-cold faces enter the list each day. The rest of the list is people you already know')}
     ${numRow('Pin soft cap','pinSoftCap',1,'Gentle confirm when pinning more than this for one day (set 99 to turn off)')}
-    ${numRow('Prospect home value ($)','icebreakerHomeValue',50000,'Never-contacted homes above this surface as cold prospects')}
-    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5 5 19M12 2l-3 3 3 3 3-3zM12 22l-3-3 3-3 3 3z"/></svg> Prospects (Waiting Room)</div>
-    ${numRow('Home value floor ($)','coldFloorHomeValue',50000,'Untouched homes above this appear in the Waiting Room’s Prospects section')}
+    ${numRow('Prospect home value ($)','prospectHomeValue',50000,'Never-contacted, never-given homes above this surface as cold prospects — one threshold for both the daily card and the Waiting Room')}
+    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Check-in window</div>
+    <div style="font-size:.58rem;color:var(--txt3);margin:-2px 0 9px;line-height:1.5">Each household's window is <b>its own average gap between real connections</b>, clamped by the floor and ceiling below. The four fallback numbers apply until a household has three logged connections to average. <b>The fallback table is deliberately not a straight line</b> — both extremes get a long window (don't lose them / don't chase them), and the short window belongs to the middle, where a call actually changes something.</div>
+    ${numRow('Cadence floor (days)','cadenceFloorDays',5,'Tightest a learned average may go — no household is called more often than this')}
+    ${numRow('Cadence ceiling (days)','cadenceCeilingDays',5,'Loosest a learned average may go — a learned rhythm may tighten toward the floor but never loosen past this')}
+    ${numRow('Averaging window (days)','cadenceLearnWindowDays',30,'Rolling window the average is computed over, so a long unlogged stretch doesn’t distort it')}
+    ${numRow('Fallback · no attendance, no contact','fb_radar',5,'Radar only — don’t lose them, don’t chase them')}
+    ${numRow('Fallback · no attendance, some contact','fb_personalOnly',5,'They don’t come, but there’s a thread — keep it warm without hounding')}
+    ${numRow('Fallback · 1–2 attendances','fb_attendSome',5,'An active mutual relationship — the group where attention actually moves something')}
+    ${numRow('Fallback · 3+ attendances','fb_attendMany',5,'Self-sustaining through community life — you’ll cross paths anyway')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness</div>
     ${numRow('Capacity threshold ($)','sriCapacityValue',50000,'+40 points if home value is at least this')}
     ${numRow('Engagement window (days)','sriEngagementDays',5,'')}
@@ -10210,7 +10351,20 @@ function openEngineSettings(){
 
 async function applyEngineSettings(){
   const num=k=>{const v=parseFloat(document.getElementById('eng_'+k)?.value);return isNaN(v)?ENGINE_DEFAULTS[k]:v;};
-  ['heatWeekdayFull','heatSundayFull','driftDays','closeLeashDays','thinLeashDays','newContactWindowDays','pinSoftCap','icebreakerHomeValue','coldFloorHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
+  ['heatWeekdayFull','heatSundayFull','cadenceFloorDays','cadenceCeilingDays','cadenceLearnWindowDays','newContactWindowDays','growthCardsPerDay','pinSoftCap','prospectHomeValue','sriCapacityValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
+  // The four §2 fallback windows live in a nested object.
+  const fb={...ENGINE_DEFAULTS.fallbackWindows,...(ENGINE.fallbackWindows||{})};
+  ['radar','personalOnly','attendSome','attendMany'].forEach(n=>{
+    const v=parseFloat(document.getElementById('eng_fb_'+n)?.value);
+    if(!isNaN(v)&&v>0)fb[n]=v;
+  });
+  ENGINE.fallbackWindows=fb;
+  // A ceiling below the floor would make every window collapse to the ceiling.
+  if(ENGINE.cadenceCeilingDays<ENGINE.cadenceFloorDays){
+    const t=ENGINE.cadenceFloorDays;ENGINE.cadenceFloorDays=ENGINE.cadenceCeilingDays;ENGINE.cadenceCeilingDays=t;
+  }
+  if(ENGINE.growthCardsPerDay<0)ENGINE.growthCardsPerDay=0;
+  ENGINE_DEAD_KEYS.forEach(k=>{delete ENGINE[k];});
   const cad=(document.getElementById('eng_trackCadence')?.value||'').split(',').map(x=>parseInt(x.trim())).filter(x=>!isNaN(x)&&x>0);
   ENGINE.trackCadence=cad.length?cad:[...ENGINE_DEFAULTS.trackCadence];
   const landSel=document.getElementById('eng_landing');
@@ -16116,7 +16270,9 @@ const CT_PRESETS={
   outreach:['tier','name','phone','lastContact','daysSince','agc']
 };
 const CT_COLS={
-  tier:{label:'Rel',val:h=>_tierSortRank(h),csv:h=>_tierWord(h),html:h=>_tierDot(h)},
+  // "Rel" carries the relationship label AND its trajectory (§9.5) — visible while
+  // scrolling, which is the point; the profile shows the worded version.
+  tier:{label:'Rel',val:h=>_tierSortRank(h),csv:h=>{const t=_tierTrajectory(h);return _tierWord(h)+(t&&t.dir!=='flat'?(t.dir==='up'?' improving':' cooling'):'');},html:h=>_tierDot(h)+_trajChip(h,false)},
   name:{label:'Household',val:h=>h.displayName||'',html:h=>`<div style="font-weight:600">${_escHtml(h.displayName||'')}</div><div class="ct-sub">${_escHtml(h.noAddress?'No address on file':((h.address||'')+(h.city?', '+h.city:'')))}</div>`},
   email:{label:'Email',val:h=>((h.members||[]).map(m=>m.email).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.email).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.email)}</div>`).join('')||'<span class="ct-sub">—</span>'},
   phone:{label:'Phone',val:h=>((h.members||[]).map(m=>m.phone).filter(Boolean)[0]||''),html:h=>(h.members||[]).filter(m=>m.phone).map(m=>`<div>${_escHtml(m.first_name)}: ${_escHtml(m.phone)}</div>`).join('')||'<span class="ct-sub">—</span>'},
@@ -16396,12 +16552,12 @@ async function openCallSheet(){
 // ── PANEL HELP — the ? icon in each panel header ──
 const PANEL_HELP={
   'panel-heatmap':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 4 6 5 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 1 .5 2 1.5 2C9 10 9 6 12 2Z"/></svg> Activity Heatmap',d:()=>`Shows how many touches you logged each day over the last two weeks — calls, texts, meetings, attendance, etc. Standing-info notes don't count. Darker squares = busier days. Saturdays are skipped. A weekday square goes fully dark at ${ENGINE.heatWeekdayFull} touches; Sundays at ${ENGINE.heatSundayFull}. Use it to spot quiet stretches before they become long gaps.`},
-  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — anyone you've connected with before who's gone quiet longer than their closeness warrants. The threshold flexes with the relationship: <b>Warm</b> households resurface after ${ENGINE.closeLeashDays} days quiet, <b>Steady</b> after ${ENGINE.driftDays}, <b>Cool</b> after ${ENGINE.thinLeashDays}. Longest overdue first.<br><b>NEW</b> — someone added in the last ${ENGINE.newContactWindowDays} days (a website form lead or a manual add) who needs a first next step. One drips in per day.<br><b>PROSPECT</b> — a $${Math.round(ENGINE.icebreakerHomeValue/1000)}k+ home you've never contacted, as the fallback for the fifth slot.<br><br>The fifth slot holds one new-or-cold card per day (NEW first, cold as fallback) and only when there are enough warm reconnects to spare — thin days just run shorter rather than padding with hard cold calls. You're in charge: <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top, snooze for 7/30/90 days, or open <b>the full queue</b> via "See the full queue →" to see and pin from every waiting bucket. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
-  'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every "Connected" interaction you've logged since Sunday. A simple scoreboard for the week — when it's empty, that's your nudge.`},
+  'panel-daily5':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg> Daily Five',d:()=>`Your call list for today, picked automatically and ordered by priority:<br><br><b>FOLLOW-UP</b> — an outreach track that's due today (always shown first, never dropped).<br><b>RECONNECT</b> — someone you've been in touch with before who has gone quiet past <b>their own check-in window</b>. Every household is measured against its own rhythm rather than one clock for everybody: the window is the average gap between your real connections with them, kept between ${ENGINE.cadenceFloorDays} and ${ENGINE.cadenceCeilingDays} days. Until there's enough history to average, a sensible default applies — and you can set any household's window by hand from its profile. Whoever is furthest past their <i>own</i> window comes first, so a close friend at seven weeks can outrank an acquaintance at three months.<br><b>NEW</b> — someone added in the last ${ENGINE.newContactWindowDays} days (a website form lead or a manual add) who has never had a personal hello. Signing up for an event doesn't count as one.<br><b>PROSPECT</b> — a $${Math.round(ENGINE.prospectHomeValue/1000)}k+ home you've never contacted and who has never given, as the fallback when there's no new face.<br><br>${ENGINE.growthCardsPerDay===1?'One slot a day':ENGINE.growthCardsPerDay+' slots a day'} ${ENGINE.growthCardsPerDay===1?'holds':'hold'} a new-or-cold card (a genuinely new household first, a cold prospect as fallback), and only when there are enough reconnects to spare — thin days run shorter rather than padding with hard cold calls.<br><br><b>A gift is not a conversation.</b> Somebody who donated last month but hasn't been spoken to still reads as out of touch, on purpose. Log the thank-you call and the clock resets. You're in charge: <b><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> pin</b> anyone to the top, snooze for 7/30/90 days, or open <b>the full queue</b> via "See the full queue →" to see and pin from every waiting bucket. Logging "Connected" closes any follow-up track; logging a miss starts/advances one automatically.`},
+  'panel-wins':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg> Wins of the Week',d:()=>`Every real connection you've logged since Sunday — a call that was answered, a conversation, a meeting, someone at a programme. A week of unanswered voicemails leaves this empty, which is the point.<br><br>One conversation logged against both spouses counts once, so the number is conversations, not records.`},
   'panel-activity':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Recent Activity',d:()=>`A running feed of every touch you've logged — texts, emails, calls, meetings, attendance, voicemails — newest first, across all households. Standing info notes are excluded. Click any row to open that household. Scroll to see your recent outreach at a glance.`},
   'panel-gifts':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Recent Gifts',d:()=>`The 10 most recent donations across all households, newest first. Click any row to open that household. A quick pulse on what's coming in — and who deserves a thank-you call.`},
-  'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+ (or capacity flag on profile)<br><b>+35</b> — ${ENGINE.sriEngagementCount}+ "Connected" interactions in the last ${ENGINE.sriEngagementDays} days (warm right now)<br><b>+25</b> — gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months (a lapsed giver, not a cold one)<br><br>High score = capacity + warmth + an open giving gap. Anyone who gave within the last ${ENGINE.sriGapMinMonths} months is held back automatically — they just gave. "Snooze Ask 60d" hides someone you've decided not to ask yet.`},
-  'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by business days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping weekends. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
+  'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Solicitation Readiness',d:()=>`Who's ready for a direct ask right now. Points:<br><br><b>+40</b> — capacity: a home worth $${Math.round(ENGINE.sriCapacityValue/1000)}k+, or that much in the profile's capacity notes. It has to be an actual figure — "needs research" earns nothing.<br><b>+35</b> — warmth: ${ENGINE.sriEngagementCount}+ real connections in the last ${ENGINE.sriEngagementDays} days. Couples count once.<br><b>+25</b> — an open giving gap: they gave before, but nothing in ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} months.<br><br><b>Capacity alone is never enough to appear here.</b> Somebody has to also be warm or have an open gap — "wealthy" is not the same as "ready", and a wealthy stranger is a cold call, not an ask.<br><br>Anyone who gave within the last ${ENGINE.sriGapMinMonths} months is held back automatically — they just gave. "Snooze Ask 60d" hides someone you've decided not to ask yet, and <i>only</i> hides the ask: they stay in your daily reconnect queue.`},
+  'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> Active Tracks',d:()=>`Automatic follow-up sequences for people who didn't pick up. Each missed attempt schedules the next one out by working days (${ENGINE.trackCadence.join(', ')} days for attempts 1, 2, 3…), skipping Shabbat, Sundays and Yom Tov — nothing gets scheduled for Rosh Hashanah, Yom Kippur, Sukkot, Shmini Atzeret, Simchat Torah, Pesach or Shavuot. Chanukah, Purim and Chol Hamoed are working days. After ${ENGINE.trackMaxAttempts} misses with no connection, the track closes and the contact rests for ${ENGINE.trackSnoozeDays} days so nobody gets pestered. A "Connected" outcome anywhere closes the track as a win.`},
   'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Email Engagement',d:()=>`Who's actually reading your mailings. One row per contact per recent email they engaged with — anyone hitting <b>${ENGINE.emailEngOpens}+ opens</b> or <b>${ENGINE.emailEngClicks}+ clicks</b> across your <b>${ENGINE.emailEngWindow} most recent mailings</b>. Opens and clicks are shown separately on purpose: Apple Mail pre-loads images and inflates opens, so clicks are the honest signal of real interest. Click a row to open the household and follow up personally. This panel only reads email data — it never creates interactions or affects Prospect scores or the Daily Five. Thresholds are tunable in Engine settings.`},
   'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`Your free-flowing to-do list. Add anything with the + box — type a plain reminder or a natural line like \u201ccoffee with the Golds next week\u201d and it will link the household and set the date for you. Tasks can also arrive from a contact note or from Quick Capture. Open tasks are grouped Overdue / Today / This week / Later / Someday. Check one off and — if it is linked to a contact — it is automatically logged as an interaction on their profile, which resets their reconnect clock. Click a household chip to jump to that profile.`}
 };
@@ -16577,13 +16733,16 @@ function renderRecentGifts(){
       });
     });
   });
+  // NOT future-date-guarded, deliberately (§7): a pledge entered with a future date
+  // would sort to the top until its date passed. None exist, and it is not worth
+  // building ahead of a problem nobody has.
   allDonations.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const top=allDonations.slice(0,10);
   if(!top.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg></div><p>No donations recorded yet</p></div>';return;}
   el.innerHTML=top.map(d=>`
     <div class="gift-row" onclick="switchView('crm');setTimeout(()=>selectHousehold(${d.householdIdx}),100)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(d.displayName)}</div>
+        <div style="font-size:.78rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(d.displayName)}${d.thanked?' <span title="Acknowledged" style="color:var(--green);font-size:.7em">✓ thanked</span>':' <span title="Not yet acknowledged — bookkeeping only, this affects no score or queue" style="color:var(--txt3);font-size:.7em">· not thanked</span>'}</div>
         ${d.notes?`<div style="font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_escHtml(d.notes)}</div>`:''}
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -16604,13 +16763,30 @@ async function renderWins(){
   const thisSunday=new Date(now2);thisSunday.setDate(now2.getDate()-dayOfWeek);
   const sinceStr=localDateStr(thisSunday);
   try{
-    rows=await sb(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${sinceStr}&date=lte.${localToday()}&order=date.desc&limit=10`)||[];
+    // Pull MORE than ten, because de-duplicating couples happens after the read and
+    // would otherwise leave the panel short. (Old bug: one Shabbat dinner logged
+    // against husband and wife appeared as two wins, and since the query took only
+    // the top ten, duplicates consumed slots — the panel that exists to provide
+    // encouragement overstated the week. §7.)
+    rows=await sb(`interactions?type=in.(${REACH_TYPES.map(t=>'"'+t+'"').join(',')})&date=gte.${sinceStr}&date=lte.${localToday()}&order=date.desc,id.asc&limit=60`)||[];
   }catch(e){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><p>Could not load wins</p></div>';return;}
   if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg></div><p>No connected calls logged yet — go make some!</p></div>';return;}
 
   // Enrich with household name
   const contactMap={};
-  households.forEach(h=>(h.members||[]).forEach(m=>{contactMap[m.id]={displayName:h.displayName,idx:hIdx(h.id)};}));
+  households.forEach(h=>(h.members||[]).forEach(m=>{contactMap[m.id]={hhId:h.id,displayName:h.displayName,idx:hIdx(h.id)};}));
+
+  // DE-DUPLICATE COUPLES, then take ten. One conversation = one win, per §1 (same
+  // household|type|date|notes key the heatmap and the score use).
+  const _seenWin=new Set();
+  rows=rows.filter(r=>{
+    const info=contactMap[r.contact_id];
+    const hh=info?info.hhId:('c:'+r.contact_id);
+    const key=hh+'|'+r.type+'|'+r.date+'|'+((r.notes||'').trim());
+    if(_seenWin.has(key))return false;
+    _seenWin.add(key);return true;
+  }).slice(0,10);
+  if(!rows.length){el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg></div><p>No real connections logged yet this week — go make some!</p></div>';return;}
 
   el.innerHTML=rows.map(r=>{
     const info=contactMap[r.contact_id]||{displayName:'Unknown',idx:-1};
@@ -17064,14 +17240,150 @@ function _closenessTier(h){
   // NOTE: "kids in programs" deliberately does NOT feed the tier — a household's kids
   // get their own flag, and program signups already arrive as event attendance (which
   // counts toward connected12). Tier is behavioral: contact frequency + multi-year giving.
+  // THE GIVING-LOYALTY PATH STAYS (Dashboard.docx §2): "2+ real connections plus giving
+  // in two different calendar years" is an alternate route to Warm alongside connection
+  // count. It is not a money test smuggled into a relationship rating — sustained giving
+  // across years is real evidence of belonging, and it accounts for the majority of
+  // today's warm households.
   if(conn>=4||(conn>=2&&multiYear))return'close';
   if(conn===0&&lifetime<=1)return'thin';
   return'regular';
 }
-function _leashDays(tier){
-  if(tier==='close')return ENGINE.closeLeashDays||45;
-  if(tier==='thin')return ENGINE.thinLeashDays||120;
-  return ENGINE.driftDays;
+
+// ── THE COMPOSITE WARM LABEL (Dashboard.docx §2) ────────────────────────────
+// The label DESCRIBES how well you know a household; it no longer SCHEDULES how
+// often to call (that is _checkInWindow below). Conflating the two was the defect.
+// A warm household is warm in a KIND: personal (you telephone/meet them), communal
+// (they come to everything), or both. A single ranked word was rejected because
+// every version of it compresses two genuinely different things.
+// Returns 'personal' | 'communal' | 'both' | null (null = not enough of either).
+function _tierKind(h){
+  if(!h)return null;
+  const agg=_agcInterAgg[h.id]||{};
+  const personal=agg.personal12||0;
+  const attend=agg.attend12||0;
+  if(personal>0&&attend>0)return'both';
+  if(personal>0)return'personal';
+  if(attend>0)return'communal';
+  return null;
+}
+function _tierKindWord(kind){return kind==='both'?'personal + communal':kind==='personal'?'personal':kind==='communal'?'communal':'';}
+// The full user-facing label: "Warm · personal + communal", "Steady · communal", "Cool".
+function _tierLabelFull(h){
+  const t=_tierWithUnrated(h);
+  if(t==='unrated')return'Unrated';
+  const kind=_tierKind(h);
+  return _tierLabel(t)+(kind?' · '+_tierKindWord(kind):'');
+}
+
+// ── THE CHECK-IN WINDOW (Dashboard.docx §2 + §9.4) ──────────────────────────
+// THE household's OWN average interval between real connections, CLAMPED — a learned
+// cadence may TIGHTEN toward the floor (30d) but never LOOSEN past the ceiling (180d).
+// This replaces the old 45/90/120 tier→leash lookup entirely: a three-band rating
+// cannot express that one household expects a monthly call and another is content
+// with twice a year, and that expressiveness is the whole point of a calling sheet.
+//
+// Precedence: MANUAL OVERRIDE  →  LEARNED AVERAGE (≥3 connections)  →  FALLBACK TABLE.
+//
+// Averaging needs at least 3 logged connections to give 2 intervals. Below that —
+// nearly the whole roster today — the fallback table applies:
+//
+//   attendance(12mo)  personal(12mo)   window   why
+//   0                 0                180d     radar only: don't lose them, don't chase them
+//   0                 1+               120d     they don't come, but there's a thread
+//   1–2               any               60d     an active mutual relationship — attention moves something
+//   3+                any              120d     self-sustaining through community life
+//
+// THIS TABLE IS DELIBERATELY NOT A STRAIGHT LINE. Both extremes get a long window for
+// OPPOSITE reasons: a household that never comes should stay on the radar without being
+// pestered, and a household at everything doesn't need chasing. The SHORT window belongs
+// to the MIDDLE — people with some organic connection, where a call changes the
+// trajectory. A later reader will be tempted to "fix" this into a monotonic ramp.
+// DO NOT. Likewise, never-attended is a LONG window, not a short one: an earlier draft
+// gave that group the shortest window on a fragility theory, which chases the least
+// responsive households hardest, indefinitely, and cannot tell a genuinely warm
+// housebound congregant from someone politely uninterested.
+//
+// ROLLING, not cumulative: only reaches inside the trailing averaging window feed the
+// mean, so a long unlogged stretch does not distort it.
+function _checkInWindow(h){
+  const floor=ENGINE.cadenceFloorDays||30;
+  const ceil=ENGINE.cadenceCeilingDays||180;
+  // 1) Manual override wins over both the learned average and the fallback.
+  const ov=_cadenceOverride(h);
+  if(ov)return{days:Math.max(1,Math.round(ov)),basis:'override'};
+  const agg=_agcInterAgg[h.id]||{};
+  const dates=(agg.reachDates||[]).slice().sort();
+  // 2) Learned average — rolling window, needs ≥3 connections for ≥2 intervals.
+  if(dates.length>=3){
+    const cutoff=localDateStr(new Date(Date.now()-(ENGINE.cadenceLearnWindowDays||730)*24*60*60*1000));
+    let rolling=dates.filter(d=>d>=cutoff);
+    if(rolling.length<3)rolling=dates.slice(-3); // never fall back to the table once history exists
+    let sum=0;
+    for(let i=1;i<rolling.length;i++)sum+=(_daysBetween(rolling[i-1],rolling[i])||0);
+    const avg=sum/(rolling.length-1);
+    if(avg>0){
+      // TIGHTEN toward the floor, never LOOSEN past the ceiling.
+      const days=Math.max(floor,Math.min(ceil,Math.round(avg)));
+      return{days,basis:'learned',avg:Math.round(avg),n:rolling.length};
+    }
+  }
+  // 3) Fallback table.
+  const attend=agg.attend12||0;
+  const personal=agg.personal12||0;
+  const fb=ENGINE.fallbackWindows||ENGINE_DEFAULTS.fallbackWindows;
+  let days,why;
+  if(attend>=3){days=fb.attendMany;why='at everything already — you\'ll cross paths anyway';}
+  else if(attend>=1){days=fb.attendSome;why='an active mutual relationship — attention moves something here';}
+  else if(personal>=1){days=fb.personalOnly;why='they don\'t come, but there\'s a thread — keep it warm without hounding';}
+  else {days=fb.radar;why='radar only — don\'t lose them, don\'t chase them';}
+  return{days:Math.max(1,Math.round(days)),basis:'fallback',why};
+}
+// Whole days between two YYYY-MM-DD strings, Eastern-safe (no UTC parse skew).
+function _daysBetween(a,b){
+  if(!a||!b)return null;
+  const d1=_localDate((''+a).slice(0,10)),d2=_localDate((''+b).slice(0,10));
+  if(isNaN(d1.getTime())||isNaN(d2.getTime()))return null;
+  return Math.round((d2-d1)/86400000);
+}
+// Per-household manual cadence override (days). Stored on the household's profile so
+// it travels with the record; surfaced on the card so you can't forget it's set.
+function _cadenceOverride(h){
+  const v=parseFloat((h&&(h.profile_data||{}).checkInDays)||0);
+  return (!isNaN(v)&&v>0)?v:0;
+}
+// Set / clear the per-household manual cadence override (§9.4). Stored on the
+// household's profile so it travels with the record and is visible on the card.
+async function setCadenceOverride(idx){
+  const h=households[idx];if(!h)return;
+  const cur=_cadenceOverride(h);
+  const w=_checkInWindow(h);
+  const msg='How often should this household hear from you, in days?\n\n'
+    +(cur?`Currently set by hand to every ${cur} days.`
+         :`Currently ${_checkInWindowText(w)}.`)
+    +'\n\nA number here overrides both their learned rhythm and the default.\nLeave blank (or enter 0) to go back to automatic.';
+  const ans=prompt(msg,cur?String(cur):'');
+  if(ans===null)return; // cancelled
+  const n=parseFloat(ans);
+  const p={...(h.profile_data||{})};
+  if(!ans.trim()||isNaN(n)||n<=0)delete p.checkInDays;
+  else p.checkInDays=Math.max(1,Math.round(n));
+  try{
+    await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({property_data:{...h.property_data,profile:p}})});
+    h.profile_data=p;h.property_data={...h.property_data,profile:p};
+    _invHH(h);
+    if(typeof _daasToast==='function')_daasToast(p.checkInDays?`Check-in set to every ${p.checkInDays} days — ${h.displayName||''}`:`Check-in back to automatic — ${h.displayName||''}`);
+    try{openFullPanel(h.id,idx);}catch(e){}
+    try{renderDailyFive();}catch(e){}
+  }catch(e){alert('Save failed: '+(e.message||e));}
+}
+
+// Plain-English explanation of a window, for the "Why?" panel and the card.
+function _checkInWindowText(w){
+  if(!w)return'';
+  if(w.basis==='override')return`every ${w.days} days (you set this by hand)`;
+  if(w.basis==='learned')return`every ${w.days} days (their own rhythm — ${w.avg}d average across ${w.n} connections)`;
+  return`every ${w.days} days (${w.why})`;
 }
 // Relationship temperature (shown to the user). close→Warm, regular→Steady, thin→Cool.
 function _tierLabel(tier){return tier==='close'?'Warm':tier==='thin'?'Cool':'Steady';}
@@ -17097,13 +17409,54 @@ function _tierWithUnrated(h){
 function _tierDot(h){
   const t=_tierWithUnrated(h);
   const base='display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-family:var(--font-ui);font-size:.58rem;font-weight:700;line-height:1';
-  if(t==='unrated')return`<span title="Not enough history yet" style="${base};border:1.5px solid var(--grey);color:var(--grey)">–</span>`;
+  if(t==='unrated')return`<span title="No history yet — not brand new to you necessarily, just nothing recorded" style="${base};border:1.5px solid var(--grey);color:var(--grey)">–</span>`;
   const c=_tierColor(t);const label=_tierLabel(t);const txt=(t==='regular')?'#3a2e05':'#fff';
-  return`<span title="${label} relationship" style="${base};background:${c};color:${txt}">${label[0]}</span>`;
+  const kind=_tierKind(h);
+  // The label describes how well you know them; it no longer sets how often to call
+  // (that's the check-in window, on the profile).
+  const tip=`${label}${kind?' — '+_tierKindWord(kind)+' warmth':''}. Describes how well you know them, not how often to call.`;
+  return`<span title="${tip}" style="${base};background:${c};color:${txt}">${label[0]}</span>`;
 }
 // Sort rank + CSV word for the contacts "Relationship" column. Warm>Steady>Cool>unrated.
 function _tierSortRank(h){const t=_tierWithUnrated(h);return t==='close'?3:t==='regular'?2:t==='thin'?1:0;}
-function _tierWord(h){const t=_tierWithUnrated(h);return t==='unrated'?'Unrated':_tierLabel(t);}
+function _tierWord(h){const t=_tierWithUnrated(h);const k=_tierKind(h);return t==='unrated'?'Unrated':(_tierLabel(t)+(k?' ('+_tierKindWord(k)+')':''));}
+
+// ── RELATIONSHIP TRAJECTORY (Dashboard.docx §9.5) ───────────────────────────
+// Direction of travel beside the label — "warm ↑ improving". Real connections in the
+// last 90 days compared against the previous 90.
+// KEEP IT A LABEL. Letting trajectory influence the daily list would mean tuning two
+// interacting mechanisms at once, and the label alone answers the question a rabbi is
+// actually asking. (A weaker version already existed — _tierSnaps, a single
+// before-and-after on the last logged contact — which feeds nothing and stays.)
+// Returns {dir:'up'|'down'|'flat', recent, prior} or null when there's nothing to compare.
+function _tierTrajectory(h){
+  if(!h)return null;
+  const agg=_agcInterAgg[h.id]||{};
+  const dates=agg.reachDates||[];
+  if(!dates.length)return null;
+  const today=localToday();
+  const d90=localDateStr(new Date(Date.now()-90*24*60*60*1000));
+  const d180=localDateStr(new Date(Date.now()-180*24*60*60*1000));
+  let recent=0,prior=0;
+  dates.forEach(d=>{
+    if(d>today)return;
+    if(d>=d90)recent++;
+    else if(d>=d180)prior++;
+  });
+  if(!recent&&!prior)return null;    // nothing in either window — no direction to report
+  if(recent===prior)return{dir:'flat',recent,prior};
+  return{dir:recent>prior?'up':'down',recent,prior};
+}
+// Small trajectory marker for dense lists + the profile. Word optional.
+function _trajChip(h,withWord){
+  const t=_tierTrajectory(h);
+  if(!t||t.dir==='flat')return'';
+  const up=t.dir==='up';
+  const c=up?'#15803d':'#b45309';
+  const word=up?'improving':'cooling';
+  const tip=`${t.recent} real connection${t.recent!==1?'s':''} in the last 90 days vs ${t.prior} in the 90 before that`;
+  return ` <span title="${tip}" style="color:${c};font-weight:700;font-size:.9em">${up?'↑':'↓'}${withWord?` <span style="font-weight:600;font-size:.9em">${word}</span>`:''}</span>`;
+}
 // Chip + ↑/↓ movement arrow when the household's most recent logged touch changed the tier
 // (reads _tierSnaps, populated in logTouch). For the contact page.
 function _tierChipMove(hhId){
@@ -17116,7 +17469,12 @@ function _tierChipMove(hhId){
     const ac=up?'#15803d':'#dc2626';
     arrow=` <span title="${up?'Warmed up':'Cooled off'} from ${_tierLabel(snap.from)} at your last contact" style="color:${ac};font-weight:700">${up?'↑':'↓'}</span><span style="color:var(--txt3);font-size:.9em"> was ${_tierLabel(snap.from)}</span>`;
   }
-  return _tierChip(tier)+arrow;
+  // Composite KIND (§2) + TRAJECTORY (§9.5). The kind says which sort of warmth this
+  // is; the trajectory says which way it's heading over the last 90 days vs the 90
+  // before. Both are labels — neither influences the daily list.
+  const kind=h?_tierKind(h):null;
+  const kindTxt=kind?` <span style="color:var(--txt3);font-size:.9em" title="Personal = you call or meet them. Communal = they come to things. A household can be warm in either way, or both.">${_tierKindWord(kind)}</span>`:'';
+  return _tierChip(tier)+kindTxt+(h?_trajChip(h,true):'')+arrow;
 }
 
 // A track that puts its household to REST, keeping it out of the Daily Five
@@ -17152,24 +17510,30 @@ async function _computeCandidatePools(){
   try{recentRows=await sbAll(`interactions?select=contact_id,date,type&order=date.desc,id.asc`)||[];}catch(e){}
   const lastInteraction={};          // last NON-NOTE, non-future interaction date per contact (recency; attendance DOES count)
   const contactHasOutreach=new Set(); // contacts with ≥1 OUTREACH touch (excludes attendance) — drives the NEW "reached out?" test
+  const contactHasAttendance=new Set(); // contacts with ≥1 passive attendance — drives "unwelcomed attendees"
   recentRows.forEach(r=>{
     if(r.type==='Note')return;                        // Notes never count as contact
     if((''+r.date).slice(0,10)>todayStr)return;        // future-dated (RSVP to a coming event) doesn't count until the day arrives
     if(!lastInteraction[r.contact_id])lastInteraction[r.contact_id]=r.date;
     if(_isOutreachTouch(r.type))contactHasOutreach.add(r.contact_id); // attendance ≠ personal outreach → won't clear the NEW card
+    if(_isPassiveAttendance(r.type))contactHasAttendance.add(r.contact_id); // feeds the "unwelcomed attendees" check
   });
 
   // Household → most recent contact across members. Attendance lives in its 'Event
   // attendance' interaction (counted above), so registration rows are NOT read here —
   // single source of truth (no double-count, and a no-show that deleted the interaction
-  // truly stops counting). A donation counts for recency. hhHasOutreach (personal
-  // outreach only) drives the NEW-contact "already reached out?" test below.
+  // truly stops counting). A GIFT NO LONGER COUNTS AS CONTACT (Dashboard.docx §1):
+  // contact means a conversation, not a cheque — the thank-you call is what resets
+  // the clock, and it is logged as a real interaction. hhHasOutreach (personal
+  // outreach only) drives the NEW-contact "already reached out?" test below;
+  // hhHasAttendance + hhHasOutreach drive the Waiting Room "unwelcomed attendees" list.
   const hhLastContact={};
   const hhHasOutreach=new Set();
+  const hhHasAttendance=new Set();
   households.forEach(h=>{
     const dates=(h.members||[]).map(m=>lastInteraction[m.id]).filter(Boolean);
-    (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{if(d&&d.date&&(''+d.date).slice(0,10)<=todayStr)dates.push(d.date);})); // a gift counts for recency (event_fee-excluded at load; future excluded)
     if((h.members||[]).some(m=>contactHasOutreach.has(m.id)))hhHasOutreach.add(h.id);
+    if((h.members||[]).some(m=>contactHasAttendance.has(m.id)))hhHasAttendance.add(h.id);
     hhLastContact[h.id]=dates.length?dates.sort().reverse()[0]:null;
   });
 
@@ -17187,13 +17551,18 @@ async function _computeCandidatePools(){
     if(snoozed)continue;
     const daysSince=_daysSince(lastContact,todayStr)??0; // Eastern whole-day math
     const tier=_closenessTier(h);
-    const leash=_leashDays(tier);
+    // THEIR OWN window — learned average (clamped) or the fallback table. The old
+    // tier→leash lookup is gone: the label describes, the window schedules.
+    const win=_checkInWindow(h);
+    const leash=win.days;
     if(daysSince>=leash){
       const agc=getAGCScore(h);
-      keepWarm.push({h,agc,daysSince,tier,leash,overshoot:daysSince-leash,idx:hIdx(h.id)});
+      keepWarm.push({h,agc,daysSince,tier,leash,win,overshoot:daysSince-leash,idx:hIdx(h.id)});
     }
   }
-  // Longest overshoot (days past their own alarm) first; AGC breaks ties.
+  // Longest overshoot (days past THEIR OWN window, not an absolute day count) first;
+  // Prospect Score breaks ties. This is why a close friend at seven weeks outranks an
+  // acquaintance at three months.
   keepWarm.sort((a,b)=>(b.overshoot-a.overshoot)||(b.agc.total-a.agc.total));
 
   // ── NEW contacts (Change 2): households added within the window, oldest-created
@@ -17226,17 +17595,44 @@ async function _computeCandidatePools(){
     const gs=getGivingStats(h);
     if(gs&&gs.total>0)continue;
     if(hhLastContact[h.id])continue; // has a logged interaction — not a cold prospect
-    if((h.home_value||0)<ENGINE.icebreakerHomeValue)continue;
+    if((h.home_value||0)<ENGINE.prospectHomeValue)continue; // ONE threshold, shared with the Waiting Room (§8)
     const snoozed=outreachTracks.find(t=>t.household_id===h.id&&_isResting(t,todayStr));
     if(snoozed)continue;
-    icebreakers.push({h,idx:hIdx(h.id)});
+    icebreakers.push({h,agc:getAGCScore(h),idx:hIdx(h.id)});
   }
-  icebreakers.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
+  // RANKED BY PROSPECT SCORE (§9.3), home value breaking ties. This stops one screen
+  // contradicting another and is nearly free. Recorded honestly: it barely changes
+  // anything — rank correlation with home-value ordering is 0.91, because for a
+  // household never contacted and never having given, two of three pillars are near
+  // zero by definition, so the score is mostly capacity, which is mostly home value.
+  icebreakers.sort((a,b)=>(b.agc.total-a.agc.total)||((b.h.home_value||0)-(a.h.home_value||0)));
+
+  // ── UNWELCOMED ATTENDEES (§9.7) ── households whose ENTIRE contact history is
+  // attendance: they signed up, they showed up, nobody ever personally reached out —
+  // regardless of how long ago they were added. REUSES the NEW card's outreach test
+  // (hhHasOutreach); nothing new is computed. The NEW card already asks exactly this
+  // question but stops asking at 14 days, so a family who attended three events last
+  // year and never got a call falls through invisibly: too old for the NEW card, not
+  // overdue enough to reconnect (attendance keeps resetting the clock), never flagged.
+  // Waiting-Room only — deliberately NOT a Daily Five route, per "better filtering
+  // before any new panel/surface".
+  const unwelcomed=[];
+  for(const h of households){
+    if(!hhHasAttendance.has(h.id))continue;   // never attended anything → not this list
+    if(hhHasOutreach.has(h.id))continue;      // you've done your part
+    const ageDays=h.created_at?(_daysSince(h.created_at,todayStr)??0):0;
+    if(ageDays<=newWindow)continue;           // still inside the NEW card's window — it's already asking
+    const snoozed=outreachTracks.find(t=>t.household_id===h.id&&_isResting(t,todayStr));
+    if(snoozed)continue;
+    unwelcomed.push({h,lastContact:hhLastContact[h.id]||null,ageDays,idx:hIdx(h.id)});
+  }
+  // Longest-waiting first — the family who has been showing up unwelcomed the longest.
+  unwelcomed.sort((a,b)=>b.ageDays-a.ageDays);
 
   // Active follow-up tracks due today or earlier.
   const activeTracks=outreachTracks.filter(t=>t.status==='active'&&t.next_due&&t.next_due<=todayStr);
 
-  return {todayStr,now,hhLastContact,activeTrackHHIds,activeTracks,keepWarm,newContacts,icebreakers};
+  return {todayStr,now,hhLastContact,hhHasOutreach,hhHasAttendance,activeTrackHHIds,activeTracks,keepWarm,newContacts,icebreakers,unwelcomed};
 }
 
 async function _computeDailyQueue(){
@@ -17263,46 +17659,48 @@ async function _computeDailyQueue(){
   // ── Resolve today's FROZEN set. Frozen for the day, no backfill. ──
   // New day → carry over yesterday's un-done ids first, then top up to DAILY_TARGET.
   //
-  // Cold-prospect rule: at most ONE cold per day, and GUARANTEED one only when there
-  // are 4+ reconnects available (so a cold call never crowds out warm calls on a thin
-  // day, but you still get a steady "one new face" on healthy days). Follow-ups are
-  // never bumped — the guaranteed cold takes a leftover slot, displacing only the
-  // lowest-priority reconnect (the ≥4 test ensures there's a reconnect to spare).
-  // The single "fifth slot" holds ONE new/cold card per day (NEW preferred, cold
-  // fallback). Guaranteed only when there are ≥4 reconnects to spare; otherwise it
-  // just fills a leftover slot on thin days. Follow-ups are never bumped.
+  // ── ONE CONSTRAINT GOVERNS THE FILL (Dashboard.docx §4): at most
+  //    ENGINE.growthCardsPerDay new-or-cold ("growth") cards per day. The list should
+  //    be mostly people you already know, with a steady trickle of new faces.
+  //    §9.6 exposes the cap as a setting (default 1): a mature community may want four
+  //    maintenance to one growth; a new Chabad house may want three to two.
+  //    Guaranteed only when there are ≥4 reconnects to spare, so a cold call never
+  //    crowds out warm calls on a thin day. Follow-ups are NEVER bumped — the
+  //    guaranteed growth card takes a leftover slot, displacing only the
+  //    lowest-priority reconnect (the ≥4 test ensures there's one to spare).
+  const growthCap=Math.max(0,Math.round(ENGINE.growthCardsPerDay??1));
   const isFifth=t=>t==='newcontact'||t==='icebreaker';
   const reconnectAvail=pool.filter(c=>c.type==='keepwarm').length;
   const fifthAvail=pool.some(c=>isFifth(c.type));
-  const guaranteeFifth=reconnectAvail>=4&&fifthAvail;
+  const guaranteeFifth=growthCap>0&&reconnectAvail>=4&&fifthAvail;
 
-  // Fill `set.ids` up to DAILY_TARGET from `pool`, honoring pins, the 1-fifth cap,
-  // and (when guaranteeFifth) reserving the final slot for the new/cold card.
+  // Fill `set.ids` up to DAILY_TARGET from `pool`, honoring pins, the growth cap,
+  // and (when guaranteeFifth) reserving slots for the growth card(s).
   function _fillDailySet(set){
     let changed=false;
     let fifthCount=set.ids.filter(id=>poolById[id]&&isFifth(poolById[id].type)).length;
     const has=id=>set.ids.includes(id)||_dailyPins.includes(id);
-    // Pass 1: fill non-fifth (follow-ups + reconnects) first. If guaranteeing the
-    // fifth slot, leave one open for it; otherwise fill all the way.
-    const warmCeiling=(guaranteeFifth&&fifthCount===0)?DAILY_TARGET-1:DAILY_TARGET;
+    // Pass 1: fill non-growth (follow-ups + reconnects) first. If guaranteeing growth
+    // slots, hold back that many; otherwise fill all the way.
+    const reserve=guaranteeFifth?Math.max(0,growthCap-fifthCount):0;
+    const warmCeiling=Math.max(1,DAILY_TARGET-reserve);
     for(const c of pool){
       if(set.ids.length>=warmCeiling)break;
       if(isFifth(c.type))continue;
       if(has(c.item.h.id))continue;
       set.ids.push(c.item.h.id);changed=true;
     }
-    // Pass 2: add the ONE fifth-slot card. Pool order puts NEW before icebreaker,
-    // so a NEW contact wins the slot when one exists; cold is the fallback.
-    if(fifthCount<1){
-      for(const c of pool){
-        if(set.ids.length>=DAILY_TARGET)break;
-        if(!isFifth(c.type))continue;
-        if(has(c.item.h.id))continue;
-        set.ids.push(c.item.h.id);fifthCount++;changed=true;break;
-      }
+    // Pass 2: add growth cards, up to the cap. Pool order puts NEW before icebreaker,
+    // so a genuinely new household wins a slot whenever one exists; cold is the fallback.
+    for(const c of pool){
+      if(fifthCount>=growthCap)break;
+      if(set.ids.length>=DAILY_TARGET)break;
+      if(!isFifth(c.type))continue;
+      if(has(c.item.h.id))continue;
+      set.ids.push(c.item.h.id);fifthCount++;changed=true;
     }
-    // Pass 3: if we reserved for a fifth that didn't materialize and slots remain,
-    // top up with any remaining non-fifth so we don't under-fill.
+    // Pass 3: if a reserved growth slot didn't materialize and slots remain, top back
+    // up with remaining follow-ups/reconnects so we don't under-fill.
     for(const c of pool){
       if(set.ids.length>=DAILY_TARGET)break;
       if(isFifth(c.type))continue;
@@ -17425,21 +17823,22 @@ async function openWaitingRoom(){
   </div>`;
   document.body.appendChild(bg);
   try{
-    const {hhLastContact,keepWarm,newContacts}=await _computeCandidatePools();
+    const {hhLastContact,keepWarm,newContacts,icebreakers,unwelcomed}=await _computeCandidatePools();
     const todayStr=localToday();
     const activeIds=new Set(outreachTracks.filter(t=>t.status==='active').map(t=>t.household_id));
     const snoozeIds=new Set(outreachTracks.filter(t=>_isResting(t,todayStr)).map(t=>t.household_id));
     const followups=outreachTracks.filter(t=>t.status==='active').slice().sort((a,b)=>String(a.next_due||'9999').localeCompare(String(b.next_due||'9999')));
-    const coldFloor=[];
-    for(const h of households){
-      if(activeIds.has(h.id)||snoozeIds.has(h.id))continue;
-      if(hhLastContact[h.id])continue;
-      const gs=getGivingStats(h);if(gs&&gs.total>0)continue;
-      if((h.home_value||0)<ENGINE.coldFloorHomeValue)continue;
-      coldFloor.push({h,idx:hIdx(h.id)});
-    }
-    coldFloor.sort((a,b)=>(b.h.home_value||0)-(a.h.home_value||0));
-    const resting=outreachTracks.filter(t=>(t.status==='snoozed'||t.status==='closed_unresponsive')&&t.snooze_until).slice().sort((a,b)=>String(a.snooze_until).localeCompare(String(b.snooze_until)));
+    // ONE prospect threshold (§8): this list reads the SAME icebreakers pool the daily
+    // card draws from, so a household can never be presented as today's cold call and
+    // be absent from the full prospect list. It previously recomputed its own pool
+    // against a different setting ($800k here vs $500k there).
+    const coldFloor=icebreakers;
+    // RESTING — only households whose rest has NOT expired. A row whose 7/30/180-day
+    // rest ended long ago used to still show here with a date in the past, which made
+    // the section unreliable as a record of who is genuinely set aside (§8).
+    const resting=outreachTracks
+      .filter(t=>(t.status==='snoozed'||t.status==='closed_unresponsive')&&t.snooze_until&&t.snooze_until>todayStr)
+      .slice().sort((a,b)=>String(a.snooze_until).localeCompare(String(b.snooze_until)));
 
     const abtn=(label,onclick)=>`<button onclick="${onclick}" style="font-size:.58rem;padding:3px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surf);color:var(--txt2);cursor:pointer">${label}</button>`;
     const actions=(h,idx,resting)=>`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
@@ -17466,18 +17865,23 @@ async function openWaitingRoom(){
         ${rows[0]}${more}</div>`;
     };
     const fuRows=followups.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';const due=t.next_due||'—';const dueTxt=due===todayStr?'due today':due<todayStr?'overdue since '+due:'upcoming '+due;return rowCard(h,hIdx(h.id),`Follow-up · step ${t.step||1} · ${dueTxt}`);}).filter(Boolean);
-    const rcRows=keepWarm.map(it=>rowCard(it.h,it.idx,`${_tierChip(it.tier)} · quiet ${it.daysSince}d · ${it.overshoot}d overdue`));
+    const rcRows=keepWarm.map(it=>rowCard(it.h,it.idx,`${_tierChip(it.tier)} · quiet ${it.daysSince}d · ${it.overshoot}d past their ${it.leash}d window`));
     const ncRows=newContacts.map(it=>{const when=it.ageDays===0?'today':it.ageDays===1?'yesterday':it.ageDays+'d ago';return rowCard(it.h,it.idx,`${it.formLead?'Website form':'Added'} · ${when}`);});
+    // §9.7 — attendance without a welcome. Placed behind New contacts on purpose:
+    // it extends an existing surface rather than adding a tenth panel, and sits next
+    // to the most closely related list.
+    const uwRows=(unwelcomed||[]).map(it=>rowCard(it.h,it.idx,`Attends, never personally contacted${it.lastContact?' · last seen '+it.lastContact:''}`));
     const cfRows=coldFloor.map(it=>rowCard(it.h,it.idx,`${it.h.home_value?_fmtHomeVal(it.h.home_value)+' home':'—'} · never contacted`));
     const rsRows=resting.map(t=>{const h=households.find(x=>x.id===t.household_id);if(!h)return'';return rowCard(h,hIdx(h.id),`Resting until ${t.snooze_until}`,true);}).filter(Boolean);
 
     const body=document.getElementById('wrBody');
     if(body)body.innerHTML=
       sec('Follow-ups','Live outreach threads — due today first, then upcoming.',fuRows)
-      +sec('Reconnects','Overdue for a touch — Warm households surface sooner than Cool ones.',rcRows)
-      +sec('New contacts','Recently added — website form leads and manual adds. One drips into the fifth slot per day.',ncRows)
-      +sec('Prospects','Untouched high-capacity homes — never contacted, no giving on file.',cfRows)
-      +sec('Resting','Snoozed for now — they wake back into the queue on these dates.',rsRows);
+      +sec('Reconnects','Past their own check-in window. Each household is measured against its own rhythm, not one global clock — so a close friend at seven weeks can outrank an acquaintance at three months.',rcRows)
+      +sec('New contacts','Recently added — website form leads and manual adds. They take the growth slot, oldest first.',ncRows)
+      +sec('Unwelcomed attendees','They signed up and showed up, but nobody has ever personally reached out — and they’re now too old for the NEW card. Attendance keeps resetting their clock, so they never look overdue either.',uwRows)
+      +sec('Prospects','Untouched high-capacity homes — never contacted, no giving on file. Ranked by Prospect Score.',cfRows)
+      +sec('Resting','Set aside for now — they wake back into the queue on these dates. Expired rests are not listed here.',rsRows);
   }catch(e){
     const body=document.getElementById('wrBody');
     if(body)body.innerHTML='<div style="font-size:.7rem;color:var(--red);padding:10px">Couldn’t load the queues: '+_escHtml(String(e&&e.message||e))+'</div>';
@@ -17517,12 +17921,14 @@ function _whyHTML(card){
   const row=(label,val)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0"><span style="color:var(--txt3)">${label}</span><span style="color:var(--txt2);text-align:right">${val}</span></div>`;
   let criteria='';
   if(card.type==='keepwarm'){
-    const conn=(gs&&gs.total>0)?`Has giving history ($${Math.round(gs.total).toLocaleString()})`:'Connected before (event or interaction)';
+    const conn='You’ve been in touch before';
     const tier=card.item.tier||'regular';
+    const win=card.item.win||_checkInWindow(h);
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${conn}<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${_tierChip(tier)} · quiet ${card.daysSince!==null?card.daysSince:'999+'} days<br>
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Prospect score ${agc.total}</div>`;
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Their check-in window: ${_checkInWindowText(win)}${win.basis==='override'?' <b>· manual override</b>':''}<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${_tierChip(tier)}${_tierKind(h)?' <span style="color:var(--txt3)">'+_tierKindWord(_tierKind(h))+'</span>':''} · quiet ${card.daysSince!==null?card.daysSince:'999+'} days<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Prospect score ${agc.total} <span style="color:var(--txt3)">— only used to break a tie between two equally overdue households</span></div>`;
   }else if(card.type==='newcontact'){
     const age=card.item.ageDays;
     const when=age===0?'today':age===1?'yesterday':age+' days ago';
@@ -17532,7 +17938,7 @@ function _whyHTML(card){
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${origin}</div>`;
   }else if(card.type==='icebreaker'){
     criteria=`<div style="color:var(--txt2);margin-bottom:6px;line-height:1.5">
-      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value ${_fmtHomeVal(h.home_value)} ≥ ${_fmtHomeVal(ENGINE.icebreakerHomeValue)} threshold<br>
+      <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Home value ${_fmtHomeVal(h.home_value)} ≥ ${_fmtHomeVal(ENGINE.prospectHomeValue)} threshold<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> No donations on file<br>
       <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${card.lastContact?'Last contact '+card.lastContact:'No recent contact in window'}</div>`;
   }else if(card.type==='activetrack'){
@@ -17548,7 +17954,10 @@ function _whyHTML(card){
     +row('Prospect breakdown',`A ${agc.affinity}/40 · G ${agc.generosity}/30 · C ${agc.capacity}/30 = <b>${agc.total}</b> · ${agc.signals?agc.signals.found+' of '+(agc.signals.of||9)+' signals':''}${agc.partial&&agc.partial.capacity?' · capacity on partial evidence':''}`)
     +row('Home value',h.home_value?'$'+Math.round(h.home_value).toLocaleString():'unknown')
     +row('Giving',gs&&gs.total>0?`$${Math.round(gs.total).toLocaleString()} · ${gs.count} gift${gs.count!==1?'s':''} · last ${gs.lastDate}`:'none on file')
-    +row('Last contact',card.lastContact?`${card.lastContact} (${card.daysSince}d ago)`:`none in last ${ENGINE.driftDays} days`);
+    // A gift is no longer contact (§1) — so "never" here can be true of a household
+    // that has given. That is the intended reading: nobody has spoken to them.
+    +row('Last contact',card.lastContact?`${card.lastContact} (${card.daysSince}d ago)`:'no conversation on record')
+    +row('Check-in window',(()=>{const w=card.item.win||_checkInWindow(h);return _checkInWindowText(w);})());
 }
 
 async function _buildDailyFive(el){
@@ -17578,7 +17987,11 @@ async function _buildDailyFive(el){
       whyNow='Manually pinned by you — stays here until you log an outcome or unpin';
     } else if(type==='keepwarm'){
       badge='RECONNECT';badgeColor='#f97316';
-      whyNow=`${_tierChip(item.tier||'regular')} · quiet ${item.daysSince} days`;
+      const w=item.win||_checkInWindow(h);
+      const kind=_tierKind(h);
+      // Surface a manual override on the card — otherwise you forget which
+      // households have one (§9.4).
+      whyNow=`${_tierChip(item.tier||'regular')}${kind?' <span style="color:var(--txt3);font-style:normal">'+_tierKindWord(kind)+'</span>':''} · quiet ${item.daysSince} days · ${item.overshoot}d past their ${w.days}d window${w.basis==='override'?' <span style="color:var(--accent);font-style:normal;font-weight:600">· cadence set by hand</span>':w.basis==='learned'?' <span style="color:var(--txt3);font-style:normal">· their own rhythm</span>':''}`;
     } else if(type==='newcontact'){
       badge='NEW';badgeColor='#0d9488';
       const age=item.ageDays;const when=age===0?'today':age===1?'yesterday':age+' days ago';
@@ -17715,15 +18128,162 @@ async function snoozeDaily(idx,days=7){
   }
 }
 
+// ── THE HEBREW CALENDAR (Dashboard.docx §5) ─────────────────────────────────
+// Self-computing, deterministic, NO live dependency and NO annual upkeep. A rabbi's
+// calling calendar is the entire use case — scheduling a follow-up attempt for Yom
+// Kippur is not a rare edge case.
+//
+// Standard arithmetic Hebrew calendar (the fixed calendar in use since Hillel II):
+// molad of Tishrei by mean lunation, then the four dechiyot (postponement rules),
+// which together give Rosh Hashanah's absolute day. Diaspora observance.
+//
+// BLOCKS ONLY TRUE YOM TOV — days on which work is forbidden:
+//   Rosh Hashanah      1–2 Tishrei
+//   Yom Kippur         10 Tishrei
+//   Sukkot             15–16 Tishrei      (two days, diaspora)
+//   Shmini Atzeret /
+//     Simchat Torah    22–23 Tishrei
+//   Pesach             15–16 and 21–22 Nisan
+//   Shavuot            6–7 Sivan
+// DELIBERATELY NOT BLOCKED: Chanukah, Purim, minor fasts, Tu B'Shvat, Tu B'Av,
+// Lag BaOmer, Chol Hamoed. Those are working days — you may absolutely call someone.
+// Shabbat is already skipped by the business-day walk.
+
+// Days elapsed from the epoch to 1 Tishrei of a Hebrew year (Rosh Hashanah),
+// as a "Rata Die"-style absolute day count. Pure integer arithmetic.
+function _hebElapsedDays(year){
+  const monthsElapsed=Math.floor((235*year-234)/19);
+  const partsElapsed=12084+13753*monthsElapsed;
+  let day=monthsElapsed*29+Math.floor(partsElapsed/25920);
+  // Dechiyah #1 — lo ADU rosh: RH never falls on Sunday, Wednesday or Friday.
+  if((3*(day+1))%7<3)day++;
+  return day;
+}
+// Length in days of Hebrew year `year`, after applying the postponements.
+function _hebDaysInYear(year){
+  return _hebNewYearDay(year+1)-_hebNewYearDay(year);
+}
+// Absolute day number of 1 Tishrei, with dechiyot #2–#4 applied.
+function _hebNewYearDay(year){
+  const last=_hebElapsedDays(year-1),cur=_hebElapsedDays(year),next=_hebElapsedDays(year+1);
+  // #2 (GaTaRaD) and #3 (BeTUTaKPaT) are folded into these two length tests, which
+  // is the standard compact formulation.
+  if(next-cur===356)return cur+2;
+  if(cur-last===382)return cur+1;
+  return cur;
+}
+// Month lengths. Hebrew month numbering here: 1=Tishrei … 12=Elul, with Adar I=6
+// and Adar II=7 in a leap year (13 months). Cheshvan/Kislev vary by year length.
+function _hebIsLeap(year){return ((7*year+1)%19)<7;}
+function _hebMonthsInYear(year){return _hebIsLeap(year)?13:12;}
+function _hebMonthLength(year,month){
+  const len=_hebDaysInYear(year);           // 353,354,355 (or 383,384,385 leap)
+  const leap=_hebIsLeap(year);
+  switch(month){
+    case 1: return 30;                       // Tishrei
+    case 2: return (len===355||len===385)?30:29; // Cheshvan — long only in a "complete" year
+    case 3: return (len===353||len===383)?29:30; // Kislev — short only in a "deficient" year
+    case 4: return 29;                       // Tevet
+    case 5: return 30;                       // Shvat
+    case 6: return leap?30:29;               // Adar / Adar I
+    case 7: return leap?29:30;               // Adar II (leap) / Nisan (non-leap)
+    case 8: return leap?30:29;               // Nisan (leap) / Iyar
+    case 9: return leap?29:30;               // Iyar / Sivan
+    case 10:return leap?30:29;               // Sivan / Tammuz
+    case 11:return leap?29:30;               // Tammuz / Av
+    case 12:return leap?30:29;               // Av / Elul
+    case 13:return 29;                       // Elul (leap)
+    default:return 29;
+  }
+}
+// Absolute day number for a Gregorian date, matching _hebNewYearDay's epoch.
+// (Hebrew year 1 began on absolute day -1373428 in this reckoning.)
+const _HEB_EPOCH_OFFSET=1373427;
+function _gregToAbs(y,m,d){
+  // Days before year y, in the proleptic Gregorian calendar.
+  const yy=y-1;
+  let days=yy*365+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400);
+  const cum=[0,31,59,90,120,151,181,212,243,273,304,334];
+  days+=cum[m-1]+d;
+  // Leap-year correction for dates from March onward.
+  if(m>2&&((y%4===0&&y%100!==0)||y%400===0))days++;
+  return days;
+}
+// Hebrew date for a Gregorian Y/M/D → {y, m, d} with m per the numbering above.
+function _gregToHeb(y,m,d){
+  const abs=_gregToAbs(y,m,d)+_HEB_EPOCH_OFFSET;
+  // Estimate the Hebrew year, then walk to the right one.
+  let hy=Math.floor(abs/366);
+  while(_hebNewYearDay(hy+1)<=abs)hy++;
+  while(_hebNewYearDay(hy)>abs)hy--;
+  let rem=abs-_hebNewYearDay(hy);   // 0-based day offset within the Hebrew year
+  let hm=1;
+  const months=_hebMonthsInYear(hy);
+  while(hm<=months){
+    const L=_hebMonthLength(hy,hm);
+    if(rem<L)break;
+    rem-=L;hm++;
+  }
+  return {y:hy,m:hm,d:rem+1};
+}
+// True Yom Tov (work forbidden), diaspora. Month numbers resolved per leap year so
+// Nisan/Sivan are correct in both cases.
+function _isYomTov(dateOrStr){
+  try{
+    const dt=(typeof dateOrStr==='string')?_localDate(dateOrStr.slice(0,10)):new Date(dateOrStr);
+    if(isNaN(dt.getTime()))return false;
+    // Use the EASTERN calendar date, consistent with the rest of the engine.
+    const s=localDateStr(dt);
+    const [gy,gm,gd]=s.split('-').map(Number);
+    const h=_gregToHeb(gy,gm,gd);
+    const leap=_hebIsLeap(h.y);
+    const NISAN=leap?8:7, SIVAN=leap?10:9;
+    if(h.m===1&&(h.d===1||h.d===2))return true;              // Rosh Hashanah
+    if(h.m===1&&h.d===10)return true;                        // Yom Kippur
+    if(h.m===1&&(h.d===15||h.d===16))return true;            // Sukkot I–II
+    if(h.m===1&&(h.d===22||h.d===23))return true;            // Shmini Atzeret / Simchat Torah
+    if(h.m===NISAN&&(h.d===15||h.d===16))return true;        // Pesach I–II
+    if(h.m===NISAN&&(h.d===21||h.d===22))return true;        // Pesach VII–VIII
+    if(h.m===SIVAN&&(h.d===6||h.d===7))return true;          // Shavuot
+    return false;
+  }catch(e){return false;}
+}
+// Name of the Yom Tov on a date ('' if none) — for explaining a pushed due date.
+function _yomTovName(dateOrStr){
+  try{
+    const dt=(typeof dateOrStr==='string')?_localDate((''+dateOrStr).slice(0,10)):new Date(dateOrStr);
+    if(isNaN(dt.getTime()))return'';
+    const [gy,gm,gd]=localDateStr(dt).split('-').map(Number);
+    const h=_gregToHeb(gy,gm,gd);
+    const leap=_hebIsLeap(h.y);
+    const NISAN=leap?8:7, SIVAN=leap?10:9;
+    if(h.m===1&&(h.d===1||h.d===2))return'Rosh Hashanah';
+    if(h.m===1&&h.d===10)return'Yom Kippur';
+    if(h.m===1&&(h.d===15||h.d===16))return'Sukkot';
+    if(h.m===1&&h.d===22)return'Shmini Atzeret';
+    if(h.m===1&&h.d===23)return'Simchat Torah';
+    if(h.m===NISAN&&(h.d===15||h.d===16||h.d===21||h.d===22))return'Pesach';
+    if(h.m===SIVAN&&(h.d===6||h.d===7))return'Shavuot';
+    return'';
+  }catch(e){return'';}
+}
+
 // ── TRACK OUTCOME ENGINE ──
-// Escalating business-day cadence: attempt 1→+3bd, 2→+5bd, 3→+7bd
+// Escalating cadence: attempt 1→+3, 2→+5, 3→+7 working days (ENGINE.trackCadence).
+// Skips Shabbat, Sunday — and true Yom Tov (above). A day that is not a working day
+// is not counted AND cannot be landed on.
 function _addBusinessDays(fromDate,days){
-  const d=new Date(fromDate);
-  let added=0;
-  while(added<days){
+  // Parse through _localDate so a 'YYYY-MM-DD' string doesn't UTC-skew to the previous
+  // Eastern day (the repo-wide date rule). Callers pass a Date today, but a string is
+  // the obvious thing for a future caller to hand it.
+  const d=(typeof fromDate==='string')?_localDate(fromDate.slice(0,10)):new Date(fromDate);
+  let added=0,guard=0;
+  while(added<days&&guard++<400){
     d.setDate(d.getDate()+1);
     const dow=d.getDay();
-    if(dow!==0&&dow!==6)added++; // skip Sun(0) and Sat(6)
+    if(dow===0||dow===6)continue;      // skip Sun(0) and Sat(6)
+    if(_isYomTov(d))continue;          // skip true Yom Tov — never schedule a call for it
+    added++;
   }
   return localDateStr(d);
 }
@@ -17974,15 +18534,13 @@ async function _recalcAGCAggForHH(hhId){
       if(_isReach(r.type)&&r.date>=since)a.connected12++;
       if(_isPersonalContact(r.type)&&r.date>=since)a.personal12++;
       if(_isPassiveAttendance(r.type)&&r.date>=since)a.attend12++;
+      if(_isReach(r.type))_aggAddReachDate(a,r.date); // learned cadence + trajectory
     });
   }
   // Registration rows are NOT counted — attendance lives in its 'Event attendance'
   // interaction (single source of truth; see loadAGCInteractionAggregates).
-  // Donations → recency only; future-dated excluded.
-  (h.members||[]).forEach(m=>(m.donations||[]).forEach(d=>{
-    if(!d||!d.date||(''+d.date).slice(0,10)>todayStr)return;
-    if(!a.lastContact||d.date>a.lastContact)a.lastContact=d.date;
-  }));
+  // Donations are NOT counted toward last-contact either (Dashboard.docx §1:
+  // a gift stops counting as contact) — they feed only giving recency in the score.
   _agcInterAgg[hhId]=a;
   _agcSeenKeys[hhId]=seen; // keep the live-bump dedupe in sync with this rebuild
 }
@@ -18343,20 +18901,31 @@ async function renderSRI(){
   if(!el||!households.length){if(el)el.innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"/></svg></div><p>Loading…</p></div>';return;}
   const now=Date.now();
   const todayStr=localToday();
-  // Fetch recent connected interactions for engagement check
+  // Fetch recent real connections for the warmth marker. Pull type|date|notes so the
+  // count can DE-DUPLICATE COUPLES — see below.
   let connectedRows=[];
-  try{connectedRows=await sbAll(`interactions?or=(type.eq.Connected,type.eq.Meeting%20in%20person,type.eq.Shabbat%20attendance,type.eq.Class%20%2F%20Program,type.eq.Event%20attendance)&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&date=lte.${todayStr}&select=contact_id&order=id.asc`)||[];}catch(e){}
-  const connectedContactIds=new Set(connectedRows.map(r=>r.contact_id));
+  try{connectedRows=await sbAll(`interactions?type=in.(${REACH_TYPES.map(t=>'"'+t+'"').join(',')})&date=gte.${localDateStr(new Date(now-ENGINE.sriEngagementDays*24*60*60*1000))}&date=lte.${todayStr}&select=contact_id,type,date,notes&order=id.asc`)||[];}catch(e){}
 
   // Build contact→household map
   const contactHHMap={};
   households.forEach(h=>(h.members||[]).forEach(m=>{contactHHMap[m.id]=h.id;}));
 
-  // Count recent connected per household
+  // Count recent real connections per household, DE-DUPLICATED BY COUPLE.
+  // DEFECT FIXED (Dashboard.docx §6): this counted interaction ROWS rather than
+  // conversations, so one call logged against both spouses counted as two and cleared
+  // the "2 or more" bar on its own — 35 points for a single call. De-duplication
+  // applies everywhere without exception (§1), using the same type|date|notes key as
+  // the heatmap and every warmth calculation in the score.
   const recentConnected={};
+  const _sriSeen={};
   connectedRows.forEach(r=>{
     const hhid=contactHHMap[r.contact_id];
-    if(hhid)recentConnected[hhid]=(recentConnected[hhid]||0)+1;
+    if(!hhid)return;
+    const key=r.type+'|'+r.date+'|'+((r.notes||'').trim());
+    const seen=_sriSeen[hhid]||(_sriSeen[hhid]=new Set());
+    if(seen.has(key))return; // same conversation, second spouse — one household touch
+    seen.add(key);
+    recentConnected[hhid]=(recentConnected[hhid]||0)+1;
   });
 
   // Ask-suppression set. Two independent sources:
@@ -18380,28 +18949,49 @@ async function renderSRI(){
     }
     let score=0;
     const reasons=[];
-    // Capacity: home value threshold or profile capacity flag
+    // ── CAPACITY +40 — GRADED ON THE AMOUNT, NEVER ON THE PRESENCE OF TEXT.
+    // DEFECT FIXED (§6): this awarded the full 40 if the profile capacity field
+    // contained ANYTHING, so "unclear, needs research" scored identically to
+    // "$2m foundation". Same defect the score rebuild removed everywhere else; this
+    // panel has its own scoring and was left out of scope then. Last surviving instance.
+    // The prose fallback now has to yield a DOLLAR FIGURE at or above the threshold.
     const p=h.profile_data||{};
-    if((h.home_value||0)>=ENGINE.sriCapacityValue||p.capacity){
-      score+=40;
-      reasons.push((h.home_value||0)>=ENGINE.sriCapacityValue
-        ?`+40 — capacity: ${_fmtHomeVal(h.home_value)} home ≥ ${_fmtHomeVal(ENGINE.sriCapacityValue)}`
-        :`+40 — capacity: profile flagged "${p.capacity}"`);
+    let capMarker=false;
+    if((h.home_value||0)>=ENGINE.sriCapacityValue){
+      capMarker=true;
+      reasons.push(`+40 — capacity: ${_fmtHomeVal(h.home_value)} home ≥ ${_fmtHomeVal(ENGINE.sriCapacityValue)}`);
+    }else if(!(h.home_value>0)){
+      // No home value on file → fall back to the largest dollar figure in the capacity
+      // prose. A field with no figure in it scores nothing.
+      const capMoney=_agcMaxMoney(p.capacity);
+      if(capMoney>=ENGINE.sriCapacityValue){
+        capMarker=true;
+        reasons.push(`+40 — capacity: ${_fmtHomeVal(capMoney)} in the profile’s capacity notes (no home value on file)`);
+      }
     }
-    // Engagement: connected logs in trailing window
+    if(capMarker)score+=40;
+    // ── WARMTH +35 — real connections in the trailing window, couple-deduped above.
     if((recentConnected[h.id]||0)>=ENGINE.sriEngagementCount){
       score+=35;
-      reasons.push(`+35 — warm: ${recentConnected[h.id]} connected interaction${recentConnected[h.id]!==1?'s':''} in last ${ENGINE.sriEngagementDays} days`);
+      reasons.push(`+35 — warm: ${recentConnected[h.id]} real connection${recentConnected[h.id]!==1?'s':''} in the last ${ENGINE.sriEngagementDays} days`);
     }
-    // Giving gap: has donated before but currently lapsed
+    // ── GIVING GAP +25 — has given before but is currently lapsed.
     const gs=getGivingStats(h);
+    let gapMarker=false;
     if(gs&&gs.total>0){
       const monthsSinceLast=gs.lastDate?(_daysSince(gs.lastDate)??1e9)/30:999;
       if(monthsSinceLast>=ENGINE.sriGapMinMonths&&monthsSinceLast<=ENGINE.sriGapMaxMonths){
-        score+=25;
+        score+=25;gapMarker=true;
         reasons.push(`+25 — giving gap: last gift ${gs.lastDate} (${Math.round(monthsSinceLast)} mo ago) — inside the ${ENGINE.sriGapMinMonths}–${ENGINE.sriGapMaxMonths} mo ask window`);
       }
     }
+    // ── CAPACITY ALONE CAN NEVER PUT A HOUSEHOLD ON THIS LIST (§6). At least one
+    // NON-CAPACITY marker — warmth or a giving gap — is required. Capacity says
+    // "wealthy", not "ready". Without this, dozens of households qualify who have
+    // never been contacted and have never given a penny; the recent-gift floor above
+    // cannot catch them because by construction it only applies to donors.
+    const warmMarker=(recentConnected[h.id]||0)>=ENGINE.sriEngagementCount;
+    if(!warmMarker&&!gapMarker)continue;
     if(score>0)scores.push({h,score,idx:hIdx(h.id),gs,reasons});
   }
   scores.sort((a,b)=>b.score-a.score);
