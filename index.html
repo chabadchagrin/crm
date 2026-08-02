@@ -161,6 +161,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .modal label{display:block;font-family:var(--font-ui);font-size:11px;text-transform:none;letter-spacing:0;color:var(--txt2);margin-bottom:4px}
 .modal input{width:100%;background:var(--surf);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.8rem;border-radius:5px;outline:none;margin-bottom:12px}
 .modal input:focus{border-color:var(--navy)}
+/* `.modal input` above is written for TEXT fields — width:100%, a border, 8px padding
+   and a 12px bottom margin. It has no type guard, so every checkbox inside a modal was
+   being stretched to the full modal width with a box drawn around it, which is why the
+   tick and its label were unreadable. One reset, applied everywhere so no future
+   checkbox inherits the same thing. Anything needing a different size (.me-aud-row,
+   .eg-picker-row) is more specific and still wins. */
+input[type=checkbox],input[type=radio]{width:16px;height:16px;min-width:16px;flex-shrink:0;padding:0;margin:0;margin-bottom:0;background:none;border:none;border-radius:0;box-shadow:none;accent-color:var(--accent);cursor:pointer;vertical-align:-0.13em}
+/* A checkbox and its words are one target. This keeps them on one line, vertically
+   centred, and stops `.modal label{display:block}` stacking the text under the box. */
+label.chk{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);line-height:1.4;margin-bottom:10px;text-transform:none;letter-spacing:0}
+label.chk input[type=checkbox]{margin-top:1px}
+label.chk .chk-note{display:block;font-size:.68rem;color:var(--txt3);margin-top:2px;line-height:1.4}
 .modal-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid var(--hairline);padding-top:14px;margin-top:4px}
 .mpin{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(16,24,40,.25)}
 .mpin.pin-grey{background:var(--grey)}.mpin.pin-green{background:var(--green)}.mpin.pin-gold{background:var(--amber)}.mpin.pin-red{background:var(--red)}
@@ -230,6 +242,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .fp-tl-date{font-size:.76rem;color:var(--txt3);white-space:nowrap}
 .fp-tl-text{font-size:.86rem;color:var(--txt2);margin-top:3px;line-height:1.55}
 .fp-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+/* Prospect Finder row-action buttons — match the app's small secondary controls */
+.pf-abtn{font-size:.62rem;padding:4px 9px;border:1px solid var(--border2);border-radius:5px;background:none;color:var(--txt3);cursor:pointer;font-family:var(--font-ui);white-space:nowrap;transition:color .15s,border-color .15s}
+.pf-abtn:hover{color:var(--accent);border-color:var(--accent)}
 @media(max-width:768px){
   #fullPanelContent.fp-layout{grid-template-columns:1fr}
   .fp-rail{position:static;max-height:none;overflow:visible;border-right:none;border-left:none;border-bottom:1px solid var(--border)}
@@ -620,6 +635,8 @@ html.force-desktop #mobileShell{display:none!important}
 /* ── REPORTS VIEW ── */
 .reports-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
 .reports-view.active{display:block}
+.prospects-view{display:none;flex:1;overflow-y:auto;padding:16px;background:var(--bg)}
+.prospects-view.active{display:block}
 .rp-card{background:var(--surf);border:1px solid var(--border);border-radius:5px;padding:14px 16px;margin-bottom:12px}
 .rp-saved-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:5px;background:var(--surf);margin-bottom:8px;cursor:pointer}
 .rp-saved-row:hover{border-color:var(--border2);background:var(--row-hover)}
@@ -811,7 +828,9 @@ html.force-desktop #mobileShell{display:none!important}
 .fb-in{width:100%;background:var(--surf);border:1px solid var(--border2);color:var(--txt);padding:7px 10px;font-family:var(--font-ui);font-size:.8rem;border-radius:5px;outline:none;margin-bottom:12px;box-sizing:border-box}
 .fb-in:focus{border-color:var(--navy)}
 .fb-check{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.74rem;color:var(--txt2);margin-bottom:10px}
-.fb-check input{width:auto;margin:0}
+.fb-check input{margin:0}
+.fb-check .chk-note,.eb-check .chk-note{display:block;font-size:.66rem;color:var(--txt3);margin-top:2px;line-height:1.4}
+.fb-check,.eb-check{align-items:flex-start}
 .fb-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .fb-row .fb-in{margin-bottom:0}
 .fb-mini-btn{background:var(--surf2);border:1px solid var(--border2);color:var(--txt2);border-radius:5px;padding:5px 9px;font-family:var(--font-ui);font-size:.66rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
@@ -1022,9 +1041,9 @@ html.force-desktop #mobileShell{display:none!important}
     <input type="date" id="li_date" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
     <label>Notes</label>
     <textarea id="li_notes" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;min-height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;padding:9px;font-family:var(--font-ui);font-size:.82rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
-    <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;margin-bottom:12px;padding:8px 10px;background:var(--surf2);border-radius:5px">
-      <input type="checkbox" id="li_significant" style="accent-color:var(--accent);margin-top:2px;flex-shrink:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-      <span style="font-size:.76rem;color:var(--txt2);line-height:1.35"><b style="color:var(--txt)">This one mattered</b><br><span style="font-size:.68rem;color:var(--txt3)">Check this if it was a real moment, not a routine check-in. Adds to their Affinity score. You set it yourself — nothing guesses it from your notes.</span></span>
+    <label class="chk" style="padding:8px 10px;background:var(--surf2);border-radius:5px;margin-bottom:12px">
+      <input type="checkbox" id="li_significant" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+      <span><b>This one mattered</b><span class="chk-note">A real moment, not a routine check-in. Adds to Affinity Score.</span></span>
     </label>
     <div id="li_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
@@ -1142,8 +1161,8 @@ html.force-desktop #mobileShell{display:none!important}
         <input type="text" id="edit_zip" placeholder="Zip" style="margin-bottom:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
       </div>
       <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.72rem;color:var(--txt2);cursor:pointer;font-weight:400">
-        <input type="checkbox" id="edit_regeocode" checked="" style="accent-color:var(--accent)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-        Re-locate map pin if the address changed
+        <input type="checkbox" id="edit_regeocode" checked="" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        Move the map pin to the new address
       </label>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
@@ -1412,6 +1431,7 @@ html.force-desktop #mobileShell{display:none!important}
     <nav class="nav" aria-label="Main">
       <button id="navDash" onclick="switchView('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg><span>Dashboard</span></button>
       <button id="navContacts" onclick="switchView('contacts')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 5"></path><path d="M18 14.5c2.1.7 3.5 2.6 3.5 5.5"></path></svg><span>Contacts</span></button>
+      <button id="navProspects" onclick="switchView('prospects')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg><span>Prospect Finder</span></button>
       <button id="navCRM" onclick="switchView('crm')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.7-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.3 12 21 12 21z"></path><circle cx="12" cy="10.5" r="2.3"></circle></svg><span>Map</span></button>
       <button id="navEmail" onclick="switchView('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7.5 12 13l9-5.5"></path></svg><span>Email</span></button>
       <button id="navEvents" onclick="switchView('events')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg><span>Events</span></button>
@@ -1492,18 +1512,10 @@ html.force-desktop #mobileShell{display:none!important}
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">No Contact ≥ Days</div><input type="number" class="tier-input fs-inp" id="minDaysSince" placeholder="e.g. 90" style="width:80px" oninput="_applyFilterDebounced()" title="Households with no logged contact in at least this many days (includes never-contacted)" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Kid Age</div><div style="display:flex;gap:4px"><input type="number" class="tier-input fs-inp" id="filterKidAgeMin" placeholder="Min" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"><input type="number" class="tier-input fs-inp" id="filterKidAgeMax" placeholder="Max" style="width:55px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div></div>
     <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">City</div><input type="text" class="tier-input fs-inp" id="filterCity" placeholder="Any" style="width:100px" oninput="_applyFilterDebounced()" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></div>
-    <!-- §9.2 DISCREPANCY PRESETS — next to "Min Prospect", because that is where a
-         filtered list actually gets worked. PRESETS, NOT FREE-FORM SLIDERS: arbitrary
-         pillar ranges invite combinations that mean nothing and put the burden of
-         knowing what to ask on the user. This is the answer to "how much should the
-         score influence?" — the score earns its keep by predicting who might become
-         warmer or a bigger giver, not by taking over the call queue. -->
-    <div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt2);margin-bottom:3px">Gap</div><select class="tier-input fs-inp" id="filterGap" style="width:190px" onchange="applyFilter()" title="Find the gap between what a household could be and what it currently is." autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-      <option value="">Any</option>
-      <option value="capNotAff">High capacity, low affinity — could give, doesn’t know us</option>
-      <option value="affNotGen">High affinity, low generosity — loves us, never asked properly</option>
-      <option value="genNotContact">High generosity, low contact — gives elsewhere, no relationship here</option>
-    </select></div>
+    <!-- The old "Gap" discrepancy-preset dropdown (capNotAff / affNotGen / genNotContact)
+         was removed in build 2026-08-02.1. Its job — surfacing overlooked people from
+         pillar disagreements — is now the dedicated Prospect Finder page (sidebar),
+         which asks the question in people, not ratios. -->
     <button onclick="_rpOpenFromQuickFilters()" title="Carry these filters into the Reports builder" style="align-self:flex-end;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;padding:5px 10px;font-family:var(--font-ui);font-size:.6rem;cursor:pointer;white-space:nowrap">Open in Reports →</button>
     <button class="btn btn-sec" onclick="clearFilter()" style="margin-bottom:1px;font-size:.68rem;padding:4px 9px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Clear</button>
     <span id="filterCount" style="font-family:var(--font-ui);font-size:.62rem;color:var(--accent);margin-bottom:5px"></span>
@@ -1588,6 +1600,11 @@ html.force-desktop #mobileShell{display:none!important}
   <!-- REPORTS VIEW -->
   <div class="reports-view" id="reportsView">
     <div id="reportsViewInner"></div>
+  </div>
+
+  <!-- PROSPECT FINDER VIEW -->
+  <div class="prospects-view" id="prospectsView">
+    <div id="prospectsViewInner"></div>
   </div>
   </div><!-- /.work -->
 </div>
@@ -1684,9 +1701,9 @@ html.force-desktop #mobileShell{display:none!important}
     <!-- §9.1 — bookkeeping only. This checkbox does NOT feed recency, warmth or the
          Prospect Score. Log the actual thank-you call as an interaction; that is what
          the engine reads. A mailed receipt is not an interaction. -->
-    <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;margin-bottom:12px;font-weight:400">
-      <input type="checkbox" id="don_thanked" style="accent-color:var(--accent);margin-top:2px;flex-shrink:0" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-      <span style="font-size:.76rem;color:var(--txt2);line-height:1.35"><b style="color:var(--txt)">Thanked</b><br><span style="color:var(--txt3);font-size:.68rem">Just bookkeeping — who still needs acknowledging. It doesn’t affect any score or queue. Log the actual thank-you call or visit as an interaction.</span></span>
+    <label class="chk">
+      <input type="checkbox" id="don_thanked" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+      <span><b>Thanked</b><span class="chk-note">Bookkeeping only. Log the actual thank-you call separately.</span></span>
     </label>
     <div id="don_status" style="display:none;padding:9px;background:var(--surf2);border-radius:4px;margin-bottom:12px;font-size:.74rem;color:var(--txt2)"></div>
     <div class="modal-btns">
@@ -1814,7 +1831,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-07-31.2'; // THE THREE QUEUED FIXES. (1) HEATMAP: Shabbos and true Yom Tov (_isYomTov) now render as a distinct heat-na cell on both desktop (renderHeatmap) and mobile (mRenderMHeat) — no longer silently skipped from the grid, and no longer counted toward the weekday/Sunday intensity thresholds. Tooltip names the holiday. Makes good on the "Shabbos and Yom Tov are left out" copy shipped in .1. (2) GROWTH-CARD CARRYOVER SPLIT: the single isFifth test used to exclude BOTH newcontact and icebreaker cards from day-to-day carryover; now only newcontact is excluded (still re-picked fresh each day, still clears on personal outreach, per its own 14-day window). An unactioned PROSPECT/icebreaker card now carries forward indefinitely, same as a reconnect, until it's contacted, given to, or ages out of the icebreaker pool on its own — "growth prospects shouldn't be a use-it-or-lose-it queue." _computeDailyQueue's carried-filter changed; _fillDailySet's fifthCount naturally still counts a carried prospect against growthCardsPerDay. (3) ONE HOME-VALUE SETTING: prospectHomeValue ($800k) and sriCapacityValue ($750k) were two independent thresholds that disagreed — Ready to Ask's capacity marker used a different bar than the Daily Five cold card and Full Queue prospect list. Collapsed into one setting, default $750k. sriCapacityValue is now a dead key with a migration (takes the higher of the two on an existing install, so consolidating never silently loosens either bar). Settings UI: the duplicate "Home value at least" row under Ready to Ask is gone; the one remaining row (now "Above-average home value: at least") is labeled as shared. VERIFIED: both blocks node --check clean, both sentinels present, no global function renamed. NOT YET EYEBALLED IN A BROWSER. — a full plain-language rewrite of every user-facing string, plus the structural changes the words depend on. THE HEADLINE FIX: the mobile Daily Five card rendered _whyHTML() INLINE and always-open while desktop had it behind a collapsed 'Why?' toggle — 85 of the card's 118 words, 72% of the surface, on the smallest screen. Mobile now has the same collapsed 'Why this name?' disclosure, and the duplicated check-in-window row (printed twice, 28 words apart, in a 320px box) is gone. Card face is ~32 words. THE THREE-LAYER RULE, applied to every string: SURFACE answers 'who is this and what do I do' in <=25 words; 'WHY THIS NAME?' answers 'why this person today' per card; the '?' answers 'how does this decide' per panel in <=120 words. Engine units never appear on a surface — new _agoWords()/_everyWords() helpers mean no raw day count over 21 is ever printed ('quiet 124 days · 34d past their 42d window' → 'Last contact about four months ago. That is longer than usual for them.'). NEW SURFACES FOR HELP: the nine '?' panels now appear on MOBILE section headers (mobile previously had none at all) and one per Engine Settings section. LABELS vs STORED VALUES: TYPE_LABELS/_typeLabel() split display from storage, so buttons read 'We talked'/'Left a message' while the database, the engine and every historical row keep 'Connected'/'Left VM' untouched — no data migration, no scoring change. RENAMES: Waiting Room → Full Queue, Activity Heatmap → Two Weeks at a Glance, Wins of the Week → This Week's Successes, Solicitation Readiness → Ready to Ask, Active Tracks → People You're Chasing, Email Engagement → Who's Reading Your Emails. 'Daily Five' kept. ENGINE SETTINGS: every hint moved from 'label / hint' to 'label [hint]' (a slash reads as either/or), Ready to Ask reordered so the giving gap — the most-changed number — comes first, and the Pin soft cap setting REMOVED and fixed at 5 (was a user-facing knob defaulting to 3). The check-in override is no longer a raw prompt() asking for a number of days — _cadencePick() offers Monthly / 6 weeks / Quarterly / Twice a year / custom. CONSISTENCY: one phrasing per state where there were four ways to say 'no address' and four for 'no giving'; ~79 error strings collapsed onto one shape (plain sentence + what to do + the technical detail underneath); developer diagnostics ('Have you run the Step 1 SQL yet?', raw exceptions) removed from user-facing copy; success messages moved off blocking alert() onto the toast; the toast's left accent bar dropped. PUBLIC PAGES: form.html's silent validation failure (a label flashing red for 1.4s, often off-screen) now says 'Please pick an amount first'; the login screen no longer ships a real personal address as its placeholder and brands as DAAS throughout. NOT CHANGED, deliberately: the heatmap still skips Saturday only — the Yom Tov wording is in place ahead of the code change, which is queued separately. VERIFIED: both blocks node --check clean, both sentinels present, no global function renamed. NOT YET EYEBALLED IN A BROWSER.
+const BUILD_STAMP='2026-08-02.1'; // PROSPECT FINDER — new sidebar page (three tabs: Get to Know, Invite to Give, Stay Connected) replacing the old Gap dropdown, per PROSPECT-FINDER-BUILD-PLAN.md + The Prospect Finder.docx. WHAT: a "who to intentionally invest in" discovery page, modeled on renderSRI() (scored rows, 0–100 bar, Why? toggle, snooze store, open-contact). Tabs 1–2 are GATE-AND-SORT, not pillar subtraction: Get to Know gates Affinity below a ceiling (people you don't know well) then sorts by Capacity desc; Invite to Give gates Generosity below a ceiling then sorts by Affinity desc. Ceilings are fractions of each pillar's max (survive re-weighting), tunable in Engine Settings (pfGetToKnowAffinityCeiling 0.65, pfInviteGenerosityCeiling 0.5), start loose. Tab 3 Stay Connected is a continuous weighted ranking of supporters (has given) by how overdue they are for personal attention: stewardScore = G*(1+overshoot/pfStewardOvershootDivisor) + noSig*pfStewardNoSigWeight, where overshoot = daysSince − _checkInWindow leash and noSig flags no "this mattered" moment — replaces the old binary "supporter with zero logged conversations" cliff with a slope. Thin data (signals.found<2) flags the row and lightly demotes ordering (×0.85) but NEVER filters. Tab 1 shows the partial-capacity banner (reuses _gapCaveat's count logic) since no-address households can't be sized. Each row: Open Contact, Pin to Daily Five (reuses pinHousehold), Snooze (new pf_snoozes store, 60d, PF-only — NOT _sriSnoozes), Mark reviewed (new persisted pf_reviewed store). 25/tab with show-more to 50 (pfResultCount). Per-tab ? help via showPanelHelp (PANEL_HELP pf-getToKnow/pf-inviteToGive/pf-stayConnected). Desktop nav button #navProspects + mobile hamburger entry near top; routed via switchView('prospects'). REMOVED: the <select id="filterGap"> Gap dropdown, _gapMatch() and its _filterBase() call, and applyFilter's gap-caveat DOM block + clearFilter's filterGap id; _gapCaveat() kept (reworded) as the PF partial-capacity banner. Ready to Ask (SRI) on the dashboard is untouched. VERIFIED: node --check clean, no dangling filterGap/_gapMatch references. // (prev .3: CHECKBOXES — a rendering bug plus the copy pass they missed. THE BUG: `.modal input{width:100%;background;border;padding:8px 10px;margin-bottom:12px}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to the full modal width with a box drawn round it — the tick and its label were unreadable. Three static-modal boxes (li_significant, don_thanked, edit_regeocode) plus every checkbox rendered into a modal. Someone had already hand-patched `width:auto` onto three event-builder checkboxes, which is the tell. FIX: one global `input[type=checkbox],input[type=radio]` reset (16px, no border/padding/margin, accent-color) placed after `.modal input` so it wins on source order; the three hand-patches and five now-redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px browser default AFTER the reset. New `label.chk` + `.chk-note` classes keep a box and its words on one line and stop `.modal label{display:block}` stacking the text under the box. COPY, confirmed line by line: 'This one mattered' 24 words -> 'A real moment, not a routine check-in. Adds to Affinity Score.'; 'Thanked' 22 words -> 'Bookkeeping only. Log the actual thank-you call separately.' (the nudge is load-bearing now a gift is not contact); Active (live and publicly readable) -> Published + note; Allow optional donation -> Let people add a donation; the Off=/On= parentheticals on online registration and paid event cut to a single clause; Track opens/clicks and Skip disengaged moved their parentheticals to sub-lines; req/required made consistent as Required. KEPT at the rabbi's instruction: 'Show title/description on the public form' and 'Allow a custom "other amount"' unchanged. VERIFIED: both blocks node --check clean, both sentinels present, 39 checkboxes audited — no leftover width:100%/padding inline styles, no parenthetical over ten words.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -3379,37 +3396,19 @@ function _filterBase(){
   let base=runFilter('household',_rpQuickFilterJSON(),{households});
   // "Show on map" bridge from Reports: narrow to the report's household set.
   if(window._reportPinSet)base=base.filter(h=>window._reportPinSet.has(h.id));
-  // ── §9.2 DISCREPANCY PRESETS ── the gap between what a household COULD be and
-  // what it currently IS. This became possible in July and was not before: the old
-  // pillars overlapped (Affinity took 10 of its 35 points from money), so "loves us
-  // but has not given" partly compared giving against giving. The rebuild cut that to
-  // a single flat 4-point signal, which is what makes the second preset mean anything.
-  const gap=document.getElementById('filterGap')?.value||'';
-  if(gap)base=base.filter(h=>_gapMatch(h,gap));
+  // The §9.2 "Gap" discrepancy presets (and _gapMatch) were removed in build
+  // 2026-08-02.1 — that job is now the dedicated Prospect Finder page.
   return base;
 }
-// Pillar thresholds for the presets. Expressed as a share of each pillar's cap so
-// they survive a re-weighting, and kept deliberately coarse — these are questions
-// ("could give, doesn't know us"), not a numeric query language.
-function _gapMatch(h,preset){
-  const s=getAGCScore(h);
-  const aff=s.affinity/40, gen=s.generosity/30, cap=s.capacity/30;
-  const HI=0.5, LO=0.3;
-  if(preset==='capNotAff')return cap>=HI&&aff<LO;       // could give, does not know us
-  if(preset==='affNotGen')return aff>=HI&&gen<LO;       // loves us, never asked properly
-  if(preset==='genNotContact'){                          // gives elsewhere, no relationship here
-    const conn=(_agcInterAgg[h.id]||{}).connected12||0;
-    return gen>=HI&&conn===0;
-  }
-  return true;
-}
-// A preset resting on Capacity silently excludes households flagged partial for want
-// of an address. THE FILTER MUST SAY SO rather than quietly returning a subset (§9.2).
+// KEPT from the retired Gap dropdown: the partial-capacity count. Prospect Finder's
+// "Get to Know" tab leans on Capacity, which can't be sized without a home value, so
+// the page must say plainly that some households are excluded (The Prospect Finder.docx
+// §7). Called by _pfBuildTab('getToKnow') with 'capNotAff'.
 function _gapCaveat(preset){
   if(preset!=='capNotAff')return'';
   const n=households.filter(h=>getAGCScore(h).partial&&getAGCScore(h).partial.capacity).length;
   if(!n)return'';
-  return `This filter rests on Capacity, and ${n} household${n!==1?'s':''} ${n!==1?'have':'has'} no home value on file (usually no street address) — their capacity is scored on partial evidence, so they cannot appear here. This is a subset, not the whole answer.`;
+  return `Some people aren’t shown here. ${n} household${n!==1?'s have':' has'} no home value on file (usually no street address), so ${n!==1?'their':'its'} Capacity is scored on partial evidence and can’t be ranked fairly on a Capacity-led list. This is a subset, not the whole answer.`;
 }
 
 // Header search NEVER narrows the map / list / contacts — it only drives the
@@ -3440,21 +3439,14 @@ function applyFilter(){
   });
   const fc=document.getElementById('filterCount');
   if(fc)fc.textContent=anyActive?`${filtered.length} of ${households.length}`:'';
-  // Say out loud when a Capacity-based gap preset is hiding partial-evidence households.
-  const _gapSel=document.getElementById('filterGap')?.value||'';
-  let _cav=document.getElementById('gapCaveat');
-  if(!_cav&&_gapSel){
-    _cav=document.createElement('div');_cav.id='gapCaveat';
-    _cav.style.cssText='flex-basis:100%;font-family:var(--font-ui);font-size:.6rem;color:var(--amber);line-height:1.45;padding:2px 0 0';
-    document.getElementById('filterStrip')?.appendChild(_cav);
-  }
-  if(_cav){const txt=_gapCaveat(_gapSel);_cav.textContent=txt;_cav.style.display=txt?'block':'none';}
+  // (The Gap-preset caveat banner was removed with the Gap dropdown in 2026-08-02.1;
+  //  the partial-capacity notice now lives on the Prospect Finder page.)
   renderList();
   if(document.getElementById('contactsView')?.classList.contains('active'))renderContacts();
 }
 
 function clearFilter(){
-  ['minValue','minAGC','minGiving','filterDateFrom','filterDateTo','minDaysSince','filterKidAgeMin','filterKidAgeMax','filterCity','filterGap','srch','headerSearch','ctSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['minValue','minAGC','minGiving','filterDateFrom','filterDateTo','minDaysSince','filterKidAgeMin','filterKidAgeMax','filterCity','srch','headerSearch','ctSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   _hideSearchPopout();
   applyFilter();
 }
@@ -6013,7 +6005,7 @@ function openLogInteraction(idx){
   const members=h.members||[];
   document.getElementById('li_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
-      <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
+      <input type="checkbox" value="${m.id}" checked>
       ${_escHtml(_daasDisplayName(m))}
     </label>`
   ).join('');
@@ -6153,7 +6145,7 @@ function openAddNote(idx){
   const members=h.members||[];
   document.getElementById('note_contacts').innerHTML=members.map(m=>
     `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
-      <input type="checkbox" value="${m.id}" checked style="accent-color:var(--accent)">
+      <input type="checkbox" value="${m.id}" checked>
       ${_escHtml(_daasDisplayName(m))}
     </label>`
   ).join('');
@@ -6880,7 +6872,7 @@ async function editTimelineItem(id, type, textOrEvent, currentDate, idx){
       const members=h.members||[];
       document.getElementById('li_contacts').innerHTML=members.map(m=>
         `<label style="display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer">
-          <input type="checkbox" value="${m.id}"${m.id===r.contact_id?' checked':''} style="accent-color:var(--accent)">
+          <input type="checkbox" value="${m.id}"${m.id===r.contact_id?' checked':''}>
           ${_escHtml(_daasDisplayName(m))}
         </label>`
       ).join('');
@@ -10229,7 +10221,19 @@ const ENGINE_DEFAULTS={
   trackCadence:[3,5,7],    // Tracks: business days between attempts (step 1, 2, 3+)
   emailEngOpens:3,         // Email Engagement panel: opens threshold to surface a contact
   emailEngClicks:3,        // Email Engagement panel: clicks threshold to surface a contact
-  emailEngWindow:5         // Email Engagement panel: how many most-recent mailings to scan
+  emailEngWindow:5,        // Email Engagement panel: how many most-recent mailings to scan
+  // ── PROSPECT FINDER (The Prospect Finder.docx §4–5, §9) ──
+  // GATE-AND-SORT, not pillar subtraction. Each ceiling is a FRACTION of that pillar's
+  // max (Affinity/40, Generosity/30) so it survives any future re-weighting of the score.
+  // Start LOOSE: someone at a third of Affinity with near-full Capacity is still worth
+  // developing, so the ceiling sits high and is pulled in only if real use runs too broad.
+  pfGetToKnowAffinityCeiling:0.65, // Tab 1: gate to households whose Affinity is BELOW this share of its max, then sort by Capacity desc
+  pfInviteGenerosityCeiling:0.5,   // Tab 2: gate to households whose Generosity is BELOW this share of its max, then sort by Affinity desc
+  // Tab 3 Stewardship weights (directionally right, coarse until tuned on real data):
+  // stewardScore = G*(1 + overshoot/divisor) + noSig*noSigWeight
+  pfStewardOvershootDivisor:30,    // how fast being past the check-in leash pulls a supporter up the list
+  pfStewardNoSigWeight:0.15,       // bump for a supporter with no "this mattered" moment on file
+  pfResultCount:25                 // rows per tab before "show more" (extends to 50)
 };
 let ENGINE={...ENGINE_DEFAULTS};
 
@@ -10341,6 +10345,13 @@ function openEngineSettings(){
     ${numRow('Number of opens that count as interested','emailEngOpens',1,'[Of a single mailing]')}
     ${numRow('Number of clicks that count as interested','emailEngClicks',1,'[Clicks are an honest signal. Set lower than opens.]')}
     ${numRow('How many mailings back to look','emailEngWindow',1,'')}
+    <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path><circle cx="12" cy="12" r="3"></circle></svg> Prospect Finder<span onclick="showPanelHelp('pf-getToKnow')" title="What does this do?" style="margin-left:6px;width:14px;height:14px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.55rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:0.05em">?</span></div>
+    <div style="font-size:.58rem;color:var(--txt3);margin:-2px 0 9px;line-height:1.5">The first two tabs keep only people under a ceiling, then rank what's left. A ceiling is a share of that pillar's range, 0 to 1 — higher is looser (more people show). Start loose.</div>
+    ${numRow('Get to Know — Affinity ceiling','pfGetToKnowAffinityCeiling',0.05,'[Keep people you know THIS well or less, then rank by capacity. 0.65 = up to two-thirds known.]')}
+    ${numRow('Invite to Give — Generosity ceiling','pfInviteGenerosityCeiling',0.05,'[Keep people who’ve given THIS much or less, then rank by how much they value you.]')}
+    ${numRow('Stay Connected — overdue sensitivity','pfStewardOvershootDivisor',5,'[Smaller = being past someone’s normal rhythm pushes them up harder. Days.]')}
+    ${numRow('Stay Connected — no-real-moment bump','pfStewardNoSigWeight',0.05,'[Extra weight for a supporter you’ve never had a moment that mattered with.]')}
+    ${numRow('How many to show per tab','pfResultCount',5,'[Before “show more”, which extends to fifty. A short list is worked; a long one is avoided.]')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg> App settings</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <div style="flex:1">
@@ -10363,7 +10374,13 @@ function openEngineSettings(){
 
 async function applyEngineSettings(){
   const num=k=>{const v=parseFloat(document.getElementById('eng_'+k)?.value);return isNaN(v)?ENGINE_DEFAULTS[k]:v;};
-  ['heatWeekdayFull','heatSundayFull','cadenceFloorDays','cadenceCeilingDays','cadenceLearnWindowDays','newContactWindowDays','growthCardsPerDay','prospectHomeValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow'].forEach(k=>{ENGINE[k]=num(k);});
+  ['heatWeekdayFull','heatSundayFull','cadenceFloorDays','cadenceCeilingDays','cadenceLearnWindowDays','newContactWindowDays','growthCardsPerDay','prospectHomeValue','sriEngagementDays','sriEngagementCount','sriGapMinMonths','sriGapMaxMonths','trackMaxAttempts','trackSnoozeDays','emailEngOpens','emailEngClicks','emailEngWindow','pfGetToKnowAffinityCeiling','pfInviteGenerosityCeiling','pfStewardOvershootDivisor','pfStewardNoSigWeight','pfResultCount'].forEach(k=>{ENGINE[k]=num(k);});
+  // Prospect Finder ceilings are fractions of a pillar's max — clamp to a sane 0.05–1 band
+  // so a stray entry can't empty a tab (0) or make the gate meaningless (>1).
+  ENGINE.pfGetToKnowAffinityCeiling=Math.min(1,Math.max(0.05,ENGINE.pfGetToKnowAffinityCeiling));
+  ENGINE.pfInviteGenerosityCeiling=Math.min(1,Math.max(0.05,ENGINE.pfInviteGenerosityCeiling));
+  if(!(ENGINE.pfStewardOvershootDivisor>0))ENGINE.pfStewardOvershootDivisor=ENGINE_DEFAULTS.pfStewardOvershootDivisor;
+  if(!(ENGINE.pfResultCount>=1))ENGINE.pfResultCount=ENGINE_DEFAULTS.pfResultCount;
   // The four §2 fallback windows live in a nested object.
   const fb={...ENGINE_DEFAULTS.fallbackWindows,...(ENGINE.fallbackWindows||{})};
   ['radar','personalOnly','attendSome','attendMany'].forEach(n=>{
@@ -11581,7 +11598,7 @@ function _ecFieldRowHtml(fld,i){
     +'<div style="display:flex;gap:6px;flex:1;min-width:0">'
     +'<input id="ec_fld_lbl_'+i+'" class="fb-in" type="text" value="'+_escAttr(fld.label||'')+'" placeholder="Field label" style="flex:1;margin-bottom:0">'
     +'<select id="ec_fld_type_'+i+'" class="fb-in" style="max-width:110px;margin-bottom:0"'+(std?' disabled':'')+' onchange="_ecFieldTypeChanged('+i+')">'+FB_FIELD_TYPES.map(t=>'<option value="'+t+'"'+(fld.type===t?' selected':'')+'>'+t+'</option>').join('')+'</select>'
-    +'<label class="fb-check" style="margin:0;white-space:nowrap"><input type="checkbox" id="ec_fld_req_'+i+'"'+(fld.required?' checked':'')+'> req</label>'
+    +'<label class="fb-check" style="margin:0;white-space:nowrap"><input type="checkbox" id="ec_fld_req_'+i+'"'+(fld.required?' checked':'')+'> Required</label>'
     +'</div>'
     +'<div style="display:flex;gap:4px;align-items:center">'
     +'<span style="font-family:var(--font-ui);font-size:.58rem;color:var(--txt3)">'+(std?fld.key:'custom')+'</span>'
@@ -11769,14 +11786,14 @@ function _ecStep1Html(){
   }
   h+='<label class="fb-lbl">Campaign tag</label>'
     +'<input id="ec_campaign" class="fb-in" type="text" value="'+_escAttr(d.campaign_tag||'')+'" placeholder="'+(isDon?'optional \u2014 for reporting':'chanukah-2026')+'">'
-    +'<label class="fb-check"><input type="checkbox" id="ec_active"'+(d.active?' checked':'')+'> Active'+(isDon?' (live and publicly readable)':'')+'</label>'
+    +'<label class="fb-check"><input type="checkbox" id="ec_active"'+(d.active?' checked':'')+'> Published'+(isDon?' <span class="chk-note">Anyone with the link can see it.</span>':'')+'</label>'
     +'</div>';
   if(!isDon){
     h+='<div class="fb-section"><h3>Online registration</h3>'
       +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
-      +'<input type="checkbox" id="ec_allow_online"'+(d.allow_online?' checked':'')+' onchange="_ecDraft.allow_online=this.checked" style="width:auto;accent-color:var(--accent)"> Allow online registration'
+      +'<input type="checkbox" id="ec_allow_online"'+(d.allow_online?' checked':'')+' onchange="_ecDraft.allow_online=this.checked"> Allow online registration'
       +'</label>'
-      +'<div class="fb-hint" style="margin-bottom:0">Off = internal-only event (Save &amp; close). On = build a public form (Save &amp; next).</div>'
+      +'<div class="fb-hint" style="margin-bottom:0">Off keeps the event internal.</div>'
       +'</div>';
   }
   return h;
@@ -11831,9 +11848,9 @@ function _ecStep3Html(){
   } else {
     h+='<div class="fb-section"><h3>Pricing</h3>'
       +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
-      +'<input type="checkbox" id="ec_paid"'+(d.paid?' checked':'')+' onchange="_ecTogglePaid(this)" style="width:auto;accent-color:var(--accent)"> Paid event'
+      +'<input type="checkbox" id="ec_paid"'+(d.paid?' checked':'')+' onchange="_ecTogglePaid(this)"> Paid event'
       +'</label>'
-      +'<div class="fb-hint" style="margin-bottom:12px">Off = free RSVP. On = ticket tiers with Stripe payment.</div>'
+      +'<div class="fb-hint" style="margin-bottom:12px">Off for free RSVP.</div>'
       +'<div id="ec_sec_tiers" style="display:'+(d.paid?'':'none')+'">'
         +'<div class="fb-seg">'
         +'<button class="ec-mode-btn '+(d.stripe_mode!=='tiered_addon'?'active':'')+'" data-mode="tiered" onclick="_ecSetMode(\'tiered\')">Tiered only</button>'
@@ -11846,19 +11863,18 @@ function _ecStep3Html(){
           +'<div class="fb-lbl" style="margin-bottom:6px">Optional donation amounts <span style="font-weight:400;color:var(--txt3)">(shown after tier selection)</span></div>'
           +'<div id="ec_don_rows_addon">'+donRowsAddon+'</div>'
           +addPresetBtn
-          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom"'+(d.donation_allow_custom?' checked':'')+'> Allow custom "other amount"</label>'
+          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom"'+(d.donation_allow_custom?' checked':'')+'> Allow a custom "other amount"</label>'
         +'</div>'
       +'</div>'
       +'<div id="ec_sec_freedon" style="display:'+(d.paid?'none':'')+'">'
         +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--font-ui);font-size:.78rem;color:var(--txt);font-weight:500;margin-bottom:6px">'
-        +'<input type="checkbox" id="ec_allow_donation"'+(d.allow_donation?' checked':'')+' onchange="_ecToggleDonation(this)" style="width:auto;accent-color:var(--accent)"> Allow optional donation'
+        +'<input type="checkbox" id="ec_allow_donation"'+(d.allow_donation?' checked':'')+' onchange="_ecToggleDonation(this)"> Let people add a donation'
         +'</label>'
-        +'<div class="fb-hint" style="margin-bottom:8px">Registrants can leave a gift after RSVPing \u2014 counts as real giving.</div>'
-        +'<div id="ec_sec_donpresets" style="display:'+(d.allow_donation?'':'none')+'">'
+            +'<div id="ec_sec_donpresets" style="display:'+(d.allow_donation?'':'none')+'">'
           +'<div class="fb-hint">Donation amount buttons (leave empty for open-amount only).</div>'
           +'<div id="ec_don_rows">'+donRowsFree+'</div>'
           +addPresetBtn
-          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+'> Allow custom "other amount"</label>'
+          +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="ec_don_allow_custom_free"'+(d.donation_allow_custom?' checked':'')+'> Allow a custom "other amount"</label>'
         +'</div>'
       +'</div>'
       +'</div>';
@@ -12836,7 +12852,7 @@ function _fbRenderEditor(){
       <label class="fb-check"><input type="checkbox" id="fb_show_desc" ${d.show_description?'checked':''}> Show description on the public form</label>
       <label class="fb-lbl" style="margin-top:6px">Campaign tag</label>
       <input id="fb_campaign" class="fb-in" type="text" value="${_escAttr(d.campaign_tag||'')}" placeholder="optional — for reporting">
-      <label class="fb-check" style="margin-top:2px"><input type="checkbox" id="fb_active" ${d.active?'checked':''}> Active (live and publicly readable)</label>
+      <label class="fb-check" style="margin-top:2px"><input type="checkbox" id="fb_active" ${d.active?'checked':''}> Published <span class="chk-note">Anyone with the link can see it.</span></label>
     </div>
 
     ${pricingHtml}
@@ -12854,7 +12870,7 @@ function _fbRenderEditor(){
             <select id="fb_fld_type_${i}" class="fb-in" style="max-width:130px" ${std?'disabled style="max-width:130px;opacity:.6"':''}>
               ${FB_FIELD_TYPES.map(t=>`<option value="${t}" ${fld.type===t?'selected':''}>${t}</option>`).join('')}
             </select>
-            <label class="fb-check" style="margin:0"><input type="checkbox" id="fb_fld_req_${i}" ${fld.required?'checked':''}> required</label>
+            <label class="fb-check" style="margin:0"><input type="checkbox" id="fb_fld_req_${i}" ${fld.required?'checked':''}> Required</label>
             <span style="font-family:var(--font-ui);font-size:.6rem;color:var(--txt3)">${std?'standard ('+fld.key+')':'custom → '+_escHtml(_fbSlugKey(fld.label||'')||'field')}</span>
           </div>
           ${fld.type==='select'?`<input id="fb_fld_opts_${i}" class="fb-in" type="text" value="${_escAttr((fld.options||[]).join(', '))}" placeholder="Option A, Option B, Option C" style="margin-top:6px;margin-bottom:0">`:''}
@@ -15139,11 +15155,11 @@ async function _ecRenderSetup(){
           <span style="display:flex;gap:22px;align-items:center;padding:5px 2px;flex-wrap:wrap">
             <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
               <input type="checkbox" id="ecsTrackOpens" ${_ecCur.track_opens?'checked':''} onchange="_ecCur.track_opens=this.checked;_ecMark()">
-              Track opens <span style="color:var(--txt3)">(who opened)</span>
+              Track opens
             </label>
             <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
               <input type="checkbox" id="ecsTrackClicks" ${_ecCur.track_clicks?'checked':''} onchange="_ecCur.track_clicks=this.checked;_ecMark()">
-              Track clicks <span style="color:var(--txt3)">(who clicked links \u2014 off = best inbox delivery)</span>
+              Track clicks <span class="chk-note">Off gives better inbox delivery.</span>
             </label>
           </span>
         </label>
@@ -15155,7 +15171,7 @@ async function _ecRenderSetup(){
           <span style="display:flex;flex-direction:column;gap:4px;padding:5px 2px">
             <label style="display:flex;gap:7px;align-items:center;font-weight:400;cursor:pointer;font-size:.8rem">
               <input type="checkbox" id="ecsSkipDis" ${sdOn?'checked':''} onchange="_ecSetupToggleSkip(this.checked)">
-              Skip disengaged contacts <span style="color:var(--txt3)">(ignored the last ${_EC_SKIP.LOOKBACK} emails \u2014 this send only, nobody is removed)</span>
+              Skip disengaged contacts <span class="chk-note">Ignored your last ${_EC_SKIP.LOOKBACK} mailings. This send only \u2014 nobody is removed.</span>
             </label>
             <span id="ecsSkipInfo" style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt3);padding-left:23px">${sdOn?'Counting\u2026':'ON for routine sends protects your sender reputation. Turn OFF for big moments (holidays, major events) to reach everyone.'}</span>
           </span>
@@ -16193,7 +16209,7 @@ function switchView(view){
   }catch(e){}
   document.getElementById('appLoading')?.remove();
   const _vt=document.getElementById('viewTitle');
-  if(_vt)_vt.textContent=({dash:'Dashboard',contacts:'Contacts',crm:'Map',events:'Events',forms:'Forms',email:'Email',reports:'Reports'})[view]||'Map';
+  if(_vt)_vt.textContent=({dash:'Dashboard',contacts:'Contacts',crm:'Map',events:'Events',forms:'Forms',email:'Email',reports:'Reports',prospects:'Prospect Finder'})[view]||'Map';
   const crm=document.getElementById('crmView');
   const dash=document.getElementById('dashView');
   const contacts=document.getElementById('contactsView');
@@ -16201,6 +16217,7 @@ function switchView(view){
   const forms=document.getElementById('formsView');
   const email=document.getElementById('emailView');
   const reports=document.getElementById('reportsView');
+  const prospects=document.getElementById('prospectsView');
   const strip=document.getElementById('filterStrip');
   const mapCtrl=document.getElementById('mapControls');
   // Reset all
@@ -16211,8 +16228,9 @@ function switchView(view){
   if(forms)forms.classList.remove('active');
   if(email)email.classList.remove('active');
   if(reports)reports.classList.remove('active');
+  if(prospects)prospects.classList.remove('active');
   const _hv=document.getElementById('hiddenView');if(_hv)_hv.style.display='none';
-  ['navCRM','navContacts','navDash','navEvents','navForms','navEmail','navReports'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  ['navCRM','navContacts','navDash','navEvents','navForms','navEmail','navReports','navProspects'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
   if(view==='dash'){
     dash.classList.add('active');
     document.getElementById('navDash').classList.add('active');
@@ -16254,6 +16272,12 @@ function switchView(view){
     if(strip)strip.style.display='none';
     if(mapCtrl)mapCtrl.style.display='none';
     renderReports();
+  } else if(view==='prospects'){
+    if(prospects)prospects.classList.add('active');
+    document.getElementById('navProspects')?.classList.add('active');
+    if(strip)strip.style.display='none';
+    if(mapCtrl)mapCtrl.style.display='none';
+    renderProspectFinder();
   } else {
     crm.classList.remove('hidden');
     document.getElementById('navCRM').classList.add('active');
@@ -16571,7 +16595,10 @@ const PANEL_HELP={
   'panel-sri':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Ready to Ask',d:()=>`<b>Who you could ask for a gift right now, and why.</b><br><br>DAAS adds up three things:<br><br><b>They could give</b> &mdash; a home worth $${Math.round(ENGINE.prospectHomeValue/1000)}k+, or that figure in their capacity notes. (Real figure only; &ldquo;needs research&rdquo; counts for nothing.)<br><b>They&rsquo;re warm</b> &mdash; ${ENGINE.sriEngagementCount} or more real conversations in the last ${Math.round(ENGINE.sriEngagementDays/30)} months.<br><b>They&rsquo;re due</b> &mdash; they&rsquo;ve given before, but nothing in ${ENGINE.sriGapMinMonths} to ${ENGINE.sriGapMaxMonths} months.<br><br><b>The one that surprises people: money alone is never enough.</b> A wealthy stranger is a cold call, not an ask, so someone has to be warm or due as well.<br><br>Anyone who gave in the last ${ENGINE.sriGapMinMonths} months is held back automatically. <b>Not yet</b> hides them from this list only &mdash; they stay in the daily list queue.<br><br><i>Change any of these rules under Engine Settings at the top of the dashboard.</i>`},
   'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> People You&rsquo;re Chasing',d:()=>`<b>People you&rsquo;re actively trying to reach.</b><br><br>Miss someone and DAAS schedules the next try for you &mdash; ${ENGINE.trackCadence.join(', ')} working days later. It skips Shabbos, Sundays and Yom Tov.<br><br>After ${ENGINE.trackMaxAttempts} misses DAAS stops asking and leaves them alone for ${Math.round(ENGINE.trackSnoozeDays/30)} months, so nobody gets pestered. Reach them at any point and it stops straight away.`},
   'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Who&rsquo;s Reading Your Emails',d:()=>`<b>Who&rsquo;s actually opening your mailings.</b><br><br>Anyone with ${ENGINE.emailEngOpens}+ opens or ${ENGINE.emailEngClicks}+ clicks across your last ${ENGINE.emailEngWindow} mailings shows up here. Click a name to open the contact and follow up personally.<br><br>Opens are not as accurate a signal as clicks.<br><br>This panel only reads email data, as a signal for you to see engagement. It does not change anything or add people to your call list.<br><br><i>Change the thresholds under Engine Settings at the top of the dashboard.</i>`},
-  'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`<b>Your to-do list.</b><br><br>Type anything into the + box. A plain reminder works, and so does a normal sentence like &ldquo;coffee with the Golds next week&rdquo; &mdash; DAAS will link the Golds and set the date for you.<br><br><b>Check off a task linked to somebody and DAAS logs it as a conversation with them.</b>`}
+  'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`<b>Your to-do list.</b><br><br>Type anything into the + box. A plain reminder works, and so does a normal sentence like &ldquo;coffee with the Golds next week&rdquo; &mdash; DAAS will link the Golds and set the date for you.<br><br><b>Check off a task linked to somebody and DAAS logs it as a conversation with them.</b>`},
+  'pf-getToKnow':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 5"/></svg> Get to Know',d:()=>`<b>The people with the most means whom you barely know.</b><br><br>DAAS keeps only households you haven&rsquo;t built much of a relationship with yet &mdash; Affinity under ${Math.round((ENGINE.pfGetToKnowAffinityCeiling||0.65)*100)}% &mdash; and then ranks what&rsquo;s left by Capacity, highest first.<br><br>It is <b>not</b> a &ldquo;biggest gap&rdquo; list. Someone you already know a little still qualifies, as long as they&rsquo;re under the line &mdash; you&rsquo;re not punished for being slightly familiar. The bar is their Capacity.<br><br><i>Move the ceiling under Engine Settings if the list runs too broad.</i>`},
+  'pf-inviteToGive':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Invite to Give',d:()=>`<b>The people who most clearly value you but haven&rsquo;t really given.</b><br><br>DAAS keeps only households whose Generosity is under ${Math.round((ENGINE.pfInviteGenerosityCeiling||0.5)*100)}% &mdash; they haven&rsquo;t become supporters &mdash; and then ranks what&rsquo;s left by Affinity, highest first. The one at the top plainly loves the community and hasn&rsquo;t yet been asked properly.<br><br>The page names the opportunity; it doesn&rsquo;t guess why they haven&rsquo;t given. The bar is their Affinity.<br><br><i>Move the ceiling under Engine Settings.</i>`},
+  'pf-stayConnected':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg> Stay Connected',d:()=>`<b>Supporters you&rsquo;re overdue to give personal attention.</b><br><br>Unlike the first two tabs, this isn&rsquo;t a gate &mdash; drift is continuous, so it&rsquo;s a single ranking that blends how much someone gives, how long since a real conversation, how far past their own normal rhythm that is, and whether you&rsquo;ve ever had a moment that mattered with them.<br><br>It replaces the old yes/no test (&ldquo;a supporter with no logged conversations&rdquo;), which let someone spoken to once, long ago, quietly drop off. A ranking turns that cliff into a slope; the old test&rsquo;s target is simply the top of this list.<br><br><i>The weights are close but coarse &mdash; read the exact order as approximate until they&rsquo;re tuned on real households.</i>`}
 };
 
 function showPanelHelp(panelId){
@@ -17092,6 +17119,12 @@ let _tierSnaps={};
 // track — a snoozed track would also drop the household out of the Daily Five
 // reconnect queue. This store hides them from SRI only; reconnect is untouched.
 let _sriSnoozes={};
+// ── PROSPECT FINDER state ── (see renderProspectFinder). pf_snoozes/pf_reviewed are
+// PF-only stores, never reused from SRI. _pfTab/_pfShowAll are view state (not persisted).
+let _pfSnoozes={};   // hhId -> 'YYYY-MM-DD' snooze-until (hidden from PF while in the future)
+let _pfReviewed={};  // hhId -> true (persisted; cleared from view once reviewed)
+let _pfTab='getToKnow';
+let _pfShowAll={getToKnow:false,inviteToGive:false,stayConnected:false};
 
 async function _saveDailySet(){
   try{
@@ -17121,6 +17154,18 @@ async function _loadDailyState(){
     const sriRows=await sb('app_settings?key=eq.sri_snoozes&limit=1');
     if(sriRows&&sriRows.length&&sriRows[0].value)_sriSnoozes=JSON.parse(sriRows[0].value)||{};
   }catch(e){console.warn('[DAAS] sri_snoozes load failed',e);}
+  // Prospect Finder's own stores. DELIBERATELY SEPARATE from _sriSnoozes: a snooze here
+  // hides someone from the discovery page only and never touches the ask suggestion,
+  // tracks, or the reconnect queue. pf_reviewed is persisted so a page you revisit
+  // remembers what you've already looked at (a discovery page that forgets is useless).
+  try{
+    const pfsRows=await sb('app_settings?key=eq.pf_snoozes&limit=1');
+    if(pfsRows&&pfsRows.length&&pfsRows[0].value)_pfSnoozes=JSON.parse(pfsRows[0].value)||{};
+  }catch(e){console.warn('[DAAS] pf_snoozes load failed',e);}
+  try{
+    const pfrRows=await sb('app_settings?key=eq.pf_reviewed&limit=1');
+    if(pfrRows&&pfrRows.length&&pfrRows[0].value)_pfReviewed=JSON.parse(pfrRows[0].value)||{};
+  }catch(e){console.warn('[DAAS] pf_reviewed load failed',e);}
 }
 // Persist "Snooze Ask" store. Fire-and-forget, like the tier snapshots.
 async function _saveSriSnoozes(){
@@ -18125,7 +18170,7 @@ async function _buildDailyFive(el){
         <div style="font-size:.65rem;color:var(--txt2);margin-bottom:5px">Add a note (optional) — <span id="outcome-label-${idx}" style="font-weight:600;color:var(--accent)"></span></div>
         <textarea id="outcome-note-${idx}" placeholder="What did you talk about?" style="width:100%;min-height:52px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:6px;font-family:var(--font-ui);font-size:.72rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:6px"></textarea>
         <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.62rem;color:var(--txt2);margin-bottom:6px" title="A real moment in the relationship, not a routine touch. Adds to Affinity.">
-          <input type="checkbox" id="outcome-sig-${idx}" style="accent-color:var(--accent)"> This one mattered
+          <input type="checkbox" id="outcome-sig-${idx}"> This one mattered
         </label>
         <div style="display:flex;gap:6px">
           <button onclick="byId('saveOutcome','${households[idx].id}',${idx})" class="btn btn-pri" style="font-size:.62rem;padding:3px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Save</button>
@@ -19195,6 +19240,197 @@ async function deleteTrack(trackId){
     await renderActiveTracks();
     renderDailyFive();
   }catch(e){_ebToastMsg('That didn\u2019t delete. Try again.\n\n'+e.message);}
+}
+
+
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// PROSPECT FINDER \u2014 "who to intentionally invest in" discovery page.
+// Modeled on renderSRI(): scored rows, a 0\u2013100 bar, a plain-English reason, a
+// "Why?" toggle with the raw numbers, and per-row actions. NO NEW SCORING MATH \u2014
+// it reuses getAGCScore / _agcInterAgg / getGivingStats / _checkInWindow.
+//   Tabs 1\u20132 are GATE-AND-SORT (The Prospect Finder.docx \u00a74): gate on one pillar's
+//   ceiling, then sort by another pillar \u2014 deliberately NOT a pillar subtraction.
+//   Tab 3 (\u00a75) is a continuous weighted stewardship ranking of supporters.
+// Ready to Ask (renderSRI) on the dashboard is a different tool and is untouched.
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+const PF_SNOOZE_DAYS=60; // how long a PF snooze hides someone from THIS page only
+const PF_THIN_SIGNAL_MIN=2; // \u00a77: fewer than this many of 9 signals on file \u21d2 "thin data" flag
+
+async function _savePfSnoozes(){try{await sbSetSetting('pf_snoozes',JSON.stringify(_pfSnoozes));}catch(e){console.warn('[DAAS] pf_snoozes save failed',e);}}
+async function _savePfReviewed(){try{await sbSetSetting('pf_reviewed',JSON.stringify(_pfReviewed));}catch(e){console.warn('[DAAS] pf_reviewed save failed',e);}}
+
+// Households currently out of view: snoozed into the future, or marked reviewed.
+function _pfHiddenSet(){
+  const todayStr=localToday();
+  const hidden=new Set();
+  Object.keys(_pfSnoozes||{}).forEach(id=>{if(_pfSnoozes[id]&&_pfSnoozes[id]>todayStr)hidden.add(id);});
+  Object.keys(_pfReviewed||{}).forEach(id=>{if(_pfReviewed[id])hidden.add(id);});
+  return hidden;
+}
+
+function pfSwitchTab(tab){_pfTab=tab;renderProspectFinder();}
+function pfShowMore(tab){_pfShowAll[tab]=true;renderProspectFinder();}
+
+// Snooze \u2014 hides from PF for a while, touches NOTHING else (not tracks, not SRI, not
+// the reconnect queue). Separate store from _sriSnoozes on purpose.
+async function pfSnooze(hhId){
+  const h=households.find(x=>x.id===hhId);
+  _pfSnoozes[hhId]=localToday(PF_SNOOZE_DAYS);
+  await _savePfSnoozes();
+  if(typeof _daasToast==='function')_daasToast('Hidden from Prospect Finder for '+PF_SNOOZE_DAYS+' days'+(h?' \u2014 '+(h.displayName||''):''));
+  renderProspectFinder();
+}
+// Mark reviewed \u2014 clears from view and is REMEMBERED between visits (persisted).
+async function pfReview(hhId){
+  const h=households.find(x=>x.id===hhId);
+  _pfReviewed[hhId]=true;
+  await _savePfReviewed();
+  if(typeof _daasToast==='function')_daasToast('Marked reviewed'+(h?' \u2014 '+(h.displayName||''):'')+' \u00b7 remembered between visits');
+  renderProspectFinder();
+}
+// Pin to Daily Five \u2014 reuses the real pin path (pinHousehold), which is the mechanism
+// by which this page feeds the daily rhythm. Do not invent a parallel one.
+async function pfPin(hhId){
+  const h=households.find(x=>x.id===hhId);
+  try{await pinHousehold(hhId);}catch(e){}
+  if(typeof _daasToast==='function')_daasToast('Pinned to Daily Five'+(h?' \u2014 '+(h.displayName||''):''));
+}
+
+// One row, cloned from the SRI row shape (name \u2192 open contact, bar, Why? toggle, actions).
+function _pfRowHtml(c,tab){
+  const h=c.h, idx=c.idx, s=c.s, bar=c.barPct;
+  const whyId='pf-why-'+tab+'-'+idx;
+  const barColor=bar>=80?'var(--green)':bar>=50?'var(--amber)':'var(--accent)';
+  const thinChip=c.thin?`<span title="Only ${s.signals.found} of ${s.signals.of} score signals are on file \u2014 this score is still a guess." style="font-family:var(--font-ui);font-size:.54rem;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;white-space:nowrap">thin data \u00b7 ${s.signals.found}/${s.signals.of}</span>`:'';
+  return `
+  <div style="padding:13px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:.92rem;font-weight:600;color:var(--txt);cursor:pointer" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${h.id}',${idx}),150)">${_escHtml(h.displayName||'')}</span>
+          ${thinChip}
+        </div>
+        <div style="font-size:.76rem;color:var(--txt2);margin-top:3px;line-height:1.5">${c.reason}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--font-ui);font-size:1.05rem;font-weight:700;color:var(--accent);line-height:1.1">${bar}</div>
+        <div style="font-family:var(--font-ui);font-size:.5rem;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3)">${c.metricLabel}</div>
+      </div>
+    </div>
+    <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px">
+      <div style="height:100%;width:${bar}%;background:${barColor};border-radius:3px;transition:width .4s"></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="pf-abtn" onclick="const w=document.getElementById('${whyId}');w.style.display=w.style.display==='none'?'block':'none'">\u2139 Why?</button>
+      <button class="pf-abtn" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${h.id}',${idx}),150)">Open contact</button>
+      <button class="pf-abtn" onclick="pfPin('${h.id}')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg> Pin to Daily Five</button>
+      <button class="pf-abtn" onclick="pfSnooze('${h.id}')">Snooze</button>
+      <button class="pf-abtn" onclick="pfReview('${h.id}')">Mark reviewed</button>
+    </div>
+    <div id="${whyId}" style="display:none;margin-top:9px;padding:10px 12px;background:var(--surf2);border:1px solid var(--border);border-radius:7px;font-size:.68rem;font-family:var(--font-ui);color:var(--txt2);line-height:1.75">${c.why}</div>
+  </div>`;
+}
+
+const _PF_EMPTY_SVG='<div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg></div>';
+
+// Build one tab's inner HTML (banner + ranked rows + count/show-more).
+function _pfBuildTab(tab){
+  const hidden=_pfHiddenSet();
+  const cand=[];
+  households.forEach(h=>{
+    if(hidden.has(h.id))return;
+    const s=getAGCScore(h);
+    const A=s.affinity/40, G=s.generosity/30, C=s.capacity/30;   // share of each pillar's max
+    const idx=hIdx(h.id);
+    const thin=!!(s.signals&&s.signals.found<PF_THIN_SIGNAL_MIN);
+    if(tab==='getToKnow'){
+      // Gate: Affinity BELOW the ceiling (you don't know them well). Sort: Capacity desc.
+      if(A>=(ENGINE.pfGetToKnowAffinityCeiling||0.65))return;
+      cand.push({h,s,idx,thin,frac:C,kind:tab});
+    }else if(tab==='inviteToGive'){
+      // Gate: Generosity BELOW the ceiling (not yet a supporter). Sort: Affinity desc.
+      if(G>=(ENGINE.pfInviteGenerosityCeiling||0.5))return;
+      cand.push({h,s,idx,thin,frac:A,kind:tab});
+    }else{
+      // Stay Connected: supporters (has given), ranked by how overdue for attention.
+      const gs=getGivingStats(h);
+      if(!(gs&&gs.total>0))return;
+      const agg=_agcInterAgg[h.id]||{};
+      const daysSince=_daysSince(agg.lastContact);
+      const leash=(_checkInWindow(h)||{}).days||180;             // reuse the daily-list leash
+      const dsEff=(daysSince==null)?leash*4:daysSince;           // never spoken = most overdue
+      const overshoot=Math.max(0,dsEff-leash);
+      const noSig=agg.significant?0:1;
+      const steward=G*(1+overshoot/(ENGINE.pfStewardOvershootDivisor||30))+noSig*(ENGINE.pfStewardNoSigWeight||0.15);
+      cand.push({h,s,idx,thin,frac:steward,gs,daysSince,leash,kind:tab});
+    }
+  });
+  // Thin data is lightly demoted (\u00d70.85) but NEVER filtered (\u00a77) \u2014 a shaky score can't
+  // pose as a sure thing near the top, but a discovery page must not hide the unknown.
+  const eff=c=>c.frac*(c.thin?0.85:1);
+  cand.sort((a,b)=>eff(b)-eff(a));
+  // Bar: tabs 1\u20132 frac is already 0\u20131 (a pillar share); tab 3 steward is unbounded, so
+  // scale it to the top of the current list.
+  const maxFrac=cand.length?Math.max(...cand.map(c=>c.frac)):1;
+  cand.forEach(c=>{
+    const s=c.s, h=c.h, agg=_agcInterAgg[h.id]||{};
+    const conn=agg.connected12||0, lastC=agg.lastContact||null, gs=c.gs||getGivingStats(h);
+    if(c.kind==='stayConnected'){
+      c.barPct=maxFrac>0?Math.round(c.frac/maxFrac*100):0;
+      c.metricLabel='overdue';
+      const ago=(c.daysSince==null)?'you\u2019ve never logged a real conversation':'last spoke '+_agoWords(c.daysSince);
+      c.reason='Real supporter \u2014 '+ago+'.';
+    }else{
+      c.barPct=Math.round(c.frac*100);
+      c.metricLabel=(c.kind==='getToKnow')?'capacity':'affinity';
+      if(c.kind==='getToKnow'){
+        c.reason=(h.home_value?('High capacity ('+_fmtHomeVal(h.home_value)+' home)'):'High capacity')+' \u2014 and you\u2019ve barely built a relationship yet.';
+      }else{
+        c.reason='Clearly values you \u2014 but hasn\u2019t really become a supporter yet.';
+      }
+    }
+    let why=`Affinity <b>${s.affinity}</b>/40 &middot; Generosity <b>${s.generosity}</b>/30 &middot; Capacity <b>${s.capacity}</b>/30<br>Last contact: <b>${lastC||'never'}</b> &middot; Real conversations (12&nbsp;mo): <b>${conn}</b><br>Last gift: <b>${gs?gs.lastDate||'never':'never'}</b>${gs&&gs.total?(' &middot; Total <b>$'+gs.total.toLocaleString()+'</b>'):''}`;
+    if(c.thin)why+=`<br><span style="color:var(--amber)">Only ${s.signals.found} of ${s.signals.of} score signals are on file \u2014 treat this as a rough guess.</span>`;
+    c.why=why;
+  });
+  const total=cand.length;
+  const shown=_pfShowAll[tab]?Math.min(total,50):Math.min(total,(ENGINE.pfResultCount||25));
+  const rows=cand.slice(0,shown);
+  // Tab 1 leans on Capacity, which can't be sized without a home value \u2192 say so (\u00a77).
+  // Reuses _gapCaveat's count logic (kept from the retired Gap dropdown).
+  let banner='';
+  if(tab==='getToKnow'){
+    const cav=(typeof _gapCaveat==='function')?_gapCaveat('capNotAff'):'';
+    if(cav)banner=`<div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt2);line-height:1.55;background:var(--surf2);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:6px;padding:9px 12px;margin-bottom:16px">${cav}</div>`;
+  }
+  if(!total){
+    const msg={getToKnow:'Nobody sits under the Affinity ceiling right now \u2014 everyone here you already know reasonably well.',inviteToGive:'Nobody sits under the Generosity ceiling right now.',stayConnected:'No supporters are overdue for attention right now \u2014 nicely kept up.'}[tab];
+    return banner+'<div class="hint">'+_PF_EMPTY_SVG+'<p>'+msg+'</p></div>';
+  }
+  const foot=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <span style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">Showing ${rows.length} of ${total}</span>
+      ${(!_pfShowAll[tab]&&total>shown)?`<button class="btn btn-sec" onclick="pfShowMore('${tab}')" style="font-size:.65rem;padding:4px 12px">Show more \u2014 up to 50</button>`:''}
+    </div>`;
+  return banner+rows.map(c=>_pfRowHtml(c,tab)).join('')+foot;
+}
+
+function renderProspectFinder(){
+  const wrap=document.getElementById('prospectsViewInner');
+  if(!wrap)return;
+  if(!households.length){wrap.innerHTML='<div class="hint">'+_PF_EMPTY_SVG+'<p>Loading your contacts&hellip;</p></div>';return;}
+  const tabs=[
+    {id:'getToKnow',label:'Get to Know',help:'pf-getToKnow'},
+    {id:'inviteToGive',label:'Invite to Give',help:'pf-inviteToGive'},
+    {id:'stayConnected',label:'Stay Connected',help:'pf-stayConnected'}
+  ];
+  if(!tabs.some(t=>t.id===_pfTab))_pfTab='getToKnow';
+  const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px;flex-wrap:wrap">
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg> Prospect Finder</h2>
+      <button class="btn btn-sec" onclick="openEngineSettings()" style="font-size:.65rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg> Engine</button>
+    </div>
+    <div style="font-size:.74rem;color:var(--txt3);margin-bottom:16px;max-width:640px;line-height:1.55">An hour to grow a relationship &mdash; who to spend it on. Three short lists, worked top to bottom. This finds people to <i>invest</i> in; it doesn&rsquo;t replace the Daily Five or the dashboard&rsquo;s Ready to Ask.</div>`;
+  const tabBar='<div class="fp-tabs">'+tabs.map(t=>`<button class="fp-tab ${_pfTab===t.id?'on':''}" onclick="pfSwitchTab('${t.id}')">${t.label}<span onclick="event.stopPropagation();showPanelHelp('${t.help}')" title="What is this tab for?" style="margin-left:6px;width:15px;height:15px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.58rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:0.08em">?</span></button>`).join('')+'</div>';
+  wrap.innerHTML=header+tabBar+'<div class="fp-card">'+_pfBuildTab(_pfTab)+'</div>';
 }
 
 
@@ -20866,6 +21102,7 @@ function _asExecuteSearch(sentence){
   </div>
   <div class="m-menu-bd" id="mMenuBd" onclick="mMenuClose()"></div>
   <div class="m-menu" id="mMenu">
+    <button onclick="mMenuGo('prospects')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg><span class="m-menu-txt"><b>Prospect Finder</b><span>Who to intentionally invest in</span></span></button>
     <button onclick="mMenuGo('assistant')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg><span class="m-menu-txt"><b>DAAS Assistant</b><span>Say it — email, event, or list</span></span></button>
     <button onclick="mMenuGo('email')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg><span class="m-menu-txt"><b>Emails</b><span>Drafts, templates, build &amp; send</span></span></button>
     <button onclick="mMenuGo('contact')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 8v6M22 11h-6"></path></svg><span class="m-menu-txt"><b>New Contact</b><span>Add a person you just met</span></span></button>
@@ -21720,6 +21957,10 @@ function mMenuClose(){
 }
 function mMenuGo(what){
   mMenuClose();
+  if(what==='prospects'){ // Prospect Finder is a "sit down and think" desktop-layout page; open it in the wider desktop view like the menu's own "Desktop view" action.
+    try{ _applyViewMode(true); switchView('prospects'); }catch(e){ _ebToastMsg('Could not open Prospect Finder.'); }
+    return;
+  }
   if(what==='assistant'){ try{ openAssistant(); setTimeout(()=>{ const ta=document.getElementById('as-text'); if(ta)ta.placeholder='e.g. \u201cSend an email to the Hebrew school parents about the schedule change next week\u201d \u00b7 \u201cCreate a Purim dinner event on March 3, $36 adults $18 kids\u201d \u00b7 \u201cWho gave last year but not this year?\u201d'; const go=document.getElementById('as-go'); if(go)go.textContent='Make it \u2192'; },60); }catch(e){ _ebToastMsg('Could not open the Assistant.'); } }
   else if(what==='email'){ mEmailHome(); }
   else if(what==='contact'){ try{ showAddContact(); }catch(e){ _ebToastMsg('Could not open Add Contact.'); } }
