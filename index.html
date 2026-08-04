@@ -1831,7 +1831,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-02.1'; // PROSPECT FINDER — new sidebar page (three tabs: Get to Know, Invite to Give, Stay Connected) replacing the old Gap dropdown, per PROSPECT-FINDER-BUILD-PLAN.md + The Prospect Finder.docx. WHAT: a "who to intentionally invest in" discovery page, modeled on renderSRI() (scored rows, 0–100 bar, Why? toggle, snooze store, open-contact). Tabs 1–2 are GATE-AND-SORT, not pillar subtraction: Get to Know gates Affinity below a ceiling (people you don't know well) then sorts by Capacity desc; Invite to Give gates Generosity below a ceiling then sorts by Affinity desc. Ceilings are fractions of each pillar's max (survive re-weighting), tunable in Engine Settings (pfGetToKnowAffinityCeiling 0.65, pfInviteGenerosityCeiling 0.5), start loose. Tab 3 Stay Connected is a continuous weighted ranking of supporters (has given) by how overdue they are for personal attention: stewardScore = G*(1+overshoot/pfStewardOvershootDivisor) + noSig*pfStewardNoSigWeight, where overshoot = daysSince − _checkInWindow leash and noSig flags no "this mattered" moment — replaces the old binary "supporter with zero logged conversations" cliff with a slope. Thin data (signals.found<2) flags the row and lightly demotes ordering (×0.85) but NEVER filters. Tab 1 shows the partial-capacity banner (reuses _gapCaveat's count logic) since no-address households can't be sized. Each row: Open Contact, Pin to Daily Five (reuses pinHousehold), Snooze (new pf_snoozes store, 60d, PF-only — NOT _sriSnoozes), Mark reviewed (new persisted pf_reviewed store). 25/tab with show-more to 50 (pfResultCount). Per-tab ? help via showPanelHelp (PANEL_HELP pf-getToKnow/pf-inviteToGive/pf-stayConnected). Desktop nav button #navProspects + mobile hamburger entry near top; routed via switchView('prospects'). REMOVED: the <select id="filterGap"> Gap dropdown, _gapMatch() and its _filterBase() call, and applyFilter's gap-caveat DOM block + clearFilter's filterGap id; _gapCaveat() kept (reworded) as the PF partial-capacity banner. Ready to Ask (SRI) on the dashboard is untouched. VERIFIED: node --check clean, no dangling filterGap/_gapMatch references. // (prev .3: CHECKBOXES — a rendering bug plus the copy pass they missed. THE BUG: `.modal input{width:100%;background;border;padding:8px 10px;margin-bottom:12px}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to the full modal width with a box drawn round it — the tick and its label were unreadable. Three static-modal boxes (li_significant, don_thanked, edit_regeocode) plus every checkbox rendered into a modal. Someone had already hand-patched `width:auto` onto three event-builder checkboxes, which is the tell. FIX: one global `input[type=checkbox],input[type=radio]` reset (16px, no border/padding/margin, accent-color) placed after `.modal input` so it wins on source order; the three hand-patches and five now-redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px browser default AFTER the reset. New `label.chk` + `.chk-note` classes keep a box and its words on one line and stop `.modal label{display:block}` stacking the text under the box. COPY, confirmed line by line: 'This one mattered' 24 words -> 'A real moment, not a routine check-in. Adds to Affinity Score.'; 'Thanked' 22 words -> 'Bookkeeping only. Log the actual thank-you call separately.' (the nudge is load-bearing now a gift is not contact); Active (live and publicly readable) -> Published + note; Allow optional donation -> Let people add a donation; the Off=/On= parentheticals on online registration and paid event cut to a single clause; Track opens/clicks and Skip disengaged moved their parentheticals to sub-lines; req/required made consistent as Required. KEPT at the rabbi's instruction: 'Show title/description on the public form' and 'Allow a custom "other amount"' unchanged. VERIFIED: both blocks node --check clean, both sentinels present, 39 checkboxes audited — no leftover width:100%/padding inline styles, no parenthetical over ten words.
+const BUILD_STAMP='2026-08-04.1'; // BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2936,11 +2936,19 @@ function _bumpAGCAgg(contactId,type,date,notes,significant){
   // Future-dated (e.g. an RSVP logged against a future event date) doesn't count for
   // warmth/recency/depth until the day arrives — matches loadAGCInteractionAggregates.
   if((''+date).slice(0,10)>localToday())return;
-  const key=type+'|'+date+'|'+((notes||'').trim()||'');
+  // Dedupe key MUST match the two DB-read builders (loadAGCInteractionAggregates,
+  // _recalcAGCAggForHH) and the authoritative server calculate_agc, all of which key
+  // on the RAW, untrimmed notes (coalesce(notes,'')). Trimming here made the live bump
+  // dedupe differently than a full reload for any note with surrounding whitespace.
+  const key=type+'|'+date+'|'+(notes||'');
   const seen=_agcSeenKeys[h.id]||(_agcSeenKeys[h.id]=new Set());
+  const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]=_blankAGCAgg());
+  // The significant flag is read BEFORE the dedupe return — a couple logged together
+  // is one household touch, but if EITHER row is marked, the household has had a
+  // significant moment (matches loadAGCInteractionAggregates + server calculate_agc).
+  if(significant)a.significant=true;
   if(seen.has(key))return; // identical logical touch already counted
   seen.add(key);
-  const a=_agcInterAgg[h.id]||(_agcInterAgg[h.id]=_blankAGCAgg());
   if(typeof a.lifetime!=='number')a.lifetime=0;
   a.lifetime++;
   if(_isTouch(type)&&(!a.lastContact||date>a.lastContact))a.lastContact=date;
@@ -2952,7 +2960,6 @@ function _bumpAGCAgg(contactId,type,date,notes,significant){
   if(_isPersonalContact(type)&&date>=since)a.personal12++;
   if(_isPassiveAttendance(type)&&date>=since)a.attend12++;
   if(_isReach(type))_aggAddReachDate(a,date); // learned cadence + trajectory
-  if(significant)a.significant=true;
 }
 
 async function loadAGCInteractionAggregates(){
@@ -3408,7 +3415,7 @@ function _gapCaveat(preset){
   if(preset!=='capNotAff')return'';
   const n=households.filter(h=>getAGCScore(h).partial&&getAGCScore(h).partial.capacity).length;
   if(!n)return'';
-  return `Some people aren’t shown here. ${n} household${n!==1?'s have':' has'} no home value on file (usually no street address), so ${n!==1?'their':'its'} Capacity is scored on partial evidence and can’t be ranked fairly on a Capacity-led list. This is a subset, not the whole answer.`;
+  return `<b>${n} ${n!==1?'people aren'+'\u2019'+'t':'person isn'+'\u2019'+'t'} on this list.</b> ${n!==1?'They have':'They have'} no home value on file, so DAAS can${'\u2019'}t judge what they could give. Add a street address to include ${n!==1?'them':'them'}.`;
 }
 
 // Header search NEVER narrows the map / list / contacts — it only drives the
@@ -4493,9 +4500,11 @@ function calcAge(dob){
   const mo=parseInt(clean.substring(4,6))-1;
   const dy=parseInt(clean.substring(6,8));
   if(isNaN(yr)||isNaN(mo)||isNaN(dy))return null;
-  const today=new Date();
-  let age=today.getFullYear()-yr;
-  if(today.getMonth()<mo||(today.getMonth()===mo&&today.getDate()<dy))age--;
+  // Eastern "today" (not the device clock), so a birthday flips on the shul's day
+  // and the local peak-age fallback matches the server's age(v_today, dob).
+  const _t=localToday(); const ty=+_t.slice(0,4), tm=+_t.slice(5,7)-1, td=+_t.slice(8,10);
+  let age=ty-yr;
+  if(tm<mo||(tm===mo&&td<dy))age--;
   return age>0&&age<120?age:null;
 }
 
@@ -6336,7 +6345,7 @@ function openFullPanel(idx){
         <!-- §2/§9.4 — the window that schedules, shown next to the label that describes.
              Click to set a manual override; it takes precedence over both the learned
              average and the fallback table. -->
-        <div class="fp-stat"><span>Check in</span><b style="cursor:pointer" title="How often this household should hear from you. Click to set it by hand." onclick="byId('setCadenceOverride','${households[idx].id}',${idx})">${(()=>{const w=_checkInWindow(h);return `every ${w.days}d <span style="font-weight:400;color:var(--txt3);font-size:.86em">${w.basis==='override'?'· set by hand':w.basis==='learned'?'· their rhythm':'· default'}</span>`;})()}</b></div>
+        <div class="fp-stat"><span>Check in</span><b style="cursor:pointer" title="How often DAAS should flag them. Click to change it." onclick="byId('setCadenceOverride','${households[idx].id}',${idx})">${(()=>{const w=_checkInWindow(h);return `${_everyWords(w.days)} <span style="font-weight:400;color:var(--txt3);font-size:.86em">${w.basis==='override'?'· set by hand':w.basis==='learned'?'· their rhythm':'· default'}</span>`;})()}</b></div>
         ${h.home_value?`<div class="fp-stat"><span>Home value</span><b style="color:var(--green)">$${Math.round(h.home_value).toLocaleString()}</b></div>`:''}
       </div>
 
@@ -7123,7 +7132,7 @@ async function saveContactEdit(){
       }
     }
 
-    status.textContent='Saved!';
+    status.textContent='Saved';
     await loadAll();
     document.getElementById('editContactModal').style.display='none';
     // If the address changed and re-geocoding was requested, relocate the pin now
@@ -7693,8 +7702,10 @@ async function renderChatSidebar(){
     const pinned=rows.filter(r=>r.pinned);
     const rest=rows.filter(r=>!r.pinned);
     const today=[],earlier=[];
-    const t0=new Date();t0.setHours(0,0,0,0);
-    rest.forEach(r=>{(new Date(r.updated_at)>=t0?today:earlier).push(r);});
+    // "Today" by the EASTERN calendar day, not the device clock — a session's
+    // Eastern date equals today's Eastern date.
+    const _todayStr=localToday();
+    rest.forEach(r=>{(localDateStr(new Date(r.updated_at))===_todayStr?today:earlier).push(r);});
     let html='';
     const rowHtml=(s)=>{
       const act=s.id===currentSessionId?' active':'';
@@ -10005,22 +10016,26 @@ async function _enrichSaveAllChunks(idx){
         const tdue=(document.getElementById('dump-taskdate-'+i)||{}).value||null;
         await createTask({text:text.trim(),household_id:h.id,contact_id:tcid,due_date:tdue,source:'note'});
         try{renderTasksPanel();}catch(e){}
-      }else if(dateEl){
+      }else if(_ptype==='interaction'){
         // interaction — through the unified logTouch choke point (2026-07-24.1):
         // deduped AGC bump, embedding, daily-five bookkeeping (only when dated
         // today), reach-closes-track. journal:false — a batch of chunks would
-        // flood the 5-slot undo stack.
+        // flood the 5-slot undo stack. Route by chunk TYPE, not DOM presence:
+        // the person picker only renders on multi-member households, so a
+        // single-member note has no personEl and must still log to members[0].
         const cid=personEl?personEl.value:(members[0]||{}).id;
         const iType=(_enrichPendingChunks[i]&&_enrichPendingChunks[i].interaction_type)||'Note';
-        const iDate=dateEl.value||today;
+        const iDate=(dateEl&&dateEl.value)||today;
         await logTouch({contactIds:[cid],householdId:h.id,type:iType,date:iDate,notes:text.trim(),source:'enrich',trackMode:'close-only',markDaily:(iDate===today),silent:true,journal:false});
-      }else if(personEl){
-        // note (person-specific, no date picker) — logTouch skips daily/track
-        // state for Notes but keeps the deduped lifetime bump + embedding.
-        const cid=personEl.value||(members[0]||{}).id;
+      }else if(_ptype==='note'){
+        // person-specific Note — logTouch skips daily/track state for Notes but
+        // keeps the deduped lifetime bump + embedding. Falls back to members[0]
+        // when there's no person picker (single-member household) — previously
+        // this misfiled such notes into the household notes blob.
+        const cid=personEl?personEl.value:(members[0]||{}).id;
         await logTouch({contactIds:[cid],householdId:h.id,type:'Note',date:today,notes:text.trim(),source:'enrich',trackMode:'none',markDaily:false,silent:true,journal:false});
       }else{
-        // household note — append to existing
+        // household note (type==='household' or unclassified) — append to existing
         const existing=h.notes||'';
         const combined=existing?(existing+'\n\n'+text.trim()):text.trim();
         await sb('households?id=eq.'+h.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notes:combined})});
@@ -10346,12 +10361,12 @@ function openEngineSettings(){
     ${numRow('Number of clicks that count as interested','emailEngClicks',1,'[Clicks are an honest signal. Set lower than opens.]')}
     ${numRow('How many mailings back to look','emailEngWindow',1,'')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path><circle cx="12" cy="12" r="3"></circle></svg> Prospect Finder<span onclick="showPanelHelp('pf-getToKnow')" title="What does this do?" style="margin-left:6px;width:14px;height:14px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.55rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:0.05em">?</span></div>
-    <div style="font-size:.58rem;color:var(--txt3);margin:-2px 0 9px;line-height:1.5">The first two tabs keep only people under a ceiling, then rank what's left. A ceiling is a share of that pillar's range, 0 to 1 — higher is looser (more people show). Start loose.</div>
-    ${numRow('Get to Know — Affinity ceiling','pfGetToKnowAffinityCeiling',0.05,'[Keep people you know THIS well or less, then rank by capacity. 0.65 = up to two-thirds known.]')}
-    ${numRow('Invite to Give — Generosity ceiling','pfInviteGenerosityCeiling',0.05,'[Keep people who’ve given THIS much or less, then rank by how much they value you.]')}
-    ${numRow('Stay Connected — overdue sensitivity','pfStewardOvershootDivisor',5,'[Smaller = being past someone’s normal rhythm pushes them up harder. Days.]')}
-    ${numRow('Stay Connected — no-real-moment bump','pfStewardNoSigWeight',0.05,'[Extra weight for a supporter you’ve never had a moment that mattered with.]')}
-    ${numRow('How many to show per tab','pfResultCount',5,'[Before “show more”, which extends to fifty. A short list is worked; a long one is avoided.]')}
+    <div style="font-size:.58rem;color:var(--txt3);margin:-2px 0 9px;line-height:1.5">The first two tabs only include people below a cut-off. Each number is a share from 0 to 1 &mdash; higher includes more people. Start loose.</div>
+    ${numRow('Get to Know: how well you can already know them','pfGetToKnowAffinityCeiling',0.05,'[0.65 includes anyone up to two-thirds as close as your closest people]')}
+    ${numRow('Invite to Give: how much they can already have given','pfInviteGenerosityCeiling',0.05,'[0.5 includes anyone who has given up to half as much as your best supporters]')}
+    ${numRow('Stay Connected: how much being overdue counts','pfStewardOvershootDivisor',5,'[A smaller number pushes overdue people further up the list]')}
+    ${numRow('Stay Connected: never had a real moment','pfStewardNoSigWeight',0.05,'[Extra weight for a supporter you’ve never had a moment that mattered with]')}
+    ${numRow('How many to show per tab','pfResultCount',5,'[Show more extends it to fifty. A short list gets worked; a long one gets avoided.]')}
     <div style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:14px 0 8px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg> App settings</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <div style="flex:1">
@@ -10529,7 +10544,10 @@ async function toggleTaskDone(id){
           // task was created, LINK it instead of writing a duplicate.
           let linked=null;
           try{
-            const sinceD=(t.created_at||'').slice(0,10)||date;
+            // Eastern calendar date of creation — NOT the raw UTC slice: a task made
+            // late-evening Eastern is next-day in UTC, which would push this lower
+            // bound past a same-day interaction and auto-log a duplicate.
+            const sinceD=t.created_at?localDateStr(new Date(t.created_at)):date;
             const rows=await sb('interactions?select=id,type,date,notes&contact_id=eq.'+t.contact_id+'&type=eq.'+encodeURIComponent(type)+'&date=gte.'+sinceD+'&order=date.desc&limit=1');
             if(rows&&rows.length)linked=rows[0];
           }catch(e){}
@@ -12198,6 +12216,10 @@ async function _doMoveContact(cur,contactId,newHHId,movedToNew){
     if(regIds.length){
       await sb('registrations?id=in.('+regIds.join(',')+')',{method:'PATCH',body:JSON.stringify({household_id:newHHId})});
     }
+    // Move the contact's own to-dos with it — tasks filter by household_id, so
+    // without this they'd stay stuck under the old household (or vanish if it's
+    // deleted below). Best-effort: a task failure must not abort the move.
+    try{ await sb('tasks?contact_id=eq.'+contactId,{method:'PATCH',body:JSON.stringify({household_id:newHHId})}); }catch(e){}
     if(removeOld){
       await sb('households?id=eq.'+oldHH.id,{method:'DELETE'});
     }
@@ -12421,6 +12443,12 @@ async function _mergeConfirm(){
     // If keeper must land in a different surviving household, move it.
     if(keeper.household_id!==survivingHHId)patch.household_id=survivingHHId;
     await sb('contacts?id=eq.'+keeper.id,{method:'PATCH',body:JSON.stringify(patch)});
+
+    // Repoint the duplicate's to-dos onto the keeper before the delete below, so a
+    // task filed against the dup contact isn't lost when the contact (and its
+    // cascade) is removed. Best-effort — the tasks table is not load-bearing for
+    // the merge, so a failure here must never abort it.
+    try{ await sb('tasks?contact_id=eq.'+dup.id,{method:'PATCH',body:JSON.stringify({contact_id:keeper.id,household_id:survivingHHId})}); }catch(e){}
 
     // ── 6. NOW delete the emptied duplicate contact ──
     show('Removing duplicate…');
@@ -12979,7 +13007,7 @@ function _fbShowEmbed(slug){
 function _copyEmbedCode(btn){
   const ta=document.getElementById('embed_code');
   ta.select(); ta.setSelectionRange(0,99999);
-  const done=()=>{ const o=btn.innerHTML; btn.innerHTML='Copied!'; setTimeout(()=>btn.innerHTML=o,1400); };
+  const done=()=>{ const o=btn.innerHTML; btn.innerHTML='Copied'; setTimeout(()=>btn.innerHTML=o,1400); };
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(done).catch(()=>{document.execCommand('copy');done();});} else {document.execCommand('copy');done();} }
   catch(e){ document.execCommand('copy'); done(); }
 }
@@ -13541,11 +13569,14 @@ function _egRenameGroup(id){
   document.getElementById('egNameModal').style.display='flex';
   setTimeout(()=>{inp.focus();inp.select();},50);
 }
+let _egNameSaving=false;
 async function _egNameSave(){
   const name=(document.getElementById('egNameInput').value||'').trim();
   if(!name)return;
   const modal=document.getElementById('egNameModal');
   if(_egNameMode==='new'){
+    if(_egNameSaving)return; // in-flight guard: Enter-key handler AND Save button both call this
+    _egNameSaving=true;
     try{
       const res=await sb('email_groups',{method:'POST',body:JSON.stringify({name})});
       const g=Array.isArray(res)?res[0]:res;
@@ -13553,6 +13584,7 @@ async function _egNameSave(){
       modal.style.display='none';
       _egOpenGroup(g.id);
     }catch(e){ _ebToastMsg('Couldn\u2019t create the group. Try again.\n\n'+e.message); }
+    finally{ _egNameSaving=false; }
   }else if(_egNameMode&&_egNameMode.id){
     const g=_egGroups.find(x=>x.id===_egNameMode.id); if(!g){modal.style.display='none';return;}
     if(name===g.name){modal.style.display='none';return;}
@@ -14235,6 +14267,12 @@ function _ebPaletteInsert(type){
   else{
     const fIdx=_ebBlocks.findIndex(b=>b.type==='footer');
     if(fIdx>=0&&type!=='footer') idx=fIdx;
+  }
+  // Clamp: never place content below the unsubscribe footer, even when the footer
+  // itself is the selected block (the selIdx+1 path above would otherwise do so).
+  if(type!=='footer'){
+    const _fIdx=_ebBlocks.findIndex(b=>b.type==='footer');
+    if(_fIdx>=0&&idx>_fIdx) idx=_fIdx;
   }
   _ebBlocks.splice(idx,0,blk);
   _ebSel=blk.id; _ebDirty=true;
@@ -14932,7 +14970,7 @@ function _ecRenderList(){
   }
   host.innerHTML=_egTabBar('campaigns')+header+body;
 }
-function _ecFmtDate(iso){ try{ return new Date(iso).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return iso; } }
+function _ecFmtDate(iso){ try{ return new Date(iso).toLocaleString([], {timeZone:DAAS_TZ,month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return iso; } }
 
 // ── audience model + resolver ──────────────────────────────────────
 // A campaign's audience is stored as { include_groups:[gid], exclude_groups:[gid],
@@ -15353,18 +15391,22 @@ async function _ecOpen(id){
     let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
     _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
       audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
-      track_opens:c.track_opens!==false, track_clicks:c.track_clicks!==false,
+      track_opens:c.track_opens!==false, track_clicks:c.track_clicks===true, // clicks are OPT-IN app-wide (deliverability): default OFF for null/legacy rows, matching _ecNew/_etUse/_ecSaveDraft
       blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _ecOpenCompose();
   }catch(e){ _ebToastMsg('Could not open campaign: '+e.message); _ecGoCampaigns(); }
 }
+const _ecDupBusy=new Set();
 async function _ecDuplicate(id){
+  if(_ecDupBusy.has(id))return; // in-flight guard: a double-tap on Copy must not create two copies
+  _ecDupBusy.add(id);
   try{
     const rows=await sbAll('email_campaigns?id=eq.'+id+'&select=*'); const c=rows&&rows[0]; if(!c)return;
     const dup={ name:(c.name||'Campaign')+' (copy)', subject:c.subject, preheader:c.preheader, from_name:c.from_name, from_address:c.from_address, group_id:c.group_id, audience:c.audience||null, track_opens:c.track_opens, track_clicks:c.track_clicks, mjml:c.mjml, section:c.section, status:'draft' };
     await sb('email_campaigns',{method:'POST',body:JSON.stringify(dup)});
     await _ecLoad(true); _ecRenderList();
   }catch(e){ _ebToastMsg('Could not duplicate: '+e.message); }
+  finally{ _ecDupBusy.delete(id); }
 }
 function _ecDelete(id){
   const c=_ecCampaigns.find(x=>x.id===id); if(!c)return;
@@ -16315,7 +16357,7 @@ const CT_COLS={
   agc:{label:'Prospect',val:h=>getAGCScore(h).total,html:h=>{const t=getAGCScore(h).total;const c=t>=70?'var(--green)':t>=40?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);font-weight:700;color:${c}">${t}</span>`;}},
   homeValue:{label:'Home Value',val:h=>h.home_value||0,html:h=>h.home_value?'$'+Math.round(h.home_value).toLocaleString():'<span class="ct-sub">—</span>'},
   lastContact:{label:'Last Contact',val:h=>(_agcInterAgg[h.id]||{}).lastContact||'',html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;return lc||'<span class="ct-sub">never</span>';}},
-  daysSince:{label:'Days Since',val:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;const d=_daysSince(lc);return d==null?99999:d;},html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return '<span style="color:var(--red);font-family:var(--font-ui)">never</span>';const d=_daysSince(lc)??0;const c=d<=30?'var(--green)':d<=90?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);color:${c}">${d}d</span>`;}},
+  daysSince:{label:'Days Since',val:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;const d=_daysSince(lc);return d==null?99999:d;},csv:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return 'never';const d=_daysSince(lc);return d==null?'never':String(d);},html:h=>{const lc=(_agcInterAgg[h.id]||{}).lastContact;if(!lc)return '<span style="color:var(--red);font-family:var(--font-ui)">never</span>';const d=_daysSince(lc)??0;const c=d<=30?'var(--green)':d<=90?'var(--amber)':'var(--red)';return `<span style="font-family:var(--font-ui);color:${c}">${d}d</span>`;}},
   totalGiving:{label:'Total Giving',val:h=>{const g=getGivingStats(h);return g?g.total:0;},html:h=>{const g=getGivingStats(h);return g&&g.total>0?'$'+Math.round(g.total).toLocaleString():'<span class="ct-sub">—</span>';}},
   lastGift:{label:'Last Gift',val:h=>{const g=getGivingStats(h);return (g&&g.lastDate)||'';},html:h=>{const g=getGivingStats(h);return (g&&g.lastDate)||'<span class="ct-sub">—</span>';}},
   giftCount:{label:'Gifts',val:h=>{const g=getGivingStats(h);return g?g.count:0;},html:h=>{const g=getGivingStats(h);return g&&g.count?g.count:'<span class="ct-sub">0</span>';}}
@@ -16596,9 +16638,10 @@ const PANEL_HELP={
   'panel-tracks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg> People You&rsquo;re Chasing',d:()=>`<b>People you&rsquo;re actively trying to reach.</b><br><br>Miss someone and DAAS schedules the next try for you &mdash; ${ENGINE.trackCadence.join(', ')} working days later. It skips Shabbos, Sundays and Yom Tov.<br><br>After ${ENGINE.trackMaxAttempts} misses DAAS stops asking and leaves them alone for ${Math.round(ENGINE.trackSnoozeDays/30)} months, so nobody gets pestered. Reach them at any point and it stops straight away.`},
   'panel-emailengage':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg> Who&rsquo;s Reading Your Emails',d:()=>`<b>Who&rsquo;s actually opening your mailings.</b><br><br>Anyone with ${ENGINE.emailEngOpens}+ opens or ${ENGINE.emailEngClicks}+ clicks across your last ${ENGINE.emailEngWindow} mailings shows up here. Click a name to open the contact and follow up personally.<br><br>Opens are not as accurate a signal as clicks.<br><br>This panel only reads email data, as a signal for you to see engagement. It does not change anything or add people to your call list.<br><br><i>Change the thresholds under Engine Settings at the top of the dashboard.</i>`},
   'panel-tasks':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg> Tasks',d:()=>`<b>Your to-do list.</b><br><br>Type anything into the + box. A plain reminder works, and so does a normal sentence like &ldquo;coffee with the Golds next week&rdquo; &mdash; DAAS will link the Golds and set the date for you.<br><br><b>Check off a task linked to somebody and DAAS logs it as a conversation with them.</b>`},
-  'pf-getToKnow':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 5"/></svg> Get to Know',d:()=>`<b>The people with the most means whom you barely know.</b><br><br>DAAS keeps only households you haven&rsquo;t built much of a relationship with yet &mdash; Affinity under ${Math.round((ENGINE.pfGetToKnowAffinityCeiling||0.65)*100)}% &mdash; and then ranks what&rsquo;s left by Capacity, highest first.<br><br>It is <b>not</b> a &ldquo;biggest gap&rdquo; list. Someone you already know a little still qualifies, as long as they&rsquo;re under the line &mdash; you&rsquo;re not punished for being slightly familiar. The bar is their Capacity.<br><br><i>Move the ceiling under Engine Settings if the list runs too broad.</i>`},
-  'pf-inviteToGive':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Invite to Give',d:()=>`<b>The people who most clearly value you but haven&rsquo;t really given.</b><br><br>DAAS keeps only households whose Generosity is under ${Math.round((ENGINE.pfInviteGenerosityCeiling||0.5)*100)}% &mdash; they haven&rsquo;t become supporters &mdash; and then ranks what&rsquo;s left by Affinity, highest first. The one at the top plainly loves the community and hasn&rsquo;t yet been asked properly.<br><br>The page names the opportunity; it doesn&rsquo;t guess why they haven&rsquo;t given. The bar is their Affinity.<br><br><i>Move the ceiling under Engine Settings.</i>`},
-  'pf-stayConnected':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg> Stay Connected',d:()=>`<b>Supporters you&rsquo;re overdue to give personal attention.</b><br><br>Unlike the first two tabs, this isn&rsquo;t a gate &mdash; drift is continuous, so it&rsquo;s a single ranking that blends how much someone gives, how long since a real conversation, how far past their own normal rhythm that is, and whether you&rsquo;ve ever had a moment that mattered with them.<br><br>It replaces the old yes/no test (&ldquo;a supporter with no logged conversations&rdquo;), which let someone spoken to once, long ago, quietly drop off. A ranking turns that cliff into a slope; the old test&rsquo;s target is simply the top of this list.<br><br><i>The weights are close but coarse &mdash; read the exact order as approximate until they&rsquo;re tuned on real households.</i>`}
+  'pf-page':{t:'Prospect Finder',d:()=>`<b>You have an hour to grow a relationship. This is who to spend it on.</b><br><br>Three short lists, worked top to bottom. <b>Get to Know</b> is people with means you barely know. <b>Invite to Give</b> is people who clearly value you but have never really given. <b>Stay Connected</b> is supporters you owe some attention.<br><br><b>This is not the Daily Five.</b> The Daily Five is who to reach <i>today</i>. This is who is worth investing in over the next while &mdash; use it when you have time, not every morning.<br><br><i>Change how wide these lists run under Engine Settings.</i>`},
+  'pf-getToKnow':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 5"/></svg> Get to Know',d:()=>`<b>The people with the most means whom you barely know.</b><br><br>DAAS keeps the households you haven&rsquo;t built much of a relationship with yet. Someone you already know a little still counts &mdash; you&rsquo;re not punished for being slightly familiar.<br><br>It is <b>not</b> a &ldquo;biggest gap&rdquo; list.<br><br><i>Change how wide this list runs under Engine Settings.</i>`},
+  'pf-inviteToGive':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg> Invite to Give',d:()=>`<b>The people who most clearly value you but haven&rsquo;t really given.</b><br><br>DAAS keeps the households who haven&rsquo;t become supporters yet. The page names the opportunity &mdash; it doesn&rsquo;t guess why they haven&rsquo;t given.<br><br><i>Change how wide this list runs under Engine Settings.</i>`},
+  'pf-stayConnected':{t:'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg> Stay Connected',d:()=>`<b>Supporters you&rsquo;re overdue to give personal attention.</b><br><br>Unlike the other two tabs this isn&rsquo;t a cut-off. It blends how much someone gives, how long since a real conversation, how far past their own normal rhythm that is, and whether you&rsquo;ve ever had a moment that mattered with them.<br><br><i>The weights are still coarse. Treat the exact order as approximate until they&rsquo;re tuned on real households.</i>`}
 };
 
 function showPanelHelp(panelId){
@@ -16703,8 +16746,10 @@ async function renderHeatmap(){
     counts[r.date]=(counts[r.date]||0)+1;
   });
 
-  // Build 2-week Sun–Fri grid (skip Saturday)
-  const today=new Date();
+  // Build 2-week Sun–Fri grid (skip Saturday). Anchor to the EASTERN calendar day
+  // (not the device clock), so "today", the week boundaries and the N/A shading
+  // all line up with the interaction counts (keyed by the Eastern r.date).
+  const today=_localDate(localToday());
   today.setHours(0,0,0,0);
   // Find last Sunday
   const days=[];
@@ -16728,7 +16773,9 @@ async function renderHeatmap(){
       const date=new Date(weekStart);
       date.setDate(weekStart.getDate()+d);
       const dow=date.getDay();
-      const dateStr=localDateStr(date);
+      // Key by the cell's own calendar day (tz-independent): `date` is anchored to
+      // the Eastern week, so its local components ARE the Eastern date the counts use.
+      const dateStr=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
       // Shabbos and true Yom Tov render as a distinct N/A cell — not "no activity",
       // not skipped from the grid. (Two Weeks at a Glance help text promises this.)
       const isShabbos=dow===6;
@@ -16801,11 +16848,14 @@ async function renderWins(){
   const el=document.getElementById('body-panel-wins');
   if(!el)return;
   let rows=[];
-  // This week = since last Sunday
-  const now2=new Date();now2.setHours(0,0,0,0);
-  const dayOfWeek=now2.getDay();
-  const thisSunday=new Date(now2);thisSunday.setDate(now2.getDate()-dayOfWeek);
-  const sinceStr=localDateStr(thisSunday);
+  // This week = since last Sunday, anchored to the EASTERN calendar day (not the
+  // device clock), so the window matches every other date in the app regardless
+  // of the browser's timezone or the time of night.
+  const _etToday=_localDate(localToday());            // local-midnight Date of Eastern "today"
+  const dayOfWeek=_etToday.getDay();
+  const thisSunday=new Date(_etToday);thisSunday.setDate(_etToday.getDate()-dayOfWeek);
+  const _p2=n=>String(n).padStart(2,'0');
+  const sinceStr=thisSunday.getFullYear()+'-'+_p2(thisSunday.getMonth()+1)+'-'+_p2(thisSunday.getDate());
   try{
     // Pull MORE than ten, because de-duplicating couples happens after the read and
     // would otherwise leave the panel short. (Old bug: one Shabbat dinner logged
@@ -17493,6 +17543,14 @@ function _agoWords(days,cap){
   else t='over a year ago';
   return cap?t.charAt(0).toUpperCase()+t.slice(1):t;
 }
+// "2025-11-14" -> "November 2025". Gift dates read as a month, never an ISO string.
+function _monthYear(d){
+  if(!d)return'never';
+  const m=String(d).match(/^(\d{4})-(\d{2})/);
+  if(!m)return String(d);
+  const names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return names[parseInt(m[2],10)-1]+' '+m[1];
+}
 // Same scale, phrased as an interval rather than a point in the past ("every six weeks").
 function _everyWords(days){
   if(!days)return'';
@@ -17505,6 +17563,14 @@ function _everyWords(days){
   if(days<200)return'about every '+Math.round(days/30)+' months';
   if(days<300)return'about twice a year';
   return'about once a year';
+}
+// A snooze DURATION phrased in words — used in the undo label + toast so the surface
+// never shows a raw day count over 21 (§4). 7d stays "a week"; 30/90 become months.
+function _snoozeWords(d){
+  d=+d||0;
+  if(d<=7)return'a week'; if(d<=14)return'two weeks'; if(d<=31)return'a month';
+  if(d<=62)return'two months'; if(d<=93)return'three months'; if(d<=186)return'six months';
+  return Math.round(d/30)+' months';
 }
 // DISPLAY labels for interaction types. The STORED value never changes — the engine,
 // the score and every historical row still key off 'Connected', 'Left VM' and friends.
@@ -18237,7 +18303,7 @@ async function snoozeDaily(idx,days=7){
   if(_outcomeSaving.has(h.id))return;
   _outcomeSaving.add(h.id);
   const snoozeUntil=localToday(days);
-  const undo=_blankUndo('Snoozed '+days+'d — '+(h.displayName||''),h.id);
+  const undo=_blankUndo('Snoozed '+_snoozeWords(days)+' — '+(h.displayName||''),h.id);
   try{
     const wasDone=!!(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id));
     await _markDailyDone(h.id);
@@ -19285,7 +19351,7 @@ async function pfReview(hhId){
   const h=households.find(x=>x.id===hhId);
   _pfReviewed[hhId]=true;
   await _savePfReviewed();
-  if(typeof _daasToast==='function')_daasToast('Marked reviewed'+(h?' \u2014 '+(h.displayName||''):'')+' \u00b7 remembered between visits');
+  if(typeof _daasToast==='function')_daasToast('Marked reviewed'+(h?' \u2014 '+(h.displayName||''):''));
   renderProspectFinder();
 }
 // Pin to Daily Five \u2014 reuses the real pin path (pinHousehold), which is the mechanism
@@ -19301,7 +19367,7 @@ function _pfRowHtml(c,tab){
   const h=c.h, idx=c.idx, s=c.s, bar=c.barPct;
   const whyId='pf-why-'+tab+'-'+idx;
   const barColor=bar>=80?'var(--green)':bar>=50?'var(--amber)':'var(--accent)';
-  const thinChip=c.thin?`<span title="Only ${s.signals.found} of ${s.signals.of} score signals are on file \u2014 this score is still a guess." style="font-family:var(--font-ui);font-size:.54rem;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;white-space:nowrap">thin data \u00b7 ${s.signals.found}/${s.signals.of}</span>`:'';
+  const thinChip=c.thin?`<span title="Only ${s.signals.found} of ${s.signals.of} things DAAS looks for are on file, so this score is a rough guess." style="font-family:var(--font-ui);font-size:.54rem;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;white-space:nowrap">rough score \u00b7 ${s.signals.found}/${s.signals.of}</span>`:'';
   return `
   <div style="padding:13px 0;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
@@ -19321,7 +19387,7 @@ function _pfRowHtml(c,tab){
       <div style="height:100%;width:${bar}%;background:${barColor};border-radius:3px;transition:width .4s"></div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="pf-abtn" onclick="const w=document.getElementById('${whyId}');w.style.display=w.style.display==='none'?'block':'none'">\u2139 Why?</button>
+      <button class="pf-abtn" onclick="const w=document.getElementById('${whyId}');w.style.display=w.style.display==='none'?'block':'none'">Why this name?</button>
       <button class="pf-abtn" onclick="switchView('crm');setTimeout(()=>byId('openFullPanel','${h.id}',${idx}),150)">Open contact</button>
       <button class="pf-abtn" onclick="pfPin('${h.id}')"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg> Pin to Daily Five</button>
       <button class="pf-abtn" onclick="pfSnooze('${h.id}')">Snooze</button>
@@ -19377,20 +19443,21 @@ function _pfBuildTab(tab){
     const conn=agg.connected12||0, lastC=agg.lastContact||null, gs=c.gs||getGivingStats(h);
     if(c.kind==='stayConnected'){
       c.barPct=maxFrac>0?Math.round(c.frac/maxFrac*100):0;
-      c.metricLabel='overdue';
-      const ago=(c.daysSince==null)?'you\u2019ve never logged a real conversation':'last spoke '+_agoWords(c.daysSince);
-      c.reason='Real supporter \u2014 '+ago+'.';
+      c.metricLabel='Overdue';
+      c.reason=(c.daysSince==null)
+        ?'A real supporter. You\u2019ve never logged a real conversation.'
+        :'A real supporter. Last contact '+_agoWords(c.daysSince)+'.';
     }else{
       c.barPct=Math.round(c.frac*100);
-      c.metricLabel=(c.kind==='getToKnow')?'capacity':'affinity';
+      c.metricLabel=(c.kind==='getToKnow')?'Capacity':'Affinity';
       if(c.kind==='getToKnow'){
-        c.reason=(h.home_value?('High capacity ('+_fmtHomeVal(h.home_value)+' home)'):'High capacity')+' \u2014 and you\u2019ve barely built a relationship yet.';
+        c.reason=(h.home_value?_fmtHomeVal(h.home_value)+' home. ':'')+'You\u2019ve barely built a relationship yet.';
       }else{
-        c.reason='Clearly values you \u2014 but hasn\u2019t really become a supporter yet.';
+        c.reason='They clearly value you. They\u2019ve never really given.';
       }
     }
-    let why=`Affinity <b>${s.affinity}</b>/40 &middot; Generosity <b>${s.generosity}</b>/30 &middot; Capacity <b>${s.capacity}</b>/30<br>Last contact: <b>${lastC||'never'}</b> &middot; Real conversations (12&nbsp;mo): <b>${conn}</b><br>Last gift: <b>${gs?gs.lastDate||'never':'never'}</b>${gs&&gs.total?(' &middot; Total <b>$'+gs.total.toLocaleString()+'</b>'):''}`;
-    if(c.thin)why+=`<br><span style="color:var(--amber)">Only ${s.signals.found} of ${s.signals.of} score signals are on file \u2014 treat this as a rough guess.</span>`;
+    let why=`Affinity <b>${s.affinity}</b>/40 &middot; Generosity <b>${s.generosity}</b>/30 &middot; Capacity <b>${s.capacity}</b>/30<br>Last contact <b>${lastC?_agoWords(_daysSince(lastC)):'never'}</b> &middot; <b>${conn}</b> conversation${conn===1?'':'s'} in the last year<br>Last gift <b>${gs&&gs.lastDate?_monthYear(gs.lastDate):'never'}</b>${gs&&gs.total?(' &middot; Total <b>$'+gs.total.toLocaleString()+'</b>'):''}`;
+    if(c.thin)why+=`<br><span style="color:var(--amber)">Only ${s.signals.found} of ${s.signals.of} things DAAS looks for are on file, so this score is a rough guess.</span>`;
     c.why=why;
   });
   const total=cand.length;
@@ -19404,12 +19471,12 @@ function _pfBuildTab(tab){
     if(cav)banner=`<div style="font-family:var(--font-ui);font-size:.66rem;color:var(--txt2);line-height:1.55;background:var(--surf2);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:6px;padding:9px 12px;margin-bottom:16px">${cav}</div>`;
   }
   if(!total){
-    const msg={getToKnow:'Nobody sits under the Affinity ceiling right now \u2014 everyone here you already know reasonably well.',inviteToGive:'Nobody sits under the Generosity ceiling right now.',stayConnected:'No supporters are overdue for attention right now \u2014 nicely kept up.'}[tab];
+    const msg={getToKnow:'You already know everybody here reasonably well.',inviteToGive:'Everybody here has already given.',stayConnected:'No supporters are overdue right now.'}[tab];
     return banner+'<div class="hint">'+_PF_EMPTY_SVG+'<p>'+msg+'</p></div>';
   }
   const foot=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap">
       <span style="font-family:var(--font-ui);font-size:.62rem;color:var(--txt3)">Showing ${rows.length} of ${total}</span>
-      ${(!_pfShowAll[tab]&&total>shown)?`<button class="btn btn-sec" onclick="pfShowMore('${tab}')" style="font-size:.65rem;padding:4px 12px">Show more \u2014 up to 50</button>`:''}
+      ${(!_pfShowAll[tab]&&total>shown)?`<button class="btn btn-sec" onclick="pfShowMore('${tab}')" style="font-size:.65rem;padding:4px 12px">Show more</button>`:''}
     </div>`;
   return banner+rows.map(c=>_pfRowHtml(c,tab)).join('')+foot;
 }
@@ -19425,10 +19492,10 @@ function renderProspectFinder(){
   ];
   if(!tabs.some(t=>t.id===_pfTab))_pfTab='getToKnow';
   const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:10px;flex-wrap:wrap">
-      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg> Prospect Finder</h2>
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt)"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg> Prospect Finder<span onclick="showPanelHelp('pf-page')" title="What is this page for?" style="margin-left:7px;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:0.15em;font-family:var(--font-ui);font-weight:400">?</span></h2>
       <button class="btn btn-sec" onclick="openEngineSettings()" style="font-size:.65rem;padding:4px 10px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg> Engine</button>
     </div>
-    <div style="font-size:.74rem;color:var(--txt3);margin-bottom:16px;max-width:640px;line-height:1.55">An hour to grow a relationship &mdash; who to spend it on. Three short lists, worked top to bottom. This finds people to <i>invest</i> in; it doesn&rsquo;t replace the Daily Five or the dashboard&rsquo;s Ready to Ask.</div>`;
+    <div style="font-size:.74rem;color:var(--txt3);margin-bottom:16px;max-width:640px;line-height:1.55">You have an hour to grow a relationship. Here&rsquo;s who to spend it on.</div>`;
   const tabBar='<div class="fp-tabs">'+tabs.map(t=>`<button class="fp-tab ${_pfTab===t.id?'on':''}" onclick="pfSwitchTab('${t.id}')">${t.label}<span onclick="event.stopPropagation();showPanelHelp('${t.help}')" title="What is this tab for?" style="margin-left:6px;width:15px;height:15px;border-radius:50%;border:1px solid var(--border2);color:var(--txt3);font-size:.58rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:0.08em">?</span></button>`).join('')+'</div>';
   wrap.innerHTML=header+tabBar+'<div class="fp-card">'+_pfBuildTab(_pfTab)+'</div>';
 }
@@ -19479,26 +19546,32 @@ function _daasHouseholdTokens(h){
 
 // ── RELATIVE DATES (saved reports stay correct forever) ──────────────────
 function _rpResolveDateRange(rel,now){
-  const d=now?new Date(now):new Date();
+  // Anchor to the EASTERN calendar day (not the device clock) so month/year
+  // boundaries resolve to the shul's day regardless of the browser's timezone.
+  const d=now?new Date(now):_localDate(localToday());
   const iso=x=>localDateStr(x);
+  const p2=n=>String(n).padStart(2,'0');
+  const isoLocal=x=>x.getFullYear()+'-'+p2(x.getMonth()+1)+'-'+p2(x.getDate()); // tz-independent for locally-built boundary dates
+  const todayStr=now?iso(d):localToday();
   const y=d.getFullYear(),m=d.getMonth();
   switch(rel){
-    case 'last_30_days':return {from:iso(new Date(d.getTime()-30*86400000)),to:iso(d)};
-    case 'last_60_days':return {from:iso(new Date(d.getTime()-60*86400000)),to:iso(d)};
-    case 'last_90_days':return {from:iso(new Date(d.getTime()-90*86400000)),to:iso(d)};
-    case 'last_365_days':return {from:iso(new Date(d.getTime()-365*86400000)),to:iso(d)};
-    case 'this_month':return {from:iso(new Date(y,m,1)),to:iso(new Date(y,m+1,0))};
-    case 'prev_month':return {from:iso(new Date(y,m-1,1)),to:iso(new Date(y,m,0))};
+    case 'last_30_days':return {from:iso(new Date(d.getTime()-30*86400000)),to:todayStr};
+    case 'last_60_days':return {from:iso(new Date(d.getTime()-60*86400000)),to:todayStr};
+    case 'last_90_days':return {from:iso(new Date(d.getTime()-90*86400000)),to:todayStr};
+    case 'last_365_days':return {from:iso(new Date(d.getTime()-365*86400000)),to:todayStr};
+    case 'this_month':return {from:isoLocal(new Date(y,m,1)),to:isoLocal(new Date(y,m+1,0))};
+    case 'prev_month':return {from:isoLocal(new Date(y,m-1,1)),to:isoLocal(new Date(y,m,0))};
     case 'this_year':return {from:y+'-01-01',to:y+'-12-31'};
     case 'last_year':return {from:(y-1)+'-01-01',to:(y-1)+'-12-31'};
     default:return null;
   }
 }
 function _rpResolveYear(v,now){
-  const d=now?new Date(now):new Date();
-  if(v==='this_year')return d.getFullYear();
-  if(v==='last_year')return d.getFullYear()-1;
-  const n=parseInt(v);return isNaN(n)?d.getFullYear():n;
+  // Eastern calendar year (not the device's) — matters near New Year's Eve.
+  const yr=now?new Date(now).getFullYear():parseInt(localToday().slice(0,4),10);
+  if(v==='this_year')return yr;
+  if(v==='last_year')return yr-1;
+  const n=parseInt(v);return isNaN(n)?yr:n;
 }
 
 // ── FIELD REGISTRY (one filter engine for reports + map + contact list) ──
@@ -19571,7 +19644,11 @@ function _rpBuildRollups(list){
     (h.members||[]).forEach(m=>{
       const cc={total:0,count:0,largest:0,lastGift:'',byYear:{},events:new Set(),groups:invGroups[m.id]||new Set(),mailable:!!(m.email&&!(_egUnsub&&_egUnsub.has&&_egUnsub.has(m.id))),lastContact:''};
       (m.donations||[]).forEach(d=>{const a=parseFloat(d.amount)||0;cc.total+=a;cc.count++;if(a>cc.largest)cc.largest=a;if(d.date&&(!cc.lastGift||d.date>cc.lastGift))cc.lastGift=d.date;const y=(d.date||'').slice(0,4);if(y)cc.byYear[y]=(cc.byYear[y]||0)+a;});
-      (m.registrations||[]).forEach(r=>{if(r.event_id){cc.events.add(r.event_id);hh.events.add(r.event_id);}if(r.reg_date&&(!cc.lastContact||r.reg_date>cc.lastContact))cc.lastContact=r.reg_date;});
+      // Registrations feed the event set only. A registration is NOT "last contact"
+      // (Dashboard manual §1: last contact = most recent non-Note interaction;
+      // registration rows are not counted) — this now matches the household grain
+      // (hh.lastContact from _agcInterAgg) and the engine, instead of folding reg_date.
+      (m.registrations||[]).forEach(r=>{if(r.event_id){cc.events.add(r.event_id);hh.events.add(r.event_id);}});
       const it=_rpInterTouch&&_rpInterTouch[m.id];
       if(it&&(!cc.lastContact||it>cc.lastContact))cc.lastContact=it;
       cc.groups.forEach(gid=>hh.groups.add(gid));
@@ -19870,7 +19947,8 @@ async function _rpEnsureData(){
     try{
       const rows=await sbAll('interactions?select=contact_id,type,date&order=id.asc')||[];
       _rpInterTouch={};
-      rows.forEach(r=>{if(!r.date||!_isTouch(r.type))return;if(!_rpInterTouch[r.contact_id]||r.date>_rpInterTouch[r.contact_id])_rpInterTouch[r.contact_id]=r.date;});
+      const _rpTd=localToday(); // future-dated rows never count as contact yet (engine parity)
+      rows.forEach(r=>{if(!r.date||!_isTouch(r.type))return;if((''+r.date).slice(0,10)>_rpTd)return;if(!_rpInterTouch[r.contact_id]||r.date>_rpInterTouch[r.contact_id])_rpInterTouch[r.contact_id]=r.date;});
     }catch(e){_rpInterTouch={};}
   }
   await _rpLoadSaved();
@@ -21385,14 +21463,17 @@ async function mRenderMHeat(){
   let rows=[];
   try{ rows=await sbAll('interactions?date=gte.'+since+'&type=neq.Note&select=date&order=id.asc')||[]; }catch(e){}
   const counts={}; rows.forEach(r=>{ if(r.date)counts[r.date]=(counts[r.date]||0)+1; });
-  const today=new Date(); today.setHours(0,0,0,0);
+  const today=_localDate(localToday()); // Eastern "today", not the device clock
+  const _p2=n=>String(n).padStart(2,'0');
+  const _fmtLocal=x=>x.getFullYear()+'-'+_p2(x.getMonth()+1)+'-'+_p2(x.getDate());
+  const todayStr=_fmtLocal(today);
   const weekStart=new Date(today); weekStart.setDate(today.getDate()-today.getDay());
   const DAY_LABELS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let cells='';
   for(let d=0; d<7; d++){
     const date=new Date(weekStart); date.setDate(weekStart.getDate()+d);
     const dow=date.getDay();
-    const dateStr=localDateStr(date);
+    const dateStr=_fmtLocal(date); // cell's own Eastern calendar day (tz-independent)
     const isShabbos=dow===6;
     const ytName=_yomTovName(date);
     const isNA=isShabbos||!!ytName;
@@ -21406,7 +21487,7 @@ async function mRenderMHeat(){
       else if(count>=threshold*.3)intensity=2;
       else intensity=1;
     }
-    const isToday=dateStr===localDateStr(today);
+    const isToday=dateStr===todayStr;
     const naLabel=isShabbos&&ytName?(ytName+' · Shabbos'):(ytName||'Shabbos');
     const tip=isNA?(dateStr+': '+naLabel+' (n/a)'):(isFuture?dateStr:(dateStr+': '+count+' interaction'+(count!==1?'s':'')));
     cells+='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1">'
@@ -21540,7 +21621,7 @@ async function mSnoozeD5(days){
   if(_outcomeSaving.has(h.id))return;
   _outcomeSaving.add(h.id);
   const snoozeUntil=localToday(days);
-  const undo=_blankUndo('Snoozed '+days+'d — '+(h.displayName||''),h.id);
+  const undo=_blankUndo('Snoozed '+_snoozeWords(days)+' — '+(h.displayName||''),h.id);
   try{
     const wasDone=!!(_dailySet&&Array.isArray(_dailySet.done)&&_dailySet.done.includes(h.id));
     await _markDailyDone(h.id);
@@ -22116,7 +22197,7 @@ async function _meOpenDraft(id){
     let blocks=[]; try{ blocks=c.mjml?JSON.parse(c.mjml):[]; }catch(e){ blocks=[]; }
     _ecCur={ id:c.id, name:c.name||'', subject:c.subject||'', preheader:c.preheader||'', from_name:c.from_name||'', from_address:c.from_address||'', group_id:c.group_id||null,
       audience:_ecNormAudience(c.audience, c.group_id), status:c.status,
-      track_opens:c.track_opens!==false, track_clicks:c.track_clicks!==false,
+      track_opens:c.track_opens!==false, track_clicks:c.track_clicks===true, // clicks are OPT-IN app-wide (deliverability): default OFF for null/legacy rows, matching _ecNew/_etUse/_ecSaveDraft
       blocks:blocks.length?blocks:[_ebNewBlock('header'),_ebNewBlock('text'),_ebNewBlock('footer')], section:c.section||{outerBg:EB_THEME.bg,cardBg:EB_THEME.card} };
     _meBind(); _meGo(1);
   }catch(e){ _ebToastMsg('Couldn\u2019t open that. Try again.\n\n'+(e.message||e)); _meRenderHome(); }
