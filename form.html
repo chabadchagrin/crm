@@ -141,6 +141,11 @@ let paymentElement=null;   // current Stripe Payment Element (destroyed before r
 let _submitting=false;     // in-flight guard for onSubmit (prevents double-submit)
 let formMode='donation';   // 'donation' | 'tiered' | 'tiered_addon' | 'free'
 let freeAllowsDonation=false; // free event that also accepts an optional gift
+let isRecurring=false;     // donation form set to charge MONTHLY (Stripe subscription)
+// One idempotency token per page load. Sent to form-submit so a retry after a soft
+// error (network blip / 3DS timeout) reuses the SAME PaymentIntent instead of minting
+// a second charge. This is the fix for the observed duplicate charge.
+const PAY_TOKEN=(function(){try{return (self.crypto&&crypto.randomUUID)?crypto.randomUUID():(String(Date.now())+'-'+Math.random().toString(36).slice(2));}catch(e){return String(Date.now())+'-'+Math.random().toString(36).slice(2);}})();
 
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showError(msg){root.innerHTML='<div class="state error">'+esc(msg)+'</div>';postHeight();}
@@ -198,6 +203,8 @@ async function init(){
   currentForm=rows[0];
   const cfg=parseMaybe(currentForm.stripe_config,{});
   formMode=currentForm.type==='event'?(cfg.mode||'tiered'):'donation';
+  // Donation form set to charge monthly → Stripe subscription instead of a one-time gift.
+  isRecurring=(currentForm.type!=='event') && !!(cfg.recurring && cfg.recurring.interval);
   // A free event MAY still allow an optional donation → Stripe is needed then.
   freeAllowsDonation=(formMode==='free' && !!cfg.allow_donation);
   // Stripe needed whenever money can be collected (paid modes, or free+donation).
@@ -234,6 +241,12 @@ function render(form){
     if(allowCustom){
       html+='<div class="custom-row"><span class="dollar">$</span>'
         +'<input type="text" inputmode="decimal" class="custom-amt" id="customAmt" placeholder="Other amount" oninput="pickCustom(this)" autocomplete="off"></div>';
+    }
+    if(isRecurring){
+      html+='<div class="addon-row" style="margin:-6px 0 18px"><div style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--accent);font-weight:600">'
+        +'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>'
+        +'Monthly recurring gift</div>'
+        +'<div style="font-size:.72rem;color:var(--txt2);margin-top:3px">This amount is charged automatically every month until you cancel.</div></div>';
     }
   }
 
@@ -290,7 +303,7 @@ function render(form){
     html+='</div>';
     if(formMode==='tiered_addon'){
       const aPresets=cfg.presets||[];
-      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add an optional gift (optional)</label>';
+      html+='<div class="addon-row"><label class="addon-lbl" for="addonAmt">Add a gift</label>';
       if(aPresets.length){
         html+='<div class="presets">';
         aPresets.forEach((p)=>{
@@ -315,7 +328,7 @@ function render(form){
   // else just custom). Leaving it blank = free RSVP; any amount = a real gift.
   if(formMode==='free' && freeAllowsDonation){
     const presets=cfg.presets||[];
-    html+='<div class="addon-row"><label class="addon-lbl">Add an optional donation (optional)</label>';
+    html+='<div class="addon-row"><label class="addon-lbl">Add a donation</label>';
     if(presets.length){
       html+='<div class="presets">';
       presets.forEach((p)=>{
@@ -340,13 +353,13 @@ function render(form){
       +'<div style="font-size:.72rem;color:var(--txt2);margin-top:1px">Submit payment by check, Venmo, or cash</div></div>'
       +'</label>';
     }
-    html+='<div id="stripePaySection"><div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue...':'Choose an amount to continue...')+'</div></div></div></div>';
+    html+='<div id="stripePaySection"><div id="payment-element"><div class="pay-loading">'+(isEvent?'Select an option to continue&hellip;':'Choose an amount to continue&hellip;')+'</div></div></div></div>';
   } else if(freeAllowsDonation){
     // Payment element is hidden until they actually enter a donation amount.
     html+='<div class="pay-section" id="freePaySection" style="display:none"><p class="pay-label">Payment</p>'
       +'<div id="payment-element"></div></div>';
   }
-  const btnText=isEvent?(formMode==='free'?'RSVP':'Register'):'Donate';
+  const btnText=isEvent?(formMode==='free'?'RSVP':'Register'):(isRecurring?'Donate Monthly':'Donate');
   if(formMode!=='free'||freeAllowsDonation){
     html+='<div class="total-box" id="totalBox"></div>';
   }
@@ -454,8 +467,8 @@ function renderTotal(){
       +'</div>';
     html+='<div class="total-row"><span class="lbl">Total</span><span class="amt">'+fmt(total)+'</span></div>';
   } else {
-    const lbl=isEvent?(lines[0]?lines[0].lbl:'Total'):'Your gift';
-    html+='<div class="total-row no-break"><span class="lbl">'+esc(lbl)+'</span><span class="amt">'+fmt(total)+'</span></div>';
+    const lbl=isEvent?(lines[0]?lines[0].lbl:'Total'):(isRecurring?'Monthly gift':'Your gift');
+    html+='<div class="total-row no-break"><span class="lbl">'+esc(lbl)+'</span><span class="amt">'+fmt(total)+(isRecurring?'<span style="font-size:.55em;color:var(--txt3);font-weight:500">/mo</span>':'')+'</span></div>';
   }
   box.innerHTML=html;
   box.className='total-box show';
@@ -477,7 +490,7 @@ function refreshPaymentElement(){
   if(!selectedAmount||selectedAmount<=0){
     paymentReady=false;
     if(paymentElement){ try{paymentElement.destroy();}catch(e){} paymentElement=null; }
-    if(formMode!=='free')mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue...':'Choose an amount to continue...')+'</div>';
+    if(formMode!=='free')mount.innerHTML='<div class="pay-loading">'+(currentForm.type==='event'?'Select an option to continue&hellip;':'Choose an amount to continue&hellip;')+'</div>';
     else mount.innerHTML='';
     postHeight();return;
   }
@@ -488,7 +501,7 @@ function refreshPaymentElement(){
   mount.innerHTML='';
   paymentReady=false;
   elements=stripe.elements({
-    mode:'payment',
+    mode:isRecurring?'subscription':'payment',
     amount:Math.round(selectedAmount*100),
     currency,
     appearance:{
@@ -579,7 +592,7 @@ async function onSubmit(){
     const data=collectFields();
     if(!data){resetBtn();return;}
     const btn=document.getElementById('submitBtn');
-    btn.disabled=true;btn.textContent='Submitting...';
+    btn.disabled=true;btn.textContent='Submitting&hellip;';
     try{
       const res=await fetch(EVENT_REGISTER_URL,{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -599,7 +612,7 @@ async function onSubmit(){
     const data=collectFields();
     if(!data){resetBtn();return;}
     const btn=document.getElementById('submitBtn');
-    btn.disabled=true;btn.textContent='Submitting...';
+    btn.disabled=true;btn.textContent='Submitting&hellip;';
     try{
       const res=await fetch(EVENT_REGISTER_URL,{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -631,17 +644,17 @@ async function onSubmit(){
   if(isEvent&&formMode!=='free'&&!selectedTier){flashAmount();resetBtn();return;}
   const data=collectFields();
   if(!data){resetBtn();return;}
-  if(!paymentReady||!elements){showMsg('err','Payment form still loading - one moment.');resetBtn();return;}
+  if(!paymentReady||!elements){showMsg('err','The payment form is still loading. One moment.');resetBtn();return;}
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent='Processing...';
+  btn.disabled=true;btn.textContent='Processing&hellip;';
   try{
     const sub=await elements.submit();
     if(sub.error){showMsg('err',sub.error.message||'Please check your payment details.');resetBtn();return;}
     // Event tier vs free+donation vs plain donation differ only in metadata; the
     // PaymentIntent flow is identical. form-submit routes on form type/slug.
     const body=isEvent
-      ? {slug:currentForm.slug,amount:selectedAmount,fields:data,tier:selectedTier?{label:selectedTier.label,amount:Number(selectedTier.amount)||0}:null,addon:addonAmount||0,free_donation:(formMode==='free'?selectedAmount:0)}
-      : {slug:currentForm.slug,amount:selectedAmount,fields:data};
+      ? {slug:currentForm.slug,amount:selectedAmount,fields:data,tier:selectedTier?{label:selectedTier.label,amount:Number(selectedTier.amount)||0}:null,addon:addonAmount||0,free_donation:(formMode==='free'?selectedAmount:0),idem:PAY_TOKEN}
+      : {slug:currentForm.slug,amount:selectedAmount,fields:data,idem:PAY_TOKEN,interval:isRecurring?'month':null};
     const res=await fetch(FORM_SUBMIT_URL,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
@@ -665,11 +678,13 @@ function showMsg(kind,text){
 function resetBtn(){
   _submitting=false;
   const btn=document.getElementById('submitBtn');
-  if(btn){btn.disabled=false;btn.textContent=currentForm.type==='event'?(formMode==='free'?'RSVP':'Register'):'Donate';}
+  if(btn){btn.disabled=false;btn.textContent=currentForm.type==='event'?(formMode==='free'?'RSVP':'Register'):(isRecurring?'Donate Monthly':'Donate');}
 }
 function flashAmount(){
   const lbl=document.querySelector('.amt-label');
   if(lbl){lbl.style.color='var(--red)';setTimeout(()=>lbl.style.color='',1400);}
+  // Flashing a label red says nothing if it has scrolled off screen. Say it too.
+  try{showMsg('err','Please pick an amount first.');}catch(e){}
 }
 function showThanks(already){
   const card=document.getElementById('formCard');
@@ -684,7 +699,9 @@ function showThanks(already){
       ? esc(currentForm.success_message)
       : (currentForm.type==='event'
           ? 'Your registration is confirmed. See you there!'
-          : 'Your gift of $'+(selectedAmount||0).toLocaleString()+' was received.');
+          : (isRecurring
+              ? 'Your monthly gift of $'+(selectedAmount||0).toLocaleString()+' is set up. You’ll be charged this amount each month until you cancel. Thank you!'
+              : 'Your gift of $'+(selectedAmount||0).toLocaleString()+' was received.'));
   }
   card.innerHTML='<div class="thanks">'
     +'<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
