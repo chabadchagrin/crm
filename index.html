@@ -1379,6 +1379,11 @@ html.force-desktop #mobileShell{display:none!important}
         <input type="text" id="apiGitHubInput" placeholder="ghp_..." style="width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--txt); padding: 8px 10px; font-family: var(--font-ui); font-size: 0.72rem; border-radius: 5px; -webkit-text-security: disc;" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Classic token · repo scope · <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">generate at github.com/settings/tokens</a></div>
       </div>
+      <div style="margin-bottom:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Phone notifications</label>
+        <button id="pushEnableBtn" type="button" onclick="daasEnablePush()" style="width:100%;background:var(--accent);color:#fff;border:none;padding:9px 10px;font-family:var(--font-ui);font-size:.72rem;font-weight:600;border-radius:5px;cursor:pointer">Turn on notifications</button>
+        <div id="pushStatus" style="font-size:.62rem;color:var(--txt3);margin-top:5px">Get a push on this device when someone signs up or donates.</div>
+      </div>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('apiKeysModal').style.display='none'">Cancel</button>
         <button class="btn btn-pri" onclick="saveAPIKeys()">Save</button>
@@ -1831,7 +1836,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-09.1'; // RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-10.1'; // SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -8253,6 +8258,63 @@ function openAPIKeys(){
   document.getElementById('apiRapidInput').value=RAPIDAPI_KEY||'';
   document.getElementById('apiGitHubInput').value=localStorage.getItem('crm_gh_pat')||'';
   document.getElementById('apiKeysModal').style.display='flex';
+  try{ _daasRefreshPushBtn(); }catch(e){}
+}
+
+// ── PHONE PUSH NOTIFICATIONS (Web Push / VAPID) ──────────────────────────
+// One device registers via the API Keys → "Phone notifications" button; the
+// browser's PushSubscription is stored in push_subscriptions, and the
+// signup-notify edge function pushes to every stored device when a public form
+// is submitted. The service worker (sw.js) renders the notification.
+const DAAS_VAPID_PUBLIC='BLT-Sa1TvGnCjAwYka1LvfP_DzSx_3iNnRL4WFrgNNuu-3O-owwUvIzPcTT_7-EmwdaGvdQZxoojeNLeY983GOU';
+function _daasB64ToU8(base64){
+  const pad='='.repeat((4-base64.length%4)%4);
+  const b64=(base64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(b64), out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
+  return out;
+}
+function _daasPushSupported(){
+  return ('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+}
+// Upsert this device's subscription (idempotent on endpoint).
+async function _daasSavePushSub(sub){
+  const j=sub.toJSON()||{};
+  const row={endpoint:sub.endpoint,p256dh:(j.keys&&j.keys.p256dh)||'',auth:(j.keys&&j.keys.auth)||'',ua:(navigator.userAgent||'').slice(0,300)};
+  await sb('push_subscriptions?on_conflict=endpoint',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)});
+}
+// Ask permission + subscribe this device (wired to the Notifications button).
+async function daasEnablePush(){
+  if(!_daasPushSupported()){ _ebToastMsg('This device can’t receive push here. On iPhone, add DAAS to your Home Screen first, then try again.'); return; }
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ _ebToastMsg('Notifications are blocked. Turn them on for this site in your browser settings, then try again.'); _daasRefreshPushBtn(); return; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_daasB64ToU8(DAAS_VAPID_PUBLIC)});
+    await _daasSavePushSub(sub);
+    _ebToastMsg('Notifications on for this device — you’ll get a push when someone signs up or donates.');
+  }catch(e){ _ebToastMsg('Could not turn on notifications: '+((e&&e.message)||e)); }
+  _daasRefreshPushBtn();
+}
+// Silent re-sync on load: if already granted + subscribed, keep the row fresh.
+async function _daasSyncPush(){
+  try{
+    if(!_daasPushSupported()||Notification.permission!=='granted')return;
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription();
+    if(sub) await _daasSavePushSub(sub);
+  }catch(e){}
+}
+function _daasRefreshPushBtn(){
+  const b=document.getElementById('pushEnableBtn'), s=document.getElementById('pushStatus');
+  if(!b)return;
+  if(!_daasPushSupported()){ b.textContent='Not supported on this device'; b.disabled=true; b.style.opacity='.6'; if(s)s.textContent='On iPhone, add DAAS to your Home Screen, then reopen this to enable push.'; return; }
+  const p=Notification.permission;
+  b.disabled=false; b.style.opacity='1';
+  if(p==='granted'){ b.textContent='On — re-register this device'; if(s)s.textContent='Notifications are on here. Tap only if you’ve stopped getting alerts.'; }
+  else if(p==='denied'){ b.textContent='Blocked in browser'; b.disabled=true; b.style.opacity='.6'; if(s)s.textContent='Notifications are blocked for this site — turn them back on in your browser settings.'; }
+  else { b.textContent='Turn on notifications'; if(s)s.textContent='Get a push on this device when someone signs up or donates.'; }
 }
 function saveAPIKeys(){
   const ant=document.getElementById('apiAnthropicInput').value.trim();
@@ -8278,8 +8340,10 @@ window.addEventListener('DOMContentLoaded',async()=>{
   try{ if(typeof _initViewMode==='function')_initViewMode(); }catch(e){}
   // Capture the page source BEFORE any JS mutates the DOM — used by Deploy to GitHub.
   _PRISTINE_SRC='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
-  // Register service worker (enables Android share target). Safe no-op on unsupported browsers.
+  // Register service worker (enables Android share target + push). Safe no-op on unsupported browsers.
   try{ if(typeof _mRegisterSW==='function') _mRegisterSW(); }catch(e){}
+  // Keep this device's push subscription fresh if notifications are already on.
+  try{ if(typeof _daasSyncPush==='function') _daasSyncPush(); }catch(e){}
   // Check for existing persistent session
   const{data:{session}}=await _sb.auth.getSession();
   if(session){
@@ -11153,6 +11217,8 @@ function _evcNew(kind){ // renamed from _ecNew — the email-campaign layer decl
     donation_allow_custom:true,
     // recurring: when true a donation form charges every month (Stripe subscription)
     recurring_monthly:false,
+    // confirmation-email settings (from name / reply-to / send toggle); CC = notify_emails
+    email:{send_confirmation:true,from_name:'',reply_to:''},
     // custom fields (add an 'address'-type field to collect a mailing address)
     fields:JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS))
   };
@@ -11177,7 +11243,8 @@ function _ecEdit(id){
     location_url:ev.location_url||'',
     description:ev.description||'', campaign_tag:ev.campaign_tag||'',
     active:ev.active!==false,
-    notify_emails:ev.notify_emails||[],
+    notify_emails:(ev.notify_emails&&ev.notify_emails.length)?ev.notify_emails:((c.email&&c.email.cc)||[]),
+    email:(c.email&&typeof c.email==='object')?{send_confirmation:c.email.send_confirmation!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||''}:{send_confirmation:true,from_name:'',reply_to:''},
     _formTitleManual:!!(lf&&lf.title),
     _locationUrlManual:!!ev.location_url,
     allow_online:!!ev.form_slug,
@@ -11213,7 +11280,9 @@ function _ecEditForm(slug){
     kind:'donation',
     name:lf.title||'', event_date:'', location:'', location_url:'',
     description:'', campaign_tag:lf.campaign_tag||'',
-    active:lf.active!==false, notify_emails:[],
+    active:lf.active!==false,
+    notify_emails:(c.email&&Array.isArray(c.email.cc))?c.email.cc:[],
+    email:(c.email&&typeof c.email==='object')?{send_confirmation:c.email.send_confirmation!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||''}:{send_confirmation:true,from_name:'',reply_to:''},
     _formTitleManual:true, _locationUrlManual:false,
     allow_online:true,
     form_slug:lf.slug,
@@ -11397,6 +11466,11 @@ function _ecSync(){
   if(g('ec_active'))d.active=g('ec_active').checked;
   // notify emails (events only; field absent on donation)
   if(g('ec_notify'))d.notify_emails=g('ec_notify').value.split(',').map(s=>s.trim()).filter(Boolean);
+  // confirmation-email settings (both kinds); CC list is maintained live via the notify chips
+  d.email=d.email||{};
+  if(g('ec_email_on'))d.email.send_confirmation=g('ec_email_on').checked;
+  if(g('ec_email_from'))d.email.from_name=g('ec_email_from').value.trim();
+  if(g('ec_email_reply'))d.email.reply_to=g('ec_email_reply').value.trim();
   // online reg + form meta
   if(g('ec_allow_online'))d.allow_online=g('ec_allow_online').checked;
   if(g('ec_form_slug'))d.form_slug=g('ec_form_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
@@ -11417,6 +11491,18 @@ function _ecSync(){
   _ecSyncFields();
 }
 
+// Confirmation-email settings written into stripe_config.email — read server-side
+// by event-register / form-submit / stripe-webhook. CC = the notify_emails chips.
+function _ecEmailCfg(d){
+  const e=d.email||{};
+  const cc=(d.notify_emails||[]).map(s=>String(s).trim()).filter(x=>x&&x.includes('@'));
+  const out={send_confirmation:e.send_confirmation!==false};
+  if(e.from_name&&e.from_name.trim())out.from_name=e.from_name.trim();
+  if(e.reply_to&&e.reply_to.trim())out.reply_to=e.reply_to.trim();
+  if(cc.length)out.cc=cc;
+  return out;
+}
+
 // ── Shared stripe_config + form payload builder (single source of truth) ──
 // Replaces the 3 divergent copies that caused the addon-preset bug. Every
 // mode routes through here: donation, tiered, tiered_addon, free(+optional gift).
@@ -11434,12 +11520,14 @@ function _ecBuildStripeConfig(d){
     // Recurring monthly donation form → the form.html renderer + form-submit create
     // a Stripe SUBSCRIPTION (charged every month) instead of a one-time PaymentIntent.
     if(d.recurring_monthly)cfg.recurring={interval:'month'};
+    cfg.email=_ecEmailCfg(d);
     return {ok:true,cfg};
   }
   if(!d.paid){
     // Free RSVP, optionally with a real donation add-on.
     const cfg={mode:'free',currency:'usd',tiers:[],allow_donation:!!d.allow_donation,presets:d.allow_donation?presets:[]};
     if(d.allow_donation)cfg.allow_custom=!!d.donation_allow_custom;
+    cfg.email=_ecEmailCfg(d);
     return {ok:true,cfg};
   }
   // Paid event — tiered or tiered_addon.
@@ -11450,6 +11538,7 @@ function _ecBuildStripeConfig(d){
     cfg.presets=presets;                       // ← the previously-missing write
     cfg.allow_custom=!!d.donation_allow_custom;
   }
+  cfg.email=_ecEmailCfg(d);
   return {ok:true,cfg};
 }
 
@@ -11917,10 +12006,18 @@ function _ecStep3Html(){
     +'<textarea id="ec_success_msg" class="fb-in" style="min-height:60px;resize:vertical" placeholder="'+(isDon?'Your gift means more than you know\u2026':'We can\'t wait to see you there\u2026')+'">'+_escHtml(d.form_success_message||'')+'</textarea>'
     +'</div>';
 
-  if(!isDon){
-    h+='<div class="fb-section"><h3>Notify on signup</h3>'
-      +'<div class="fb-hint">Stored for when email delivery is wired up.</div>'
-      +'<div id="ec_notify_chips" style="margin-bottom:10px">'+_ecNotifyChipsHtml()+'</div>'
+  {
+    const em=d.email||{};
+    h+='<div class="fb-section"><h3>Confirmation emails</h3>'
+      +'<label class="fb-check" style="margin-top:0"><input type="checkbox" id="ec_email_on"'+(em.send_confirmation!==false?' checked':'')+'> Email a confirmation to the '+(isDon?'donor':'person who registers')+'</label>'
+      +'<div class="fb-hint" style="margin-top:4px">'+(isDon?'A branded thank-you is sent after each gift.':'A branded confirmation with the event name, date and location is sent after they register.')+'</div>'
+      +'<label class="fb-lbl" style="margin-top:12px">From name</label>'
+      +'<input id="ec_email_from" class="fb-in" type="text" value="'+_escAttr(em.from_name||'')+'" placeholder="Chabad at the Falls">'
+      +'<label class="fb-lbl">Reply-to address</label>'
+      +'<input id="ec_email_reply" class="fb-in" type="email" value="'+_escAttr(em.reply_to||'')+'" placeholder="rabbi@jewishchagrinfalls.com">'
+      +'<div class="fb-hint" style="margin-top:-8px">Where replies go. Leave blank to use the default.</div>'
+      +'<label class="fb-lbl" style="margin-top:8px">CC these people on every confirmation</label>'
+      +'<div id="ec_notify_chips" style="margin:4px 0 10px">'+_ecNotifyChipsHtml()+'</div>'
       +'<div class="fb-row">'
       +'<input id="ec_notify_new" class="fb-in" type="email" placeholder="simi@chabadchagrin.com" style="flex:1;margin-bottom:0">'
       +'<button class="fb-mini-btn" onclick="_ecAddNotifyEmail()">'+_ecIcons.plus+' Add</button>'
