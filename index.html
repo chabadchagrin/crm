@@ -1836,7 +1836,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-10.2'; // EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-10.3'; // CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -11083,11 +11083,95 @@ async function renderEvents(){
   _renderEventList();
 }
 
+// ── FORMS → SETTINGS: global org branding for confirmation emails ──────────
+// Stored in app_settings.key='confirm_email_settings', read by the signup-notify
+// edge function. Nothing is hardwired — another org rebrands entirely from here.
+let _fsSettings=null;
+async function openFormsSettings(){
+  let bg=document.getElementById('formsSettingsModal');
+  if(!bg){
+    bg=document.createElement('div'); bg.id='formsSettingsModal'; bg.className='modal-bg';
+    bg.addEventListener('mousedown',e=>{ if(e.target===bg)bg.style.display='none'; });
+    document.body.appendChild(bg);
+  }
+  bg.style.display='flex';
+  bg.innerHTML='<div class="modal" style="width:560px"><div style="text-align:center;padding:36px;color:var(--txt3);font-family:var(--font-ui);font-size:.8rem">Loading settings…</div></div>';
+  let s={};
+  try{ const r=await sbAll("app_settings?key=eq.confirm_email_settings&select=value"); let v=r&&r[0]&&r[0].value; if(typeof v==='string')v=JSON.parse(v); if(v&&typeof v==='object')s=v; }catch(e){}
+  _fsSettings=s;
+  const A=_escAttr, H=_escHtml;
+  bg.querySelector('.modal').style.cssText='width:560px;max-height:88vh;overflow:auto';
+  bg.querySelector('.modal').innerHTML=
+    '<h2 style="font-family:var(--font-display);font-size:1rem;color:var(--txt);margin:0 0 4px">Forms &amp; email settings</h2>'
+    +'<div class="fb-hint" style="margin-bottom:14px">Your branding for every confirmation email. Each form&rsquo;s own paragraph and send toggle live in that form&rsquo;s step&nbsp;4.</div>'
+    +'<div class="fb-section"><h3>Organization</h3>'
+      +'<label class="fb-lbl">Organization name</label>'
+      +'<input id="fs_org" class="fb-in" type="text" value="'+A(s.org_name||'')+'" placeholder="Chabad at the Falls">'
+      +'<label class="fb-lbl">Logo image URL</label>'
+      +'<input id="fs_logo" class="fb-in" type="url" value="'+A(s.logo_url||'')+'" placeholder="https://…/email-logo.png">'
+      +'<div class="fb-hint" style="margin-top:-8px">A hosted image (shown ~180px wide). Use a light file for fast loading.</div>'
+      +'<label class="fb-lbl" style="margin-top:6px">Mailing address <span style="font-weight:400;color:var(--txt3)">(optional, shown in the footer)</span></label>'
+      +'<textarea id="fs_addr" class="fb-in" style="min-height:48px;resize:vertical" placeholder="123 Main St, Chagrin Falls, OH 44022">'+H(s.address||'')+'</textarea>'
+      +'<label class="fb-lbl">Receipt / legal footer line</label>'
+      +'<textarea id="fs_tax" class="fb-in" style="min-height:60px;resize:vertical" placeholder="…is a tax exempt 501(c)(3)… Tax ID #…">'+H(s.tax_footer||'')+'</textarea>'
+      +'<label class="fb-check" style="margin-top:8px"><input type="checkbox" id="fs_bh"'+(s.show_bh!==false?' checked':'')+'> Show ב&quot;ה at the top of every email</label>'
+    +'</div>'
+    +'<div class="fb-section"><h3>Default sender</h3>'
+      +'<div class="fb-hint">Used unless a form overrides it in its step&nbsp;4.</div>'
+      +'<label class="fb-lbl">From / reply-to name</label>'
+      +'<input id="fs_from" class="fb-in" type="text" value="'+A(s.from_name||'')+'" placeholder="Chabad at the Falls">'
+      +'<label class="fb-lbl">From / reply-to email address</label>'
+      +'<input id="fs_reply" class="fb-in" type="email" value="'+A(s.reply_to||'')+'" placeholder="rabbi@jewishchagrinfalls.com">'
+      +'<div class="fb-hint" style="margin-top:-8px">Emails are sent from this address and replies return to it.</div>'
+      +'<label class="fb-lbl" style="margin-top:6px">CC these people on every confirmation <span style="font-weight:400;color:var(--txt3)">(comma-separated)</span></label>'
+      +'<input id="fs_cc" class="fb-in" type="text" value="'+A((Array.isArray(s.cc)?s.cc.join(', '):''))+'" placeholder="simi@chabadchagrin.com">'
+    +'</div>'
+    +'<div class="fb-section"><h3>Default messages</h3>'
+      +'<div class="fb-hint">The opening paragraph used when a form doesn&rsquo;t set its own. Names, amounts, dates and custom fields fill in automatically.</div>'
+      +'<label class="fb-check" style="margin-top:6px"><input type="checkbox" id="fs_evsend"'+(s.event_send!==false?' checked':'')+'> Send event registration confirmations by default</label>'
+      +'<label class="fb-lbl" style="margin-top:8px">Default event paragraph</label>'
+      +'<textarea id="fs_evintro" class="fb-in" style="min-height:80px;resize:vertical" placeholder="Thank you for registering! We look forward to seeing you.">'+H(s.event_intro||'')+'</textarea>'
+      +'<label class="fb-check" style="margin-top:10px"><input type="checkbox" id="fs_dsend"'+(s.donation_send!==false?' checked':'')+'> Send donation confirmations by default</label>'
+      +'<label class="fb-lbl" style="margin-top:8px">Default donation paragraph</label>'
+      +'<textarea id="fs_dintro" class="fb-in" style="min-height:120px;resize:vertical" placeholder="Thank you for your generous contribution…">'+H(s.donation_intro||'')+'</textarea>'
+    +'</div>'
+    +'<div class="modal-btns">'
+      +'<button class="btn btn-sec" onclick="document.getElementById(\'formsSettingsModal\').style.display=\'none\'">Cancel</button>'
+      +'<button class="btn btn-pri" id="fs_saveBtn" onclick="saveFormsSettings()">Save</button>'
+    +'</div>';
+}
+async function saveFormsSettings(){
+  const g=id=>document.getElementById(id);
+  const s=Object.assign({},_fsSettings||{});
+  s.org_name=g('fs_org').value.trim();
+  s.logo_url=g('fs_logo').value.trim();
+  s.from_name=g('fs_from').value.trim();
+  s.reply_to=g('fs_reply').value.trim();
+  s.address=g('fs_addr').value.trim();
+  s.tax_footer=g('fs_tax').value.trim();
+  s.show_bh=g('fs_bh').checked;
+  s.event_send=g('fs_evsend').checked;
+  s.donation_send=g('fs_dsend').checked;
+  s.event_intro=g('fs_evintro').value;
+  s.donation_intro=g('fs_dintro').value;
+  s.cc=g('fs_cc').value.split(',').map(x=>x.trim()).filter(x=>x&&x.includes('@'));
+  const btn=g('fs_saveBtn'); if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  try{
+    await sbSetSetting('confirm_email_settings',JSON.stringify(s));
+    _fsSettings=s;
+    document.getElementById('formsSettingsModal').style.display='none';
+    if(typeof _ebToastMsg==='function')_ebToastMsg('Email settings saved');
+  }catch(e){ if(btn){btn.disabled=false;btn.textContent='Save';} alert('Could not save settings: '+(e.message||e)); }
+}
+
 function _renderEventList(){
   const host=document.getElementById('eventsViewInner');
   const header=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <h2 style="font-family:var(--font-display);font-size:1.1rem;color:var(--txt);margin:0"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg> Events</h2>
-    <button class="btn btn-pri" onclick="_evcNew()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Event</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sec" onclick="openFormsSettings()" style="font-size:.7rem;padding:6px 12px" title="Email &amp; branding for confirmation emails"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.4H3a2 2 0 0 1 0-4h.2A1.6 1.6 0 0 0 4.5 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.5V4a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1.4Z"></path></svg> Settings</button>
+      <button class="btn btn-pri" onclick="_evcNew()" style="font-size:.7rem;padding:6px 14px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg> New Event</button>
+    </div>
   </div>`;
   if(!_events.length){
     host.innerHTML=header+`<div style="text-align:center;padding:48px 16px;color:var(--txt3);font-family:var(--font-ui);font-size:.78rem">No events yet.</div>`;
@@ -11218,7 +11302,7 @@ function _evcNew(kind){ // renamed from _ecNew — the email-campaign layer decl
     // recurring: when true a donation form charges every month (Stripe subscription)
     recurring_monthly:false,
     // confirmation-email settings (from name / reply-to / heading / message / send toggle); CC = notify_emails
-    email:{send_confirmation:true,from_name:'',reply_to:'',heading:'',message:''},
+    email:{send:true,from_name:'',reply_to:'',intro:''},
     // custom fields (add an 'address'-type field to collect a mailing address)
     fields:JSON.parse(JSON.stringify(_EC_DEFAULT_FIELDS))
   };
@@ -11244,7 +11328,7 @@ function _ecEdit(id){
     description:ev.description||'', campaign_tag:ev.campaign_tag||'',
     active:ev.active!==false,
     notify_emails:(ev.notify_emails&&ev.notify_emails.length)?ev.notify_emails:((c.email&&c.email.cc)||[]),
-    email:(c.email&&typeof c.email==='object')?{send_confirmation:c.email.send_confirmation!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||'',heading:c.email.heading||'',message:c.email.message||''}:{send_confirmation:true,from_name:'',reply_to:'',heading:'',message:''},
+    email:(c.email&&typeof c.email==='object')?{send:c.email.send!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||'',intro:c.email.intro||''}:{send:true,from_name:'',reply_to:'',intro:''},
     _formTitleManual:!!(lf&&lf.title),
     _locationUrlManual:!!ev.location_url,
     allow_online:!!ev.form_slug,
@@ -11282,7 +11366,7 @@ function _ecEditForm(slug){
     description:'', campaign_tag:lf.campaign_tag||'',
     active:lf.active!==false,
     notify_emails:(c.email&&Array.isArray(c.email.cc))?c.email.cc:[],
-    email:(c.email&&typeof c.email==='object')?{send_confirmation:c.email.send_confirmation!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||'',heading:c.email.heading||'',message:c.email.message||''}:{send_confirmation:true,from_name:'',reply_to:'',heading:'',message:''},
+    email:(c.email&&typeof c.email==='object')?{send:c.email.send!==false,from_name:c.email.from_name||'',reply_to:c.email.reply_to||'',intro:c.email.intro||''}:{send:true,from_name:'',reply_to:'',intro:''},
     _formTitleManual:true, _locationUrlManual:false,
     allow_online:true,
     form_slug:lf.slug,
@@ -11468,11 +11552,10 @@ function _ecSync(){
   if(g('ec_notify'))d.notify_emails=g('ec_notify').value.split(',').map(s=>s.trim()).filter(Boolean);
   // confirmation-email settings (both kinds); CC list is maintained live via the notify chips
   d.email=d.email||{};
-  if(g('ec_email_on'))d.email.send_confirmation=g('ec_email_on').checked;
+  if(g('ec_email_on'))d.email.send=g('ec_email_on').checked;
   if(g('ec_email_from'))d.email.from_name=g('ec_email_from').value.trim();
   if(g('ec_email_reply'))d.email.reply_to=g('ec_email_reply').value.trim();
-  if(g('ec_email_heading'))d.email.heading=g('ec_email_heading').value;
-  if(g('ec_email_message'))d.email.message=g('ec_email_message').value;
+  if(g('ec_email_intro'))d.email.intro=g('ec_email_intro').value;
   // online reg + form meta
   if(g('ec_allow_online'))d.allow_online=g('ec_allow_online').checked;
   if(g('ec_form_slug'))d.form_slug=g('ec_form_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
@@ -11495,14 +11578,16 @@ function _ecSync(){
 
 // Confirmation-email settings written into stripe_config.email — read server-side
 // by event-register / form-submit / stripe-webhook. CC = the notify_emails chips.
+// Per-form email config written to stripe_config.email. Read by signup-notify,
+// layered over the global org branding (Forms → Settings). Only the fields the
+// user set here override the global defaults.
 function _ecEmailCfg(d){
   const e=d.email||{};
   const cc=(d.notify_emails||[]).map(s=>String(s).trim()).filter(x=>x&&x.includes('@'));
-  const out={send_confirmation:e.send_confirmation!==false};
+  const out={send:e.send!==false};
   if(e.from_name&&e.from_name.trim())out.from_name=e.from_name.trim();
   if(e.reply_to&&e.reply_to.trim())out.reply_to=e.reply_to.trim();
-  if(e.heading&&e.heading.trim())out.heading=e.heading.trim();
-  if(e.message&&e.message.trim())out.message=e.message;
+  if(e.intro&&e.intro.trim())out.intro=e.intro;
   if(cc.length)out.cc=cc;
   return out;
 }
@@ -12029,27 +12114,22 @@ function _ecStep3Html(){
 function _ecStep4Html(){
   const d=_ecDraft, isDon=(d.kind==='donation');
   const em=d.email||{};
-  const _defHead=isDon?'Thank you!':"You're registered!";
-  const _defMsg=isDon
-    ?"Thank you for your generous contribution to support Chabad at the Falls.\nAll our activities are locally funded by people like you, and we appreciate your partnership in advancing our mission of building a vibrant community for local Chagrin Falls Jews.\nMay the merit of the Mitzvah of Tzedaka bring much blessing to you and your loved ones.\n\nSincerely,\nRabbi Shneur Itzinger\n\nPlease keep this receipt for your tax records."
-    :"Thank you for registering! We're looking forward to seeing you. Here are the details:";
-  const _tokHint=isDon
-    ?'Tokens you can use: {first_name}, {amount}.'
-    :'Tokens you can use: {first_name}, {event_name}, {event_date}, {event_location}, {amount}.';
+  const who=isDon?'donor':'person who registers';
+  const autoBits=isDon
+    ?'name, email, amount, and any dedication or notes'
+    :'name, email, and the event name &amp; date';
   let h='<div class="fb-section"><h3>Confirmation email</h3>'
-    +'<label class="fb-check" style="margin-top:0"><input type="checkbox" id="ec_email_on"'+(em.send_confirmation!==false?' checked':'')+'> Email a confirmation to the '+(isDon?'donor':'person who registers')+'</label>'
-    +'<div class="fb-hint" style="margin-top:4px">'+(isDon?'A branded thank-you / tax receipt (with the ב"ה and your logo) is sent after each gift.':'A branded confirmation (with the ב"ה and your logo) is sent after they register; the event name, date and location fill in automatically below your message.')+'</div>'
-    +'<label class="fb-lbl" style="margin-top:12px">From name</label>'
-    +'<input id="ec_email_from" class="fb-in" type="text" value="'+_escAttr(em.from_name||'')+'" placeholder="Chabad at the Falls">'
-    +'<label class="fb-lbl">Reply-to address</label>'
-    +'<input id="ec_email_reply" class="fb-in" type="email" value="'+_escAttr(em.reply_to||'')+'" placeholder="rabbi@jewishchagrinfalls.com">'
-    +'<div class="fb-hint" style="margin-top:-8px">The email is also sent <b>from</b> this address. Leave blank to use rabbi@jewishchagrinfalls.com.</div>'
-    +'<label class="fb-lbl" style="margin-top:8px">Email heading</label>'
-    +'<input id="ec_email_heading" class="fb-in" type="text" value="'+_escAttr(em.heading||_defHead)+'" placeholder="'+_escAttr(_defHead)+'">'
-    +'<label class="fb-lbl">Email message</label>'
-    +'<textarea id="ec_email_message" class="fb-in" style="min-height:170px;resize:vertical">'+_escHtml(em.message||_defMsg)+'</textarea>'
-    +'<div class="fb-hint" style="margin-top:-8px">'+(isDon?'The body of the thank-you / receipt. The gift amount and date fill in automatically below.':'Shown above the auto-filled event details.')+' '+_tokHint+'</div>'
-    +'<label class="fb-lbl" style="margin-top:8px">CC these people on every confirmation</label>'
+    +'<label class="fb-check" style="margin-top:0"><input type="checkbox" id="ec_email_on"'+(em.send!==false?' checked':'')+'> Send an automatic confirmation email to the '+who+'</label>'
+    +'<div class="fb-hint" style="margin-top:4px">Your logo, the ב"ה, and the '+autoBits+' are added automatically. You only write the opening paragraph below. Branding is set once in <b>Forms → Settings</b>.</div>'
+    +'<label class="fb-lbl" style="margin-top:14px">Your paragraph</label>'
+    +'<textarea id="ec_email_intro" class="fb-in" style="min-height:170px;resize:vertical" placeholder="'+(isDon?'Thank you for your generous contribution…':'Thank you for registering! We look forward to seeing you.')+'">'+_escHtml(em.intro||'')+'</textarea>'
+    +'<div class="fb-hint" style="margin-top:-8px">The '+(isDon?'thank-you':'welcome')+' message shown above the auto-filled details. Leave blank to use the default set in Forms → Settings.</div>'
+    +'<label class="fb-lbl" style="margin-top:10px">From / reply-to name</label>'
+    +'<input id="ec_email_from" class="fb-in" type="text" value="'+_escAttr(em.from_name||'')+'" placeholder="(uses the default from Forms → Settings)">'
+    +'<label class="fb-lbl">From / reply-to email address</label>'
+    +'<input id="ec_email_reply" class="fb-in" type="email" value="'+_escAttr(em.reply_to||'')+'" placeholder="(uses the default from Forms → Settings)">'
+    +'<div class="fb-hint" style="margin-top:-8px">The email is sent <b>from</b> this address and replies come back to it. Leave blank to use the org default.</div>'
+    +'<label class="fb-lbl" style="margin-top:8px">Also CC these people</label>'
     +'<div id="ec_notify_chips" style="margin:4px 0 10px">'+_ecNotifyChipsHtml()+'</div>'
     +'<div class="fb-row">'
     +'<input id="ec_notify_new" class="fb-in" type="email" placeholder="simi@chabadchagrin.com" style="flex:1;margin-bottom:0">'
