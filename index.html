@@ -148,6 +148,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .loading-row{display:flex;align-items:center;gap:8px;padding:16px 13px;color:var(--txt3);font-size:.7rem}
 .spin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Quick Capture stage panel — one visible state at a time (see _captureStage) */
+@keyframes capPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.14);opacity:.55}100%{transform:scale(1);opacity:1}}
+.cap-dot{width:54px;height:54px;border-radius:50%;background:var(--red,#b91c1c);margin:0 auto;animation:capPulse 1.25s ease-in-out infinite;display:flex;align-items:center;justify-content:center;color:#fff}
+.cap-spin{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@media (prefers-reduced-motion:reduce){.cap-dot{animation:none}.cap-spin{animation-duration:2s}}
 .errblk{padding:12px 13px;color:var(--red);font-size:.7rem;display:flex;flex-direction:column;gap:8px}
 .retry-btn{background:rgba(185,28,28,.1);border:1px solid rgba(185,28,28,.25);color:var(--red);font-family:var(--font-ui);font-size:.65rem;padding:5px 12px;border-radius:4px;cursor:pointer;align-self:flex-start}
 .tab-bar{display:flex;border-bottom:1px solid var(--border);background:var(--surf)}
@@ -869,7 +874,7 @@ html.force-desktop #mobileShell{display:none!important}
 .ct-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surf2);flex-shrink:0;flex-wrap:wrap}
 .ct-wrap{flex:1;overflow:auto;padding:18px 24px}
 .ct-wrap-inner{max-width:1280px;margin:0 auto;background:var(--surf);border:1px solid var(--border);border-radius:5px;overflow:hidden}
-/* ── Research Chat (Claude-app layout) ── */
+/* ── Research Chat (chat-app layout) ── */
 .chat-shell{display:flex;flex:1;overflow:hidden;min-height:0}
 .chat-rail{width:264px;background:var(--surf2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
 .chat-rail-top{padding:14px 14px 10px}
@@ -1401,7 +1406,7 @@ html.force-desktop #mobileShell{display:none!important}
   <div class="modal-bg" id="contextModal" style="display:none">
     <div class="modal" style="width:520px">
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg> Rabbi Context</h2>
-      <div style="font-size:.72rem;color:var(--txt3);margin-bottom:12px">This is included in every AI search and research session — tell Claude who you are, what you're working on, upcoming events, key relationships.</div>
+      <div style="font-size:.72rem;color:var(--txt3);margin-bottom:12px">This is included in every AI search and research session — tell the AI who you are, what you're working on, upcoming events, key relationships.</div>
       <textarea id="globalContext" placeholder="I am Rabbi Shneur Itzinger of Chabad of Chagrin Falls. We are currently planning our annual gala in November..." style="width:100%;min-height:140px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:10px;font-family:var(--font-ui);font-size:.8rem;color:var(--txt);resize:vertical;outline:none;margin-bottom:12px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
       <div class="modal-btns">
         <button class="btn btn-sec" onclick="document.getElementById('contextModal').style.display='none'">Cancel</button>
@@ -1735,7 +1740,7 @@ html.force-desktop #mobileShell{display:none!important}
   </div>
 </div>
 
-<!-- GLOBAL ASK PANEL (Claude-app layout) -->
+<!-- GLOBAL ASK PANEL (chat-app layout) -->
 <div id="globalAskPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:8500;flex-direction:column">
   <!-- top bar -->
   <div id="chatTopBar" style="background:var(--surf);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:var(--sh-sm)">
@@ -1834,7 +1839,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-16.1'; // AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-16.3'; // QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -8041,7 +8046,7 @@ async function sendGlobalAsk(){
 }
 
 // ── GLOBAL ASK TOKEN GUARDRAILS ──
-// At scale the full roster can exceed Claude's 200k context window (hard API
+// At scale the full roster can exceed the context window (hard API
 // error) and the static "~35k tokens" hints become fiction. These helpers
 // (a) build roster lines at three detail levels from ONE shared source,
 // (b) estimate tokens from real data, and (c) auto-fit oversized rosters:
@@ -8082,7 +8087,10 @@ function _rosterLines(detail){
   });
 }
 function _rosterBudget(notesStr){
-  // 200k window minus: output reserve, system prompt, semantic notes, chat history, query overhead
+  // Budgeted against a 200k window minus output reserve, system prompt, semantic
+  // notes, chat history and query overhead. Gemini's window is far larger, so
+  // this is now conservative rather than a hard limit — deliberately left alone,
+  // because a bigger window is not a reason to spend more on every Power Search.
   const hist=_estTok(globalChatHistory.map(m=>m.content).join(' '));
   return Math.max(20000,170000-_estTok(notesStr||'')-hist-4000);
 }
@@ -8444,7 +8452,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
 // ════════════════════════════════════════════════════════════
 // ── QUICK CAPTURE ──
-// Dump text / PDF / image / voice → Claude matches it to a contact
+// Dump text / PDF / image / voice → the AI matches it to a contact
 // and proposes interactions/notes to log. Nothing saves until the
 // rabbi confirms. Interactions & notes only (pledges go in as text).
 // ════════════════════════════════════════════════════════════
@@ -8470,11 +8478,18 @@ function openCapture(){
   const ci=document.getElementById('capture-contact-input'); if(ci)ci.value='';
   const cr=document.getElementById('capture-contact-results'); if(cr){cr.style.display='none';cr.innerHTML='';}
   const vb=document.getElementById('capture-voice-banner'); if(vb)vb.style.display='none';
+  _captureHeard='';
+  try{_captureStage('idle');}catch(e){}
   try{_captureRenderPins();}catch(e){}
 }
 function closeCapture(){
-  _captureStopVoice();
+  // Discard, don't transcribe: closing mid-recording should not fire off a
+  // request and land proposals in a panel he has walked away from.
+  if(_captureMediaRec&&_captureMediaRec.state==='recording'){_captureCancelVoice();}
+  else{_captureStopVoice();}
+  _capRecTimerStop();
   captureContactClear();
+  try{_captureStage('idle');}catch(e){}
   document.getElementById('captureOverlay').style.display='none';
   document.body.style.overflow='';
 }
@@ -8966,12 +8981,207 @@ function captureClearFile(){
   const fi=document.getElementById('capture-file-info'); fi.style.display='none'; fi.textContent='';
 }
 
-// ── Voice note (records → Whisper → fills the text box) ──
+// ── ONE STATE AT A TIME ──────────────────────────────────────────────────
+// Quick Capture used to show every control at once: while a voice note was
+// transcribing, the textarea said "Transcribing…", the mic sat in the corner as
+// a small red square, and the Analyze button was still there offering to start
+// the thing that was already running. Three widgets describing one moment.
+//
+// Now the composer and the stage panel are MUTUALLY EXCLUSIVE — exactly one is
+// on screen. Everything that takes time (recording, transcribing, matching)
+// happens in the stage panel, which names the current step and shows how many
+// are left. The composer comes back when there is something to type into again.
+//
+// This applies to the typed path too: pressing Analyze hides the composer and
+// shows "Matching it to a contact", so the button can't be pressed twice and
+// there is never a stale control next to a live status.
+const _CAP_STEPS=[
+  {key:'recording',    label:'Record'},
+  {key:'transcribing', label:'Write it down'},
+  {key:'analyzing',    label:'Match it'}
+];
+let _captureStageName='idle';
+let _capRecTimer=null, _capRecStart=0, _capRecElapsed=0, _capRecPaused=false, _capRecCancelled=false;
+// Hard stop. 16 kHz mono PCM16 is ~32 KB/sec, and base64 inflates it by a third
+// against Gemini's 20 MB inline cap — about 7 minutes of audio. Stopping at 5
+// with a visible warning from 4 means a forgotten recorder ends as a usable
+// note rather than a request that's rejected after the fact.
+const CAP_REC_WARN_MS=4*60*1000, CAP_REC_MAX_MS=5*60*1000;
+
+function _capStepsHtml(active){
+  // Voice runs all three steps; typing starts at the third. Showing the whole
+  // path (dimmed where it doesn't apply) is what makes the flow legible.
+  const typedOnly=(active==='analyzing'&&!_captureHeard);
+  const idx=_CAP_STEPS.findIndex(x=>x.key===active);
+  return _CAP_STEPS.map((st,i)=>{
+    const skipped=typedOnly&&i<2;
+    const done=!skipped&&i<idx, now=i===idx;
+    const col=now?'var(--accent)':done?'var(--green,#15803d)':'var(--txt3)';
+    const mark=done?'<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ':'';
+    return (i?'<span style="color:var(--txt3);font-size:.6rem">→</span>':'')
+      +'<span style="font-family:var(--font-ui);font-size:.6rem;letter-spacing:.04em;color:'+col+';font-weight:'+(now?'700':'400')+';opacity:'+(skipped?'.4':'1')+'">'+mark+st.label+'</span>';
+  }).join('');
+}
+
+// Exactly one of #capture-composer / #capture-recorder / #capture-stage is ever
+// on screen. stage: 'idle' | 'recording' | 'transcribing' | 'analyzing'
+function _captureStage(stage){
+  _captureStageName=stage;
+  const panel=document.getElementById('capture-stage');
+  const composer=document.getElementById('capture-composer');
+  const recorder=document.getElementById('capture-recorder');
+  const intro=document.getElementById('capture-intro');
+  const batch=document.getElementById('capture-batch-bar');
+  if(!panel||!composer||!recorder)return;
+
+  panel.style.display='none'; recorder.style.display='none'; composer.style.display='none';
+
+  if(stage==='idle'){
+    composer.style.display='';
+    if(intro)intro.style.display='';
+    try{_captureRenderPins();}catch(e){}   // owns the batch bar's own visibility
+    return;
+  }
+  if(intro)intro.style.display='none';
+  if(batch)batch.style.display='none';
+
+  if(stage==='recording'){ recorder.style.display=''; _capRecPaintTime(); return; }
+
+  panel.style.display='';
+  const icon=document.getElementById('capture-stage-icon');
+  const title=document.getElementById('capture-stage-title');
+  const sub=document.getElementById('capture-stage-sub');
+  const heard=document.getElementById('capture-stage-heard');
+  const steps=document.getElementById('capture-stage-steps');
+  icon.innerHTML='<div class="cap-spin"></div>';
+
+  if(stage==='transcribing'){
+    title.textContent='Writing down what you said';
+    sub.textContent='A few seconds — keep this open.';
+    heard.style.display='none';
+  }else if(stage==='analyzing'){
+    title.textContent='Reading it and finding the person';
+    const names=_captureContacts.map(p=>p.name);
+    sub.textContent=names.length===1?('Filing to '+names[0]+'…')
+      :names.length>1?('Filing across '+names.length+' pinned people…')
+      :'Nothing is saved yet — you’ll get a proposal to check first.';
+    // The transcript stays up through matching, so a misheard name is catchable
+    // before the proposal even arrives.
+    if(_captureHeard){
+      heard.style.display='';
+      heard.innerHTML='<span style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard'+(_transcribeUsed==='whisper'?' · Whisper':'')+'</span><br>'+_enrichEsc(_captureHeard);
+    }else{
+      heard.style.display='none';
+    }
+  }
+  if(steps)steps.innerHTML=_capStepsHtml(stage);
+}
+
+// ── Recorder: timer, pause, live waveform ────────────────────────────────
+function _capElapsedMs(){ return _capRecElapsed+(_capRecPaused?0:(Date.now()-_capRecStart)); }
+function _capRecPaintTime(){
+  const el=document.getElementById('cap-rec-time');
+  if(!el)return;
+  const ms=_capElapsedMs(), sec=Math.floor(ms/1000);
+  el.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+  el.style.color=(ms>=CAP_REC_WARN_MS)?'var(--red,#b91c1c)':'var(--txt)';
+  const hint=document.getElementById('cap-rec-hint');
+  if(hint&&ms>=CAP_REC_WARN_MS&&!_capRecPaused)
+    hint.innerHTML='Getting long — this stops on its own at 5:00 and sends what it has.';
+}
+function _capRecTick(){
+  _capRecPaintTime();
+  if(!_capRecPaused&&_capElapsedMs()>=CAP_REC_MAX_MS)_captureStopVoice();
+}
+function _capRecTimerStop(){ if(_capRecTimer){clearInterval(_capRecTimer);_capRecTimer=null;} }
+
+// Pause is real (MediaRecorder.pause), not just a frozen clock — Safari before
+// 15 has no pause(), so the button hides itself rather than lying.
+function _capTogglePause(){
+  const rec=_captureMediaRec, btn=document.getElementById('cap-rec-pause');
+  const dot=document.getElementById('cap-rec-dot'), hint=document.getElementById('cap-rec-hint');
+  if(!rec)return;
+  if(_capRecPaused){
+    try{rec.resume();}catch(e){}
+    _capRecPaused=false; _capRecStart=Date.now();
+    if(dot)dot.style.animation='capPulse 1.25s ease-in-out infinite';
+    if(btn){btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';btn.title='Pause';btn.setAttribute('aria-label','Pause');}
+    if(hint)hint.innerHTML='Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet';
+  }else{
+    try{rec.pause();}catch(e){}
+    _capRecPaused=true; _capRecElapsed+=Date.now()-_capRecStart;
+    if(dot)dot.style.animation='none';
+    if(btn){btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><path d="M7 4v16l13-8Z"/></svg>';btn.title='Resume';btn.setAttribute('aria-label','Resume');}
+    if(hint)hint.textContent='Paused — carry on when you’re ready.';
+  }
+  _capRecPaintTime();
+}
+
+let _capAudioCtx=null,_capAnalyser=null,_capWaveRaf=null,_capLevels=[],_capWaveColor='#0f1e33',_capLastPush=0;
+function _capWaveDraw(){
+  const c=document.getElementById('cap-rec-wave');
+  if(!c||!c.getContext)return;
+  const dpr=window.devicePixelRatio||1;
+  const w=Math.max(40,c.clientWidth||120), h=30;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  const ctx=c.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const bw=3, step=5, n=Math.max(1,Math.floor(w/step));
+  const lv=_capLevels.slice(-n);
+  ctx.fillStyle=_capWaveColor;
+  for(let i=0;i<lv.length;i++){
+    const bh=Math.max(2,lv[i]*(h-4));
+    const x=w-(lv.length-i)*step;
+    // Older bars fade out, so the eye reads left-to-right as time passing.
+    ctx.globalAlpha=0.3+0.7*(i/Math.max(1,lv.length-1));
+    const y=(h-bh)/2;
+    if(ctx.roundRect){ctx.beginPath();ctx.roundRect(x,y,bw,bh,1.5);ctx.fill();}
+    else ctx.fillRect(x,y,bw,bh);
+  }
+  ctx.globalAlpha=1;
+}
+function _capWaveStart(stream){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC||!window.requestAnimationFrame)return;   // no waveform, everything else still works
+    try{_capWaveColor=(getComputedStyle(document.documentElement).getPropertyValue('--accent')||'').trim()||'#0f1e33';}catch(e){}
+    _capAudioCtx=new AC();
+    const srcNode=_capAudioCtx.createMediaStreamSource(stream);
+    _capAnalyser=_capAudioCtx.createAnalyser();
+    _capAnalyser.fftSize=1024;
+    srcNode.connect(_capAnalyser);   // analyser only — never to destination, or he'd hear himself
+    _capLevels=[]; _capLastPush=0;
+    const buf=new Uint8Array(_capAnalyser.fftSize);
+    const loop=()=>{
+      _capWaveRaf=requestAnimationFrame(loop);
+      if(_capRecPaused)return;
+      const now=Date.now();
+      if(now-_capLastPush<55)return;   // ~18 bars/sec: reads as speech, not a blur
+      _capLastPush=now;
+      _capAnalyser.getByteTimeDomainData(buf);
+      let sum=0;
+      for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;sum+=v*v;}
+      _capLevels.push(Math.min(1,Math.sqrt(sum/buf.length)*3.2));
+      if(_capLevels.length>200)_capLevels.shift();
+      _capWaveDraw();
+    };
+    loop();
+  }catch(e){}
+}
+function _capWaveStop(){
+  if(_capWaveRaf){try{cancelAnimationFrame(_capWaveRaf);}catch(e){} _capWaveRaf=null;}
+  if(_capAudioCtx){try{_capAudioCtx.close();}catch(e){} _capAudioCtx=null;}
+  _capAnalyser=null; _capLevels=[];
+}
+
+// ── Voice note: record → transcribe → analyze ────────────────────────────
 function captureRecordVoice(btn){
-  if(_captureMediaRec && _captureMediaRec.state==='recording'){ _captureStopVoice(); return; }
-  if(!navigator.mediaDevices||!window.MediaRecorder){alert('This browser can\u2019t record. Use the microphone on your keyboard instead.');return;}
+  if(_captureMediaRec && _captureMediaRec.state!=='inactive'){ _captureStopVoice(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){alert('This browser can’t record. Use the microphone on your keyboard instead.');return;}
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-    _captureStream=stream; _captureChunks=[];
+    _captureStream=stream; _captureChunks=[]; _captureHeard='';
+    _capRecCancelled=false; _capRecPaused=false; _capRecElapsed=0;
     let mime='';
     if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
     else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
@@ -8979,22 +9189,53 @@ function captureRecordVoice(btn){
     _captureMediaRec.ondataavailable=e=>{ if(e.data&&e.data.size>0)_captureChunks.push(e.data); };
     _captureMediaRec.onstop=()=>{ _captureTranscribe(); };
     _captureMediaRec.start();
-    btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="currentColor" stroke="none"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" stroke="none"/></svg>'; btn.style.background='var(--red,#b91c1c)';
+    _capRecStart=Date.now();
+    // Hide pause where it isn't supported rather than offering a dead control.
+    const pb=document.getElementById('cap-rec-pause');
+    if(pb)pb.style.display=(typeof _captureMediaRec.pause==='function')?'':'none';
+    const hint=document.getElementById('cap-rec-hint');
+    if(hint)hint.innerHTML='Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet';
+    const dot=document.getElementById('cap-rec-dot');
+    if(dot)dot.style.animation='capPulse 1.25s ease-in-out infinite';
+    _captureStage('recording');
+    _capWaveStart(stream);
+    _capRecTimerStop(); _capRecTimer=setInterval(_capRecTick,250);
   }).catch(()=>alert('DAAS can’t hear your microphone. Allow access in your browser settings, then try again.'));
 }
+// Send. Releases the mic here AND again in _captureTranscribe — stopping twice
+// is harmless, missing it leaves the tab's recording indicator lit.
 function _captureStopVoice(){
-  if(_captureMediaRec && _captureMediaRec.state==='recording'){ try{_captureMediaRec.stop();}catch(e){} }
+  _capRecTimerStop(); _capWaveStop();
+  if(_captureMediaRec && _captureMediaRec.state!=='inactive'){ try{_captureMediaRec.stop();}catch(e){} }
   if(_captureStream){ try{_captureStream.getTracks().forEach(t=>t.stop());}catch(e){} _captureStream=null; }
-  const b=document.getElementById('capture-mic'); if(b){b.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>';b.style.background='var(--surf,#fff)';}
 }
+// Delete. There used to be no way out of a recording except to let it
+// transcribe — pressing the mic again both stopped AND sent it.
+function _captureCancelVoice(){
+  _capRecCancelled=true;
+  _capRecTimerStop(); _capWaveStop();
+  if(_captureMediaRec && _captureMediaRec.state!=='inactive'){ try{_captureMediaRec.stop();}catch(e){} }
+  if(_captureStream){ try{_captureStream.getTracks().forEach(t=>t.stop());}catch(e){} _captureStream=null; }
+  _captureChunks=[]; _captureHeard=''; _capRecPaused=false; _capRecElapsed=0;
+  _captureStage('idle');
+}
+
 async function _captureTranscribe(){
   if(_captureStream){ try{_captureStream.getTracks().forEach(t=>t.stop());}catch(e){} _captureStream=null; }
-  const b=document.getElementById('capture-mic'); if(b){b.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>';b.style.background='var(--surf,#fff)';}
-  if(!_captureChunks.length)return;
+  _capWaveStop();
+  // A final chunk can still land during stop(), so re-clear rather than trust
+  // the clear that _captureCancelVoice already did.
+  if(_capRecCancelled){ _capRecCancelled=false; _captureChunks=[]; return; }
+  if(!_captureChunks.length){ _captureStage('idle'); return; }
   const blob=new Blob(_captureChunks,{type:_captureChunks[0].type||'audio/webm'});
   const ta=document.getElementById('capture-text');
   const prev=ta.value;
-  ta.value=(prev?prev+'\n':'')+'Transcribing…';
+  _captureStage('transcribing');
+  // Set inside the try, acted on after it: awaiting captureAnalyze() in here
+  // would put it under this catch, and a failure there would restore `prev` and
+  // wipe the transcript we just successfully got. captureAnalyze owns its own
+  // errors — this only decides whether to hand over.
+  let chain=false;
   try{
     // Roster first names are passed as a decoding hint — without it Hebrew and
     // Yiddish names come back mangled (Shloimy→"Solomy", Chaya→"Haya"), which
@@ -9002,26 +9243,28 @@ async function _captureTranscribe(){
     // `prompt` parameter; Gemini gets it folded into the instruction.
     let wp=''; try{wp=_captureWhisperPrompt();}catch(e){}
     const heard=await _transcribe(blob,{prompt:wp});
+    if(!heard){ _captureStage('idle'); alert('Nothing was picked up in that recording. Try again.'); return; }
     ta.value=(prev?prev+'\n':'')+heard;
     _captureHeard=heard;
-    // Non-destructive: the text stays put; we only OFFER to turn it into pins.
+    // The one branch that hands control back: if the recording reads like a LIST
+    // OF NAMES, the pin banner offers to pin them instead of sending it to the
+    // AI. That is a choice, so return to the composer where the banner and the
+    // transcript are both visible, and let him decide.
     let offered=false;
     try{offered=_captureOfferVoicePins(heard);}catch(e){}
-    // AUTO-CHAIN (2026-08-16, confirmed with Shneur): voice input no longer
-    // waits for a manual Analyze tap — transcribe, then go straight to the
-    // proposal review screen. TYPED input is unaffected and still needs the tap.
-    // Nothing is saved either way: a proposal still requires an explicit
-    // approval tap. The raw transcript is kept on the review screen as a
-    // "Heard:" line so a misheard name or amount is still catchable.
-    // Two deliberate exceptions: if the recording looked like a LIST OF NAMES we
-    // show the pin-instead banner and let the rabbi choose (auto-sending it to
-    // the AI is exactly what that banner exists to avoid), and if nothing was
-    // heard there is nothing to analyze.
-    if(heard&&!offered){
-      const ab=document.getElementById('capture-analyze-btn');
-      if(ab)captureAnalyze(ab);
-    }
-  }catch(e){ ta.value=prev; alert('Couldn\u2019t transcribe that. Try again.\n\n'+e.message); }
+    if(offered){ _captureStage('idle'); return; }
+    chain=true;
+  }catch(e){
+    ta.value=prev;
+    _captureHeard='';
+    _captureStage('idle');
+    alert('Couldn’t transcribe that. Try again.\n\n'+e.message);
+    return;
+  }
+  // Straight through to matching (confirmed with Shneur). Typed input still
+  // needs an explicit Analyze press, and nothing is saved either way — a
+  // proposal still requires an approval tap.
+  if(chain) await captureAnalyze();
 }
 
 // ── Build a roster WITH contact IDs for matching ──
@@ -9036,16 +9279,15 @@ function _captureRoster(){
 }
 
 // ── Analyze the dump → propose items ──
+// btn is optional — the composer is hidden while this runs, so there is no
+// button to disable or relabel. The voice path calls it with no argument.
 async function captureAnalyze(btn){
+  if(_captureStageName==='analyzing')return; // already running; can't double-fire
   const text=document.getElementById('capture-text').value.trim();
   if(!text && !_captureFile){alert('Add some text, a file, or a voice note first.');return;}
   const results=document.getElementById('capture-results');
-  const orig=btn.textContent; btn.disabled=true; btn.textContent='Analyzing…';
-  const _pinNames=_captureContacts.map(p=>p.name);
-  results.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:10px">'
-    +(_pinNames.length===1?('Reading — filing to '+_escHtml(_pinNames[0])+'…')
-      :_pinNames.length>1?('Reading — filing across '+_pinNames.length+' pinned people…')
-      :'Reading it and matching to a contact&hellip;')+'</div>';
+  results.innerHTML='';
+  _captureStage('analyzing');
 
   const today=localToday();
   const roster=_captureRoster();
@@ -9098,11 +9340,15 @@ async function captureAnalyze(btn){
     let parsed;
     try{parsed=_jsonFromReply(txt);}
     catch(_){throw new Error('The answer came back incomplete, so nothing was saved. Try fewer people at once — or pin them and press “Log to all”.');}
+    _captureStage('idle');
     _captureRenderProposals(parsed);
+    // Land him on the proposals rather than on the empty box that is now above
+    // them — the composer is back only so the next dump has somewhere to go.
+    try{results.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}
   }catch(e){
-    results.innerHTML='<div style="font-size:.78rem;color:var(--red);padding:10px;line-height:1.5">Analysis failed: '+_enrichEsc(e.message)+'</div>';
+    _captureStage('idle');
+    results.innerHTML='<div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;font-size:.8rem;color:var(--red);line-height:1.5">Couldn’t read that: '+_enrichEsc(e.message)+'<br><span style="color:var(--txt3)">Your text is still in the box above — press Analyze to try again.</span></div>';
   }
-  btn.disabled=false; btn.textContent=orig;
 }
 
 // Raw transcript of the last voice capture, surfaced on the review screen.
@@ -9132,7 +9378,13 @@ function _captureRenderProposals(parsed){
       copts+='<option value="'+m.id+'" data-household="'+h.id+'">'+_enrichEsc(_daasDisplayName(m))+'</option>';
     });
   });
-  const _heardHtml=_captureHeardHtml();
+  // Name the step. The proposals used to appear as a bare stack of cards, which
+  // read as "done" rather than "your turn" — especially after a voice note, where
+  // he pressed nothing between speaking and seeing them.
+  const _heardHtml='<div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 10px">'
+    +'<span style="font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--txt)">Here’s what I’d log</span>'
+    +'<span style="font-size:.72rem;color:var(--txt3)">'+items.length+' item'+(items.length===1?'':'s')+' · nothing saves until you confirm each one</span>'
+    +'</div>'+_captureHeardHtml();
 
   let html=_heardHtml;
   items.forEach((it,i)=>{
@@ -9833,7 +10085,7 @@ async function renderEnrichCard(){
   const memberListJson=JSON.stringify(members.map(m=>({id:m.id,name:m.first_name+' '+m.last_name})));
   html+='<div style="background:var(--surf,#fff);border:2px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:14px">';
   html+='<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:6px;font-weight:600"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"/><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"/></svg> Brain Dump</div>';
-  html+='<div style="font-size:.74rem;color:var(--txt3);margin-bottom:9px;line-height:1.4">Dump everything you know — calls, meetings, background, family details, giving context. Claude will sort it out.</div>';
+  html+='<div style="font-size:.74rem;color:var(--txt3);margin-bottom:9px;line-height:1.4">Dump everything you know — calls, meetings, background, family details, giving context. The AI will sort it out.</div>';
   html+='<div style="position:relative">';
   html+='<textarea id="enrich-dump" rows="5" placeholder="e.g. Ran into David at shul Sunday, he asked about the new building. His wife Sarah handles the checkbook. They moved here from Chicago 3 years ago. Pledged $5k last Yom Kippur but hasn\'t paid yet…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5"></textarea>';
   html+='<button onclick="enrichDumpRecord(this)" id="enrich-dump-mic" title="Record voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg></button>';
@@ -9910,7 +10162,7 @@ async function renderEnrichCard(){
   document.getElementById('enrichOverlay').scrollTop=0;
 }
 
-// Reusable textarea + <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg> voice-note record button (records audio → Whisper → Claude clean+extract)
+// Reusable textarea + voice-note record button (records audio → _transcribe → Gemini clean+extract)
 function _enrichTextareaWithVoice(id, value, placeholder, rows){
   return '<div style="position:relative">'
     +'<textarea id="'+id+'" rows="'+rows+'" placeholder="'+placeholder+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+value+'</textarea>'
@@ -9919,7 +10171,7 @@ function _enrichTextareaWithVoice(id, value, placeholder, rows){
     +'</div>';
 }
 
-// ── Voice note: record audio → Whisper transcription → Claude clean + extract ──
+// ── Voice note: record audio → _transcribe → Gemini clean + extract ──
 let _enrichMediaRec=null, _enrichChunks=[], _enrichRecTarget=null, _enrichRecStream=null;
 
 function enrichRecordVoice(targetId, btn){
@@ -21365,9 +21617,37 @@ function _asExecuteSearch(sentence){
     <button onclick="closeCapture()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Close</button>
   </div>
   <div style="max-width:680px;margin:0 auto;padding:16px 16px 80px">
-    <p style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.<br><span style="color:var(--txt3)">Logging a group after a program? Pin everyone under <strong>Pin people</strong> and log them all in one go — no limit on how many.</span></p>
+    <p id="capture-intro" style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.<br><span style="color:var(--txt3)">Logging a group after a program? Pin everyone under <strong>Pin people</strong> and log them all in one go — no limit on how many.</span></p>
 
-    <div style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+    <!-- STAGE PANEL — replaces the composer entirely while anything is running.
+         The composer and this are mutually exclusive: exactly one is on screen.
+         Before, a voice note left the textarea saying "Transcribing…" while an
+         "Analyze" button sat underneath still offering to do the thing already
+         in progress — two controls describing the same moment. -->
+    <div id="capture-stage" style="display:none;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:24px 18px 20px;margin-bottom:14px;text-align:center">
+      <div id="capture-stage-icon"></div>
+      <div id="capture-stage-title" style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--txt);margin-top:14px"></div>
+      <div id="capture-stage-sub" style="font-size:.76rem;color:var(--txt3);margin-top:5px;line-height:1.5"></div>
+      <div id="capture-stage-heard" style="display:none;text-align:left;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-top:14px;font-size:.79rem;color:var(--txt2);line-height:1.55"></div>
+      <div id="capture-stage-steps" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- RECORDER — WhatsApp-shaped: delete on the left, timer + live waveform in
+         the middle, pause, send on the right. Sits in the composer's slot so it
+         reads as the box transforming rather than a new screen appearing. -->
+    <div id="capture-recorder" style="display:none;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="_captureCancelVoice()" title="Delete this recording" aria-label="Delete this recording" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:none;background:none;color:var(--red,#b91c1c);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg></button>
+        <span id="cap-rec-dot" style="flex-shrink:0;width:9px;height:9px;border-radius:50%;background:var(--red,#b91c1c);animation:capPulse 1.25s ease-in-out infinite"></span>
+        <span id="cap-rec-time" style="flex-shrink:0;min-width:44px;font-family:var(--font-mono);font-size:.88rem;color:var(--txt);font-variant-numeric:tabular-nums">0:00</span>
+        <canvas id="cap-rec-wave" style="flex:1;min-width:40px;height:30px;display:block"></canvas>
+        <button id="cap-rec-pause" onclick="_capTogglePause()" title="Pause" aria-label="Pause" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></button>
+        <button onclick="_captureStopVoice()" title="Use this recording" aria-label="Use this recording" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+      </div>
+      <div id="cap-rec-hint" style="font-size:.7rem;color:var(--txt3);margin-top:10px;text-align:center;line-height:1.45">Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet</div>
+    </div>
+
+    <div id="capture-composer" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
       <div style="position:relative">
         <textarea id="capture-text" oninput="_captureHeard=''" rows="6" placeholder="Type or paste here. e.g. 'Met Carol on the street, she asked about Hebrew school for her grandkids'…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
         <button onclick="captureRecordVoice(this)" id="capture-mic" title="Record a voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
