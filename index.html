@@ -1367,15 +1367,7 @@ html.force-desktop #mobileShell{display:none!important}
     <div class="modal" style="width:420px">
       <h2><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="m10.5 12.5 9-9M16 6l3 3M14 8l3 3"></path></svg> API Keys</h2>
       <div style="margin-bottom:20px;padding:10px 12px;background:var(--surf2);border:1px solid var(--border2);border-radius:6px">
-        <div style="font-size:.7rem;color:var(--txt2);line-height:1.55">The AI and property keys live on the server now — there is nothing to paste here. Anthropic, Gemini, OpenAI and RapidAPI are all reached through Supabase edge functions.</div>
-      </div>
-      <div style="margin-bottom:20px">
-        <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Voice transcription</label>
-        <select id="apiTranscribeSelect" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--txt);padding:8px 10px;font-family:var(--font-ui);font-size:.72rem;border-radius:5px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-          <option value="gemini">Gemini (falls back to Whisper)</option>
-          <option value="openai">Whisper only</option>
-        </select>
-        <div style="font-size:.62rem;color:var(--txt3);margin-top:3px">Switch to Whisper if Hebrew or Yiddish names come back wrong.</div>
+        <div style="font-size:.7rem;color:var(--txt2);line-height:1.55">The AI and property keys live on the server now — there is nothing to paste here. Claude, OpenAI and RapidAPI are all reached through Supabase edge functions.</div>
       </div>
       <div style="margin-bottom:20px">
         <label style="display:block;font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">GitHub PAT <span style="font-weight:400;text-transform:none;letter-spacing:0">(for <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13c-1.5 1-2 4-2 4s3-.5 4-2M12 15l-3-3a13 13 0 0 1 7-9 1 1 0 0 1 1 1 13 13 0 0 1-5 11Z"></path><circle cx="14.5" cy="9.5" r="1.5"></circle></svg> Deploy)</span></label>
@@ -1778,10 +1770,6 @@ html.force-desktop #mobileShell{display:none!important}
               <svg class="ic" viewBox="0 0 24 24" width=".85em" height=".85em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
             </button>
             <div class="strength-menu" id="strengthMenu">
-              <div class="strength-opt" data-mode="quick" onclick="setStrength('quick')">
-                <span class="so-ic"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"></path></svg></span>
-                <div><div class="so-name">Quick</div><div class="so-desc">Names and basic info</div></div>
-              </div>
               <div class="strength-opt" data-mode="standard" onclick="setStrength('standard')">
                 <span class="so-ic"><svg class="ic" viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l3 2"></path></svg></span>
                 <div><div class="so-name">Standard</div><div class="so-desc">Names, basic info and your notes</div></div>
@@ -1839,7 +1827,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-16.4'; // RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-17.1'; // TWO PROVIDERS, NO MODEL NAMES IN THE BROWSER. Gemini is gone; every AI call now runs on Claude or OpenAI, chosen server-side by JOB TYPE. NEW ai-router edge function replaces ai-proxy AND gemini-proxy: a call site posts {tier:'deep'|'fast'|'search'} plus the Anthropic-shaped payload it already spoke, and the router picks the company and the model. deep -> claude-sonnet-5 (falls back to gpt-5.6-sol with no Anthropic key); fast -> gpt-5.6-luna, NEVER Claude, because those four sites are interactive and a reasoning model puts a visible pause in a command bar (latency, not cost); search -> claude-sonnet-5 + Anthropic web_search, or gpt-5.6-sol + OpenAI web search via the Responses API. NO MODEL PICKER ANYWHERE and no model string in this file: the fair question to ask a user is how much effort, never which vendor, and a model rename is now a 300-line server edit rather than a redeploy of this 1.7MB page. Client entry point is _ai(tier,payload) over the existing _fnPost; _aiComplete/_geminiComplete/_gemParts/_gemSystem and the GEM_* constants are deleted. Response shape is unchanged ({content:[{type:'text',text}],stop_reason}) so no call site changed how it reads a reply, and stop_reason is normalised across providers because captureAnalyze's truncation guard reads it. NEW: d.citations — the router returns every page the search tool actually read, and Profile Build now renders them as clickable Sources (OpenAI's terms require visible citations wherever web results are shown, and a research claim the rabbi cannot check in one tap is one he has to take on faith). SCHEMAS: the call sites' Gemini-dialect nullable:true is translated server-side into a JSON Schema null union — shipping the Gemini spelling to OpenAI would silently drop nullability and turn an absent household_id into an empty string. OpenAI's dialect supports anyOf, which Gemini's did not, so _rpAiRun/_mAsSearch/captureAnalyze can finally be pinned — deliberately left as a follow-up, not done on cutover day. TRANSCRIPTION -> gpt-transcribe, one engine: both were run on real voice notes covering Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag and gpt-transcribe held up with no word list or priming, so the Gemini audio path, the Whisper op, the Settings engine dropdown and the daas_transcribe preference are all gone (a picker with one option is worse than none). _blobToWav is UNTOUCHED — 16kHz mono PCM16 is what the engine wants, its header logic is byte-tested, and it is what made the A/B valid. QUICK CHAT MODE REMOVED (Shneur): it did not do enough over the plain text search bar to justify a third option. Standard is the light mode, Power Search the heavy one; the help text was verified accurate and kept, since it describes how much DATA each mode reads, not which model reads it. setStrength normalises an unknown mode to standard, so a chat_sessions row saved with mode:'quick' loads on Standard instead of a mode that no longer exists. Power Search's cost estimate is untouched — $2/1M input is Claude Sonnet 5's exact rate and the ~90%-cheaper line is its $0.20 cache rate; only the stale ~$0.30 in the help modal became ~$0.20. VERIFIED: both blocks node --check clean, both sentinels present, 75/75 on a stubbed VM harness (translation, cache_control blocks, JSON modes, stop_reason round-trip, resolution matrix, citation extraction, error surfacing, _jsonFromReply), and every tier smoke-tested against the LIVE functions — fast/deep/search on Claude, search AND deep forced onto OpenAI, embed, and transcribe. THE OPENAI SEARCH BRANCH NEVER FIRES IN NORMAL USE (the Anthropic key is set), so it is forceable on purpose: body.force:'openai' per request, or AI_FORCE_PROVIDER=openai on the function. Re-verify it that way, not by deleting secrets. ||| PREVIOUS (2026-08-16.4): RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -1926,18 +1914,29 @@ console.log('DAAS build '+BUILD_STAMP);
 // ── SUPABASE AUTH ──
 const SB_URL='https://sdzbzdoncakpsnfapbxj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkemJ6ZG9uY2FrcHNuZmFwYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMTkyMjEsImV4cCI6MjA5NDc5NTIyMX0.AXXt2NIhvGtmAS2xEJ5ulLD37cOGcHLyZ3FbbHBegMs';
-// ── NO PROVIDER KEYS IN THE BROWSER (2026-08-16) ─────────────────────────
+// ── NO PROVIDER KEYS, AND NO MODEL NAMES, IN THE BROWSER (2026-08-17) ────
 // ANTHROPIC_KEY / OPENAI_KEY / RAPIDAPI_KEY and their localStorage entries
 // (crm_ant_key / crm_oai_key / crm_rapid_key) are GONE. Every AI and data call
-// now routes through a JWT-protected Supabase edge function that holds the key
-// as a server-side secret:
-//     ai-proxy      → Anthropic   (profile research only — it needs web_search)
-//     gemini-proxy  → Gemini      (all chat, cleanup, JSON extraction, audio)
-//     openai-proxy  → OpenAI      (pgvector embeddings + the Whisper fallback)
+// routes through a JWT-protected Supabase edge function that holds the key as
+// a server-side secret:
+//     ai-router     → Anthropic or OpenAI, decided server-side by JOB TYPE
+//     openai-proxy  → OpenAI      (pgvector embeddings + transcription)
 //     data-proxy    → RapidAPI    (Zillow property lookup)
-// Client entry points: _aiComplete() / _geminiComplete() / _openaiProxy() /
-// _dataProxy(). NEVER add a direct fetch to a provider host anywhere in this
-// file — this source is public on GitHub Pages.
+// Client entry points: _ai() / _openaiProxy() / _dataProxy().
+//
+// A CALL SITE DECLARES A JOB TYPE, NEVER A MODEL. `_ai('deep'|'fast'|'search')`
+// says what kind of work this is; ai-router decides which company and which
+// model does it. Model names are meaningless to the rabbi, change constantly,
+// and under per-account keys would differ per organisation — so they live on
+// the server, where changing one is an edit to a 300-line function rather than
+// a redeploy of this 1.7MB page. This also closes the failure mode from the
+// 2026-08-16 migration, where a model constant here drifted out of sync with
+// the proxy's allow-list and every call 400'd.
+//     deep   — anything that reasons or writes prose, and anything SAVED
+//     fast   — instant, form-filling, fixed output, user is waiting
+//     search — Profile Build's live web research
+// NEVER add a direct fetch to a provider host anywhere in this file — this
+// source is public on GitHub Pages.
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 // Supabase client (handles session persistence automatically)
@@ -1982,50 +1981,19 @@ async function sbInChunks(buildPath,ids,chunk=100){
   return out;
 }
 
-// ── AI PROXY ─────────────────────────────────────────────────────────────
-// Single client entry point for Anthropic calls. Routes through the ai-proxy
-// Edge Function so the key lives server-side, never in the browser. Returns
-// the SAME response shape the direct Anthropic API returned (d.content /
-// d.error.message), so a call site migrates by swapping its fetch(...) for
-// `await _aiComplete({model,max_tokens,system,messages})` with no change to
-// how it reads d.content or catches d.error.message.
-// JWT-protected: sends the user's Supabase session token, exactly like sb().
-async function _aiComplete(payload,opts={}){
-  const token=_authToken||SB_KEY;
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),opts.timeoutMs||45000);
-  try{
-    const res=await fetch(SB_URL+'/functions/v1/ai-proxy',{
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify(payload),
-      signal:controller.signal
-    });
-    clearTimeout(timer);
-    const txt=await res.text();
-    let d; try{d=txt?JSON.parse(txt):{};}catch(_){throw new Error('AI proxy returned a non-JSON response.');}
-    if(!res.ok){throw new Error((d&&d.error&&d.error.message)||('AI proxy error '+res.status));}
-    return d;
-  }catch(e){
-    clearTimeout(timer);
-    if(e&&e.name==='AbortError')throw new Error('AI request timed out.');
-    throw e;
-  }
-}
-
 // ── EDGE-FUNCTION POST — shared transport for every proxy helper below.
-// Same auth as sb()/_aiComplete(): the user's Supabase session token, which
-// Supabase validates before the function body runs.
+// Same auth as sb(): the user's Supabase session token, which Supabase
+// validates before the function body runs.
 //
 // RETRIES ON 429/503. Every call through here is idempotent (nothing is written
 // until the user approves a proposal), so a rate-limited request is safe to
 // repeat. This matters most for Research Chat: one message ships the whole
 // roster — roughly 32k tokens at 615 households — so a quick back-and-forth can
 // trip a tokens-per-minute ceiling that a single retry rides straight over.
-// Gemini returns a retryDelay in its 429 body; we honour it when present.
-const _FN_LABEL={'gemini-proxy':'Gemini','openai-proxy':'OpenAI','ai-proxy':'Anthropic','data-proxy':'the property lookup'};
+const _FN_LABEL={'ai-router':'The AI','openai-proxy':'OpenAI','data-proxy':'the property lookup'};
 function _fnRetryDelayMs(d,attempt){
-  // Gemini: error.details[] contains {@type:...RetryInfo, retryDelay:"7s"}
+  // Some providers name their own backoff in the 429 body — honour it when it
+  // is there rather than guessing shorter.
   try{
     const det=(d&&d.error&&d.error.details)||[];
     for(const x of det){
@@ -2063,9 +2031,9 @@ async function _fnPost(fnName,payload,opts={}){
     let d; try{d=txt?JSON.parse(txt):{};}catch(_){throw new Error(fnName+' returned a non-JSON response.');}
     // Console-log the raw failure body. The UI necessarily shows a short, calm
     // sentence, which makes it impossible to tell afterwards WHICH failure it
-    // was — a Gemini 429, a Supabase EDGE_FUNCTION_ERROR, or a bad model name
-    // all read alike once they've been softened. This line is the receipt.
-    if(!res.ok)console.warn('[DAAS]',fnName,'HTTP',res.status,txt.slice(0,500));
+    // was — a provider 429, a Supabase EDGE_FUNCTION_ERROR, or a refusal all
+    // read alike once they've been softened. This line is the receipt.
+    if(!res.ok)console.warn('[DAAS]',fnName,'HTTP',res.status,txt.slice(0,800));
 
     // Retryable: rate limited (429) or the upstream is briefly overloaded (503).
     if((res.status===429||res.status===503)&&attempt<tries){
@@ -2073,10 +2041,15 @@ async function _fnPost(fnName,payload,opts={}){
       continue;
     }
     if(res.status===429){
-      const who=_FN_LABEL[fnName]||fnName;
+      // Name whichever provider actually refused. ai-router reports it in
+      // _meta.provider on success and in the error body on failure; without
+      // that this sentence used to blame Gemini for an OpenAI rate limit and
+      // send the reader to the wrong dashboard.
+      const who=(d&&d._meta&&d._meta.provider==='anthropic')?'Anthropic'
+        :(d&&d._meta&&d._meta.provider==='openai')?'OpenAI'
+        :(_FN_LABEL[fnName]||fnName);
       throw new Error(who+' is rate-limiting us right now. Wait a minute and try again. '
-        +'If this keeps happening, the API key is probably still on the free tier — turn on billing '
-        +'for it in Google AI Studio and the limits jump immediately.');
+        +'If it keeps happening the account has hit a spending or rate cap — the raw refusal is in the console.');
     }
     if(!res.ok)throw new Error((d&&d.error&&d.error.message)||(fnName+' error '+res.status));
     if(d&&d.error&&d.error.message)throw new Error(d.error.message);
@@ -2084,94 +2057,48 @@ async function _fnPost(fnName,payload,opts={}){
   }
 }
 
-// ── GEMINI ───────────────────────────────────────────────────────────────
-// Model tiers. Keep in sync with ALLOWED_MODELS in gemini-proxy.ts — the proxy
-// rejects anything not on its list, so adding one here alone will 400.
-const GEM_FLASH='gemini-3.7-flash';       // workhorse: chat, cleanup, JSON, audio
-const GEM_LITE='gemini-3.5-flash-lite';   // cheapest tier
-const GEM_PRO='gemini-3.1-pro-preview';   // deep tier: power search, profile update
-// Transcription is pinned to 3.6-flash, NOT the 3.7 workhorse: Google's audio
-// docs demonstrate audio-understanding on 3.6-flash only, and never state that
-// audio input carries across the 3.x line. If 3.7 silently rejects the audio
-// part, every voice note quietly falls through to Whisper — working, but paying
-// for a conversion nobody uses. Re-point at GEM_FLASH once 3.7 audio is
-// confirmed. Both are allow-listed in gemini-proxy.
-const GEM_AUDIO='gemini-3.6-flash';
-
-// Anthropic content blocks → Gemini parts. Handles the image/PDF blocks Quick
-// Capture sends and the audio blocks _transcribe() sends.
-function _gemParts(content){
-  if(typeof content==='string')return [{text:content}];
-  const parts=[];
-  (content||[]).forEach(b=>{
-    if(!b)return;
-    if(b.type==='text'){parts.push({text:b.text||''});return;}
-    if((b.type==='image'||b.type==='document'||b.type==='audio')&&b.source&&b.source.data){
-      parts.push({inlineData:{mimeType:b.source.media_type||'application/octet-stream',data:b.source.data}});
-      return;
-    }
-    if(typeof b.text==='string')parts.push({text:b.text});
-  });
-  return parts.length?parts:[{text:''}];
-}
-// Anthropic `system` (a string, OR an array of blocks with cache_control) →
-// Gemini systemInstruction. Gemini caches implicitly, so the cache_control
-// hints simply drop away; the text itself is preserved in order.
-function _gemSystem(system){
-  if(!system)return null;
-  const txt=(typeof system==='string')
-    ?system
-    :(Array.isArray(system)?system.map(b=>(b&&b.text)||'').filter(Boolean).join('\n\n'):'');
-  return txt?{parts:[{text:txt}]}:null;
-}
-
-// Mirrors _aiComplete()'s CONTRACT so call sites migrate without changing how
-// they read the result: takes {model,max_tokens,system,messages} and returns an
-// Anthropic-shaped {content:[{type:'text',text}], stop_reason}. Two extras:
-//   json:true       → Gemini's native JSON mode (responseMimeType). This alone
-//                     guarantees parseable JSON back, which is strictly more
-//                     reliable than Claude's "return ONLY JSON" prompt
-//                     convention plus a regex brace-scrape.
-//   responseSchema  → additionally pins the shape. Use ONLY where the shape is
-//                     closed — Gemini's schema dialect can't express a field
-//                     that is "string OR array", so the report-filter and
-//                     Quick Capture payloads use json:true with no schema.
-// NOTE ON max_tokens: these are thinking models — reasoning tokens draw from
-// the same budget as the visible answer. Call sites here ask for noticeably
-// more than their Claude equivalents did so a long JSON answer can't be cut
-// mid-object. You are billed on tokens actually produced, not on the ceiling.
-async function _geminiComplete(payload,opts={}){
+// ── AI TIER LAYER ────────────────────────────────────────────────────────
+// The ONE entry point for every AI call in this file. Call sites pass a TIER,
+// never a model:
+//   'deep'   — anything that reasons, writes prose, or produces something that
+//              gets SAVED. Reading and writing both. Shneur's rule: if a Claude
+//              key exists, everything that thinks uses Claude.
+//   'fast'   — instant, fixed-shape, the user is watching a cursor blink.
+//   'search' — live web research (Profile Build). The router attaches the
+//              provider's own web-search tool and returns citations.
+//
+// Contract is Anthropic's, because every call site already spoke it before this
+// rebuild: takes {system,messages,max_tokens} and returns
+// {content:[{type:'text',text}], stop_reason, citations}. Two extras:
+//   json:true   → the router uses the provider's native JSON mode where one
+//                 exists (OpenAI) and a prompt instruction where none does
+//                 (Anthropic). Either way _jsonFromReply below stays the net.
+//   schema      → additionally pins the shape. OpenAI's schema dialect handles
+//                 anyOf, which Gemini's could not — so a "string OR array"
+//                 field is finally expressible. Sites that had to run
+//                 schema-less under Gemini can be pinned as a follow-up.
+//
+// stop_reason is normalised to 'max_tokens'|'end_turn' across providers, which
+// is what captureAnalyze's truncation guard reads.
+async function _ai(tier,payload,opts={}){
   const p=payload||{};
-  const contents=(p.messages||[]).map(m=>({
-    role:(m&&m.role==='assistant')?'model':'user',
-    parts:_gemParts(m&&m.content)
-  }));
-  const generationConfig={maxOutputTokens:Number(p.max_tokens)||2048};
-  if(typeof p.temperature==='number')generationConfig.temperature=p.temperature;
-  if(p.json||p.responseSchema){
-    generationConfig.responseMimeType='application/json';
-    if(p.responseSchema)generationConfig.responseSchema=p.responseSchema;
-  }
-  const body={model:p.model||GEM_FLASH,contents,generationConfig};
-  const si=_gemSystem(p.system);
-  if(si)body.systemInstruction=si;
-
-  const d=await _fnPost('gemini-proxy',body,opts);
-  const cand=((d&&d.candidates)||[])[0]||{};
-  const text=(((cand.content&&cand.content.parts)||[]).map(x=>(x&&x.text)||'')).join('');
-  // A blocked prompt returns candidates:[] with promptFeedback — surface that
-  // as a real error instead of silently handing back an empty string.
-  if(!text&&!(d&&d.candidates&&d.candidates.length)){
-    const br=d&&d.promptFeedback&&d.promptFeedback.blockReason;
-    throw new Error(br?('The request was blocked ('+br+').'):'The AI returned an empty response.');
-  }
-  return {
-    content:[{type:'text',text}],
-    stop_reason:(cand.finishReason==='MAX_TOKENS')?'max_tokens':'end_turn',
-    usage:(d&&d.usageMetadata)||null,
-    _raw:d
-  };
+  const body={tier,messages:p.messages||[]};
+  if(p.system)body.system=p.system;
+  if(p.max_tokens)body.max_tokens=p.max_tokens;
+  if(p.json||p.schema)body.json=true;
+  if(p.schema)body.schema=p.schema;
+  if(p.tools)body.tools=p.tools;
+  if(p.force)body.force=p.force;      // test-only; nothing in the app sets it
+  const d=await _fnPost('ai-router',body,opts);
+  if(!d||!Array.isArray(d.content))throw new Error('Unexpected response shape from the AI.');
+  return d;
 }
+// Convenience: the text of a reply. Every call site used to write this same
+// filter/map/join by hand, and two of them got it subtly different.
+function _aiText(d){
+  return ((d&&d.content)||[]).filter(b=>b&&b.type==='text').map(b=>b.text||'').join('');
+}
+
 // Pull a JSON object out of a model reply. With json:true the whole reply IS
 // the object, so this is a no-op; it stays as a safety net for a model that
 // wraps the answer in prose or a ```json fence anyway.
@@ -2183,7 +2110,7 @@ function _jsonFromReply(txt){
   return JSON.parse(m[0]);
 }
 
-// ── OPENAI (embeddings + the Whisper transcription fallback) ─────────────
+// ── OPENAI (pgvector embeddings + voice transcription) ───────────────────
 async function _openaiProxy(payload,opts={}){ return _fnPost('openai-proxy',payload,opts); }
 
 // ── RAPIDAPI (Zillow) ───────────────────────────────────────────────────
@@ -5498,7 +5425,30 @@ function buildProfileDisplay(p, idx, newInteractions, newDonations, containerId)
     ${p.boardMemberships&&!_efProseHidden(idx,'boardMemberships')?`<div style="font-size:.7rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg> <b>Boards:</b> ${p.boardMemberships}</div>`:''}
     ${p.philanthropy990&&!_efProseHidden(idx,'philanthropy990')?`<div style="font-size:.7rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg> <b>990 Giving:</b> ${p.philanthropy990}</div>`:''}
     ${p.pressmentions?`<div style="font-size:.7rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2ZM19 8h1a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2M7 8h7M7 12h7M7 16h4"/></svg> <b>Press:</b> ${p.pressmentions}</div>`:''}
+    ${_pbSourcesHtml(p)}
   `;
+}
+
+// SOURCES — the pages the web-search tool actually read during a Profile Build.
+// Rendered as clickable links because OpenAI's web-search terms require exactly
+// that wherever its results are shown, and because a research claim the rabbi
+// cannot check in one tap is a claim he has to take on faith. Profiles built
+// before 2026-08-17.1 have no sources array and simply show nothing.
+function _pbSourcesHtml(p){
+  const src=(p&&Array.isArray(p.sources))?p.sources:[];
+  if(!src.length)return '';
+  const rows=src.map(x=>{
+    const u=String((x&&x.url)||'');
+    if(!/^https?:\/\//i.test(u))return '';
+    let host=u; try{host=new URL(u).hostname.replace(/^www\./,'');}catch(_){}
+    const t=String((x&&x.title)||host).slice(0,110);
+    return `<a href="${_escHtml(u)}" target="_blank" rel="noopener noreferrer" style="display:block;font-size:.65rem;color:var(--accent);text-decoration:none;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_escHtml(u)}">${_escHtml(t)} <span style="color:var(--txt3)">${_escHtml(host)}</span></a>`;
+  }).filter(Boolean).join('');
+  if(!rows)return '';
+  return `<div style="margin-top:12px;padding-top:9px;border-top:1px solid var(--border2)">
+    <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:5px">Sources read</div>
+    ${rows}
+  </div>`;
 }
 
 // ── Inline profile editing in the main panel ──
@@ -5642,17 +5592,15 @@ async function buildProfileSoft(idx){
   const {affinityNotes,generosityNotes,capacityNotes,businessInfo,boardMemberships,philanthropy990,pressmentions,approximateAge,fedLevel,score,capacity,builtAt,searchHints,estimated_children}=existingProfile;
 
   try{
-    // GEMINI (2026-08-16). Quick Update does no web research — only the FULL
-    // build needs Claude's web_search tool — so this moved with the rest of the
-    // chat/cleanup sites. Native JSON mode + a responseSchema replaces the old
-    // "return ONLY valid JSON" instruction and the first-brace/last-brace
-    // scrape below: the shape here is closed (three keys, no union-typed
-    // fields), which is exactly the case a schema can pin.
-    const d=await _geminiComplete({
-        model:GEM_PRO,
+    // DEEP. Quick Update does no web research — only the FULL build needs the
+    // web-search tool — but its output is SAVED onto the household, which is
+    // what puts it on the deep tier rather than fast. The schema is kept: this
+    // shape is closed (three keys, no union-typed fields), exactly the case a
+    // schema pins well.
+    const d=await _ai('deep',{
         max_tokens:12000,
         json:true,
-        responseSchema:{
+        schema:{
           type:'object',
           properties:{
             approach:{type:'string'},
@@ -5821,9 +5769,7 @@ async function _buildProfilePhase2(idx, researchHints, tabContent, interactions)
 
   try{
     const _pbPayload={
-        model:'claude-sonnet-4-6',
         max_tokens:4000,
-        tools:[{type:'web_search_20250305',name:'web_search',max_uses:8}],
         system:`You are a prospect research assistant for a Chabad rabbi in Chagrin Falls, Ohio. Your job is to ENRICH a contact profile using public web research — not to recalculate scores. The AGC scores below are authoritative pre-calculated database scores. Accept them as facts.
 
 YOUR ROLE: Use the search context below to guide your research. Surface specific actionable intelligence the rabbi can use.
@@ -5934,16 +5880,13 @@ ACTIVITY LOG (${meaningful_activity.length} interactions with notes):
 ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).join('\n'):'None'}`+(researchHints?' IMPORTANT RESEARCH HINTS FROM RABBI: '+researchHints:'')}]
       };
 
-    _pbPayload.model='claude-sonnet-4-6';
-    // STAYS ON CLAUDE — the one exception to the Gemini migration. This call
-    // uses Anthropic's native web_search tool to do live prospect research, and
-    // ai-proxy forwards `tools` unmodified, so routing it through the proxy is
-    // a straight swap: same model, same tools array, same system prompt. The
-    // browser key is gone; the abort/timeout that used to be hand-rolled here
-    // now lives in _aiComplete's own AbortController.
+    // SEARCH TIER. The web-search tool is attached SERVER-SIDE — this call site
+    // no longer names one, because Anthropic's and OpenAI's are different tools
+    // on different endpoints and the difference is the router's problem. What
+    // comes back is the same either way: text plus a citations array.
     let d;
     try{
-      d=await _aiComplete(_pbPayload,{timeoutMs:120000});
+      d=await _ai('search',_pbPayload,{timeoutMs:120000});
     }catch(fe){
       const m=String((fe&&fe.message)||fe);
       if(/timed out/i.test(m)) throw new Error('The research timed out. That happens on a weak connection — try again on Wi-Fi.');
@@ -5965,6 +5908,7 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
         fedLevel:null,businessInfo:null,boardMemberships:null,philanthropy990:null,
         pressmentions:null,approximateAge:null,
         estimated_children:(h.profile_data&&h.profile_data.estimated_children)||[], // never drop hand-entered kids
+        sources:(d.citations||[]).slice(0,20),
         builtAt:new Date().toISOString(),searchHints:researchHints||''
       };
       h.profile_data=fallbackProfile;
@@ -5980,6 +5924,11 @@ ${meaningful_activity.length?meaningful_activity.slice(0,10).map(a=>`[${a.date}]
     try{ profile=JSON.parse(jsonStr); }
     catch(pe){ throw new Error('The profile JSON was malformed and could not be read. Try rebuilding.'); }
     profile.builtAt=new Date().toISOString();
+    // SOURCES. The router returns every page the search tool actually read.
+    // OpenAI's terms require citations be visible and clickable wherever web
+    // results are shown, and it is the right thing regardless — a research
+    // profile the rabbi cannot check is a profile he has to take on faith.
+    profile.sources=(d.citations||[]).slice(0,20);
     delete profile.softBuiltAt;
 
     // PRESERVE EXISTING CHILDREN: the full rebuild is not given the Family-card
@@ -7375,8 +7324,10 @@ async function runAISearch(){
   }catch(e){console.warn('Semantic search failed:',e.message);}
 
   try{
-    const d=await _geminiComplete({
-        model:GEM_FLASH,
+    // DEEP — this writes prose the rabbi reads and acts on, and it reasons
+    // over the whole roster to do it. Nothing is saved, but fast is for
+    // form-filling, not for judgement.
+    const d=await _ai('deep',{
         max_tokens:3000,
         system:`CHRONOLOGICAL EVALUATION RULE: You are processing structured historical logs where each line is formatted as [LOG_DATE] | TYPE -> TEXT. CRITICAL: Any relative time-anchored words found inside the note text (such as 'yesterday', 'last week', 'months ago', or 'tomorrow') are strictly relative to the specific [LOG_DATE] prefix on that exact line. Compute timelines backwards or forwards from that local [LOG_DATE] first, then cross-reference your final timeline calculation against the current global date.\n\nYou are a quick-lookup assistant for a Chabad rabbi's CRM. Answer concisely and specifically — name actual people from the data. One paragraph max.`,
         messages:[{role:'user',content:'Query: "'+query+'"\n\nROSTER:\n'+roster+(semanticCtx?'\n\nRELEVANT NOTES:\n'+semanticCtx:'')}]
@@ -7403,8 +7354,10 @@ async function runAISearch(){
 //     ORDER BY similarity DESC LIMIT match_count;
 //   $$;
 
-// Embeddings stay on OpenAI PERMANENTLY — not an oversight in the Gemini
-// migration. Every interaction and household note already carries a 1536-dim
+// Embeddings are on OpenAI PERMANENTLY, and this is why the OpenAI key is the
+// required one: Anthropic sells no embedding model at all — their own docs
+// point at Voyage AI, a third company and a third key. Beyond that, every
+// interaction and household note already carries a 1536-dim
 // text-embedding-3-small vector in pgvector, and match_interactions /
 // match_households are built on it. Another provider means another dimension,
 // which means re-embedding the entire corpus. Routed through openai-proxy so
@@ -7418,19 +7371,17 @@ async function getEmbedding(text){
 }
 
 // ── VOICE TRANSCRIPTION ──────────────────────────────────────────────────
-// Gemini is primary; OpenAI Whisper is the fallback. Both go through an edge
-// function, so neither needs a browser key.
+// Transcription runs on gpt-transcribe through openai-proxy, so no key is in
+// the browser. Claude accepts no audio at all, which is the other half of why
+// the OpenAI key is structurally required and the Anthropic one is optional.
 //
-// WHY THE WAV CONVERSION (the one genuinely fiddly part of this migration):
-// MediaRecorder gives us audio/webm (Chrome/Android, Opus-in-WebM) or
-// audio/mp4 (Safari/iOS, AAC-in-MP4). Gemini's inline-audio part accepts
-// wav/mp3/aiff/aac/ogg/flac — NEITHER container is on that list, so posting the
-// recording verbatim fails. Rather than ship an encoder library, we decode with
-// the browser's own codecs (decodeAudioData handles webm and mp4 natively),
-// downmix to mono and resample to 16 kHz through an OfflineAudioContext, then
-// write a PCM16 WAV header by hand. 16 kHz mono is what speech models want
-// anyway, and it keeps a 2-minute note near 4 MB — well inside the 20 MB inline
-// cap. Whisper accepts WAV too, so both paths share one conversion.
+// WHY THE WAV CONVERSION: MediaRecorder gives us audio/webm (Chrome/Android,
+// Opus-in-WebM) or audio/mp4 (Safari/iOS, AAC-in-MP4). Rather than ship an
+// encoder library, we decode with the browser's own codecs (decodeAudioData
+// handles webm and mp4 natively), downmix to mono and resample to 16 kHz
+// through an OfflineAudioContext, then write a PCM16 WAV header by hand. 16 kHz
+// mono is what speech models want, it keeps a 2-minute note near 4 MB, and it
+// is the format the engine comparison was run on. DO NOT change this.
 function _wavEncode(pcm,rate){
   const n=pcm.length, ab=new ArrayBuffer(44+n*2), dv=new DataView(ab);
   const ws=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i));};
@@ -7468,51 +7419,28 @@ function _blobToB64(blob){
     r.readAsDataURL(blob);
   });
 }
-// Engine selector, surfaced in Settings → API Keys. 'gemini' (default) tries
-// Gemini and silently falls back to Whisper on any failure; 'openai' skips
-// Gemini entirely. Kept because Gemini has NOT yet been compared against
-// Whisper on real voice notes with Hebrew/Yiddish names — see HANDOFF.
-function _transcribeEngine(){ return localStorage.getItem('daas_transcribe')||'gemini'; }
-let _transcribeUsed='';   // 'gemini' | 'whisper' — which engine produced the last transcript
-let _transcribeNote='';   // set when Gemini failed and Whisper covered for it
-
+// ── VOICE TRANSCRIPTION — gpt-transcribe, one engine, no picker ──────────
+// The Gemini path and the Whisper fallback are both gone as of 2026-08-17.1.
+// Both engines were run on real recordings covering Ashkenazi names and
+// Hebrew/Yiddish vocabulary — Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag
+// — and gpt-transcribe handled all of it with no word list or keyword priming.
+// With the comparison settled there is no second engine to pick between, and a
+// picker with one option is worse than none: the Settings dropdown and the
+// daas_transcribe preference went with it.
+//
+// _blobToWav above is UNCHANGED and stays that way. MediaRecorder gives us
+// audio/webm (Chrome/Android) or audio/mp4 (Safari/iOS); it decodes either with
+// the browser's own codecs, downmixes to 16 kHz mono and hand-writes a PCM16
+// WAV header. That is the format speech models want, its header logic is
+// byte-tested including clamping, and it is what made the A/B comparison valid
+// in the first place.
 async function _transcribe(blob,opts={}){
   const hint=String(opts.prompt||'').trim();
-  _transcribeUsed=''; _transcribeNote='';
   let wav=null;
   try{ wav=await _blobToWav(blob); }catch(e){ console.warn('WAV conversion failed:',e.message); }
-
-  if(_transcribeEngine()!=='openai'&&wav){
-    try{
-      const b64=await _blobToB64(wav);
-      // The name-biasing that Whisper got via its `prompt` parameter has to be
-      // steered in the instruction instead — Gemini has no equivalent field.
-      const instr='Transcribe this audio VERBATIM into plain text. Return only the words that were spoken. '
-        +'Do not summarise, translate, tidy, add commentary, or add punctuation the speaker did not imply. '
-        +'If nothing intelligible was said, return an empty string.'
-        +(hint?('\n\nThe speaker is an American rabbi; expect Hebrew and Yiddish given names. '
-          +'Prefer these spellings when a name is heard: '+hint):'');
-      const d=await _geminiComplete({
-        model:GEM_AUDIO,max_tokens:8192,
-        system:'You are a verbatim speech-to-text engine. You output transcripts and nothing else.',
-        messages:[{role:'user',content:[
-          {type:'text',text:instr},
-          {type:'audio',source:{media_type:'audio/wav',data:b64}}
-        ]}]
-      },{timeoutMs:120000});
-      const t=(d.content[0].text||'').trim();
-      if(t){ _transcribeUsed='gemini'; return t; }
-      throw new Error('Gemini returned an empty transcript.');
-    }catch(e){
-      console.warn('Gemini transcription failed — falling back to Whisper:',e.message);
-      _transcribeNote='Gemini transcription failed ('+e.message+') — used Whisper instead.';
-    }
-  }
-
   const src=wav||blob;
   const b64=await _blobToB64(src);
   const d=await _openaiProxy({op:'transcribe',audio_b64:b64,mime:src.type||'audio/wav',prompt:hint},{timeoutMs:120000});
-  _transcribeUsed='whisper';
   return String((d&&d.text)||'').trim();
 }
 
@@ -7702,11 +7630,10 @@ ${activities.length?activities.map(a=>`[${a.date}] ${a.type}: ${a.notes||''}`).j
   personChatHistory.push({role:'user',content:query});
 
   try{
-    // The system array's cache_control hint is dropped by _gemSystem — Gemini
-    // caches implicitly rather than on an explicit marker. The text is
-    // preserved in order, so the prompt itself is unchanged.
-    const d=await _geminiComplete({
-        model:GEM_FLASH,
+    // DEEP. The system array's cache_control markers are forwarded intact to
+    // Anthropic and flattened for OpenAI (which caches implicitly) — either
+    // way the text is preserved in order, so the prompt itself is unchanged.
+    const d=await _ai('deep',{
         max_tokens:4000,
         system:[{type:'text',text:`You are a relationship intelligence assistant for a Chabad rabbi. You have complete, authoritative information about one specific contact. The AGC scores in the context are pre-calculated database facts — treat them as ground truth, not estimates. Your job is to help the rabbi understand this person deeply, recall past interactions, plan next steps, and craft specific outreach. Be warm, insightful, and concrete. Reference actual details. Surface patterns the rabbi might not see. Suggest specific asks, timing, and talking points based on the data. Keep formatting simple: short paragraphs, plain lists and occasional bold — no deep heading hierarchies or tables.\n\n${context}`,cache_control:{type:'ephemeral'}}],
         messages:personChatHistory
@@ -7737,7 +7664,6 @@ function updateModeHint(){
     // Estimate from the ACTUAL roster (cached 60s — builders are cheap now but not free)
     if(!_modeEstCache.vals||Date.now()-_modeEstCache.t>60000){
       _modeEstCache={t:Date.now(),vals:{
-        quick:_estTok(_rosterLines('quick').map(x=>x.line).join('\n'))+1000,
         standard:_estTok(_rosterLines('lean').map(x=>x.line).join('\n'))+6000,
         power:_estTok(_rosterLines('full').map(x=>x.line).join('\n'))+9000
       }};
@@ -7745,18 +7671,24 @@ function updateModeHint(){
     const v=_modeEstCache.vals;
     const fmt=n=>n>=178000?'>178k (auto-fit) <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg>':'~'+Math.round(n/1000)+'k tokens';
     if(mode==='power') hint.innerHTML=fmt(v.power)+' <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>';
-    else if(mode==='quick') hint.textContent=fmt(v.quick);
     else hint.textContent=fmt(v.standard);
   }catch(e){hint.innerHTML=mode==='power'?'power <svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>':mode;}
 }
 
 // ── STRENGTH SWITCHER ──
-const _STRENGTH={quick:'Quick',standard:'Standard',power:'Power Search'};
+// Quick was retired on 2026-08-17.1 — it did not do enough over the plain text
+// search bar to justify a third option. Standard is the light mode now.
+const _STRENGTH={standard:'Standard',power:'Power Search'};
 function toggleStrengthMenu(e){
   if(e)e.stopPropagation();
   document.getElementById('strengthMenu')?.classList.toggle('open');
 }
 function setStrength(mode){
+  // Sessions saved before 2026-08-17.1 carry mode:'quick' in chat_sessions, and
+  // loadSession feeds it straight back in here. Normalising at the single point
+  // every caller goes through means a returning conversation lands on Standard
+  // instead of a mode that no longer exists.
+  if(!_STRENGTH[mode])mode='standard';
   const inp=document.getElementById('searchMode'); if(inp)inp.value=mode;
   const lbl=document.getElementById('strengthLabel'); if(lbl)lbl.textContent=_STRENGTH[mode]||'Standard';
   document.querySelectorAll('.strength-opt').forEach(o=>o.classList.toggle('sel',o.dataset.mode===mode));
@@ -8015,7 +7947,9 @@ async function sendGlobalAsk(){
   // Power search warning — estimated from the ACTUAL current data, not a stale guess
   if(mode==='power'){
     const _estIn=_estTok(_rosterLines('full').map(x=>x.line).join('\n'))+_estTok(globalChatHistory.map(m=>m.content).join(' '))+8000;
-    // Repriced for Gemini 3.1 Pro ($2 per 1M input tokens up to a 200k prompt)
+    // $2 per 1M input tokens — Claude Sonnet 5's rate, which is also what this
+    // estimate was originally written against. The ~90%-cheaper follow-up line
+    // is Sonnet's $0.20 cached-input rate.
     // — this used to quote Claude Sonnet's $3.
     const _estCost=(Math.min(_estIn,170000)/1e6*2).toFixed(2);
     if(!confirm('Power Search will send ~'+Math.round(Math.min(_estIn,178000)/1000)+'k tokens (~$'+_estCost+' first message; follow-ups within 5 min are ~90% cheaper via caching).'+(_estIn>170000?'\n\n<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7l-3 6a3 3 0 0 0 6 0Zm12 0-3 6a3 3 0 0 0 6 0ZM6 7l6-2 6 2"/></svg> Roster exceeds the context window — it will be auto-fit: full detail for top households by Prospect score, compact lines for the rest.':'')+' Continue?'))return;
@@ -8024,7 +7958,7 @@ async function sendGlobalAsk(){
   input.value='';autoGrowChat(input);
   const msgs=_chatMsgsInner();
   msgs.innerHTML+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div style="background:var(--accent);color:#fff;padding:9px 14px;border-radius:14px 14px 2px 14px;font-size:.82rem;max-width:75%">${_escHtml(query)}</div></div>`;
-  msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">${mode==='power'?'Running power search…':mode==='quick'?'Searching…':'Searching your contacts…'}</div></div>`;
+  msgs.innerHTML+=`<div id="global-typing" style="display:flex;margin-bottom:12px"><div style="background:var(--surf2);padding:9px 14px;border-radius:14px 14px 14px 2px;font-size:.82rem;color:var(--txt3)">${mode==='power'?'Running power search…':'Searching your contacts…'}</div></div>`;
   _chatScroll();
 
   // Build context based on mode — rosterStr is stable per mode (cached), notesStr varies per query
@@ -8033,11 +7967,7 @@ async function sendGlobalAsk(){
   const rabbiCtx=localStorage.getItem('ci_context')||'';
 
   let _fit=null;
-  if(mode==='quick'){
-    // Quick: lean roster only, no semantic search
-    _fit=_fitRoster(_rosterLines('quick'),_rosterBudget(notesStr));
-    rosterStr=_fit.text;
-  }else if(mode==='power'){
+  if(mode==='power'){
     // Power: full roster with all profile data + semantic search (30 results)
     const semRows=await semanticSearch(query,30).catch(()=>[]);
     const ctx=await buildGlobalContext(semRows);
@@ -8063,15 +7993,16 @@ async function sendGlobalAsk(){
   globalChatHistory.push({role:'user',content:query});
 
   try{
-    // Quick/standard on Flash, Power on Pro — the same two-tier split the
-    // haiku/sonnet pattern expressed. cache_control is dropped by _gemSystem
-    // (Gemini caches implicitly); the roster block stays a separate system
-    // part so it still sits ahead of the turn history.
-    const d=await _geminiComplete({
-        model:mode==='power'?GEM_PRO:GEM_FLASH,
-        max_tokens:mode==='quick'?3000:mode==='power'?8000:6000,
+    // DEEP for both modes. Standard and Power Search differ in HOW MUCH DATA
+    // they read — roster detail and token budget — not in which model reads it.
+    // That is what the ? panel has always said, and it stays true here.
+    // The roster block stays a separate system part, carrying cache_control, so
+    // it sits ahead of the turn history and is cached rather than re-billed on
+    // every follow-up.
+    const d=await _ai('deep',{
+        max_tokens:mode==='power'?8000:6000,
         system:[
-          {type:'text',text:`${temporalAnchor}\n\nCHRONOLOGICAL EVALUATION RULE: You are processing structured historical logs where each line is formatted as [LOG_DATE] | TYPE -> TEXT. CRITICAL: Any relative time-anchored words found inside the note text (such as 'yesterday', 'last week', 'months ago', or 'tomorrow') are strictly relative to the specific [LOG_DATE] prefix on that exact line. Compute timelines backwards or forwards from that local [LOG_DATE] first, then cross-reference your final timeline calculation against the current global date.\n\nYou are a relationship intelligence assistant for a Chabad rabbi. AGC scores are pre-calculated database facts — treat them as authoritative. Help identify the right people, surface patterns, give concrete actionable recommendations. Always name specific people and reference actual data. Keep formatting simple: short paragraphs, plain lists and occasional bold — no deep heading hierarchies or tables.${rabbiCtx?'\n\nABOUT THE RABBI:\n'+rabbiCtx:''}${mode==='quick'?'\n\nBe concise — one paragraph max.':''}`},
+          {type:'text',text:`${temporalAnchor}\n\nCHRONOLOGICAL EVALUATION RULE: You are processing structured historical logs where each line is formatted as [LOG_DATE] | TYPE -> TEXT. CRITICAL: Any relative time-anchored words found inside the note text (such as 'yesterday', 'last week', 'months ago', or 'tomorrow') are strictly relative to the specific [LOG_DATE] prefix on that exact line. Compute timelines backwards or forwards from that local [LOG_DATE] first, then cross-reference your final timeline calculation against the current global date.\n\nYou are a relationship intelligence assistant for a Chabad rabbi. AGC scores are pre-calculated database facts — treat them as authoritative. Help identify the right people, surface patterns, give concrete actionable recommendations. Always name specific people and reference actual data. Keep formatting simple: short paragraphs, plain lists and occasional bold — no deep heading hierarchies or tables.${rabbiCtx?'\n\nABOUT THE RABBI:\n'+rabbiCtx:''}`},
           {type:'text',text:'CONTACT DATABASE:\n'+rosterStr,cache_control:{type:'ephemeral'}}
         ],
         messages:[...globalChatHistory.slice(0,-1),{role:'user',content:query+(notesStr?'\n\nRELEVANT NOTES (semantic matches for this query):\n'+notesStr:'')}]
@@ -8103,10 +8034,7 @@ function _rosterLines(detail){
     const p=h.profile_data||{};
     const fam=(typeof _famLinksText==='function'&&RELS&&RELS.length)?_famLinksText(h):'';
     let line;
-    if(detail==='quick'){
-      const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
-      line=h.displayName+' ['+members+'] | AGC:'+agc.total+' | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value/1000)+'k':'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString():'none')+(fam?' | Family:'+fam:'');
-    }else if(detail==='full'){
+    if(detail==='full'){
       const members=(h.members||[]).map(m=>m.first_name+' '+m.last_name+(m.dob?' age '+calcAge(m.dob):'')).join(' & ');
       line=h.displayName+' ['+members+'] | AGC:'+agc.total+'/100(A:'+agc.affinity+' G:'+agc.generosity+' C:'+agc.capacity+') | HomeVal:'+(h.home_value?'$'+Math.round(h.home_value).toLocaleString():'?')+' | Giving:'+(g?'$'+Math.round(g.total).toLocaleString()+'/'+g.count+'gifts/last:'+g.lastDate:'none')+(fam?' | FamilyLinks:'+fam:'')+(p.summary?' | '+p.summary.substring(0,200):'')+(p.approach?' | Approach:'+p.approach.substring(0,120):'')+(p.fedLevel?' | Fed:'+p.fedLevel:'')+(p.businessInfo?' | Biz:'+p.businessInfo:'');
     }else{ // lean
@@ -8132,7 +8060,7 @@ function _rosterLines(detail){
 }
 function _rosterBudget(notesStr){
   // Budgeted against a 200k window minus output reserve, system prompt, semantic
-  // notes, chat history and query overhead. Gemini's window is far larger, so
+  // notes, chat history and query overhead. The model's window is far larger, so
   // this is now conservative rather than a hard limit — deliberately left alone,
   // because a bigger window is not a reason to spend more on every Power Search.
   const hist=_estTok(globalChatHistory.map(m=>m.content).join(' '));
@@ -8401,8 +8329,6 @@ function openAPIKeys(){
   // RapidAPI keys now live as Supabase edge-function secrets. What is left here
   // is the GitHub PAT (used by Deploy, which really is a per-user credential),
   // push notifications, and the transcription-engine choice.
-  const ts=document.getElementById('apiTranscribeSelect');
-  if(ts)ts.value=_transcribeEngine();
   document.getElementById('apiGitHubInput').value=localStorage.getItem('crm_gh_pat')||'';
   document.getElementById('apiKeysModal').style.display='flex';
   try{ _daasRefreshPushBtn(); }catch(e){}
@@ -8466,8 +8392,6 @@ function _daasRefreshPushBtn(){
 function saveAPIKeys(){
   const gh=document.getElementById('apiGitHubInput').value.trim();
   if(gh){localStorage.setItem('crm_gh_pat',gh);}else{localStorage.removeItem('crm_gh_pat');}
-  const ts=document.getElementById('apiTranscribeSelect');
-  if(ts)localStorage.setItem('daas_transcribe',ts.value==='openai'?'openai':'gemini');
   document.getElementById('apiKeysModal').style.display='none';
   _ebToastMsg('Settings saved');
 }
@@ -8856,11 +8780,11 @@ async function captureUndoFromBox(btn,undoId){
 
 // ── VOICE → PINS (§7) ────────────────────────────────────────────────────────
 // "Yossi, Dovid, Shloimy and the Golds came to shul" → four pinned chips.
-// Whisper transcribes; the NAME MATCHING stays deterministic and local. Using an
+// The engine transcribes; the NAME MATCHING stays deterministic and local. Using an
 // LLM to match names is what produced the original token-ceiling bug, and it can
 // mis-match silently — a local matcher can only be wrong out loud.
 
-// Normalise a heard name so Whisper's manglings converge on the roster spelling:
+// Normalise a heard name so a mis-heard spelling converges on the roster one:
 // Shloimy/Shloime, Chaya/Khaya/Haya, Yossi/Yossie/Yossey all collapse together.
 function _captureNormName(s){
   return String(s||'').toLowerCase()
@@ -8965,9 +8889,9 @@ function _captureLooksLikeNameList(text){
   if(resolved.length<Math.max(2,Math.ceil(parts.length*0.5)))return null;
   return parts;
 }
-// Bias Whisper toward the names it would otherwise mangle. The prompt field is
+// Bias the transcriber toward roster spellings. The prompt field is
 // capped (~224 tokens), so send the most common first names, not all 800.
-function _captureWhisperPrompt(){
+function _captureNamePrompt(){
   const freq=new Map();
   households.forEach(h=>(h.members||[]).forEach(m=>{
     const f=(m.first_name||'').trim();
@@ -9047,7 +8971,7 @@ const _CAP_STEPS=[
 let _captureStageName='idle';
 let _capRecTimer=null, _capRecStart=0, _capRecElapsed=0, _capRecPaused=false, _capRecCancelled=false;
 // Hard stop. 16 kHz mono PCM16 is ~32 KB/sec, and base64 inflates it by a third
-// against Gemini's 20 MB inline cap — about 7 minutes of audio. Stopping at 5
+// against the 25 MB upload cap — about 8 minutes of audio. Stopping at 5
 // with a visible warning from 4 means a forgotten recorder ends as a usable
 // note rather than a request that's rejected after the fact.
 const CAP_REC_WARN_MS=4*60*1000, CAP_REC_MAX_MS=5*60*1000;
@@ -9113,7 +9037,7 @@ function _captureStage(stage){
     // before the proposal even arrives.
     if(_captureHeard){
       heard.style.display='';
-      heard.innerHTML='<span style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard'+(_transcribeUsed==='whisper'?' · Whisper':'')+'</span><br>'+_enrichEsc(_captureHeard);
+      heard.innerHTML='<span style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'+_enrichEsc(_captureHeard);
     }else{
       heard.style.display='none';
     }
@@ -9283,9 +9207,9 @@ async function _captureTranscribe(){
   try{
     // Roster first names are passed as a decoding hint — without it Hebrew and
     // Yiddish names come back mangled (Shloimy→"Solomy", Chaya→"Haya"), which
-    // is exactly the vocabulary that matters here. Whisper takes it as its
-    // `prompt` parameter; Gemini gets it folded into the instruction.
-    let wp=''; try{wp=_captureWhisperPrompt();}catch(e){}
+    // is exactly the vocabulary that matters here, and it rides along as the
+    // engine's own `prompt` parameter.
+    let wp=''; try{wp=_captureNamePrompt();}catch(e){}
     const heard=await _transcribe(blob,{prompt:wp});
     if(!heard){ _captureStage('idle'); alert('Nothing was picked up in that recording. Try again.'); return; }
     ta.value=(prev?prev+'\n':'')+heard;
@@ -9364,15 +9288,18 @@ async function captureAnalyze(btn){
   userContent.push({type:'text',text:'TODAY: '+today+'\n\n'+preSel+'ROSTER:\n'+roster+'\n\nDUMPED CONTENT:\n'+(text||'(see attached file)')});
 
   try{
-    // Gemini (2026-08-16), with native JSON mode. NO responseSchema here on
-    // purpose: an item's `value`-style fields are union-typed and the *_fields
-    // blocks are deliberately omitted when they don't apply, and Gemini's
-    // schema dialect can express neither. responseMimeType alone still
-    // guarantees a parseable object back, which is what the brace-scrape below
-    // was working around.
-    // userContent carries image/PDF parts for a photographed letter — _gemParts
-    // translates those Anthropic source blocks into Gemini inlineData.
-    const d=await _geminiComplete({model:GEM_PRO,max_tokens:24000,json:true,system:sys,messages:[{role:'user',content:userContent}]},{timeoutMs:120000});
+    // DEEP — everything this produces gets written to the database once the
+    // rabbi approves it, and a confident wrong match is the failure that costs
+    // most here. NO schema on purpose: an item's `value`-style fields are
+    // union-typed and the *_fields blocks are omitted when they don't apply.
+    // json:true alone still guarantees a parseable object, and _jsonFromReply
+    // stays the net under it.
+    // userContent carries image/PDF parts for a photographed letter — the
+    // router translates those Anthropic source blocks per provider.
+    // NOTE max_tokens: asked for 24000, and the router caps at 16384. That is
+    // deliberate on both sides — the cap is what the stop_reason guard below
+    // exists to report.
+    const d=await _ai('deep',{max_tokens:24000,json:true,system:sys,messages:[{role:'user',content:userContent}]},{timeoutMs:120000});
     // TRUNCATION GUARD: at the old 1500-token ceiling a list of ~9+ people ran past
     // the budget, the JSON was cut mid-item, the greedy brace match grabbed a partial
     // object and JSON.parse threw — surfacing as a raw "JSON Parse error" in red.
@@ -9401,9 +9328,8 @@ async function captureAnalyze(btn){
 let _captureHeard='';
 function _captureHeardHtml(){
   if(!_captureHeard)return '';
-  const engine=(_transcribeUsed==='whisper')?' · Whisper':'';
   return '<div style="background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.74rem;color:var(--txt2);line-height:1.5">'
-    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard'+engine+'</span><br>'
+    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'
     +_enrichEsc(_captureHeard)+'</div>';
 }
 function _captureRenderProposals(parsed){
@@ -10206,7 +10132,7 @@ async function renderEnrichCard(){
   document.getElementById('enrichOverlay').scrollTop=0;
 }
 
-// Reusable textarea + voice-note record button (records audio → _transcribe → Gemini clean+extract)
+// Reusable textarea + voice-note record button (records audio → _transcribe → AI clean+extract)
 function _enrichTextareaWithVoice(id, value, placeholder, rows){
   return '<div style="position:relative">'
     +'<textarea id="'+id+'" rows="'+rows+'" placeholder="'+placeholder+'" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5">'+value+'</textarea>'
@@ -10215,7 +10141,7 @@ function _enrichTextareaWithVoice(id, value, placeholder, rows){
     +'</div>';
 }
 
-// ── Voice note: record audio → _transcribe → Gemini clean + extract ──
+// ── Voice note: record audio → _transcribe → AI clean + extract ──
 let _enrichMediaRec=null, _enrichChunks=[], _enrichRecTarget=null, _enrichRecStream=null;
 
 function enrichRecordVoice(targetId, btn){
@@ -10232,7 +10158,7 @@ function enrichRecordVoice(targetId, btn){
     _enrichRecStream=stream;
     _enrichChunks=[];
     _enrichRecTarget=targetId;
-    // Pick a mime type Whisper accepts; Safari prefers mp4/m4a, others webm
+    // Pick a mime type the transcriber accepts; Safari prefers mp4/m4a, others webm
     let mime='';
     if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm';
     else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
@@ -10264,15 +10190,14 @@ async function _enrichProcessRecording(targetId){
   // Loading indicator in the suggestion area
   if(sug){sug.style.display='block';sug.innerHTML='<div style="font-size:.72rem;color:var(--txt3);padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg> Transcribing…</div>';}
   try{
-    // 1) Transcribe (Gemini, Whisper fallback — see _transcribe)
-    const transcript=await _transcribe(blob,{prompt:_captureWhisperPrompt()});
+    // 1) Transcribe (gpt-transcribe — see _transcribe)
+    const transcript=await _transcribe(blob,{prompt:_captureNamePrompt()});
     if(!transcript){throw new Error('No speech detected in the recording.');}
     // Show raw transcript immediately so nothing is lost even if cleanup fails
     ta.value=(ta.value?ta.value.replace(/\s+$/,'')+'\n':'')+transcript;
     if(sug)sug.innerHTML='<div style="font-size:.72rem;color:var(--txt3);padding:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg> Tidying &amp; extracting details…</div>';
-    // 2) Tidy the transcript into a clean note (Gemini)
-    const ar=await _geminiComplete({
-      model:GEM_FLASH,
+    // 2) Tidy the transcript into a clean note
+    const ar=await _ai('deep',{
       max_tokens:3000,
       system:'You tidy a rabbi\u2019s dictated voice note about a donor/household into a clean, concise note. Fix grammar and remove filler words and false starts. Keep ALL facts, names, numbers. Do not invent anything, and never fabricate dates or dollar amounts. Do not add commentary or headings. Return ONLY the cleaned note text.',
       messages:[{role:'user',content:transcript}]
@@ -10285,7 +10210,7 @@ async function _enrichProcessRecording(targetId){
   }
 }
 
-// ── Brain-dump: voice recording (same Whisper pipeline, targets enrich-dump) ──
+// ── Brain-dump: voice recording (same transcription pipeline, targets enrich-dump) ──
 let _dumpMediaRec=null,_dumpChunks=[],_dumpStream=null;
 function enrichDumpRecord(btn){
   if(_dumpMediaRec&&_dumpMediaRec.state==='recording'){
@@ -10307,7 +10232,7 @@ function enrichDumpRecord(btn){
       const blob=new Blob(_dumpChunks,{type:mime||'audio/webm'});
       btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3c0 4 4 5 5 7 1-2 5-3 5-7M7 21c0-4 4-5 5-7 1 2 5 3 5 7"/></svg>';btn.disabled=true;
       try{
-        const heard=await _transcribe(blob,{prompt:_captureWhisperPrompt()});
+        const heard=await _transcribe(blob,{prompt:_captureNamePrompt()});
         const ta=document.getElementById('enrich-dump');
         if(ta){ta.value=(ta.value?ta.value+'\n':'')+heard;ta.focus();}
       }catch(e){alert('Couldn\u2019t transcribe that. Try again.\n\n'+e.message);}
@@ -10331,14 +10256,12 @@ async function enrichProcessDump(idx){
   resultEl.innerHTML='<div style="font-size:.78rem;color:var(--txt3);padding:6px 0">Analyzing…</div>';
   try{
     const memberNames=members.map(m=>m.first_name+' '+m.last_name).join(', ')||'(no contacts listed)';
-    // Gemini + native JSON mode. The shape here is closed (a flat array of
-    // fixed-key objects), so a responseSchema can pin it outright — replacing
-    // the old "Return ONLY a JSON array" instruction plus a fence-strip.
-    const d=await _geminiComplete({
-        model:GEM_FLASH,
+    // DEEP — the proposals this returns become saved rows. The shape is closed
+    // (a flat array of fixed-key objects), so the schema pins it outright.
+    const d=await _ai('deep',{
         max_tokens:6000,
         json:true,
-        responseSchema:{type:'array',items:{type:'object',properties:{
+        schema:{type:'array',items:{type:'object',properties:{
           type:{type:'string',enum:['household','note','interaction','task']},
           text:{type:'string'},
           person_id:{type:'string',nullable:true},
@@ -10500,7 +10423,7 @@ async function enrichCleanup(btn){
   if(!ta||!ta.value.trim()){alert('Nothing to clean up yet.');return;}
   const orig=btn.textContent; btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg> …'; btn.disabled=true;
   try{
-    const d=await _geminiComplete({model:GEM_FLASH,max_tokens:3000,system:'Tidy a rough dictated donor note. Fix grammar, remove filler. Keep all facts. Return ONLY the cleaned text.',messages:[{role:'user',content:ta.value}]});
+    const d=await _ai('deep',{max_tokens:3000,system:'Tidy a rough dictated donor note. Fix grammar, remove filler. Keep all facts. Return ONLY the cleaned text.',messages:[{role:'user',content:ta.value}]});
     const cleaned=d.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
     if(cleaned)ta.value=cleaned;
   }catch(e){alert('Cleanup failed: '+e.message);}
@@ -11202,9 +11125,9 @@ async function parseTaskInput(text){
   const roster=households.slice(0,700).map(h=>h.id+' | '+(h.displayName||'')).join('\n');
   const sys='You convert a rabbi\'s one-line to-do into structured JSON for his CRM. You are given TODAY\'s date and a ROSTER of households (household_id | name). Return ONLY JSON, no markdown: {"text":"clean imperative task","household_id":"exact id from roster or null","due_date":"YYYY-MM-DD or null"}. '
     +'Match a household ONLY if a name in the line clearly refers to one (a first name, last name, or family). If unsure, use null. Resolve relative dates against TODAY: "next week" = the coming Monday, "tomorrow" = TODAY+1, a weekday name = the next such weekday, "after the holiday"/"sometime" = null. If no timeframe is stated, due_date null. Keep text short and action-oriented; you may keep the person\'s name in the text.';
-  const d=await _geminiComplete({
-    model:GEM_FLASH,max_tokens:2000,json:true,
-    responseSchema:{type:'object',properties:{
+  const d=await _ai('fast',{
+    max_tokens:2000,json:true,
+    schema:{type:'object',properties:{
       text:{type:'string'},
       household_id:{type:'string',nullable:true},
       due_date:{type:'string',nullable:true}
@@ -21102,11 +21025,12 @@ async function _rpAiRun(){
     +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
     +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
   try{
-    // json:true but NO responseSchema — a filter condition's `value` is
-    // "string OR array of strings" depending on the operator, and Gemini's
-    // schema dialect has no union type. JSON mode alone still guarantees a
-    // parseable object, which is the reliability win that mattered here.
-    const d=await _geminiComplete({model:GEM_FLASH,max_tokens:6000,json:true,
+    // FAST — he types a sentence and watches for the report to build.
+    // json:true but still NO schema: a filter condition's `value` is "string OR
+    // array of strings" depending on the operator. OpenAI's dialect CAN express
+    // that with anyOf, unlike Gemini's — pinning it is a worthwhile follow-up,
+    // but not on cutover day. JSON mode alone guarantees a parseable object.
+    const d=await _ai('fast',{max_tokens:6000,json:true,
       system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
     const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
@@ -21426,7 +21350,7 @@ async function _assistantTranscribe(){
   const prev=ta.value;
   ta.value=(prev?prev+'\n':'')+'Transcribing\u2026';
   try{
-    let wp=''; try{wp=_captureWhisperPrompt();}catch(e){}
+    let wp=''; try{wp=_captureNamePrompt();}catch(e){}
     const heard=await _transcribe(blob,{prompt:wp});
     ta.value=(prev?prev+'\n':'')+heard;
     _asHeard=heard;
@@ -21447,9 +21371,8 @@ async function _assistantTranscribe(){
 let _asHeard='';
 function _asHeardHtml(){
   if(!_asHeard)return '';
-  const engine=(_transcribeUsed==='whisper')?' \u00b7 Whisper':'';
   return '<div style="background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.74rem;color:var(--txt2);line-height:1.5">'
-    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard'+engine+'</span><br>'
+    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'
     +_enrichEsc(_asHeard)+'</div>';
 }
 // PURE router — separable from DOM for testing. parsed → {action, payload}.
@@ -21490,16 +21413,16 @@ async function _asAnalyze(btn){
     +'Rules: intent email = he wants to SEND or DRAFT an email/mailing to people. Draft real, warm, ready-to-edit content in blocks (a heading and one or two text blocks; a button only if a link/action was implied). PERSONALIZATION TOKENS: when a greeting or the text should address the recipient by name, use these EXACT merge tags (with curly braces) and NO other format \u2014 never write [First Name], <Name>, or similar: {first_name} (the recipient\u2019s own first name), {joint_name} (e.g. "David & Rachel Cohen"), {first_names} (e.g. "David & Rachel"), {last_name}, {email}. So "Dear first name," becomes "Dear {first_name}," and "Dear the family," becomes "Dear {joint_name},". Do NOT add a logo, header, "\u05d1\u05f4\u05d4" line, or unsubscribe link \u2014 those are added automatically. Match group names loosely against EMAIL GROUPS and return the metadata spelling. intent event = he wants to create an event, program, or signup/registration/donation form: extract name, date (resolve relative dates against TODAY), location, ticket tiers with prices. intent search = he wants a list, report, count, or lookup of people/donations \u2014 restate it as search_sentence. If it fits none of the three, intent unknown with a short reply. NEVER invent group names not in the metadata; if no group matches, return an empty groups array.'
     +(_asForcedIntent?(' IMPORTANT: The user has explicitly chosen intent="'+_asForcedIntent+'". You MUST set intent to "'+_asForcedIntent+'" and extract ONLY the fields for that intent \u2014 do not classify differently and do not return unknown.'):'');
   try{
-    // The router is the single best fit for Gemini's native structured output:
-    // a closed set of intents and a fixed payload per intent. The schema below
-    // replaces "return ONLY valid JSON" plus a regex brace-scrape, so a chatty
-    // preamble can no longer break routing. NOTE: the {first_name}-style merge
-    // tags in the email prompt are still prompt-enforced — a schema can pin the
-    // shape of a string, not its contents — so spot-check a draft's tone and
-    // tags before trusting it in front of donors.
-    const d=await _geminiComplete({
-      model:GEM_FLASH,max_tokens:8000,json:true,
-      responseSchema:{type:'object',properties:{
+    // FAST — the Assistant router is a closed set of intents with a fixed
+    // payload each, and he is waiting on it. The schema replaces "return ONLY
+    // valid JSON" plus a regex brace-scrape, so a chatty preamble can no longer
+    // break routing. NOTE: the {first_name}-style merge tags in the email
+    // prompt are still prompt-enforced — a schema pins the shape of a string,
+    // not its contents — so spot-check a draft's tone and tags before trusting
+    // it in front of donors.
+    const d=await _ai('fast',{
+      max_tokens:8000,json:true,
+      schema:{type:'object',properties:{
         intent:{type:'string',enum:['email','event','search','unknown']},
         email:{type:'object',nullable:true,properties:{
           name:{type:'string'},subject:{type:'string'},preheader:{type:'string'},
@@ -21770,23 +21693,18 @@ function _asExecuteSearch(sentence){
 <div class="modal-bg" id="modeHelpModal" style="display:none">
   <div style="background:var(--surf,#fff);color:var(--txt);max-width:480px;width:100%;border-radius:16px;border:1px solid var(--border);padding:24px;font-family:var(--font-ui),system-ui,sans-serif;max-height:85vh;overflow:auto;box-shadow:var(--sh-lg)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700">How the three search modes differ</div>
+      <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700">How the two search modes differ</div>
       <button onclick="toggleModeHelp()" style="background:none;border:none;color:var(--txt2);font-size:1.3rem;cursor:pointer;line-height:1">×</button>
     </div>
-    <p style="font-size:.82rem;color:var(--txt2);line-height:1.6;margin:0 0 16px">All three answer questions about your people. They differ in <b>how much they first dig into your data</b>, and therefore in cost.</p>
-
-    <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="5" r="2"></circle><path d="M11 8l-2 4 3 2v5M9 12l-3 1-2 4M14 14l3 1 2 4"></path></svg> Quick <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~10k tokens · cheapest, fastest</span></div>
-      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Reads a one-line summary of every household: names, Prospect score, home value, total giving. It does <b>not</b> read your notes. Good for “who are my top families in Pepper Pike?”</p>
-    </div>
+    <p style="font-size:.82rem;color:var(--txt2);line-height:1.6;margin:0 0 16px">Both answer questions about your people. They differ in <b>how much they first dig into your data</b>, and therefore in cost.</p>
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
       <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"></path></svg> Standard <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~35k tokens · the everyday default</span></div>
-      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Everything Quick reads, <b>plus</b> it searches your notes for whatever is relevant. Good for “who mentioned wanting to host a Shabbos dinner?”, where the answer is in a note.</p>
+      <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Reads a one-line summary of every household — names, Prospect score, home value, total giving — <b>plus</b> it searches your notes for whatever is relevant. Good for “who mentioned wanting to host a Shabbos dinner?”, where the answer is in a note.</p>
     </div>
 
     <div style="border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:6px">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg> Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow &amp; costly (~$0.30)</span></div>
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:4px"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg> Power Search <span style="font-weight:400;color:var(--txt3);font-size:.72rem">· ~80–100k tokens · slow &amp; costly (~$0.20)</span></div>
       <p style="font-size:.8rem;color:var(--txt2);line-height:1.55;margin:0">Reads the <b>full profile</b> of every household: score breakdown, giving history, research, business background, plus your notes. For big jobs like “build me a major-gift list with talking points.” It asks before running.</p>
     </div>
 
@@ -21915,7 +21833,7 @@ function _asExecuteSearch(sentence){
         <div class="m-sub">Ask anything — who’s lapsed, who to cultivate, who’s in which neighborhood.</div>
         <button class="m-action-card" onclick="openGlobalAsk()">
           <span class="m-action-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"></path></svg></span>
-          <span class="m-action-txt"><b>Open Chat</b><span>Quick · Standard · Power modes</span></span>
+          <span class="m-action-txt"><b>Open Chat</b><span>Standard and Power Search modes</span></span>
           <span class="m-chev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
         </button>
       </div>
@@ -22470,7 +22388,7 @@ async function _mOutProcess(){
     // Shared with desktop: _transcribe lives in Block A. No key needed on this
     // device any more — that was the reason for the old "add your OpenAI key on
     // desktop" message, which is gone.
-    let wp=''; try{wp=_captureWhisperPrompt();}catch(e){}
+    let wp=''; try{wp=_captureNamePrompt();}catch(e){}
     const heard=await _transcribe(blob,{prompt:wp});
     ta.value=(prev?prev+' ':'')+heard;
   }catch(e){ ta.value=prev; _ebToastMsg('Couldn\u2019t transcribe that. Try again.'); }
@@ -23227,11 +23145,12 @@ async function _mAsSearch(sentence){
     +'\nEMAIL GROUPS: '+((_egGroups||[]).map(g=>g.name+' [id='+g.id+']').join(' | ')||'(none)')
     +'\nEVENTS: '+((_events||[]).map(e=>(e.name||'?')+' [id='+e.id+']').join(' | ')||'(none)');
   try{
-    // json:true but NO responseSchema — a filter condition's `value` is
-    // "string OR array of strings" depending on the operator, and Gemini's
-    // schema dialect has no union type. JSON mode alone still guarantees a
-    // parseable object, which is the reliability win that mattered here.
-    const d=await _geminiComplete({model:GEM_FLASH,max_tokens:6000,json:true,
+    // FAST — he types a sentence and watches for the report to build.
+    // json:true but still NO schema: a filter condition's `value` is "string OR
+    // array of strings" depending on the operator. OpenAI's dialect CAN express
+    // that with anyOf, unlike Gemini's — pinning it is a worthwhile follow-up,
+    // but not on cutover day. JSON mode alone guarantees a parseable object.
+    const d=await _ai('fast',{max_tokens:6000,json:true,
       system:'You translate one sentence into a report config for a donor CRM. Return ONLY valid JSON, no markdown. '+_rpAiSchemaDoc()+' If the sentence names (even loosely) one of the SAVED REPORTS, set base_report to its exact name and put ONLY the additional filters in filters. If a phrase like a program or audience name resolves to an EMAIL GROUP, use an in_group condition with that group id. Choose the entity that matches what one row should be. For "top/biggest/highest donors" use entity donation with group_mode donor and sort total_results desc (or entity household sorted total_giving desc). For "most recent / latest donors" use entity donation group_mode donor and sort last_gift desc. ALWAYS set sort whenever the sentence implies a ranking or recency. When the sentence asks for a specific count ("top 5", "first 10"), also set limit to that number. Leave columns null unless specific columns were requested.',
       messages:[{role:'user',content:meta+'\n\nSENTENCE: '+sentence}]});
     const txt=(d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
