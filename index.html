@@ -509,6 +509,33 @@ html.force-desktop #mobileShell{display:none!important}
 .m-map-tray .mt-acts .ic{width:15px;height:15px}
 .m-map-loc{position:absolute;right:14px;bottom:calc(150px + env(safe-area-inset-bottom));width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--border2);box-shadow:var(--sh-md);display:flex;align-items:center;justify-content:center;color:var(--accent);z-index:500;cursor:pointer}
 .m-map-loc .ic{width:21px;height:21px}
+/* Stacked-pin picker inside the tray — only rendered when pins genuinely overlap */
+.m-map-tray .mt-stack{margin-top:11px;max-height:196px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.m-map-tray .mt-stack-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:9px;background:var(--surf2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;min-height:44px;box-sizing:border-box}
+.m-map-tray .mt-stack-row:last-child{margin-bottom:0}
+.m-map-tray .mt-stack-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px var(--border2)}
+.m-map-tray .mt-stack-nm{font-family:var(--font-ui);font-size:.84rem;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.m-map-tray .mt-stack-sc{font-family:var(--font-ui);font-size:.8rem;font-weight:700;flex-shrink:0}
+/* Floating map search — sits over the tiles, costs no map height when idle.
+   z-index clears Leaflet's own controls (.leaflet-top is 1000), and the zoom
+   buttons are pushed below the bar so it never covers them. 16px font on the
+   input is deliberate: iOS Safari zooms the page on focus at anything smaller. */
+.m-mapsearch{position:absolute;top:10px;left:12px;right:12px;z-index:1200}
+.m-mapsearch-bar{display:flex;align-items:center;gap:9px;background:var(--surf);border:1px solid var(--border2);border-radius:12px;box-shadow:var(--sh-lg);padding:0 6px 0 12px}
+.m-mapsearch-bar .m-ms-ic{width:17px;height:17px;color:var(--txt3);flex-shrink:0}
+.m-mapsearch-bar input{flex:1;min-width:0;background:none;border:none;outline:none;padding:12px 0;font-family:var(--font-ui);font-size:16px;color:var(--txt)}
+.m-mapsearch-x{display:none;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border:none;background:none;color:var(--txt3);cursor:pointer;padding:0}
+.m-mapsearch-x.on{display:flex}
+.m-mapsearch-x .ic{width:17px;height:17px}
+.m-mapsearch-res{display:none;margin-top:8px;max-height:min(46vh,336px);overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--surf);border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh-lg);padding:6px}
+.m-mapsearch-res.open{display:block}
+.m-mapsearch-res .mfind-row{margin-bottom:5px;background:var(--surf2)}
+.m-mapsearch-res .mfind-row:last-child{margin-bottom:0}
+.m-mapsearch-res .m-empty{padding:15px 12px}
+#mMap .leaflet-top.leaflet-left{top:60px;transition:opacity .15s ease}
+/* the results panel and the zoom buttons want the same corner — stand the buttons
+   down while a list is open instead of letting them peek out from behind it */
+#mtab-map.m-searching #mMap .leaflet-top.leaflet-left{opacity:0;pointer-events:none}
 .m-livedot{width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,.4),0 1px 4px rgba(0,0,0,.3)}
 
 .m-empty{text-align:center;color:var(--txt3);font-family:var(--font-ui);font-size:.84rem;padding:40px 20px;line-height:1.6}
@@ -1827,7 +1854,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-17.2'; // DAY-ONE FIXES from the live smoke test, all three found by clicking rather than by the harness — both live on the provider's server, not in the request shape. (1) OpenAI's json_object mode 400s unless the literal word 'json' appears in the INPUT; our schema-less sites say 'Return ONLY valid JSON' in the SYSTEM prompt, which becomes `instructions`, and OpenAI does not count that — it broke report search on desktop and mobile the moment the build went live. ai-router now injects the word only when it is genuinely absent. (2) CLAUDE SONNET 5 EMITS `thinking` BLOCKS AND THEY SPEND THE SAME BUDGET AS THE ANSWER. A Power Search returned a thinking block and NO text after 61 seconds; Profile Build's 4000-token ask came back cut mid-JSON, so the brace-scrape found no closing brace and dumped raw JSON into the Summary field. The router now gives Anthropic the same headroom OpenAI already had (double the ask, capped at 16384), Profile Build asks 12000 instead of 4000, and a thinking-only reply now reports running out of room instead of 'The AI returned an empty response' — it is a length problem, not a refusal, and the old wording sent the reader to the wrong place. (3) _buildProfilePhase2's prose fallback no longer says 'Model returned a narrative instead of structured data' when the real cause was truncation; it names the cut-off and says a rebuild usually works. NOT A BUG: task parsing returning null for 'call the kleins'. Reproduced against the real 700-household roster on both Luna and Sonnet — both matched Leslie and Steve Klein correctly. The roster holds both a Klein and a Kleinman, and the prompt says 'if unsure, use null', so declining is defensible. Change that instruction if you want it to guess. Harness 84/84 with regression tests for both server-side rules. Edge functions ai-router 2026-08-17.1b deployed. ||| PREVIOUS (2026-08-17.1): TWO PROVIDERS, NO MODEL NAMES IN THE BROWSER. Gemini is gone; every AI call now runs on Claude or OpenAI, chosen server-side by JOB TYPE. NEW ai-router edge function replaces ai-proxy AND gemini-proxy: a call site posts {tier:'deep'|'fast'|'search'} plus the Anthropic-shaped payload it already spoke, and the router picks the company and the model. deep -> claude-sonnet-5 (falls back to gpt-5.6-sol with no Anthropic key); fast -> gpt-5.6-luna, NEVER Claude, because those four sites are interactive and a reasoning model puts a visible pause in a command bar (latency, not cost); search -> claude-sonnet-5 + Anthropic web_search, or gpt-5.6-sol + OpenAI web search via the Responses API. NO MODEL PICKER ANYWHERE and no model string in this file: the fair question to ask a user is how much effort, never which vendor, and a model rename is now a 300-line server edit rather than a redeploy of this 1.7MB page. Client entry point is _ai(tier,payload) over the existing _fnPost; _aiComplete/_geminiComplete/_gemParts/_gemSystem and the GEM_* constants are deleted. Response shape is unchanged ({content:[{type:'text',text}],stop_reason}) so no call site changed how it reads a reply, and stop_reason is normalised across providers because captureAnalyze's truncation guard reads it. NEW: d.citations — the router returns every page the search tool actually read, and Profile Build now renders them as clickable Sources (OpenAI's terms require visible citations wherever web results are shown, and a research claim the rabbi cannot check in one tap is one he has to take on faith). SCHEMAS: the call sites' Gemini-dialect nullable:true is translated server-side into a JSON Schema null union — shipping the Gemini spelling to OpenAI would silently drop nullability and turn an absent household_id into an empty string. OpenAI's dialect supports anyOf, which Gemini's did not, so _rpAiRun/_mAsSearch/captureAnalyze can finally be pinned — deliberately left as a follow-up, not done on cutover day. TRANSCRIPTION -> gpt-transcribe, one engine: both were run on real voice notes covering Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag and gpt-transcribe held up with no word list or priming, so the Gemini audio path, the Whisper op, the Settings engine dropdown and the daas_transcribe preference are all gone (a picker with one option is worse than none). _blobToWav is UNTOUCHED — 16kHz mono PCM16 is what the engine wants, its header logic is byte-tested, and it is what made the A/B valid. QUICK CHAT MODE REMOVED (Shneur): it did not do enough over the plain text search bar to justify a third option. Standard is the light mode, Power Search the heavy one; the help text was verified accurate and kept, since it describes how much DATA each mode reads, not which model reads it. setStrength normalises an unknown mode to standard, so a chat_sessions row saved with mode:'quick' loads on Standard instead of a mode that no longer exists. Power Search's cost estimate is untouched — $2/1M input is Claude Sonnet 5's exact rate and the ~90%-cheaper line is its $0.20 cache rate; only the stale ~$0.30 in the help modal became ~$0.20. VERIFIED: both blocks node --check clean, both sentinels present, 75/75 on a stubbed VM harness (translation, cache_control blocks, JSON modes, stop_reason round-trip, resolution matrix, citation extraction, error surfacing, _jsonFromReply), and every tier smoke-tested against the LIVE functions — fast/deep/search on Claude, search AND deep forced onto OpenAI, embed, and transcribe. THE OPENAI SEARCH BRANCH NEVER FIRES IN NORMAL USE (the Anthropic key is set), so it is forceable on purpose: body.force:'openai' per request, or AI_FORCE_PROVIDER=openai on the function. Re-verify it that way, not by deleting secrets. ||| PREVIOUS (2026-08-16.4): RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-17.6'; // ADDRESS MATCHING IS NOW SHARED, NOT A MOBILE-MAP FEATURE (Shneur: "anything helpful lets extend"). The USPS table, _normAddr, the raw/normalised union and the relevance tiers MOVED OUT OF BLOCK B INTO BLOCK A, because this is engine, not chrome: four different boxes search the same roster and had four different opinions about what '12 Maple Road' means. Block A now owns ADDR_ABBR (renamed from M_ADDR_ABBR), _normAddr, _addrBlob, _normBlob, _addrMatch, _matchTier and _rankMatches; Block B calls them, never the reverse, which is the documented direction of that dependency. UPGRADED CALL SITES: desktop header-search popout (_showSearchPopout - it slices to SIX rows, so ranking matters more there than anywhere: a street search must not spend all six on everyone who lives in that town), mobile global Find (_mFindRender - its old name-first/everything-else split let a city bury a street; now the full tier), mobile Contacts roster (mRenderRoster), and the mobile map. TWO DELIBERATE ASYMMETRIES. (1) _searchMatch reaches the whole _searchBlob - notes, interaction text, profile fields - while _addrMatch is names+address ONLY. The map and the roster mean 'find this person or street'; global Find means 'find this anywhere'. (2) THE NORMALISED PASS NEVER RUNS OVER THE FULL BLOB, only over names+address: normalising every interaction note for 600 households would cost real milliseconds on a phone for nothing, and a suffix table has no business rewriting words inside someone's notes. Raw matching still covers the whole blob, so nothing became unfindable. THE ROSTER IS MATCHED BUT NOT RE-RANKED - that list is alphabetical and the A-Z rail indexes into it, so re-sorting by relevance would break the rail. _rankMatches takes opts.mapFirst so 'has coordinates' is a tiebreak INSIDE a tier for the map only; match quality outranks it everywhere, since the right household with no coordinates beats the wrong one with them. Desktop Contacts table left alone on purpose: its box says 'Filter by name' and runs _nameMatch, so suffix equivalence is not in scope. Normalised blobs are memoised in a Map keyed by household id, self-invalidated on the source string. VERIFIED: both blocks node --check clean, both sentinels present, 92/92 on the stubbed VM harness (now loading the shared Block A layer alongside Block B) covering _addrMatch-vs-_searchMatch scope, tier assignment, ranking with and without mapFirst, no input mutation, USPS variants, and the no-regression checks; 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.5): MAP SEARCH: THE REAL USPS TABLE, AND STREET BEATS CITY. (1) M_ADDR_ABBR is now USPS PUBLICATION 28 APPENDIX C1 VERBATIM - 387 aliases (was a hand-written 90), the Postal Service's own suffix table, which exists because they have to route mail people addressed sloppily and therefore lists every variant seen in the wild: av/aven/avenu/avn/avnue all -> ave, hiway/hiwy/highwy -> hwy, crecent/cresent/crsnt -> cres. That matters because this roster was IMPORTED FROM SPREADSHEETS, not typed into a validating form. Plus Appendix B directionals (north->n) and C2 unit designators (apartment->apt). Public-domain data; identity rows (rd->rd) omitted since _mNormAddr falls through to the word, which is why 553 source rows become 387. WHY A TABLE AND NOT A SERVICE (asked directly): Leaflet HAS no geocoder - leaflet-control-geocoder is a UI shim over Nominatim/Google/etc; Google Places matches the REAL WORLD, not these 615 households, so it cannot answer 'which Klein is this' and would need a paid key that this architecture forbids in the browser anyway; libpostal is the real open-source answer and is a C library with ~2GB of data, so it fits neither a browser nor a Deno edge function. Every open-source JS address library resolves to exactly this lookup table - addresser's whole street-type brain is a 16KB JSON. A geocoder is still worth building, but it solves a DIFFERENT problem (missing pins, addresses not yet in the CRM) and Shneur deferred it. (2) BUG HE CAUGHT IMMEDIATELY: searching 'falls' returned all of Chagrin Falls, burying Falls Road. Cause was a flat relevance model - a city match and a street match sorted identically. Results are now tiered by WHICH FIELD matched: 0 person/household name, 1 street, 2 city/zip; then mappable; then alphabetical. So 'falls' gives the Falls surname, then Falls Road, then the town, and 'falls road' narrows to the street alone. Tier is computed ONCE PER HOUSEHOLD into a Map, never inside the comparator, which would have re-normalised on every one of the O(n log n) comparisons. NOTE the previous sort keyed on mappable-first; match quality now outranks it, because the right household with no coordinates beats the wrong one with them. VERIFIED: both blocks node --check clean, both sentinels present, 76/76 stubbed VM harness (USPS variants and misspellings, long<->short both directions, the Chagrin-Falls ranking case, no-regression checks that every raw substring matching before still matches, cache re-normalisation after an address edit) and 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.4): MAP SEARCH: STREET-SUFFIX EQUIVALENCE (Shneur: "road and rd, lane and ln etc need to be recognized"). Addresses get TYPED the way they are spoken and STORED the way they were imported, so a literal substring match missed half of them. New M_ADDR_ABBR table (~90 entries: USPS street suffixes long->short, plus directionals north->n and unit words apartment->apt) and _mNormAddr, which lowercases, strips ALL punctuation, and maps token by token. Applied to BOTH the query and the record, so it works in both directions - typed 'Pine Dr' finds a stored 'Pine Drive' just as typed '12 Maple Road' finds a stored '12 Maple Rd'. ONLY LONG->SHORT IS LISTED, deliberately: mapping short->long would have to pick a winner between 'Saint' and 'Street', which share the abbreviation 'st'. Collapsing both onto 'st' can only ever over-match, which in a search box is free. MATCHING IS THE UNION OF RAW AND NORMALISED, never normalised alone - '12 maple ro' tokenises to a word that is in no table, so a normalised-only match would have returned FEWER rows mid-typing than the old plain substring did. The union guarantees this change can never take a result away. Note a city like 'Chagrin Falls' normalises to 'chagrin fls' because Falls is a real suffix; harmless, since both sides get the same treatment, and the raw half of the union covers 'chagrin fall'. Normalised blobs are memoised in a Map KEYED BY HOUSEHOLD ID AND SELF-INVALIDATED on the source string - not stamped onto the household object, which gets PATCHed back to PostgREST. Also: the 'No address' label in results lost its '- opens the contact' tail (Shneur). VERIFIED: both blocks node --check clean, both sentinels present, 66/66 on the stubbed VM harness (normaliser unit tests, long->short and short->long in both directions, punctuation, no-regression checks that every raw substring that matched before still matches, and cache re-normalisation after an address edit) and 29/29 driving real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.3): MOBILE MAP: PINS YOU CAN ACTUALLY HIT, PLUS A SEARCH BAR (Shneur: "you have to make sure you're pressing exactly on it"). ROOT CAUSE: mobile pins were INTERACTIVE circleMarkers at radius 7 and Leaflet hit-tests the drawn SVG path exactly, so the whole target was an 14px circle against the ~44px a thumb needs - there was no forgiveness at all, by construction. Desktop never felt this because it uses 28px divIcons plus markercluster. FIX: the markers are now interactive:false DECORATION (radius 9) and ONE handler on the map owns every tap, so there is a single code path and no marker/map double-fire. New PURE _mPinHitTest(pins,pt,tapTol,stackTol) awards the tap to the NEAREST pin centre within M_TAP_TOL=24 (a ~48px target). NEAREST-WINS IS THE WHOLE POINT and is why the extra slop costs no precision: a fatter hit circle would let two close pins steal each other's taps, whereas here each pin owns exactly the half of the tolerance nearer to it - verified at 30px separation, the boundary flips between 14 and 16px from the left pin. STACKING IS NOT DESKTOP CLUSTERING (explicitly rejected - he wants grouping only for literal neighbours): pins are never merged or hidden at any zoom, and the only grouping happens at the moment of the tap. Pins whose CENTRES sit within M_STACK_TOL=14 of the winner are on top of each other on screen (spouses at one address, a duplex, an apartment building) and get listed by name in the tray instead of guessed at; a pin 20px away is inside the tap tolerance but excluded from the stack, so two houses a block apart always resolve to one. Selected pin gets a ring (_mHighlightPin, re-applied after _mSyncMapPins throws the markers away); tapping empty map now closes the tray, which it never did. SEARCH: floating rounded bar over the tiles at the top of the map tab (z-index 1200 clears Leaflet's own 1000 controls; the zoom buttons are pushed to top:60px so it never covers them; input font is 16px because iOS Safari zooms the page on focus at anything smaller). Matches the SAME fields the Contacts tab searches - household name, member first/last, street, city, zip - so a name that works there works here. CRM DATA ONLY, NO GEOCODER: Nominatim is CORS-blocked on GitHub Pages, which is already why geocodeMissing is skipped on the live site, so an arbitrary-address lookup would need a new edge function - deliberately deferred, not forgotten. Un-geocoded households still appear in results (ranked below mappable ones, labelled 'No address') and open their contact sheet instead of moving the map: searching a name and getting silence because that household was never geocoded is worse than the wrong-looking action. Tapping a mappable result flies to zoom 16, rings the pin and opens the tray. VERIFIED: both blocks node --check clean, both sentinels present, 36/36 on a stubbed VM harness covering the geometry (forgiveness, nearest-wins boundary, diagonal tolerance, stack inclusion at exactly 14px and exclusion at 15, no input mutation) and the matcher (Klein vs Kleinman, member first names, street/city/zip, mappable-first ordering, no-address households still findable). NO desktop map code, data layer or logTouch path touched. ||| PREVIOUS (2026-08-17.2): DAY-ONE FIXES from the live smoke test, all three found by clicking rather than by the harness — both live on the provider's server, not in the request shape. (1) OpenAI's json_object mode 400s unless the literal word 'json' appears in the INPUT; our schema-less sites say 'Return ONLY valid JSON' in the SYSTEM prompt, which becomes `instructions`, and OpenAI does not count that — it broke report search on desktop and mobile the moment the build went live. ai-router now injects the word only when it is genuinely absent. (2) CLAUDE SONNET 5 EMITS `thinking` BLOCKS AND THEY SPEND THE SAME BUDGET AS THE ANSWER. A Power Search returned a thinking block and NO text after 61 seconds; Profile Build's 4000-token ask came back cut mid-JSON, so the brace-scrape found no closing brace and dumped raw JSON into the Summary field. The router now gives Anthropic the same headroom OpenAI already had (double the ask, capped at 16384), Profile Build asks 12000 instead of 4000, and a thinking-only reply now reports running out of room instead of 'The AI returned an empty response' — it is a length problem, not a refusal, and the old wording sent the reader to the wrong place. (3) _buildProfilePhase2's prose fallback no longer says 'Model returned a narrative instead of structured data' when the real cause was truncation; it names the cut-off and says a rebuild usually works. NOT A BUG: task parsing returning null for 'call the kleins'. Reproduced against the real 700-household roster on both Luna and Sonnet — both matched Leslie and Steve Klein correctly. The roster holds both a Klein and a Kleinman, and the prompt says 'if unsure, use null', so declining is defensible. Change that instruction if you want it to guess. Harness 84/84 with regression tests for both server-side rules. Edge functions ai-router 2026-08-17.1b deployed. ||| PREVIOUS (2026-08-17.1): TWO PROVIDERS, NO MODEL NAMES IN THE BROWSER. Gemini is gone; every AI call now runs on Claude or OpenAI, chosen server-side by JOB TYPE. NEW ai-router edge function replaces ai-proxy AND gemini-proxy: a call site posts {tier:'deep'|'fast'|'search'} plus the Anthropic-shaped payload it already spoke, and the router picks the company and the model. deep -> claude-sonnet-5 (falls back to gpt-5.6-sol with no Anthropic key); fast -> gpt-5.6-luna, NEVER Claude, because those four sites are interactive and a reasoning model puts a visible pause in a command bar (latency, not cost); search -> claude-sonnet-5 + Anthropic web_search, or gpt-5.6-sol + OpenAI web search via the Responses API. NO MODEL PICKER ANYWHERE and no model string in this file: the fair question to ask a user is how much effort, never which vendor, and a model rename is now a 300-line server edit rather than a redeploy of this 1.7MB page. Client entry point is _ai(tier,payload) over the existing _fnPost; _aiComplete/_geminiComplete/_gemParts/_gemSystem and the GEM_* constants are deleted. Response shape is unchanged ({content:[{type:'text',text}],stop_reason}) so no call site changed how it reads a reply, and stop_reason is normalised across providers because captureAnalyze's truncation guard reads it. NEW: d.citations — the router returns every page the search tool actually read, and Profile Build now renders them as clickable Sources (OpenAI's terms require visible citations wherever web results are shown, and a research claim the rabbi cannot check in one tap is one he has to take on faith). SCHEMAS: the call sites' Gemini-dialect nullable:true is translated server-side into a JSON Schema null union — shipping the Gemini spelling to OpenAI would silently drop nullability and turn an absent household_id into an empty string. OpenAI's dialect supports anyOf, which Gemini's did not, so _rpAiRun/_mAsSearch/captureAnalyze can finally be pinned — deliberately left as a follow-up, not done on cutover day. TRANSCRIPTION -> gpt-transcribe, one engine: both were run on real voice notes covering Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag and gpt-transcribe held up with no word list or priming, so the Gemini audio path, the Whisper op, the Settings engine dropdown and the daas_transcribe preference are all gone (a picker with one option is worse than none). _blobToWav is UNTOUCHED — 16kHz mono PCM16 is what the engine wants, its header logic is byte-tested, and it is what made the A/B valid. QUICK CHAT MODE REMOVED (Shneur): it did not do enough over the plain text search bar to justify a third option. Standard is the light mode, Power Search the heavy one; the help text was verified accurate and kept, since it describes how much DATA each mode reads, not which model reads it. setStrength normalises an unknown mode to standard, so a chat_sessions row saved with mode:'quick' loads on Standard instead of a mode that no longer exists. Power Search's cost estimate is untouched — $2/1M input is Claude Sonnet 5's exact rate and the ~90%-cheaper line is its $0.20 cache rate; only the stale ~$0.30 in the help modal became ~$0.20. VERIFIED: both blocks node --check clean, both sentinels present, 75/75 on a stubbed VM harness (translation, cache_control blocks, JSON modes, stop_reason round-trip, resolution matrix, citation extraction, error surfacing, _jsonFromReply), and every tier smoke-tested against the LIVE functions — fast/deep/search on Claude, search AND deep forced onto OpenAI, embed, and transcribe. THE OPENAI SEARCH BRANCH NEVER FIRES IN NORMAL USE (the Anthropic key is set), so it is forceable on purpose: body.force:'openai' per request, or AI_FORCE_PROVIDER=openai on the function. Re-verify it that way, not by deleting secrets. ||| PREVIOUS (2026-08-16.4): RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2509,7 +2536,10 @@ function _showSearchPopout(){
   const list=document.getElementById('searchPopoutList');
   if(!popout||!list)return;
   if(!q){_hideSearchPopout();return;}
-  const matches=households.filter(h=>_searchMatch(h,q)).slice(0,6);
+  // Only six rows fit, so ranking matters more here than anywhere: a street
+  // search must not spend all six on everyone who lives in that town.
+  const _nq=_normAddr(q);
+  const matches=_rankMatches(households.filter(h=>_searchMatch(h,q,_nq)),q,_nq).slice(0,6);
   if(!matches.length){popout.style.display='none';return;}
   list.innerHTML=matches.map((h,i)=>{
     const snippet=_popoutSnippet(h,q);
@@ -3457,8 +3487,142 @@ function _searchBlob(h){
   h._blob=t.toLowerCase();
   return h._blob;
 }
-function _searchMatch(h,q){
-  return _searchBlob(h).includes(q);
+/* ── ADDRESS NORMALISATION + MATCH RANKING (shared) ───────────────────────
+   Lives in Block A because it is engine, not chrome: the map, the roster, the
+   global Find and the desktop header popout all search the same roster and
+   should all agree on what "12 Maple Road" means.
+
+   USPS Publication 28, Appendix C1 — the Postal Service's own street-suffix
+   table, kept because they have to route mail people addressed sloppily. It
+   lists every variant seen in the wild ("av"/"aven"/"avenu"/"avnue" -> "ave"),
+   not just the tidy long form, which matters because this roster was imported
+   from spreadsheets rather than typed into a validating form. Plus Appendix B
+   directionals (north->n) and C2 unit designators (apartment->apt).
+   Public-domain data, 387 aliases. Identity rows (rd->rd) are omitted —
+   _normAddr falls through to the word.
+   Long form -> abbreviation ONLY, never the reverse: "saint" and "street"
+   share "st", and collapsing both onto it can only ever over-match, which in a
+   search box is free, whereas expanding "st" would have to pick a winner. */
+const ADDR_ABBR={
+  allee:"aly",alley:"aly",ally:"aly",anex:"anx",annex:"anx",annx:"anx",apartment:"apt",arcade:"arc",av:"ave",
+  aven:"ave",avenu:"ave",avenue:"ave",avn:"ave",avnue:"ave",basement:"bsmt",bayoo:"byu",bayou:"byu",beach:"bch",
+  bend:"bnd",bluf:"blf",bluff:"blf",bluffs:"blfs",bot:"btm",bottm:"btm",bottom:"btm",boul:"blvd",boulevard:"blvd",
+  boulv:"blvd",branch:"br",brdge:"brg",bridge:"brg",brnch:"br",brook:"brk",brooks:"brks",building:"bldg",burg:"bg",
+  burgs:"bgs",bypa:"byp",bypas:"byp",bypass:"byp",byps:"byp",camp:"cp",canyn:"cyn",canyon:"cyn",cape:"cpe",
+  causeway:"cswy",causway:"cswy",cen:"ctr",cent:"ctr",center:"ctr",centers:"ctrs",centr:"ctr",centre:"ctr",
+  circ:"cir",circl:"cir",circle:"cir",circles:"cirs",ck:"crk",cliff:"clf",cliffs:"clfs",club:"clb",cmp:"cp",
+  cnter:"ctr",cntr:"ctr",cnyn:"cyn",common:"cmn",corner:"cor",corners:"cors",course:"crse",court:"ct",courts:"cts",
+  cove:"cv",coves:"cvs",cr:"crk",crcl:"cir",crcle:"cir",crecent:"cres",creek:"crk",crescent:"cres",cresent:"cres",
+  crest:"crst",crossing:"xing",crossroad:"xrd",crscnt:"cres",crsent:"cres",crsnt:"cres",crssing:"xing",
+  crssng:"xing",crt:"ct",curve:"curv",dale:"dl",dam:"dm",department:"dept",div:"dv",divide:"dv",driv:"dr",
+  drive:"dr",drives:"drs",drv:"dr",dvd:"dv",east:"e",estate:"est",estates:"ests",exp:"expy",expr:"expy",
+  express:"expy",expressway:"expy",expw:"expy",extension:"ext",extensions:"exts",extn:"ext",extnsn:"ext",
+  falls:"fls",ferry:"fry",field:"fld",fields:"flds",flat:"flt",flats:"flts",floor:"fl",ford:"frd",fords:"frds",
+  forest:"frst",forests:"frst",forg:"frg",forge:"frg",forges:"frgs",fork:"frk",forks:"frks",fort:"ft",freeway:"fwy",
+  freewy:"fwy",front:"frnt",frry:"fry",frt:"ft",frway:"fwy",frwy:"fwy",garden:"gdn",gardens:"gdns",gardn:"gdn",
+  gateway:"gtwy",gatewy:"gtwy",gatway:"gtwy",glen:"gln",glens:"glns",grden:"gdn",grdn:"gdn",grdns:"gdns",
+  green:"grn",greens:"grns",grov:"grv",grove:"grv",groves:"grvs",gtway:"gtwy",hangar:"hngr",harb:"hbr",harbor:"hbr",
+  harbors:"hbrs",harbr:"hbr",haven:"hvn",havn:"hvn",height:"hts",heights:"hts",hgts:"hts",highway:"hwy",
+  highwy:"hwy",hill:"hl",hills:"hls",hiway:"hwy",hiwy:"hwy",hllw:"holw",hollow:"holw",hollows:"holw",holws:"holw",
+  hrbor:"hbr",ht:"hts",hway:"hwy",inlet:"inlt",island:"is",islands:"iss",isles:"isle",islnd:"is",islnds:"iss",
+  jction:"jct",jctn:"jct",jctns:"jcts",junction:"jct",junctions:"jcts",junctn:"jct",juncton:"jct",key:"ky",
+  keys:"kys",knol:"knl",knoll:"knl",knolls:"knls",la:"ln",lake:"lk",lakes:"lks",landing:"lndg",lane:"ln",lanes:"ln",
+  ldge:"ldg",light:"lgt",lights:"lgts",lndng:"lndg",loaf:"lf",lobby:"lbby",lock:"lck",locks:"lcks",lodg:"ldg",
+  lodge:"ldg",loops:"loop",lower:"lowr",manor:"mnr",manors:"mnrs",meadow:"mdw",meadows:"mdws",medows:"mdws",
+  mill:"ml",mills:"mls",mission:"msn",missn:"msn",mnt:"mt",mntain:"mtn",mntn:"mtn",mntns:"mtns",motorway:"mtwy",
+  mount:"mt",mountain:"mtn",mountains:"mtns",mountin:"mtn",mssn:"msn",mtin:"mtn",neck:"nck",north:"n",
+  northeast:"ne",northwest:"nw",office:"ofc",orchard:"orch",orchrd:"orch",overpass:"opas",ovl:"oval",parks:"park",
+  parkway:"pkwy",parkways:"pkwy",parkwy:"pkwy",passage:"psge",paths:"path",penthouse:"ph",pikes:"pike",pine:"pne",
+  pines:"pnes",pk:"park",pkway:"pkwy",pkwys:"pkwy",pky:"pkwy",place:"pl",plain:"pln",plaines:"plns",plains:"plns",
+  plaza:"plz",plza:"plz",point:"pt",points:"pts",port:"prt",ports:"prts",prairie:"pr",prarie:"pr",prk:"park",
+  prr:"pr",rad:"radl",radial:"radl",radiel:"radl",ranch:"rnch",ranches:"rnch",rapid:"rpd",rapids:"rpds",rdge:"rdg",
+  rest:"rst",ridge:"rdg",ridges:"rdgs",river:"riv",rivr:"riv",rnchs:"rnch",road:"rd",roads:"rds",room:"rm",
+  route:"rte",rvr:"riv",saint:"st",shoal:"shl",shoals:"shls",shoar:"shr",shoars:"shrs",shore:"shr",shores:"shrs",
+  skyway:"skwy",south:"s",southeast:"se",southwest:"sw",space:"spc",spng:"spg",spngs:"spgs",spring:"spg",
+  springs:"spgs",sprng:"spg",sprngs:"spgs",spurs:"spur",sqr:"sq",sqre:"sq",sqrs:"sqs",squ:"sq",square:"sq",
+  squares:"sqs",station:"sta",statn:"sta",stn:"sta",str:"st",strav:"stra",strave:"stra",straven:"stra",
+  stravenue:"stra",stravn:"stra",stream:"strm",street:"st",streets:"sts",streme:"strm",strt:"st",strvn:"stra",
+  strvnue:"stra",suite:"ste",sumit:"smt",sumitt:"smt",summit:"smt",terr:"ter",terrace:"ter",throughway:"trwy",
+  tpk:"tpke",tr:"trl",trace:"trce",traces:"trce",track:"trak",tracks:"trak",trafficway:"trfy",trail:"trl",
+  trailer:"trlr",trails:"trl",trk:"trak",trks:"trak",trls:"trl",trnpk:"tpke",trpk:"tpke",tunel:"tunl",tunls:"tunl",
+  tunnel:"tunl",tunnels:"tunl",tunnl:"tunl",turnpike:"tpke",turnpk:"tpke",underpass:"upas",union:"un",unions:"uns",
+  upper:"uppr",valley:"vly",valleys:"vlys",vally:"vly",vdct:"via",viadct:"via",viaduct:"via",view:"vw",views:"vws",
+  vill:"vlg",villag:"vlg",village:"vlg",villages:"vlgs",ville:"vl",villg:"vlg",villiage:"vlg",vist:"vis",
+  vista:"vis",vlly:"vly",vst:"vis",vsta:"vis",walks:"walk",well:"wl",wells:"wls",west:"w",wy:"way"
+};
+function _normAddr(s){
+  return String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()
+    .split(' ').map(w=>ADDR_ABBR[w]||w).join(' ');
+}
+/* The NORMALISED pass runs over names + address only, never the full _searchBlob.
+   Two reasons: the full blob carries every interaction note and profile field, so
+   normalising it for 600 households would cost real milliseconds on a phone for no
+   benefit; and a suffix table has no business rewriting words inside someone's
+   notes. Raw matching still covers the whole blob — see _searchMatch. */
+function _addrBlob(h){
+  let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'')+' '+(h.zip||'');
+  (h.members||[]).forEach(m=>{ t+=' '+(m.first_name||'')+' '+(m.last_name||''); });
+  return t.toLowerCase();
+}
+/* Keyed by household id and self-invalidated on the source string, so an edited
+   address is never served stale. Held in a Map rather than stamped onto the
+   household — these objects get PATCHed back to PostgREST. */
+const _normBlobCache=new Map();
+function _normBlob(h){
+  const raw=_addrBlob(h);
+  const c=_normBlobCache.get(h.id);
+  if(c&&c.src===raw)return c.norm;
+  const norm=_normAddr(raw);
+  _normBlobCache.set(h.id,{src:raw,norm});
+  return norm;
+}
+/* Every matcher is the UNION of raw and normalised, never normalised alone: a
+   half-typed word ("maple ro") tokenises to something in no table, so a
+   normalised-only test would return FEWER rows mid-typing than plain substring
+   did. The union guarantees the suffix table can never take a result away.
+   Callers looping over the roster should pass nq to hoist the normalise. */
+function _searchMatch(h,q,nq){
+  if(_searchBlob(h).includes(q))return true;
+  if(nq===undefined)nq=_normAddr(q);
+  return !!nq && _normBlob(h).includes(nq);
+}
+/* Names + address only — what a MAP or a roster search means, as opposed to the
+   global Find, which deliberately reaches into notes and profiles. */
+function _addrMatch(h,q,nq){
+  if(_addrBlob(h).includes(q))return true;
+  if(nq===undefined)nq=_normAddr(q);
+  return !!nq && _normBlob(h).includes(nq);
+}
+/* WHICH field matched, for ranking. "Falls" is a street name AND half of
+   "Chagrin Falls", so without this the whole town buries Falls Road — and the
+   same goes for any street sharing a word with a city.
+   0 person/household name, 1 street, 2 city/zip/notes/profile. */
+function _matchTier(h,q,nq){
+  if(nq===undefined)nq=_normAddr(q);
+  const hit=s=>{ const f=String(s==null?'':s).toLowerCase();
+    return f.includes(q)||(!!nq&&_normAddr(f).includes(nq)); };
+  if(hit(h.displayName)||(h.members||[]).some(m=>hit((m.first_name||'')+' '+(m.last_name||''))))return 0;
+  if(hit(h.address))return 1;
+  return 2;
+}
+/* Tier is computed ONCE PER HOUSEHOLD into a Map, never inside the comparator,
+   which would re-normalise on every one of the O(n log n) comparisons.
+   opts.mapFirst adds "has coordinates" as a tiebreak below match quality —
+   the map wants it, a contact list does not. */
+function _rankMatches(list,q,nq,opts){
+  if(nq===undefined)nq=_normAddr(q);
+  const mapFirst=!!(opts&&opts.mapFirst);
+  const tier=new Map();
+  list.forEach(h=>tier.set(h.id,_matchTier(h,q,nq)));
+  return list.slice().sort((a,b)=>{
+    const ta=tier.get(a.id),tb=tier.get(b.id);
+    if(ta!==tb)return ta-tb;
+    if(mapFirst){
+      const am=!!(a.lat&&a.lon),bm=!!(b.lat&&b.lon);
+      if(am!==bm)return am?-1:1;
+    }
+    return (a.displayName||'').localeCompare(b.displayName||'');
+  });
 }
 
 // Structured filters only (no search) — the "filtered base set".
@@ -21855,6 +22019,14 @@ function _asExecuteSearch(sentence){
     <!-- MAP TAB -->
     <div class="m-tab" id="mtab-map" data-tab="map">
       <div id="mMap"></div>
+      <div class="m-mapsearch">
+        <div class="m-mapsearch-bar">
+          <svg class="m-ms-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg>
+          <input id="mMapSearch" type="text" placeholder="Search a name or address…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="mMapSearchRun()" onfocus="mMapSearchRun()" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+          <button class="m-mapsearch-x" id="mMapSearchX" type="button" aria-label="Clear search" onclick="mMapSearchClear()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="m-mapsearch-res" id="mMapSearchRes"></div>
+      </div>
       <button class="m-map-loc" onclick="mLocate()" title="My location"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button>
       <div class="m-map-tray" id="mMapTray"></div>
     </div>
@@ -22419,10 +22591,15 @@ function mRenderRoster(){
   const q=(document.getElementById('mRosterSearch').value||'').toLowerCase().trim();
   let list=households.slice();
   if(q){
+    // Phone and email are roster-only fields, so the raw pass stays inline; the
+    // shared _addrMatch adds USPS suffix equivalence on top, so "Maple Road"
+    // finds "Maple Rd". Results are deliberately NOT re-ranked by match quality
+    // here — this list is alphabetical and the A–Z rail indexes into it.
+    const nq=_normAddr(q);
     list=list.filter(h=>{
       let t=(h.displayName||'')+' '+(h.address||'')+' '+(h.city||'');
       (h.members||[]).forEach(m=>{t+=' '+(m.first_name||'')+' '+(m.last_name||'')+' '+(m.phone||'')+' '+(m.email||'');});
-      return t.toLowerCase().includes(q);
+      return t.toLowerCase().includes(q) || _addrMatch(h,q,nq);
     });
   }
   list.sort((a,b)=>{
@@ -22568,7 +22745,41 @@ function mSheetChat(hid){
 }
 function mSheetHide(hid){ mCloseSheet(); hideHousehold(hid); try{ if(typeof mRenderRoster==='function')mRenderRoster(); }catch(e){} }
 
-/* ===================== MAP (mobile) ===================== */
+/* ===================== MAP (mobile) =====================
+   TAP TARGETS. Pins used to be interactive 14px circles, and Leaflet hit-tests
+   the drawn SVG path exactly — so a tap had to land inside the circle itself,
+   which is a third of the ~44px a thumb needs. The markers are now
+   NON-INTERACTIVE decoration (interactive:false) and ONE handler on the map owns
+   every tap, so there is a single code path and no marker/map double-fire.
+   _mPinHitTest awards the tap to the NEAREST pin centre within M_TAP_TOL. Nearest-
+   wins is the point: a fatter hit circle would let two close pins steal each
+   other's taps, whereas here each pin owns exactly the half of the slop that is
+   nearer to it, so more forgiveness never costs precision.
+   STACKING is deliberately NOT desktop-style clustering — pins are never merged
+   or hidden at any zoom. The only grouping is at the moment of the tap: pins whose
+   centres sit within M_STACK_TOL of the winner are literally on top of each other
+   on screen (spouses at one address, a duplex, an apartment building), and those
+   get listed by name in the tray instead of guessed at. */
+const M_TAP_TOL=24, M_STACK_TOL=14;
+let _mSelHhId=null, _mMapSearchDebounce=null;
+
+function _mPinColor(h){ const agc=getAGCScore(h).total; return agc>=70?'#15803d':agc>=40?'#a16207':'#b91c1c'; }
+function _mScoreVar(agc){ return agc>=70?'var(--green)':agc>=40?'var(--amber)':'var(--red)'; }
+
+/* Pure geometry, so it is testable with no map and no DOM.
+   pins: [{x,y,id}] in container pixels. Returns null (empty space) or
+   {hit, dist, stack} with stack ordered nearest-to-the-thumb first. */
+function _mPinHitTest(pins,pt,tapTol,stackTol){
+  if(!pins||!pins.length||!pt) return null;
+  const tt=(tapTol==null?M_TAP_TOL:tapTol), st=(stackTol==null?M_STACK_TOL:stackTol);
+  const d=(a,b)=>Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+  let best=null,bestD=Infinity;
+  for(const p of pins){ const dd=d(p,pt); if(dd<bestD){ bestD=dd; best=p; } }
+  if(!best||bestD>tt) return null;
+  const stack=pins.filter(p=>d(p,best)<=st).sort((a,b)=>d(a,pt)-d(b,pt));
+  return {hit:best,dist:bestD,stack};
+}
+
 function _mSyncMapPins(){
   // Rebuild the pin layer from the CURRENT households array. Previously pins were
   // plotted exactly once at first map build — a Map tab opened before loadAll
@@ -22578,35 +22789,176 @@ function _mSyncMapPins(){
   _mPins=[];
   households.forEach(h=>{
     if(!h.lat||!h.lon) return;
-    const agc=getAGCScore(h).total;
-    const col=agc>=70?'#15803d':agc>=40?'#a16207':'#b91c1c';
-    const mk=L.circleMarker([h.lat,h.lon],{radius:7,fillColor:col,color:'#fff',weight:2,fillOpacity:.9});
-    mk.on('click',()=>mMapTray(h));
+    const mk=L.circleMarker([h.lat,h.lon],{radius:9,fillColor:_mPinColor(h),color:'#fff',weight:2,fillOpacity:.9,interactive:false});
+    mk._hhId=h.id;
     mk.addTo(_mMapObj);
     _mPins.push(mk);
   });
+  // A rebuild throws away the old marker objects, so re-apply any selection ring.
+  if(_mSelHhId) _mHighlightPin(_mSelHhId);
 }
+
+/* Shows which pin the tap actually landed on — with a forgiving hit area you
+   need to see what you got, especially where houses sit close together. */
+function _mHighlightPin(hid){
+  _mSelHhId=hid||null;
+  _mPins.forEach(mk=>{
+    const on=(_mSelHhId&&mk._hhId===_mSelHhId);
+    try{
+      mk.setStyle({radius:on?13:9,weight:on?4:2,color:on?'#1c1917':'#fff',fillOpacity:on?1:.9});
+      if(on&&mk.bringToFront) mk.bringToFront();
+    }catch(e){}
+  });
+}
+
+function _mPinPoints(){
+  if(!_mMapObj) return [];
+  const out=[];
+  _mPins.forEach(mk=>{
+    try{ const p=_mMapObj.latLngToContainerPoint(mk.getLatLng()); out.push({x:p.x,y:p.y,id:mk._hhId}); }catch(e){}
+  });
+  return out;
+}
+
+function _mMapTap(e){
+  if(!_mMapObj||!e||!e.latlng) return;
+  _mMapSearchCollapse();
+  let pt; try{ pt=_mMapObj.latLngToContainerPoint(e.latlng); }catch(err){ return; }
+  const r=_mPinHitTest(_mPinPoints(),{x:pt.x,y:pt.y});
+  if(!r){ mMapTrayClose(); return; }   // empty map closes the tray
+  const hhs=r.stack.map(p=>households.find(h=>h.id===p.id)).filter(Boolean);
+  if(hhs.length>1) mMapStack(hhs);
+  else if(hhs.length===1) mMapPick(hhs[0].id);
+  else mMapTrayClose();
+}
+
 function mInitMap(){
   if(_mMapBuilt){ _mSyncMapPins(); setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); },80); return; }
   if(typeof L==='undefined'){ return; }
   _mMapObj=L.map('mMap',{zoomControl:true,attributionControl:false}).setView([41.43,-81.39],12);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_mMapObj);
+  _mMapObj.on('click',_mMapTap);
   _mSyncMapPins();
   _mMapBuilt=true;
   setTimeout(()=>{ if(_mMapObj) _mMapObj.invalidateSize(); mLocate(); },120);
 }
+
+function mMapTrayClose(){
+  const tray=document.getElementById('mMapTray');
+  if(tray) tray.classList.remove('open');
+  if(_mSelHhId) _mHighlightPin(null);
+}
+function mMapPick(hid){
+  const h=households.find(x=>x.id===hid);
+  if(!h) return;
+  _mHighlightPin(hid);
+  mMapTray(h);
+}
 function mMapTray(h){
   const tray=document.getElementById('mMapTray');
-  const call=_mD5CallTarget(h);
   const navQ=encodeURIComponent((h.address||'')+' '+(h.city||''));
   tray.innerHTML=`
     <div class="mt-name">${_escHtml(h.displayName||'Household')}</div>
     <div class="mt-sub">${_escHtml(h.noAddress?'No address':((h.address||'')+(h.city?', '+h.city:'')))} · Prospect ${getAGCScore(h).total}</div>
     <div class="mt-acts">
       <a class="mt-go" href="geo:0,0?q=${navQ}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 22 2l-9 19-2-8-8-2Z"/></svg> Navigate</a>
-      <a class="mt-open" href="javascript:void(0)" onclick="document.getElementById('mMapTray').classList.remove('open');mOpenSheetById('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg> Open</a>
+      <a class="mt-open" href="javascript:void(0)" onclick="mMapTrayClose();mOpenSheetById('${_escAttr(h.id)}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg> Open</a>
     </div>`;
   tray.classList.add('open');
+}
+/* Two or more pins under the thumb and genuinely on the same spot — name them
+   rather than pick one. No ring is drawn yet: nothing has been chosen. */
+function mMapStack(list){
+  const tray=document.getElementById('mMapTray');
+  if(!tray) return;
+  _mHighlightPin(null);
+  const rows=list.map(h=>{
+    const agc=getAGCScore(h).total;
+    return `<div class="mt-stack-row" onclick="mMapPick('${_escAttr(h.id)}')">
+      <span class="mt-stack-dot" style="background:${_mPinColor(h)}"></span>
+      <span class="mt-stack-nm">${_escHtml(h.displayName||'Household')}</span>
+      <span class="mt-stack-sc" style="color:${_mScoreVar(agc)}">${agc}</span>
+    </div>`;
+  }).join('');
+  tray.innerHTML=`
+    <div class="mt-name">${list.length} households here</div>
+    <div class="mt-sub">These pins sit on the same spot &mdash; pick one.</div>
+    <div class="mt-stack">${rows}</div>`;
+  tray.classList.add('open');
+}
+
+/* ---- Map search: names and addresses already in the CRM ----
+   Same fields the Contacts tab searches, so a name that works there works here.
+   Households with no coordinates still appear — searching a name and getting
+   silence because that household was never geocoded is worse than opening
+   their contact sheet instead. */
+function mMapSearchRun(){
+  clearTimeout(_mMapSearchDebounce);
+  _mMapSearchDebounce=setTimeout(_mMapSearchRender,140);
+}
+/* Names + addresses already in the CRM. Runs on the SHARED matcher, so the map,
+   the roster, the global Find and the desktop header popout all agree on what
+   "12 Maple Road" means. mapFirst: among equally good matches the map prefers
+   the ones it can actually show, but match quality still outranks that — the
+   right household with no coordinates beats the wrong one with them. */
+function _mMapSearchMatches(q){
+  q=(q||'').toLowerCase().trim();
+  if(!q) return [];
+  const nq=_normAddr(q);
+  const out=(households||[]).filter(h=>_addrMatch(h,q,nq));
+  return _rankMatches(out,q,nq,{mapFirst:true});
+}
+function _mMapSearchOpen(on){
+  const res=document.getElementById('mMapSearchRes');
+  if(res) res.classList.toggle('open', !!on);
+  const tab=document.getElementById('mtab-map');
+  if(tab) tab.classList.toggle('m-searching', !!on);   // stands the zoom buttons down
+}
+function _mMapSearchRender(){
+  const inp=document.getElementById('mMapSearch'), res=document.getElementById('mMapSearchRes'), x=document.getElementById('mMapSearchX');
+  if(!inp||!res) return;
+  const q=(inp.value||'').trim();
+  if(x) x.classList.toggle('on', !!q);
+  if(!q){ _mMapSearchOpen(false); res.innerHTML=''; return; }
+  const matches=_mMapSearchMatches(q);
+  if(!matches.length){ res.innerHTML='<div class="m-empty">No matches for “'+_escHtml(q)+'”.</div>'; _mMapSearchOpen(true); return; }
+  const rows=matches.slice(0,40).map(h=>{
+    const agc=getAGCScore(h).total;
+    const initials=((_mLastName(h)||'')[0]||(h.displayName||'?')[0]||'?').toUpperCase();
+    const mappable=!!(h.lat&&h.lon);
+    const sub=mappable?(((h.address||'')+(h.city?', '+h.city:''))||h.city||'On the map'):'No address';
+    return `<div class="mfind-row" onclick="mMapSearchPick('${_escAttr(h.id)}')">
+      <div class="mfind-av">${_escHtml(initials)}</div>
+      <div class="mfind-txt"><div class="mfind-name">${_escHtml(h.displayName||'Household')}</div><div class="mfind-snip">${_escHtml(sub)}</div></div>
+      <div class="mfind-score" style="color:${_mScoreVar(agc)}">${agc}</div>
+    </div>`;
+  }).join('');
+  const more=matches.length>40?'<div class="m-empty" style="padding:13px 12px">+'+(matches.length-40)+' more — keep typing to narrow.</div>':'';
+  res.innerHTML=rows+more;
+  _mMapSearchOpen(true);
+}
+function mMapSearchPick(hid){
+  const h=(households||[]).find(x=>x.id===hid);
+  if(!h) return;
+  _mMapSearchCollapse();
+  if(!(h.lat&&h.lon)){ mMapTrayClose(); mOpenSheet(h); return; }
+  try{ if(_mMapObj) _mMapObj.setView([h.lat,h.lon],16); }catch(e){}
+  mMapPick(h.id);
+}
+function _mMapSearchCollapse(){
+  _mMapSearchOpen(false);
+  const inp=document.getElementById('mMapSearch');
+  if(inp) try{ inp.blur(); }catch(e){}
+}
+function mMapSearchClear(){
+  const inp=document.getElementById('mMapSearch');
+  if(inp) inp.value='';
+  const x=document.getElementById('mMapSearchX');
+  if(x) x.classList.remove('on');
+  const res=document.getElementById('mMapSearchRes');
+  if(res) res.innerHTML='';
+  _mMapSearchOpen(false);
+  if(inp) try{ inp.focus(); }catch(e){}
 }
 function mLocate(){
   if(!navigator.geolocation||!_mMapObj) return;
@@ -22686,11 +23038,12 @@ function _mFindRender(){
   const q=(document.getElementById('mFindInput').value||'').trim().toLowerCase();
   if(!q){ body.innerHTML='<div class="m-empty">Type a name, phone, note, or anything from a profile.</div>'; return; }
   let matches=[];
-  try{ matches=households.filter(h=>_searchMatch(h,q)); }catch(e){ matches=[]; }
+  const nq=_normAddr(q);
+  try{ matches=households.filter(h=>_searchMatch(h,q,nq)); }catch(e){ matches=[]; }
   if(!matches.length){ body.innerHTML='<div class="m-empty">No matches for \u201c'+_escHtml(q)+'\u201d.</div>'; return; }
-  // name matches first, then the rest; cap at 60 rows
-  const nameHit=h=>((h.displayName||'').toLowerCase().includes(q))||((h.members||[]).some(m=>((m.first_name||'')+' '+(m.last_name||'')).toLowerCase().includes(q)));
-  matches.sort((a,b)=>{ const an=nameHit(a),bn=nameHit(b); if(an&&!bn)return -1; if(bn&&!an)return 1; return (a.displayName||'').localeCompare(b.displayName||''); });
+  // Shared ranking: name, then street, then city/notes/profile. Replaces a
+  // name-first/everything-else split that let a city bury a street. Cap 60 rows.
+  try{ matches=_rankMatches(matches,q,nq); }catch(e){}
   const rows=matches.slice(0,60).map(h=>{
     const agc=getAGCScore(h).total;
     const c=agc>=70?'var(--green)':agc>=40?'var(--amber)':'var(--red)';
