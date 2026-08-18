@@ -52,6 +52,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
 .brand span{color:#fff;font-size:15px;font-weight:600;letter-spacing:.03em}
 .side .nav{padding:10px 0;flex:1;display:flex;flex-direction:column;overflow-y:auto;min-height:0}
 .side .nav .nav-spacer{flex:1}
+.side .nav .nav-log{margin:2px 12px 10px;padding:11px 12px;width:auto;border-left:none;border-radius:9px;background:var(--gold);color:var(--navy);font-weight:700;font-size:12.5px;gap:8px}
+.side .nav .nav-log .ic{stroke-width:2.1;color:var(--navy)}
+.side .nav .nav-log:hover{background:var(--gold);color:var(--navy);filter:brightness(1.07)}
+.side .nav .nav-log:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .side .nav .nav-tools{border-top:1px solid var(--navy-line);margin-top:8px;padding-top:8px}
 .side .nav button{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;border-left:3px solid transparent;padding:8px 18px 8px 15px;font-family:var(--font-ui);font-size:12.5px;color:var(--nav-txt);cursor:pointer;text-align:left;white-space:nowrap}
 .side .nav button:hover{color:var(--nav-txt-hi);background:rgba(255,255,255,.04)}
@@ -70,6 +74,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font-ui);background:var(
   .brand{padding:16px 0 14px;justify-content:center}
   .brand span,.side .nav button span,.side-foot .sf-id{display:none}
   .side .nav button{justify-content:center;padding:10px 0 10px 0}
+  .side .nav .nav-log{margin:2px 8px 10px;padding:11px 0}
   .side-foot{justify-content:center;padding:12px 6px}
   .side-foot .gear{margin-left:0}
 }
@@ -366,8 +371,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
      have zoomed and wrecked the layout. Cover every focusable field. */
   #captureOverlay textarea, #captureOverlay input[type="text"], #captureOverlay input[type="date"],
   #captureOverlay input[type="number"], #captureOverlay select{font-size:16px!important}
-  /* Sticky batch bar must clear the 56px bottom nav + the safe-area inset */
-  #captureOverlay #capture-batch-bar{bottom:calc(12px + env(safe-area-inset-bottom))!important}
   /* Keep a long pin list from eating the whole screen */
   #captureOverlay #capture-pin-chips{max-height:30vh!important}
   #captureOverlay #capture-contact-results{max-height:32vh!important}
@@ -495,6 +498,30 @@ html.force-desktop #mobileShell{display:none!important}
 .m-tool-btn:active{background:var(--surf2)}
 .m-tool-btn.m-tool-pri{background:var(--accent);color:#fff;border-color:var(--accent)}
 .m-tool-btn.m-tool-pri .ic{color:#fff}
+/* Big primary "Log Interaction" — the one action the whole app hinges on */
+.m-tool-btn.m-tool-log{background:var(--accent);color:#fff;border-color:var(--accent);font-size:1.02rem;font-weight:700;padding:17px 16px;justify-content:center;box-shadow:0 3px 12px rgba(15,30,51,.20)}
+.m-tool-btn.m-tool-log .ic{color:#fff;width:20px;height:20px}
+.m-tool-btn.m-tool-log:active{background:var(--accent);opacity:.88}
+/* In-tray log form */
+.m-log-body{padding:14px 18px 6px}
+.m-log-lbl{font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;color:var(--txt3);margin:0 0 7px;font-weight:600}
+.m-chipwrap{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.m-chip{padding:9px 13px;border-radius:19px;border:1px solid var(--border2);background:var(--surf);color:var(--txt2);font-family:var(--font-ui);font-size:.8rem;font-weight:500;cursor:pointer;min-height:38px;line-height:1.1}
+.m-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.m-log-date{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px;font-family:var(--font-ui);font-size:.88rem;color:var(--txt);margin-bottom:16px}
+.m-log-note{width:100%;box-sizing:border-box;min-height:86px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px 46px 11px 11px;font-family:var(--font-ui);font-size:.88rem;color:var(--txt);resize:vertical;line-height:1.5;outline:none}
+.m-log-note:focus{border-color:var(--accent)}
+.m-log-mic{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--surf);color:var(--txt2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.m-log-mic .ic{width:17px;height:17px}
+.m-log-save{width:100%;padding:16px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-family:var(--font-ui);font-size:.95rem;font-weight:700;cursor:pointer;margin-top:6px}
+.m-log-save:disabled{opacity:.42}
+.m-log-back{background:none;border:none;color:var(--txt2);cursor:pointer;padding:4px 6px;flex-shrink:0;display:flex;align-items:center}
+.m-log-back .ic{width:20px;height:20px}
+/* Quick Capture manual form */
+.cap-f-lbl{font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;color:var(--txt3);font-weight:600;margin-bottom:7px}
+#capture-manual .m-chip{padding:9px 13px;border-radius:19px;border:1px solid var(--border2);background:var(--surf,#fff);color:var(--txt2);font-family:var(--font-ui);font-size:.8rem;font-weight:500;cursor:pointer;min-height:38px;line-height:1.1}
+#capture-manual .m-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+#capture-batch-btn:disabled{opacity:.42;cursor:default}
 
 /* Mobile map */
 #mMap{position:absolute;inset:0}
@@ -1305,8 +1332,6 @@ html.force-desktop #mobileShell{display:none!important}
     <button class="sb-item" id="embedBackfillBtn" onclick="closeSidebar();startEmbedBackfill()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg> Generate Embeddings</button>
     <div id="embedBackfillStatus" style="padding:4px 18px 8px;font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);display:none"></div>
 
-    <button class="sb-item" id="canvassSyncBtn" onclick="closeSidebar();runCanvassSync()"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg> Sync from CRM</button>
-    <div id="canvassSyncStatus" style="padding:4px 18px 8px;font-family:var(--font-ui);font-size:.58rem;color:var(--txt3);display:none"></div>
 
     <!-- MAP section -->
     <div style="padding:14px 18px 6px;font-family:var(--font-ui);font-size:.62rem;font-weight:600;color:var(--txt3);border-top:1px solid var(--border2);margin-top:8px">Map</div>
@@ -1456,6 +1481,10 @@ html.force-desktop #mobileShell{display:none!important}
       <span>דַּעַת</span>
     </div>
     <nav class="nav" aria-label="Main">
+      <!-- The one thing done ten times a day. Filled gold so it reads as THE
+           action while everything below it reads as navigation — it is the only
+           filled control in the rail, and that is the whole point. -->
+      <button class="nav-log" onclick="openCapture()" title="Log an interaction"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M9 13h6M9 17h4"></path></svg><span>Log interaction</span></button>
       <button id="navDash" onclick="switchView('dash')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg><span>Dashboard</span></button>
       <button id="navContacts" onclick="switchView('contacts')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 5"></path><path d="M18 14.5c2.1.7 3.5 2.6 3.5 5.5"></path></svg><span>Contacts</span></button>
       <button id="navProspects" onclick="switchView('prospects')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2 5-5 2 2-5 5-2z"></path></svg><span>Prospect Finder</span></button>
@@ -1468,7 +1497,6 @@ html.force-desktop #mobileShell{display:none!important}
       <div class="nav-tools">
         <button onclick="openGlobalAsk()" title="Research chat"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3Z"></path><path d="M18.5 13.5c.25 1.75 1 2.5 2.75 2.75-1.75.25-2.5 1-2.75 2.75-.25-1.75-1-2.5-2.75-2.75 1.75-.25 2.5-1 2.75-2.75Z"></path></svg><span>Research chat</span></button>
         <button onclick="openAssistant()" title="DAAS Assistant"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg><span>DAAS Assistant</span></button>
-        <button onclick="openCapture()" title="Quick capture"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg><span>Quick capture</span></button>
       </div>
     </nav>
     <div class="side-foot">
@@ -1854,7 +1882,7 @@ html.force-desktop #mobileShell{display:none!important}
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 // ── BUILD ──
-const BUILD_STAMP='2026-08-17.6'; // ADDRESS MATCHING IS NOW SHARED, NOT A MOBILE-MAP FEATURE (Shneur: "anything helpful lets extend"). The USPS table, _normAddr, the raw/normalised union and the relevance tiers MOVED OUT OF BLOCK B INTO BLOCK A, because this is engine, not chrome: four different boxes search the same roster and had four different opinions about what '12 Maple Road' means. Block A now owns ADDR_ABBR (renamed from M_ADDR_ABBR), _normAddr, _addrBlob, _normBlob, _addrMatch, _matchTier and _rankMatches; Block B calls them, never the reverse, which is the documented direction of that dependency. UPGRADED CALL SITES: desktop header-search popout (_showSearchPopout - it slices to SIX rows, so ranking matters more there than anywhere: a street search must not spend all six on everyone who lives in that town), mobile global Find (_mFindRender - its old name-first/everything-else split let a city bury a street; now the full tier), mobile Contacts roster (mRenderRoster), and the mobile map. TWO DELIBERATE ASYMMETRIES. (1) _searchMatch reaches the whole _searchBlob - notes, interaction text, profile fields - while _addrMatch is names+address ONLY. The map and the roster mean 'find this person or street'; global Find means 'find this anywhere'. (2) THE NORMALISED PASS NEVER RUNS OVER THE FULL BLOB, only over names+address: normalising every interaction note for 600 households would cost real milliseconds on a phone for nothing, and a suffix table has no business rewriting words inside someone's notes. Raw matching still covers the whole blob, so nothing became unfindable. THE ROSTER IS MATCHED BUT NOT RE-RANKED - that list is alphabetical and the A-Z rail indexes into it, so re-sorting by relevance would break the rail. _rankMatches takes opts.mapFirst so 'has coordinates' is a tiebreak INSIDE a tier for the map only; match quality outranks it everywhere, since the right household with no coordinates beats the wrong one with them. Desktop Contacts table left alone on purpose: its box says 'Filter by name' and runs _nameMatch, so suffix equivalence is not in scope. Normalised blobs are memoised in a Map keyed by household id, self-invalidated on the source string. VERIFIED: both blocks node --check clean, both sentinels present, 92/92 on the stubbed VM harness (now loading the shared Block A layer alongside Block B) covering _addrMatch-vs-_searchMatch scope, tier assignment, ranking with and without mapFirst, no input mutation, USPS variants, and the no-regression checks; 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.5): MAP SEARCH: THE REAL USPS TABLE, AND STREET BEATS CITY. (1) M_ADDR_ABBR is now USPS PUBLICATION 28 APPENDIX C1 VERBATIM - 387 aliases (was a hand-written 90), the Postal Service's own suffix table, which exists because they have to route mail people addressed sloppily and therefore lists every variant seen in the wild: av/aven/avenu/avn/avnue all -> ave, hiway/hiwy/highwy -> hwy, crecent/cresent/crsnt -> cres. That matters because this roster was IMPORTED FROM SPREADSHEETS, not typed into a validating form. Plus Appendix B directionals (north->n) and C2 unit designators (apartment->apt). Public-domain data; identity rows (rd->rd) omitted since _mNormAddr falls through to the word, which is why 553 source rows become 387. WHY A TABLE AND NOT A SERVICE (asked directly): Leaflet HAS no geocoder - leaflet-control-geocoder is a UI shim over Nominatim/Google/etc; Google Places matches the REAL WORLD, not these 615 households, so it cannot answer 'which Klein is this' and would need a paid key that this architecture forbids in the browser anyway; libpostal is the real open-source answer and is a C library with ~2GB of data, so it fits neither a browser nor a Deno edge function. Every open-source JS address library resolves to exactly this lookup table - addresser's whole street-type brain is a 16KB JSON. A geocoder is still worth building, but it solves a DIFFERENT problem (missing pins, addresses not yet in the CRM) and Shneur deferred it. (2) BUG HE CAUGHT IMMEDIATELY: searching 'falls' returned all of Chagrin Falls, burying Falls Road. Cause was a flat relevance model - a city match and a street match sorted identically. Results are now tiered by WHICH FIELD matched: 0 person/household name, 1 street, 2 city/zip; then mappable; then alphabetical. So 'falls' gives the Falls surname, then Falls Road, then the town, and 'falls road' narrows to the street alone. Tier is computed ONCE PER HOUSEHOLD into a Map, never inside the comparator, which would have re-normalised on every one of the O(n log n) comparisons. NOTE the previous sort keyed on mappable-first; match quality now outranks it, because the right household with no coordinates beats the wrong one with them. VERIFIED: both blocks node --check clean, both sentinels present, 76/76 stubbed VM harness (USPS variants and misspellings, long<->short both directions, the Chagrin-Falls ranking case, no-regression checks that every raw substring matching before still matches, cache re-normalisation after an address edit) and 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.4): MAP SEARCH: STREET-SUFFIX EQUIVALENCE (Shneur: "road and rd, lane and ln etc need to be recognized"). Addresses get TYPED the way they are spoken and STORED the way they were imported, so a literal substring match missed half of them. New M_ADDR_ABBR table (~90 entries: USPS street suffixes long->short, plus directionals north->n and unit words apartment->apt) and _mNormAddr, which lowercases, strips ALL punctuation, and maps token by token. Applied to BOTH the query and the record, so it works in both directions - typed 'Pine Dr' finds a stored 'Pine Drive' just as typed '12 Maple Road' finds a stored '12 Maple Rd'. ONLY LONG->SHORT IS LISTED, deliberately: mapping short->long would have to pick a winner between 'Saint' and 'Street', which share the abbreviation 'st'. Collapsing both onto 'st' can only ever over-match, which in a search box is free. MATCHING IS THE UNION OF RAW AND NORMALISED, never normalised alone - '12 maple ro' tokenises to a word that is in no table, so a normalised-only match would have returned FEWER rows mid-typing than the old plain substring did. The union guarantees this change can never take a result away. Note a city like 'Chagrin Falls' normalises to 'chagrin fls' because Falls is a real suffix; harmless, since both sides get the same treatment, and the raw half of the union covers 'chagrin fall'. Normalised blobs are memoised in a Map KEYED BY HOUSEHOLD ID AND SELF-INVALIDATED on the source string - not stamped onto the household object, which gets PATCHed back to PostgREST. Also: the 'No address' label in results lost its '- opens the contact' tail (Shneur). VERIFIED: both blocks node --check clean, both sentinels present, 66/66 on the stubbed VM harness (normaliser unit tests, long->short and short->long in both directions, punctuation, no-regression checks that every raw substring that matched before still matches, and cache re-normalisation after an address edit) and 29/29 driving real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.3): MOBILE MAP: PINS YOU CAN ACTUALLY HIT, PLUS A SEARCH BAR (Shneur: "you have to make sure you're pressing exactly on it"). ROOT CAUSE: mobile pins were INTERACTIVE circleMarkers at radius 7 and Leaflet hit-tests the drawn SVG path exactly, so the whole target was an 14px circle against the ~44px a thumb needs - there was no forgiveness at all, by construction. Desktop never felt this because it uses 28px divIcons plus markercluster. FIX: the markers are now interactive:false DECORATION (radius 9) and ONE handler on the map owns every tap, so there is a single code path and no marker/map double-fire. New PURE _mPinHitTest(pins,pt,tapTol,stackTol) awards the tap to the NEAREST pin centre within M_TAP_TOL=24 (a ~48px target). NEAREST-WINS IS THE WHOLE POINT and is why the extra slop costs no precision: a fatter hit circle would let two close pins steal each other's taps, whereas here each pin owns exactly the half of the tolerance nearer to it - verified at 30px separation, the boundary flips between 14 and 16px from the left pin. STACKING IS NOT DESKTOP CLUSTERING (explicitly rejected - he wants grouping only for literal neighbours): pins are never merged or hidden at any zoom, and the only grouping happens at the moment of the tap. Pins whose CENTRES sit within M_STACK_TOL=14 of the winner are on top of each other on screen (spouses at one address, a duplex, an apartment building) and get listed by name in the tray instead of guessed at; a pin 20px away is inside the tap tolerance but excluded from the stack, so two houses a block apart always resolve to one. Selected pin gets a ring (_mHighlightPin, re-applied after _mSyncMapPins throws the markers away); tapping empty map now closes the tray, which it never did. SEARCH: floating rounded bar over the tiles at the top of the map tab (z-index 1200 clears Leaflet's own 1000 controls; the zoom buttons are pushed to top:60px so it never covers them; input font is 16px because iOS Safari zooms the page on focus at anything smaller). Matches the SAME fields the Contacts tab searches - household name, member first/last, street, city, zip - so a name that works there works here. CRM DATA ONLY, NO GEOCODER: Nominatim is CORS-blocked on GitHub Pages, which is already why geocodeMissing is skipped on the live site, so an arbitrary-address lookup would need a new edge function - deliberately deferred, not forgotten. Un-geocoded households still appear in results (ranked below mappable ones, labelled 'No address') and open their contact sheet instead of moving the map: searching a name and getting silence because that household was never geocoded is worse than the wrong-looking action. Tapping a mappable result flies to zoom 16, rings the pin and opens the tray. VERIFIED: both blocks node --check clean, both sentinels present, 36/36 on a stubbed VM harness covering the geometry (forgiveness, nearest-wins boundary, diagonal tolerance, stack inclusion at exactly 14px and exclusion at 15, no input mutation) and the matcher (Klein vs Kleinman, member first names, street/city/zip, mappable-first ordering, no-address households still findable). NO desktop map code, data layer or logTouch path touched. ||| PREVIOUS (2026-08-17.2): DAY-ONE FIXES from the live smoke test, all three found by clicking rather than by the harness — both live on the provider's server, not in the request shape. (1) OpenAI's json_object mode 400s unless the literal word 'json' appears in the INPUT; our schema-less sites say 'Return ONLY valid JSON' in the SYSTEM prompt, which becomes `instructions`, and OpenAI does not count that — it broke report search on desktop and mobile the moment the build went live. ai-router now injects the word only when it is genuinely absent. (2) CLAUDE SONNET 5 EMITS `thinking` BLOCKS AND THEY SPEND THE SAME BUDGET AS THE ANSWER. A Power Search returned a thinking block and NO text after 61 seconds; Profile Build's 4000-token ask came back cut mid-JSON, so the brace-scrape found no closing brace and dumped raw JSON into the Summary field. The router now gives Anthropic the same headroom OpenAI already had (double the ask, capped at 16384), Profile Build asks 12000 instead of 4000, and a thinking-only reply now reports running out of room instead of 'The AI returned an empty response' — it is a length problem, not a refusal, and the old wording sent the reader to the wrong place. (3) _buildProfilePhase2's prose fallback no longer says 'Model returned a narrative instead of structured data' when the real cause was truncation; it names the cut-off and says a rebuild usually works. NOT A BUG: task parsing returning null for 'call the kleins'. Reproduced against the real 700-household roster on both Luna and Sonnet — both matched Leslie and Steve Klein correctly. The roster holds both a Klein and a Kleinman, and the prompt says 'if unsure, use null', so declining is defensible. Change that instruction if you want it to guess. Harness 84/84 with regression tests for both server-side rules. Edge functions ai-router 2026-08-17.1b deployed. ||| PREVIOUS (2026-08-17.1): TWO PROVIDERS, NO MODEL NAMES IN THE BROWSER. Gemini is gone; every AI call now runs on Claude or OpenAI, chosen server-side by JOB TYPE. NEW ai-router edge function replaces ai-proxy AND gemini-proxy: a call site posts {tier:'deep'|'fast'|'search'} plus the Anthropic-shaped payload it already spoke, and the router picks the company and the model. deep -> claude-sonnet-5 (falls back to gpt-5.6-sol with no Anthropic key); fast -> gpt-5.6-luna, NEVER Claude, because those four sites are interactive and a reasoning model puts a visible pause in a command bar (latency, not cost); search -> claude-sonnet-5 + Anthropic web_search, or gpt-5.6-sol + OpenAI web search via the Responses API. NO MODEL PICKER ANYWHERE and no model string in this file: the fair question to ask a user is how much effort, never which vendor, and a model rename is now a 300-line server edit rather than a redeploy of this 1.7MB page. Client entry point is _ai(tier,payload) over the existing _fnPost; _aiComplete/_geminiComplete/_gemParts/_gemSystem and the GEM_* constants are deleted. Response shape is unchanged ({content:[{type:'text',text}],stop_reason}) so no call site changed how it reads a reply, and stop_reason is normalised across providers because captureAnalyze's truncation guard reads it. NEW: d.citations — the router returns every page the search tool actually read, and Profile Build now renders them as clickable Sources (OpenAI's terms require visible citations wherever web results are shown, and a research claim the rabbi cannot check in one tap is one he has to take on faith). SCHEMAS: the call sites' Gemini-dialect nullable:true is translated server-side into a JSON Schema null union — shipping the Gemini spelling to OpenAI would silently drop nullability and turn an absent household_id into an empty string. OpenAI's dialect supports anyOf, which Gemini's did not, so _rpAiRun/_mAsSearch/captureAnalyze can finally be pinned — deliberately left as a follow-up, not done on cutover day. TRANSCRIPTION -> gpt-transcribe, one engine: both were run on real voice notes covering Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag and gpt-transcribe held up with no word list or priming, so the Gemini audio path, the Whisper op, the Settings engine dropdown and the daas_transcribe preference are all gone (a picker with one option is worse than none). _blobToWav is UNTOUCHED — 16kHz mono PCM16 is what the engine wants, its header logic is byte-tested, and it is what made the A/B valid. QUICK CHAT MODE REMOVED (Shneur): it did not do enough over the plain text search bar to justify a third option. Standard is the light mode, Power Search the heavy one; the help text was verified accurate and kept, since it describes how much DATA each mode reads, not which model reads it. setStrength normalises an unknown mode to standard, so a chat_sessions row saved with mode:'quick' loads on Standard instead of a mode that no longer exists. Power Search's cost estimate is untouched — $2/1M input is Claude Sonnet 5's exact rate and the ~90%-cheaper line is its $0.20 cache rate; only the stale ~$0.30 in the help modal became ~$0.20. VERIFIED: both blocks node --check clean, both sentinels present, 75/75 on a stubbed VM harness (translation, cache_control blocks, JSON modes, stop_reason round-trip, resolution matrix, citation extraction, error surfacing, _jsonFromReply), and every tier smoke-tested against the LIVE functions — fast/deep/search on Claude, search AND deep forced onto OpenAI, embed, and transcribe. THE OPENAI SEARCH BRANCH NEVER FIRES IN NORMAL USE (the Anthropic key is set), so it is forceable on purpose: body.force:'openai' per request, or AI_FORCE_PROVIDER=openai on the function. Re-verify it that way, not by deleting secrets. ||| PREVIOUS (2026-08-16.4): RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
+const BUILD_STAMP='2026-08-18.6'; // DESKTOP: LOGGING PROMOTED OUT OF THE TOOLS DRAWER INTO THE TOP OF THE NAVY RAIL. It was the third item in the bottom nav-tools group, visually identical to Research chat and DAAS Assistant and named 'Quick capture' - mechanism, not job. It is now a filled GOLD pill above Dashboard labelled 'Log interaction', and it is the ONLY filled control in the rail, which is what makes it read as the action while everything under it reads as navigation. REMOVED from nav-tools in the same move: one entry point, not two. The hamburger drawer's own Quick Capture row under Intelligence is LEFT ALONE - it is a settings/tools drawer and duplicating the rail there costs nothing. ||| TRAY FORM AND QUICK CAPTURE FORM NOW USE IDENTICAL FIELD LABELS - Who / Interaction type / When / Notes (optional). The tray said 'Who was this with?' and 'What was it?', which made the same three fields read as two different forms depending on which surface you reached them from. ||| Manual form's field label 'Type' -> 'Interaction type' (Shneur). The tray form still reads 'What was it?' for the same field. ||| Quick Capture's Analyze and Attach buttons now carry the SAME radius/weight/height as the manual form's Log button (10px, 700, ~46px) - they were 7px/6px pills at .84rem next to a 10px 700 primary, so the two cards read as two different products. Manual form's 'Pick who, pick what, done.' subhead removed at Shneur's instruction; the header row's bottom margin absorbed its spacing. ||| AI PROPOSALS NOW RENDER BETWEEN THE AI BOX AND THE MANUAL FORM, not below it. #capture-results moved above #capture-manual: the proposals are the AI box's OUTPUT, so pushing the manual form between a dump and what it proposed read as an interruption. The manual form is the other path and belongs last. Proposal header 'Here’s what I’d log' -> 'Review and confirm', and the transcript block label 'Heard' -> 'Transcript' in BOTH _captureHeardHtml and the Ask-panel copy, so one word means one thing everywhere. ||| LOGGING IS NOW THE FIRST-CLASS ACTION ON BOTH SURFACES. Shneur: "the whole app hinges on ppl loging all interactions." (1) MOBILE CONTACT TRAY: the tools list was five equal-weight buttons and logging was not one of them - you had to Open Full Profile and scroll to the interactions tab. It is now three buttons: a big navy Log Interaction first, then Open Full Profile, then Context Chat. Build/Enrich Profile, Add Notes (which did the same thing as Open Full Profile) and Hide Contact are gone from the tray. mSheetEnrich/mSheetNotes/mSheetHide are LEFT DEFINED - nothing calls them from the tray any more, but hideHousehold is still reachable elsewhere and deleting live helpers to save three lines is not worth the risk. (2) THE TRAY LOGS IN PLACE. mSheetLog swaps #mSheetInner for the form (_mSheetMode='log') and mSheetLogBack swaps it back - same sheet, same person, no navigation, no modal. The form re-renders ONCE on open; chip and pill clicks mutate _mLogSel/_mLogType and restyle their own buttons, because a full re-render would wipe a half-typed note. It writes through logTouch (source:'tray'), so the AGC bump, track close, daily-five bookkeeping and undo journal are identical to every other path. (3) QUICK CAPTURE HAS A NON-AI PATH THAT IS ALWAYS ON SCREEN. The batch bar existed but only appeared at 2+ pins, so there was no way to log one person without going through the AI box. It is now #capture-manual, always visible, n>=1, sitting BELOW the AI box (Shneur's call: ai box above, manual form below). The type <select> is gone - all ten types are chips, because a dropdown on a phone is two taps and a scroll wheel. The AI box still fills this form in: captureVoicePinAll drops heard names into Who, and _captureContacts is still the PRE-SELECTED CONTACTS block in the analyze prompt. (4) THE CONFIRMATION MOVED INSIDE THE FORM (#capture-manual-result, directly above the button) - it used to render in #capture-results below the fold, where a phone never scrolled to it. #capture-results still belongs to the AI proposals. (5) ONE TYPE VOCABULARY, ONE ORDER, shared by the tray and Quick Capture, defaulting to Connected (the batch bar used to default to Shabbat attendance, which was right when it was a group-attendance tool and wrong now that it is the general form). (6) COPY: the stage flow read as narration ('Writing down what you said', 'Reading it and finding the person', 'Filing to...', HEARD) and is now flat status - Recording/Transcribing/Matching, 'Transcribing', 'Matching to a contact', TRANSCRIPT. The standing intro paragraph is gone; each card carries its own header. Buttons say 'Log interaction'/'Log to N people' and deliberately do NOT name the type - 'Log Connected to 2 people' does not parse, and the lit chip is already right above the button. NO FLOATING ACTION BUTTON AND NO BOTTOM-NAV RENAME - both were built and then reverted at Shneur's instruction. Do not re-add them. ||| CANVASS SYNC REMOVED: the ChabadOnCanvass one-way importer is gone from the app (sidebar button, mobile topbar button, _canvassFmt/refreshCanvassStatus/runCanvassSync/mSync) and the nightly-crm-sync cron job is unscheduled. Shneur does not use it. The edge function source is preserved at supabase/functions/canvass-sync/index.ts before deletion, since it existed nowhere in the repo. canvass_id columns and the import dedupe keys are LEFT ALONE - they hold real imported identifiers. ||| // ADDRESS MATCHING IS NOW SHARED, NOT A MOBILE-MAP FEATURE (Shneur: "anything helpful lets extend"). The USPS table, _normAddr, the raw/normalised union and the relevance tiers MOVED OUT OF BLOCK B INTO BLOCK A, because this is engine, not chrome: four different boxes search the same roster and had four different opinions about what '12 Maple Road' means. Block A now owns ADDR_ABBR (renamed from M_ADDR_ABBR), _normAddr, _addrBlob, _normBlob, _addrMatch, _matchTier and _rankMatches; Block B calls them, never the reverse, which is the documented direction of that dependency. UPGRADED CALL SITES: desktop header-search popout (_showSearchPopout - it slices to SIX rows, so ranking matters more there than anywhere: a street search must not spend all six on everyone who lives in that town), mobile global Find (_mFindRender - its old name-first/everything-else split let a city bury a street; now the full tier), mobile Contacts roster (mRenderRoster), and the mobile map. TWO DELIBERATE ASYMMETRIES. (1) _searchMatch reaches the whole _searchBlob - notes, interaction text, profile fields - while _addrMatch is names+address ONLY. The map and the roster mean 'find this person or street'; global Find means 'find this anywhere'. (2) THE NORMALISED PASS NEVER RUNS OVER THE FULL BLOB, only over names+address: normalising every interaction note for 600 households would cost real milliseconds on a phone for nothing, and a suffix table has no business rewriting words inside someone's notes. Raw matching still covers the whole blob, so nothing became unfindable. THE ROSTER IS MATCHED BUT NOT RE-RANKED - that list is alphabetical and the A-Z rail indexes into it, so re-sorting by relevance would break the rail. _rankMatches takes opts.mapFirst so 'has coordinates' is a tiebreak INSIDE a tier for the map only; match quality outranks it everywhere, since the right household with no coordinates beats the wrong one with them. Desktop Contacts table left alone on purpose: its box says 'Filter by name' and runs _nameMatch, so suffix equivalence is not in scope. Normalised blobs are memoised in a Map keyed by household id, self-invalidated on the source string. VERIFIED: both blocks node --check clean, both sentinels present, 92/92 on the stubbed VM harness (now loading the shared Block A layer alongside Block B) covering _addrMatch-vs-_searchMatch scope, tier assignment, ranking with and without mapFirst, no input mutation, USPS variants, and the no-regression checks; 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.5): MAP SEARCH: THE REAL USPS TABLE, AND STREET BEATS CITY. (1) M_ADDR_ABBR is now USPS PUBLICATION 28 APPENDIX C1 VERBATIM - 387 aliases (was a hand-written 90), the Postal Service's own suffix table, which exists because they have to route mail people addressed sloppily and therefore lists every variant seen in the wild: av/aven/avenu/avn/avnue all -> ave, hiway/hiwy/highwy -> hwy, crecent/cresent/crsnt -> cres. That matters because this roster was IMPORTED FROM SPREADSHEETS, not typed into a validating form. Plus Appendix B directionals (north->n) and C2 unit designators (apartment->apt). Public-domain data; identity rows (rd->rd) omitted since _mNormAddr falls through to the word, which is why 553 source rows become 387. WHY A TABLE AND NOT A SERVICE (asked directly): Leaflet HAS no geocoder - leaflet-control-geocoder is a UI shim over Nominatim/Google/etc; Google Places matches the REAL WORLD, not these 615 households, so it cannot answer 'which Klein is this' and would need a paid key that this architecture forbids in the browser anyway; libpostal is the real open-source answer and is a C library with ~2GB of data, so it fits neither a browser nor a Deno edge function. Every open-source JS address library resolves to exactly this lookup table - addresser's whole street-type brain is a 16KB JSON. A geocoder is still worth building, but it solves a DIFFERENT problem (missing pins, addresses not yet in the CRM) and Shneur deferred it. (2) BUG HE CAUGHT IMMEDIATELY: searching 'falls' returned all of Chagrin Falls, burying Falls Road. Cause was a flat relevance model - a city match and a street match sorted identically. Results are now tiered by WHICH FIELD matched: 0 person/household name, 1 street, 2 city/zip; then mappable; then alphabetical. So 'falls' gives the Falls surname, then Falls Road, then the town, and 'falls road' narrows to the street alone. Tier is computed ONCE PER HOUSEHOLD into a Map, never inside the comparator, which would have re-normalised on every one of the O(n log n) comparisons. NOTE the previous sort keyed on mappable-first; match quality now outranks it, because the right household with no coordinates beats the wrong one with them. VERIFIED: both blocks node --check clean, both sentinels present, 76/76 stubbed VM harness (USPS variants and misspellings, long<->short both directions, the Chagrin-Falls ranking case, no-regression checks that every raw substring matching before still matches, cache re-normalisation after an address edit) and 33/33 in real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.4): MAP SEARCH: STREET-SUFFIX EQUIVALENCE (Shneur: "road and rd, lane and ln etc need to be recognized"). Addresses get TYPED the way they are spoken and STORED the way they were imported, so a literal substring match missed half of them. New M_ADDR_ABBR table (~90 entries: USPS street suffixes long->short, plus directionals north->n and unit words apartment->apt) and _mNormAddr, which lowercases, strips ALL punctuation, and maps token by token. Applied to BOTH the query and the record, so it works in both directions - typed 'Pine Dr' finds a stored 'Pine Drive' just as typed '12 Maple Road' finds a stored '12 Maple Rd'. ONLY LONG->SHORT IS LISTED, deliberately: mapping short->long would have to pick a winner between 'Saint' and 'Street', which share the abbreviation 'st'. Collapsing both onto 'st' can only ever over-match, which in a search box is free. MATCHING IS THE UNION OF RAW AND NORMALISED, never normalised alone - '12 maple ro' tokenises to a word that is in no table, so a normalised-only match would have returned FEWER rows mid-typing than the old plain substring did. The union guarantees this change can never take a result away. Note a city like 'Chagrin Falls' normalises to 'chagrin fls' because Falls is a real suffix; harmless, since both sides get the same treatment, and the raw half of the union covers 'chagrin fall'. Normalised blobs are memoised in a Map KEYED BY HOUSEHOLD ID AND SELF-INVALIDATED on the source string - not stamped onto the household object, which gets PATCHed back to PostgREST. Also: the 'No address' label in results lost its '- opens the contact' tail (Shneur). VERIFIED: both blocks node --check clean, both sentinels present, 66/66 on the stubbed VM harness (normaliser unit tests, long->short and short->long in both directions, punctuation, no-regression checks that every raw substring that matched before still matches, and cache re-normalisation after an address edit) and 29/29 driving real Chromium at 390x844 with touch. ||| PREVIOUS (2026-08-17.3): MOBILE MAP: PINS YOU CAN ACTUALLY HIT, PLUS A SEARCH BAR (Shneur: "you have to make sure you're pressing exactly on it"). ROOT CAUSE: mobile pins were INTERACTIVE circleMarkers at radius 7 and Leaflet hit-tests the drawn SVG path exactly, so the whole target was an 14px circle against the ~44px a thumb needs - there was no forgiveness at all, by construction. Desktop never felt this because it uses 28px divIcons plus markercluster. FIX: the markers are now interactive:false DECORATION (radius 9) and ONE handler on the map owns every tap, so there is a single code path and no marker/map double-fire. New PURE _mPinHitTest(pins,pt,tapTol,stackTol) awards the tap to the NEAREST pin centre within M_TAP_TOL=24 (a ~48px target). NEAREST-WINS IS THE WHOLE POINT and is why the extra slop costs no precision: a fatter hit circle would let two close pins steal each other's taps, whereas here each pin owns exactly the half of the tolerance nearer to it - verified at 30px separation, the boundary flips between 14 and 16px from the left pin. STACKING IS NOT DESKTOP CLUSTERING (explicitly rejected - he wants grouping only for literal neighbours): pins are never merged or hidden at any zoom, and the only grouping happens at the moment of the tap. Pins whose CENTRES sit within M_STACK_TOL=14 of the winner are on top of each other on screen (spouses at one address, a duplex, an apartment building) and get listed by name in the tray instead of guessed at; a pin 20px away is inside the tap tolerance but excluded from the stack, so two houses a block apart always resolve to one. Selected pin gets a ring (_mHighlightPin, re-applied after _mSyncMapPins throws the markers away); tapping empty map now closes the tray, which it never did. SEARCH: floating rounded bar over the tiles at the top of the map tab (z-index 1200 clears Leaflet's own 1000 controls; the zoom buttons are pushed to top:60px so it never covers them; input font is 16px because iOS Safari zooms the page on focus at anything smaller). Matches the SAME fields the Contacts tab searches - household name, member first/last, street, city, zip - so a name that works there works here. CRM DATA ONLY, NO GEOCODER: Nominatim is CORS-blocked on GitHub Pages, which is already why geocodeMissing is skipped on the live site, so an arbitrary-address lookup would need a new edge function - deliberately deferred, not forgotten. Un-geocoded households still appear in results (ranked below mappable ones, labelled 'No address') and open their contact sheet instead of moving the map: searching a name and getting silence because that household was never geocoded is worse than the wrong-looking action. Tapping a mappable result flies to zoom 16, rings the pin and opens the tray. VERIFIED: both blocks node --check clean, both sentinels present, 36/36 on a stubbed VM harness covering the geometry (forgiveness, nearest-wins boundary, diagonal tolerance, stack inclusion at exactly 14px and exclusion at 15, no input mutation) and the matcher (Klein vs Kleinman, member first names, street/city/zip, mappable-first ordering, no-address households still findable). NO desktop map code, data layer or logTouch path touched. ||| PREVIOUS (2026-08-17.2): DAY-ONE FIXES from the live smoke test, all three found by clicking rather than by the harness — both live on the provider's server, not in the request shape. (1) OpenAI's json_object mode 400s unless the literal word 'json' appears in the INPUT; our schema-less sites say 'Return ONLY valid JSON' in the SYSTEM prompt, which becomes `instructions`, and OpenAI does not count that — it broke report search on desktop and mobile the moment the build went live. ai-router now injects the word only when it is genuinely absent. (2) CLAUDE SONNET 5 EMITS `thinking` BLOCKS AND THEY SPEND THE SAME BUDGET AS THE ANSWER. A Power Search returned a thinking block and NO text after 61 seconds; Profile Build's 4000-token ask came back cut mid-JSON, so the brace-scrape found no closing brace and dumped raw JSON into the Summary field. The router now gives Anthropic the same headroom OpenAI already had (double the ask, capped at 16384), Profile Build asks 12000 instead of 4000, and a thinking-only reply now reports running out of room instead of 'The AI returned an empty response' — it is a length problem, not a refusal, and the old wording sent the reader to the wrong place. (3) _buildProfilePhase2's prose fallback no longer says 'Model returned a narrative instead of structured data' when the real cause was truncation; it names the cut-off and says a rebuild usually works. NOT A BUG: task parsing returning null for 'call the kleins'. Reproduced against the real 700-household roster on both Luna and Sonnet — both matched Leslie and Steve Klein correctly. The roster holds both a Klein and a Kleinman, and the prompt says 'if unsure, use null', so declining is defensible. Change that instruction if you want it to guess. Harness 84/84 with regression tests for both server-side rules. Edge functions ai-router 2026-08-17.1b deployed. ||| PREVIOUS (2026-08-17.1): TWO PROVIDERS, NO MODEL NAMES IN THE BROWSER. Gemini is gone; every AI call now runs on Claude or OpenAI, chosen server-side by JOB TYPE. NEW ai-router edge function replaces ai-proxy AND gemini-proxy: a call site posts {tier:'deep'|'fast'|'search'} plus the Anthropic-shaped payload it already spoke, and the router picks the company and the model. deep -> claude-sonnet-5 (falls back to gpt-5.6-sol with no Anthropic key); fast -> gpt-5.6-luna, NEVER Claude, because those four sites are interactive and a reasoning model puts a visible pause in a command bar (latency, not cost); search -> claude-sonnet-5 + Anthropic web_search, or gpt-5.6-sol + OpenAI web search via the Responses API. NO MODEL PICKER ANYWHERE and no model string in this file: the fair question to ask a user is how much effort, never which vendor, and a model rename is now a 300-line server edit rather than a redeploy of this 1.7MB page. Client entry point is _ai(tier,payload) over the existing _fnPost; _aiComplete/_geminiComplete/_gemParts/_gemSystem and the GEM_* constants are deleted. Response shape is unchanged ({content:[{type:'text',text}],stop_reason}) so no call site changed how it reads a reply, and stop_reason is normalised across providers because captureAnalyze's truncation guard reads it. NEW: d.citations — the router returns every page the search tool actually read, and Profile Build now renders them as clickable Sources (OpenAI's terms require visible citations wherever web results are shown, and a research claim the rabbi cannot check in one tap is one he has to take on faith). SCHEMAS: the call sites' Gemini-dialect nullable:true is translated server-side into a JSON Schema null union — shipping the Gemini spelling to OpenAI would silently drop nullability and turn an absent household_id into an empty string. OpenAI's dialect supports anyOf, which Gemini's did not, so _rpAiRun/_mAsSearch/captureAnalyze can finally be pinned — deliberately left as a follow-up, not done on cutover day. TRANSCRIPTION -> gpt-transcribe, one engine: both were run on real voice notes covering Shabbos, Yom Kippur, Neilah, Shavuos, Isru Chag and gpt-transcribe held up with no word list or priming, so the Gemini audio path, the Whisper op, the Settings engine dropdown and the daas_transcribe preference are all gone (a picker with one option is worse than none). _blobToWav is UNTOUCHED — 16kHz mono PCM16 is what the engine wants, its header logic is byte-tested, and it is what made the A/B valid. QUICK CHAT MODE REMOVED (Shneur): it did not do enough over the plain text search bar to justify a third option. Standard is the light mode, Power Search the heavy one; the help text was verified accurate and kept, since it describes how much DATA each mode reads, not which model reads it. setStrength normalises an unknown mode to standard, so a chat_sessions row saved with mode:'quick' loads on Standard instead of a mode that no longer exists. Power Search's cost estimate is untouched — $2/1M input is Claude Sonnet 5's exact rate and the ~90%-cheaper line is its $0.20 cache rate; only the stale ~$0.30 in the help modal became ~$0.20. VERIFIED: both blocks node --check clean, both sentinels present, 75/75 on a stubbed VM harness (translation, cache_control blocks, JSON modes, stop_reason round-trip, resolution matrix, citation extraction, error surfacing, _jsonFromReply), and every tier smoke-tested against the LIVE functions — fast/deep/search on Claude, search AND deep forced onto OpenAI, embed, and transcribe. THE OPENAI SEARCH BRANCH NEVER FIRES IN NORMAL USE (the Anthropic key is set), so it is forceable on purpose: body.force:'openai' per request, or AI_FORCE_PROVIDER=openai on the function. Re-verify it that way, not by deleting secrets. ||| PREVIOUS (2026-08-16.4): RATE-LIMIT HANDLING. _fnPost now RETRIES 429/503 (2 retries, so 3 attempts) across every proxy — each call through it is idempotent, since nothing is written until a proposal is approved. Honours Gemini's own retryDelay from the 429 body when present (capped at 20s), otherwise exponential backoff with jitter so two open tabs don't retry in lockstep. WHY IT MATTERS HERE: one Research Chat message ships the whole roster — ~32k tokens at 615 households, before semantic notes and growing history — so a quick back-and-forth trips a tokens-per-minute ceiling that a single retry rides straight over. On exhaustion the message names the provider, says to wait a minute, and names the actual fix (the key is still on the Gemini free tier; billing lifts it instantly) instead of leaking RESOURCE_EXHAUSTED. 400/500 still fail fast and unretried, so a missing secret or a bad model still reports itself immediately. opts.retries overrides per call. Also logs the raw failure body to the console on any non-2xx, because the softened UI sentence makes it impossible to tell a Gemini 429 from a Supabase EDGE_FUNCTION_ERROR after the fact. DIAGNOSED 2026-08-16: the 'rate limit' reports were NOT rate limits — Supabase logs show 15 gemini-proxy calls, 13 x 200 and 2 x 503 EDGE_FUNCTION_ERROR, and zero 429s anywhere including at the gateway. Both 503s were gemini-proxy crashing on an unguarded `await req.text()` (a phone dropping connection mid-upload rejects the body read; an uncaught rejection inside Deno.serve surfaces as a bare 503). Fixed and redeployed in gemini-proxy + openai-proxy: guarded body read, whole handler wrapped, and upstream non-200s now logged server-side with status + snippet. ||| PREVIOUS (2026-08-16.3): QUICK CAPTURE RECORDER = WHATSAPP SHAPE. The recording state is now its own pane (#capture-recorder) sitting in the composer's slot, so the box reads as TRANSFORMING rather than a new screen appearing: delete (trash) on the left, pulsing dot + m:ss timer, LIVE WAVEFORM (canvas driven by an AnalyserNode off the same MediaStream — RMS pushed every ~55ms, ~18 bars/sec, older bars faded so it reads left-to-right; analyser is never connected to destination or he'd hear himself), then pause, then send (accent circle, →). All three are 44px and aria-labelled. PAUSE is real (MediaRecorder.pause/resume, _capElapsedMs banks time across pauses so the clock genuinely freezes) and HIDES ITSELF where pause() is unsupported rather than offering a dead control. HARD STOP at 5:00 with the timer going red from 4:00 — 16kHz mono PCM16 is ~32KB/s and base64 inflates a third against Gemini's 20MB inline cap (~7 min), so a forgotten recorder ends as a usable note instead of a rejected request. Waveform degrades quietly with no AudioContext/rAF. THREE mutually exclusive panes now: composer (idle), recorder (recording), stage panel (transcribing/analyzing) — the stage panel lost its actions row since recording was the only stage that had any. Recording stays WhatsApp-simple with no step row; the Record -> Write it down -> Match it row appears once processing starts, with Record already ticked. Proposals now open with a 'Here's what I'd log — N items, nothing saves until you confirm each one' heading: a bare stack of cards read as 'done' rather than 'your turn', especially after a voice note where he pressed nothing between speaking and seeing them. Stage copy: 'Writing down what you said' / 'Reading it and finding the person'. ||| PREVIOUS (2026-08-16.2): QUICK CAPTURE FLOW + COPY. FLOW: the composer and a new stage panel (#capture-stage) are now MUTUALLY EXCLUSIVE — exactly one is on screen. Before, a voice note left the textarea reading 'Transcribing…' while the mic sat in the corner as a small red square and the Analyze button was still there offering to start the thing already running: three controls describing one moment. Now _captureStage('idle'|'recording'|'transcribing'|'analyzing') hides the composer + intro + batch bar and shows one named step with a Record -> Write it down -> Match it progress row (_capStepsHtml greys the first two on the typed path). RECORDING is a real state: pulsing dot, mm:ss timer (_capRecTick), a 44px 'Done — use this' button, and a 'Throw it away' that DISCARDS (_captureCancelVoice + _capRecCancelled) — previously there was no way out of a recording except to let it transcribe, since pressing the mic again both stopped AND sent it. closeCapture mid-recording now discards instead of firing a request into a panel he walked away from. The transcript stays on screen through matching as a 'Heard' block, so a misheard name is catchable before the proposal arrives. captureAnalyze no longer takes/needs a btn (the composer is hidden), guards re-entry on _captureStageName, and scrolls the proposals into view; its failure message now says the text is still in the box. The voice auto-chain still stands down when the pin-instead banner fires. COPY: 'tell Claude who you are' -> 'tell the AI who you are' in Rabbi Context, 'Claude will sort it out' -> 'The AI will sort it out' in the brain-dump, plus stale Claude/Whisper references in comments — Research Chat and everything else except profile research runs on Gemini now. _rosterBudget left at 200k on purpose (Gemini's window is far larger, but a bigger window is not a reason to spend more per Power Search). ||| PREVIOUS (2026-08-16.1): AI PROXY CONSOLIDATION: zero provider keys left in the browser. crm_ant_key/crm_oai_key/crm_rapid_key and the ANTHROPIC_KEY/OPENAI_KEY/RAPIDAPI_KEY globals are GONE, along with _keyNudge and the three API-Keys inputs. Four edge functions now hold the keys: ai-proxy (Anthropic — MAX_TOKENS_CAP raised 4096->16384, which was silently truncating Quick Capture's 8000-token captureAnalyze), NEW gemini-proxy (GEMINI_API_KEY), NEW openai-proxy (embeddings + the Whisper fallback), NEW data-proxy (RapidAPI/Zillow). Client entry points _aiComplete/_geminiComplete/_openaiProxy/_dataProxy over a shared _fnPost. EVERY Claude call site moved to Gemini except _buildProfilePhase2, which keeps Claude because it uses the native web_search tool — it moved onto _aiComplete instead. Gemini's native JSON mode (responseMimeType, plus a responseSchema where the shape is closed) replaces 'return ONLY JSON' + regex brace-scraping at every structured call site: _asAnalyze router, parseTaskInput, enrichProcessDump, buildProfileSoft, captureAnalyze, _rpAiRun/_mAsSearch. TRANSCRIPTION: new _transcribe() runs Gemini first with an automatic Whisper fallback (engine picker in Settings -> API Keys, localStorage daas_transcribe) — Gemini rejects MediaRecorder's webm/mp4 containers, so _blobToWav decodes with the browser's own codecs and re-encodes to 16kHz mono PCM16 WAV first. VOICE AUTO-CHAIN (confirmed with Shneur): Quick Capture AND the DAAS Assistant now transcribe -> analyze -> land on the review screen with no manual tap; typed input still needs the tap, nothing saves without an approval tap, and the raw transcript shows as a 'Heard:' line (_captureHeardHtml/_asHeardHtml). Quick Capture defers the auto-chain when the pin-instead banner fires. MELISSA REMOVED ENTIRELY (fetchMelissa, the dead fetchContactAge, the add-contact DOB hook, the Personator host): verified against the DB that it never returned a single DOB. Embeddings STAY on OpenAI — 1536-dim vectors are already in pgvector. Power Search cost estimate repriced to Gemini Pro. ||| PREVIOUS (2026-08-10.4): Forms→Settings gear button now also on the Donation Forms page header (was Events-only) — same openFormsSettings modal. ||| PREVIOUS (2026-08-10.3): CONFIRMATION EMAILS v3 (settings-driven, auto-embed): nothing org-specific is hardwired — global branding (org name, logo URL, mailing address, tax/receipt footer, ב"ה, default sender + default event/donation paragraphs + global CC) lives in app_settings.confirm_email_settings, edited via a NEW "Settings" (gear) button on the Events/Forms page (openFormsSettings/saveFormsSettings → sbSetSetting). Every confirmation email AUTO-EMBEDS all submitted fields (name, email, event+date, amount, dedication, notes, custom fields) — the tokens system is GONE. Form Builder step 4 now only holds PER-FORM overrides: send toggle, from/reply name, from/reply email, and the custom opening paragraph (stripe_config.email={send,from_name,reply_to,intro,cc}); signup-notify layers per-form over global via loadFormEmail(slug)+effectiveSettings. Callers pass slug + first/last/email/phone + fields. Logo defaults to the live logo.png until email-logo.png is uploaded. ||| PREVIOUS (2026-08-10.2): EMAIL TEMPLATE v2: confirmation emails now carry ב"ה + the Chabad logo (CONFIRM_LOGO_URL, defaults to the hosted app logo), and each form has an editable heading + message body (stripe_config.email.heading/message) pre-filled with kind defaults — donation default is the rabbi's standard tax-receipt text (+ 501c3/Tax-ID footer), event default keeps the auto date/location details. Tokens {first_name}/{amount}/{event_name}/{event_date}/{event_location} filled server-side. Email now sends FROM the reply-to address (default rabbi@jewishchagrinfalls.com), not no-reply@mg. ||| PREVIOUS (2026-08-10.1): SIGNUP CONFIRMATION EMAILS + PHONE PUSH: public event/donation form submissions now trigger (1) a branded confirmation email to the signer/donor via Mailgun (new `signup-notify` edge function), CC'ing the form's notify list; and (2) a Web Push notification to every device registered in the new `push_subscriptions` table, so the rabbi's phone buzzes on each signup/donation. Form Builder step 3 "Notify on signup" replaced by "Confirmation emails" (From name, Reply-to, Send-confirmation toggle, CC chips) for BOTH event + donation forms, written to stripe_config.email; CC still also stored on events.notify_emails for backward-safety. event-register + stripe-webhook (one-time + recurring invoice.paid) call signup-notify fire-and-forget (never block the save; event redelivery gated on regWasNew). form-submit no longer sets Stripe receipt_email (DAAS sends its own thank-you — also disable Stripe's "successful payment" customer emails in the Dashboard). API Keys modal gains a "Phone notifications" enable button (permission + pushManager.subscribe → push_subscriptions, upsert on endpoint); sw.js gains push + notificationclick handlers (sw.js must be uploaded to the crm repo manually — the Deploy button pushes index.html only). New secrets: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT, NOTIFY_SECRET, optional CONFIRM_FROM_ADDRESS. New table push_subscriptions. ||| PREVIOUS (2026-08-09.1): RECURRING DONATIONS + DOUBLE-CHARGE FIX: donation forms have a "Charge every month" option (writes stripe_config.recurring={interval:'month'}); form.html renders monthly forms with a subscription-mode Payment Element + "Donate Monthly" button and passes a per-page idempotency token; form-submit creates a Stripe Customer+Subscription for recurring forms and attaches an Idempotency-Key to all PaymentIntent/Subscription creates (a retry after a soft error can no longer mint a second charge — the root cause of the observed $3 double charge); stripe-webhook now also handles invoice.paid (logs each monthly renewal as a fresh donation row, deduped by stripe_invoice_id) and ignores subscription-invoice PaymentIntents so nothing double-logs. New donations columns: recurring, stripe_subscription_id, stripe_invoice_id. ||| PREVIOUS (2026-08-06.1) COPY: checkbox render fix + Prospect Finder copy pass. CHECKBOXES: `.modal input{width:100%;background;border;padding;margin-bottom}` is written for TEXT fields and has NO type guard, so every checkbox inside a modal was stretched to full modal width with a box drawn round it — tick and label unreadable. Global `input[type=checkbox],input[type=radio]` reset placed AFTER it (source order wins on equal specificity) with an explicit margin-bottom:0 because `.modal input` sets the longhand; three hand-patched `width:auto` workarounds and five redundant inline accent-colors removed; `.fb-check input{width:auto}` dropped, which had been shrinking form-builder boxes back to the ~13px default AFTER the reset. New `label.chk` / `.chk-note`. Checkbox copy confirmed line by line with the rabbi (This one mattered 24 words -> 8; Thanked 22 -> 9; Active -> Published; Allow optional donation -> Let people add a donation; req/required -> Required). PROSPECT FINDER: shipped in .1 before HANDOFF §4 existed, so the whole page got the pass. The three tab ? panels were rewritten twice — they had been explaining how the filter works and defending design decisions ('you're not punished for being slightly familiar', 'It is not a biggest-gap list', 'Unlike the other two tabs this isn't a cut-off') rather than saying who is on the list. Final form: plain sentence first, then the pillar shorthand — High Capacity / low Affinity, High Affinity / low Generosity, Real Generosity — capitalised, named once, never re-explained. Also: the Get to Know banner 48 words -> 24 (it is `_gapCaveat()`, shared from the retired Gap dropdown, which is why the first pass missed it); all five Engine Settings rows + section note rewritten (they had em-dashes instead of brackets, 'ceiling' as a visible word, ranking explanations, and fragment grammar); metric labels capitalised; 'thin data' -> 'rough score'; last gift through a new `_monthYear()`; 'Marked reviewed' lost its second clause; NEW `pf-page` ? on the heading answering how this page differs from the Daily Five. APP-WIDE: 'Saved!'/'Copied!' lost their exclamation marks; the profile Check-in stat printed 'every 42d', now 'about every six weeks'. LEFT ALONE ON PURPOSE: the public form's 'Thank you!' defaults (donor-facing, different register) and raw day counts in the Contacts 'Days Since' column and the 'Nd late' track cell (sortable grids where the number IS the content — the one standing exception to the no-raw-days rule). NO LOGIC TOUCHED: copy, CSS, one date helper, one help panel. NOTE: lands on top of 2026-08-04.1 from another session; that build's notes follow. ||| PREVIOUS (2026-08-04.1): BUG AUDIT (2026-08-04) — exhaustive audit + fixes (two passes this session). Batch of confirmed fixes from the exhaustive pass (all verified: both blocks node --check clean, both sentinels present, VM engine harness 30/30, jsdom headless render of all 7 views + Daily Five/Waiting Room/Engine Settings/Reports at 0 app errors). FIXES: (a) double-submit guards on _egNameSave (Enter+button) and _ecDuplicate (per-id) — the only two genuinely unguarded creates; confirmAddContact/saveDonation/saveInteraction/_mergeConfirm were already guarded via _guardClick. (b) TASK LOSS: _mergeConfirm now repoints the duplicate's tasks to the keeper before delete; _doMoveContact moves a contact's tasks with it (tasks filter by household_id). (c) ENRICH: _enrichSaveAllChunks routes note chunks by chunk.type not DOM presence — a note in a SINGLE-member household is now logged as a person Note via logTouch instead of misfiled into household notes. (d) EMAIL: _ecOpen (desktop+mobile) defaults track_clicks OFF for null/legacy rows, matching every other path (clicks are opt-in for deliverability); _ebPaletteInsert clamps click-insert so content never lands below the unsubscribe footer. (e) REPORTS: contact-grain last-contact no longer folds registration reg_date (matches the manual + household grain); _rpInterTouch future-gated. [event_fee-in-reports and Fee-Paid-always-0 were FALSE POSITIVES — m.donations is already event-fee-filtered and r._fee is set at load.] (f) EASTERN DATES (manual: "the day begins and ends in Ohio"): renderWins week boundary, _rpResolveDateRange/_rpResolveYear, toggleTaskDone link window (UTC→Eastern date), desktop + mobile heatmap grids, calcAge, _ecFmtDate, chat-sidebar Today bucket. (g) COPY: CSV "Days Since" exports "never" not 99999; snooze undo label uses word form (_snoozeWords) not "30d". First-pass note (same 2026-08-04 session) follows. // BUG AUDIT (first pass) — two _bumpAGCAgg sync fixes, both aligning the LIVE incremental aggregate bump with the two full-reload builders (loadAGCInteractionAggregates, _recalcAGCAggForHH) and the authoritative server calculate_agc, per the documented "all builders stay in sync" invariant. (1) DEDUPE KEY: bump was trimming notes ((notes||'').trim()) while every other path keys on RAW untrimmed coalesce(notes,''), so a note with surrounding whitespace deduped differently live vs a reload. Now untrimmed. (2) SIGNIFICANT FLAG: bump set a.significant AFTER the dedupe early-return, so a couple's second (deduped) row marked "this mattered" was dropped live until the next reload — the household lost its 4 Affinity points in the local fallback score. Now set BEFORE the return, matching the builder + server (a household is significant if EITHER row is marked; The Prospect Score manual: worth 4 if a household has ANY interaction marked). NO scoring math, thresholds, bands, or copy touched. VERIFIED: both blocks node --check clean; both sentinels present; a stubbed VM harness (no live DB) proves load==bump for lastContact/connected12/lifetime/reachDates/significant, future+Note exclusion, check-in-window clamps, Hebrew Yom Tov dates, and 8000-household scoring with no NaN/throw. Prior stamp .3 note below. // PROSPECT FINDER — the rest of the copy pass, plus the app-wide §4 sweep it prompted. PF LEFTOVERS (all shipped in .1 before HANDOFF §4 existed): the Get to Know banner was 48 words of pre-rules prose because it is `_gapCaveat()`, shared code inherited from the retired Gap dropdown — rewritten to 24 and now names the fix ('Add a street address to include them'). The five Engine Settings rows had four §4 problems at once — em-dash instead of brackets, 'ceiling' as a visible label, ranking explanations in the hints, fragment grammar ('Days.', 'Smaller = …') — all rewritten, and the section blurb with them. Metric labels capitalised (Capacity/Affinity/Overdue) since the pillars are named vocabulary. 'thin data' chip -> 'rough score'. Last gift now renders through a new `_monthYear()` ('November 2025') so it matches last contact rendering through `_agoWords`. 'Marked reviewed' toast lost its second clause. NEW `pf-page` ? panel on the page heading answering the question the shortened subtitle no longer does — how this page differs from the Daily Five — which is where that belongs. APP-WIDE SWEEP: 'Saved!' -> 'Saved' and 'Copied!' -> 'Copied' (rule 9); the profile's Check-in stat printed 'every 42d' and now reads 'about every six weeks' via `_everyWords`, its tooltip rewritten. DELIBERATELY LEFT: the public form's 'Thank you!' defaults (a donor-facing thank-you is a different register from app chrome), and the raw day counts in the Contacts 'Days Since' column and the Active Tracks 'Nd late' cell — both are sortable data grids where the number IS the content, which is the one standing exception to the no-raw-days rule. NO LOGIC TOUCHED anywhere: copy, one new date helper, one new help panel. VERIFIED: both blocks node --check clean, both sentinels present, helpers executed against real inputs (_monthYear, _everyWords, _gapCaveat), all four PF ? panels inside the 120-word budget (98/56/45/69), §4 grep clean over the PF region.
 const _PAGE_LOADED_AT=Date.now(); // used by the deploy stale-tab guard
 console.log('DAAS build '+BUILD_STAMP);
 
@@ -2366,73 +2394,6 @@ async function sbSetSetting(key,value){
   }catch(e){console.warn('[DAAS] setting save failed for '+key,e);throw e;}
 }
 
-// ── CANVASS SYNC ──────────────────────────────────────────────────────────
-// Invokes the `canvass-sync` Edge Function (one-way Canvass→DAAS pull). The
-// function holds the Canvass API key server-side; we just trigger it and show
-// the summary. Delta by default; the function decides full vs. incremental
-// from its own last-sync watermark.
-function _canvassFmt(iso){
-  if(!iso)return'never';
-  try{
-    const d=new Date(iso);const now=new Date();
-    const mins=Math.round((now-d)/60000);
-    if(mins<1)return'just now';
-    if(mins<60)return mins+' min ago';
-    const hrs=Math.round(mins/60);
-    if(hrs<24)return hrs+(hrs===1?' hour ago':' hours ago');
-    return d.toLocaleDateString([], {month:'short',day:'numeric'})+' at '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-  }catch(e){return iso;}
-}
-// Show the last-sync time under the button on load (and after a sync).
-async function refreshCanvassStatus(){
-  const el=document.getElementById('canvassSyncStatus');
-  if(!el)return;
-  try{
-    const rows=await sb('app_settings?key=eq.last_canvass_sync&select=value');
-    const last=(rows&&rows.length)?rows[0].value:null;
-    el.textContent='Last synced: '+_canvassFmt(last);
-    el.style.display='block';
-  }catch(e){/* leave hidden on error */}
-}
-async function runCanvassSync(){
-  const btn=document.getElementById('canvassSyncBtn');
-  const el=document.getElementById('canvassSyncStatus');
-  if(el){el.style.display='block';el.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0;animation:spin 1s linear infinite" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/></svg> Syncing from CRM…';}
-  if(btn)btn.disabled=true;
-  try{
-    const res=await fetch(SB_URL+'/functions/v1/canvass-sync',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+(_authToken||SB_KEY),'Content-Type':'application/json'},
-      body:JSON.stringify({})  // delta sync (function uses its own watermark)
-    });
-    const out=await res.json();
-    if(out&&out.ok===false){
-      throw new Error(out.fatal||'Sync failed');
-    }
-    // Build a short human summary. Delta runs usually report small numbers.
-    const hh=out.households_upserted||0, c=out.contacts_upserted||0;
-    const d=out.donations_upserted||0, ev=out.events_upserted||0;
-    const parts=[];
-    if(hh)parts.push(hh+' household'+(hh===1?'':'s'));
-    if(c)parts.push(c+' contact'+(c===1?'':'s'));
-    if(d)parts.push(d+' donation'+(d===1?'':'s'));
-    if(ev)parts.push(ev+' event'+(ev===1?'':'s'));
-    const summary=parts.length?('Synced '+parts.join(', ')+'.'):'Already up to date.';
-    if(el)el.textContent=summary+' Reloading…';
-    // Pull the freshly-synced data into the app.
-    try{await loadAll();}catch(e){console.warn('[DAAS] reload after sync failed',e);}
-    if(el){
-      // After reload, show the new last-synced time.
-      setTimeout(refreshCanvassStatus,1500);
-      el.textContent=summary;
-    }
-  }catch(e){
-    console.error('[DAAS] Canvass sync error',e);
-    if(el)el.textContent='Sync failed: '+(e.message||e);
-  }finally{
-    if(btn)btn.disabled=false;
-  }
-}
 
 // ── AUTH FUNCTIONS ──
 async function signIn(){
@@ -2470,7 +2431,6 @@ async function showApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('ppanel').innerHTML='<div class="hint"><div class="hi"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></svg></div><p>Pick somebody to see their details</p></div>';
   await loadAll();
-  try{refreshCanvassStatus();}catch(e){}
   try{ if(typeof mBoot==='function') mBoot(); }catch(e){}
 }
 
@@ -8617,7 +8577,7 @@ function openCapture(){
   _captureContacts=[];
   _capturePending=[];
   _captureBatchArmed=false;
-  _captureBatchType='Shabbat attendance';
+  _captureBatchType='Connected';
   const bt=document.getElementById('capture-batch-text'); if(bt)bt.value='';
   const bd=document.getElementById('capture-batch-date'); if(bd)bd.value=localToday();
   const ci=document.getElementById('capture-contact-input'); if(ci)ci.value='';
@@ -8750,7 +8710,7 @@ function _captureRenderPins(){
   const n=_captureContacts.length, pend=_capturePending.length;
   let html=_captureContacts.map(p=>'<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(15,30,51,.08);border:1px solid rgba(15,30,51,.16);border-radius:16px;padding:5px 5px 5px 11px;font-size:.76rem;color:var(--accent);max-width:100%">'
       +'<span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(p.name)+'</span>'
-      +(p.householdName?'<span style="font-size:.63rem;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(p.householdName)+'</span>':'')
+      +((p.householdName&&p.householdName!==p.name)?'<span style="font-size:.63rem;color:var(--txt3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_escHtml(p.householdName)+'</span>':'')
       +'<button onclick="captureUnpin(\''+p.contactId+'\')" aria-label="Remove" style="background:none;border:none;color:var(--txt3);cursor:pointer;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;padding:0">×</button>'
     +'</span>').join('');
   // Unresolved voice names — amber = pick one, grey = no match, never silently dropped.
@@ -8775,10 +8735,11 @@ function _captureRenderPins(){
   }).join('');
   wrap.innerHTML=html;
   wrap.style.display=(n||pend)?'flex':'none';
-  if(cnt){cnt.style.display=n?'inline':'none';cnt.textContent=n+' pinned';}
+  if(cnt){cnt.style.display=n?'inline':'none';cnt.textContent=n+' selected';}
   if(clr)clr.style.display=(n||pend)?'inline':'none';
   if(hint)hint.style.display=(n||pend)?'none':'block';
-  _captureBatchArmed=false; // any change to the pin set re-arms the confirm step
+  _captureBatchArmed=false; // any change to the selection re-arms the confirm step
+  if(n||pend){const r=document.getElementById('capture-manual-result');if(r)r.innerHTML='';}
   _captureRenderBatchBar();
 }
 
@@ -8788,13 +8749,22 @@ function _captureRenderPins(){
 // its own score bump and its own track close, while two spouses at the same
 // Shabbat table collapse into one household touch (the existing multi-member
 // semantic). No AI, no token ceiling, no silent mis-matching.
-const CAPTURE_BATCH_TYPES=['Email / Text','Phone call','Connected','Meeting in person','Shabbat attendance','Class / Program','Event attendance','Left VM','Other','Note'];
+// Every user-facing string the manual log form can print, in one place.
+const _CAPCOPY={
+  emptyNote:'',
+  btnEmpty:'Select someone above',
+  softCap:'That\u2019s a large group \u2014 consider logging it as an Event.',
+  noNoteOk:'No note is fine for attendance.',
+  backdated:' \u00b7 back-dated, so it won\u2019t clear today\u2019s Daily Five'
+};
+const CAPTURE_BATCH_TYPES=['Connected','Phone call','Meeting in person','Left VM','Email / Text','Shabbat attendance','Class / Program','Event attendance','Other','Note'];
+const CAPTURE_ATTEND=['Shabbat attendance','Class / Program','Event attendance'];
 const CAPTURE_BATCH_QUICK=['Shabbat attendance','Class / Program','Event attendance'];
 // The batch note is exactly the note field from the Log Interaction modal — same
 // wording, always present, always optional. It is NOT connected to the AI dump
 // box above (that box builds proposal cards; this is a plain note).
 function captureBatchNoteInput(){ _captureRenderBatchBar(); }
-let _captureBatchType='Shabbat attendance';
+let _captureBatchType='Connected';
 let _captureBatchArmed=false;
 let _captureBatchBusy=false;
 
@@ -8817,23 +8787,19 @@ function _captureGroupByHousehold(){
   return [...by.values()];
 }
 function _captureRenderBatchBar(){
-  const bar=document.getElementById('capture-batch-bar');
+  const bar=document.getElementById('capture-manual');
   if(!bar)return;
   const n=_captureContacts.length;
-  if(n<2||_captureBatchBusy){ if(!_captureBatchBusy)bar.style.display='none'; return; }
-  bar.style.display='block';
-  // One-tap chips for the common attendance cases; full list in the dropdown.
+  if(_captureBatchBusy){ bar.style.display='block'; }
+  else bar.style.display='block';
+  // Every type is a chip. A dropdown on a phone is two taps and a scroll wheel;
+  // this is one tap, and it shows the whole vocabulary at a glance.
   const chips=document.getElementById('capture-batch-type-chips');
   if(chips){
-    chips.innerHTML=CAPTURE_BATCH_QUICK.map(t=>{
+    chips.innerHTML=CAPTURE_BATCH_TYPES.map(t=>{
       const on=(t===_captureBatchType);
-      return '<button onclick="captureSetBatchType(\''+t.replace(/'/g,"\\'")+'\')" style="padding:7px 12px;border-radius:16px;cursor:pointer;font-family:inherit;font-size:.74rem;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?'var(--accent)':'var(--border2)')+';background:'+(on?'var(--accent)':'var(--surf,#fff)')+';color:'+(on?'#fff':'var(--txt2)')+'">'+_escHtml(t)+'</button>';
+      return '<button class="m-chip'+(on?' on':'')+'" onclick="captureSetBatchType(\''+t.replace(/'/g,"\\'")+'\')">'+_escHtml(t)+'</button>';
     }).join('');
-  }
-  const sel=document.getElementById('capture-batch-type');
-  if(sel){
-    sel.innerHTML=CAPTURE_BATCH_TYPES.map(t=>'<option'+(t===_captureBatchType?' selected':'')+'>'+_escHtml(t)+'</option>').join('');
-    sel.value=_captureBatchType;
   }
   const dateEl=document.getElementById('capture-batch-date');
   if(dateEl&&!dateEl.value)dateEl.value=localToday(); // Eastern, per DAAS_TZ
@@ -8845,31 +8811,40 @@ function _captureRenderBatchBar(){
   const batchTextVal=nb?(nb.value||'').trim():'';
   if(note){
     let msg='';
-    if(_captureBatchArmed){
-      // Confirm summary — say plainly what is about to change, incl. track closes.
+    if(!n){
+      msg=_CAPCOPY.emptyNote;
+    }else if(_captureBatchArmed){
       let closing=0;
       if(_isReach(_captureBatchType)){
         for(const g of groups){ if(g.householdId&&(outreachTracks||[]).some(t=>t.household_id===g.householdId&&t.status==='active'))closing++; }
       }
-      msg='<strong>'+n+' '+(n===1?'person':'people')+' · '+groups.length+' household'+(groups.length===1?'':'s')+'</strong> · '+_escHtml(_captureBatchType)+' · '+_escHtml(date)
-        +(closing?(' · closes '+closing+' open follow-up'+(closing===1?'':'s')):'')
-        +(date!==localToday()?' · back-dated, so it won\u2019t clear today\u2019s Daily Five':'');
+      msg='<strong>'+n+' '+(n===1?'person':'people')+' \u00b7 '+groups.length+' household'+(groups.length===1?'':'s')+'</strong> \u00b7 '+_escHtml(_captureBatchType)+' \u00b7 '+_escHtml(date)
+        +(closing?(' \u00b7 closes '+closing+' open follow-up'+(closing===1?'':'s')):'')
+        +(date!==localToday()?_CAPCOPY.backdated:'');
     }else{
-      msg=groups.length!==n
-        ? (n+' people across '+groups.length+' households — spouses count as one household touch.')
-        : (n+' households, one touch each.');
-      if(n>=CAPTURE_PIN_SOFT_CAP)msg+=' That\u2019s a lot — consider making this an Event instead.';
-      msg+=batchTextVal?' The note is saved to each of them.':' No note — that\u2019s fine for attendance.';
+      msg=(groups.length!==n)
+        ? (n+' people across '+groups.length+' households.')
+        : (n===1?'':(n+' households, one touch each.'));
+      if(n>=CAPTURE_PIN_SOFT_CAP)msg+=' '+_CAPCOPY.softCap;
+      if(!batchTextVal&&n>1&&CAPTURE_ATTEND.includes(_captureBatchType))msg+=' '+_CAPCOPY.noNoteOk;
+      if(date!==localToday())msg+=_CAPCOPY.backdated;
     }
     note.innerHTML=msg;
+    note.style.display=msg?'block':'none';
   }
-  if(btn)btn.textContent=_captureBatchArmed?('Confirm — log all '+n):('Log '+_captureBatchType+' to '+n+' people');
+  if(btn){
+    btn.disabled=(!n||_captureBatchBusy);
+    if(!n)btn.textContent=_CAPCOPY.btnEmpty;
+    else if(_captureBatchArmed)btn.textContent='Confirm \u2014 log all '+n;
+    else if(n===1)btn.textContent='Log interaction';
+    else btn.textContent='Log to '+n+' people';
+  }
 }
 
 async function captureBatchLog(btn){
   if(_captureBatchBusy)return;
   const n=_captureContacts.length;
-  if(n<2)return;
+  if(n<1)return;
   const type=_captureBatchType;
   const date=((document.getElementById('capture-batch-date')||{}).value)||localToday();
   const notes=((document.getElementById('capture-batch-text')||{}).value||'').trim();
@@ -8907,11 +8882,14 @@ async function captureBatchLog(btn){
   // Failures stay pinned so Retry re-runs only them.
   const failedIds=new Set();
   failed.forEach(g=>g.contactIds.forEach(id=>failedIds.add(id)));
-  const results=document.getElementById('capture-results');
-  let summary=_escHtml(String(savedPeople))+' household'+(savedPeople===1?'':'s')+' · '+_escHtml(type);
-  if(failed.length)summary+=' — <strong style="color:var(--red)">'+failed.length+' failed</strong>: '+failed.map(g=>_escHtml(g.label)).join(', ');
-  if(results&&subs.length)results.insertAdjacentHTML('afterbegin',_captureConfirmHTML(summary,entryId));
-  else if(results&&failed.length)results.insertAdjacentHTML('afterbegin','<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.8rem;color:var(--red)">Nothing saved. '+_escHtml(failed.map(g=>g.label).join(', '))+'</div>');
+  // The confirmation belongs INSIDE the form, directly above the button that was
+  // just pressed — it used to render in the AI results column further down the
+  // page, where a phone would never scroll to it.
+  const results=document.getElementById('capture-manual-result');
+  let summary=_escHtml(String(savedPeople))+' household'+(savedPeople===1?'':'s')+' \u00b7 '+_escHtml(type);
+  if(failed.length)summary+=' \u2014 <strong style="color:var(--red)">'+failed.length+' failed</strong>: '+failed.map(g=>_escHtml(g.label)).join(', ');
+  if(results&&subs.length)results.innerHTML=_captureConfirmHTML(summary,entryId);
+  else if(results&&failed.length)results.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:.8rem;color:var(--red)">Nothing saved. '+_escHtml(failed.map(g=>g.label).join(', '))+'</div>';
   _captureBatchBusy=false;
   btn.disabled=false;
   btn.textContent=orig;
@@ -8931,7 +8909,7 @@ async function captureBatchLog(btn){
 // This box sits still and waits. `msg` must already be escaped by the caller.
 function _captureConfirmHTML(msg,undoId){
   return '<div class="capture-confirmed" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'
-    +'<span style="font-size:.8rem;font-weight:700;color:#15803d;white-space:nowrap">\u2705 Confirmed</span>'
+    +'<span style="font-size:.8rem;font-weight:700;color:#15803d;white-space:nowrap">Logged</span>'
     +'<span style="font-size:.78rem;color:var(--txt2);flex:1;min-width:110px">'+msg+'</span>'
     +(undoId?('<button onclick="captureUndoFromBox(this,\''+undoId+'\')" style="flex-shrink:0;background:var(--surf,#fff);border:1px solid #86efac;color:#15803d;border-radius:6px;padding:7px 13px;cursor:pointer;font-size:.76rem;font-weight:600;font-family:inherit;min-height:34px">Undo</button>'):'')
     +'</div>';
@@ -9087,7 +9065,7 @@ function _captureOfferVoicePins(text){
   const txt=document.getElementById('capture-voice-banner-txt');
   if(!parts||!banner){if(banner)banner.style.display='none';return false;}
   _captureVoiceParts=parts;
-  if(txt)txt.textContent='Heard what sounds like '+parts.length+' names. Pin them instead of sending this to the AI?';
+  if(txt)txt.textContent='That sounds like '+parts.length+' names. Add them to the form below instead?';
   banner.style.display='flex';
   return true;
 }
@@ -9141,9 +9119,9 @@ function captureClearFile(){
 // shows "Matching it to a contact", so the button can't be pressed twice and
 // there is never a stale control next to a live status.
 const _CAP_STEPS=[
-  {key:'recording',    label:'Record'},
-  {key:'transcribing', label:'Write it down'},
-  {key:'analyzing',    label:'Match it'}
+  {key:'recording',    label:'Recording'},
+  {key:'transcribing', label:'Transcribing'},
+  {key:'analyzing',    label:'Matching'}
 ];
 let _captureStageName='idle';
 let _capRecTimer=null, _capRecStart=0, _capRecElapsed=0, _capRecPaused=false, _capRecCancelled=false;
@@ -9176,7 +9154,7 @@ function _captureStage(stage){
   const composer=document.getElementById('capture-composer');
   const recorder=document.getElementById('capture-recorder');
   const intro=document.getElementById('capture-intro');
-  const batch=document.getElementById('capture-batch-bar');
+  const batch=document.getElementById('capture-manual');
   if(!panel||!composer||!recorder)return;
 
   panel.style.display='none'; recorder.style.display='none'; composer.style.display='none';
@@ -9201,20 +9179,20 @@ function _captureStage(stage){
   icon.innerHTML='<div class="cap-spin"></div>';
 
   if(stage==='transcribing'){
-    title.textContent='Writing down what you said';
-    sub.textContent='A few seconds — keep this open.';
+    title.textContent='Transcribing';
+    sub.textContent='This takes a few seconds.';
     heard.style.display='none';
   }else if(stage==='analyzing'){
-    title.textContent='Reading it and finding the person';
+    title.textContent='Matching to a contact';
     const names=_captureContacts.map(p=>p.name);
-    sub.textContent=names.length===1?('Filing to '+names[0]+'…')
-      :names.length>1?('Filing across '+names.length+' pinned people…')
-      :'Nothing is saved yet — you’ll get a proposal to check first.';
+    sub.textContent=names.length===1?names[0]
+      :names.length>1?(names.length+' selected contacts')
+      :'Nothing saves until you review it.';
     // The transcript stays up through matching, so a misheard name is catchable
     // before the proposal even arrives.
     if(_captureHeard){
       heard.style.display='';
-      heard.innerHTML='<span style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'+_enrichEsc(_captureHeard);
+      heard.innerHTML='<span style="font-family:var(--font-ui);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Transcript</span><br>'+_enrichEsc(_captureHeard);
     }else{
       heard.style.display='none';
     }
@@ -9232,7 +9210,7 @@ function _capRecPaintTime(){
   el.style.color=(ms>=CAP_REC_WARN_MS)?'var(--red,#b91c1c)':'var(--txt)';
   const hint=document.getElementById('cap-rec-hint');
   if(hint&&ms>=CAP_REC_WARN_MS&&!_capRecPaused)
-    hint.innerHTML='Getting long — this stops on its own at 5:00 and sends what it has.';
+    hint.innerHTML='This stops on its own at 5:00 and uses what it has.';
 }
 function _capRecTick(){
   _capRecPaintTime();
@@ -9251,13 +9229,13 @@ function _capTogglePause(){
     _capRecPaused=false; _capRecStart=Date.now();
     if(dot)dot.style.animation='capPulse 1.25s ease-in-out infinite';
     if(btn){btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';btn.title='Pause';btn.setAttribute('aria-label','Pause');}
-    if(hint)hint.innerHTML='Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet';
+    if(hint)hint.innerHTML='Tap <strong style="color:var(--txt2)">→</strong> to use this recording. Nothing is saved yet.';
   }else{
     try{rec.pause();}catch(e){}
     _capRecPaused=true; _capRecElapsed+=Date.now()-_capRecStart;
     if(dot)dot.style.animation='none';
     if(btn){btn.innerHTML='<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><path d="M7 4v16l13-8Z"/></svg>';btn.title='Resume';btn.setAttribute('aria-label','Resume');}
-    if(hint)hint.textContent='Paused — carry on when you’re ready.';
+    if(hint)hint.textContent='Paused.';
   }
   _capRecPaintTime();
 }
@@ -9339,7 +9317,7 @@ function captureRecordVoice(btn){
     const pb=document.getElementById('cap-rec-pause');
     if(pb)pb.style.display=(typeof _captureMediaRec.pause==='function')?'':'none';
     const hint=document.getElementById('cap-rec-hint');
-    if(hint)hint.innerHTML='Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet';
+    if(hint)hint.innerHTML='Tap <strong style="color:var(--txt2)">→</strong> to use this recording. Nothing is saved yet.';
     const dot=document.getElementById('cap-rec-dot');
     if(dot)dot.style.animation='capPulse 1.25s ease-in-out infinite';
     _captureStage('recording');
@@ -9482,12 +9460,12 @@ async function captureAnalyze(btn){
     // object and JSON.parse threw — surfacing as a raw "JSON Parse error" in red.
     // Say something useful instead, and point at the path that has no limit.
     if(d.stop_reason==='max_tokens'){
-      throw new Error('That was too much to read in one go, so the answer got cut off. For a group like this, pin them instead — use “Pin people” below, add everyone, then press “Log to all”. That way has no limit.');
+      throw new Error('That was too much to read in one go, so the answer got cut off. For a group this size, use the Log an interaction form below — add everyone under Who and log them in one go. That way has no limit.');
     }
     const txt=((d.content)||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
     let parsed;
     try{parsed=_jsonFromReply(txt);}
-    catch(_){throw new Error('The answer came back incomplete, so nothing was saved. Try fewer people at once — or pin them and press “Log to all”.');}
+    catch(_){throw new Error('The answer came back incomplete, so nothing was saved. Try fewer people at once, or use the Log an interaction form below.');}
     _captureStage('idle');
     _captureRenderProposals(parsed);
     // Land him on the proposals rather than on the empty box that is now above
@@ -9506,7 +9484,7 @@ let _captureHeard='';
 function _captureHeardHtml(){
   if(!_captureHeard)return '';
   return '<div style="background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.74rem;color:var(--txt2);line-height:1.5">'
-    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'
+    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Transcript</span><br>'
     +_enrichEsc(_captureHeard)+'</div>';
 }
 function _captureRenderProposals(parsed){
@@ -9529,7 +9507,7 @@ function _captureRenderProposals(parsed){
   // read as "done" rather than "your turn" — especially after a voice note, where
   // he pressed nothing between speaking and seeing them.
   const _heardHtml='<div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 10px">'
-    +'<span style="font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--txt)">Here’s what I’d log</span>'
+    +'<span style="font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--txt)">Review and confirm</span>'
     +'<span style="font-size:.72rem;color:var(--txt3)">'+items.length+' item'+(items.length===1?'':'s')+' · nothing saves until you confirm each one</span>'
     +'</div>'+_captureHeardHtml();
 
@@ -21549,7 +21527,7 @@ let _asHeard='';
 function _asHeardHtml(){
   if(!_asHeard)return '';
   return '<div style="background:var(--surf2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:.74rem;color:var(--txt2);line-height:1.5">'
-    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Heard</span><br>'
+    +'<span style="font-family:var(--font-ui);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Transcript</span><br>'
     +_enrichEsc(_asHeard)+'</div>';
 }
 // PURE router — separable from DOM for testing. parsed → {action, payload}.
@@ -21761,7 +21739,7 @@ function _asExecuteSearch(sentence){
     <button onclick="closeCapture()" style="background:none;border:1px solid var(--border2);color:var(--txt2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;white-space:nowrap"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg> Close</button>
   </div>
   <div style="max-width:680px;margin:0 auto;padding:16px 16px 80px">
-    <p id="capture-intro" style="font-size:.82rem;color:var(--txt2);line-height:1.55;margin:0 0 14px">Dump anything — a pasted email, a quick thought, a PDF or screenshot of a conversation, or a voice note. It'll figure out which contact it belongs to and propose what to log. Nothing saves until you confirm.<br><span style="color:var(--txt3)">Logging a group after a program? Pin everyone under <strong>Pin people</strong> and log them all in one go — no limit on how many.</span></p>
+    <div id="capture-intro" style="display:none"></div>
 
     <!-- STAGE PANEL — replaces the composer entirely while anything is running.
          The composer and this are mutually exclusive: exactly one is on screen.
@@ -21788,66 +21766,74 @@ function _asExecuteSearch(sentence){
         <button id="cap-rec-pause" onclick="_capTogglePause()" title="Pause" aria-label="Pause" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></button>
         <button onclick="_captureStopVoice()" title="Use this recording" aria-label="Use this recording" style="flex-shrink:0;width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
       </div>
-      <div id="cap-rec-hint" style="font-size:.7rem;color:var(--txt3);margin-top:10px;text-align:center;line-height:1.45">Send it with <strong style="color:var(--txt2)">→</strong> when you’re done · nothing is saved yet</div>
+      <div id="cap-rec-hint" style="font-size:.7rem;color:var(--txt3);margin-top:10px;text-align:center;line-height:1.45">Tap <strong style="color:var(--txt2)">→</strong> to use this recording. Nothing is saved yet.</div>
     </div>
 
-    <div id="capture-composer" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+    <div id="capture-composer" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:16px 16px 14px;margin-bottom:14px">
+      <div style="font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--txt);margin-bottom:3px">Let AI sort it out</div>
+      <div style="font-size:.75rem;color:var(--txt3);line-height:1.5;margin-bottom:13px">Paste an email, type a thought, attach a photo or PDF, or record a voice note. DAAS works out who it’s about and proposes what to log. Nothing saves until you approve it.</div>
       <div style="position:relative">
         <textarea id="capture-text" oninput="_captureHeard=''" rows="6" placeholder="Type or paste here. e.g. 'Met Carol on the street, she asked about Hebrew school for her grandkids'…" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 42px 10px 10px;font-size:.84rem;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
         <button onclick="captureRecordVoice(this)" id="capture-mic" title="Record a voice note" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:var(--surf,#fff);cursor:pointer;font-size:.9rem;line-height:1;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
       </div>
       <div id="capture-file-info" style="font-size:.72rem;color:var(--txt3);margin-top:8px;display:none"></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center">
-        <label style="padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:6px;cursor:pointer;font-size:.74rem"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"></path></svg> Attach PDF / image
+        <label style="display:inline-flex;align-items:center;gap:6px;padding:12px 15px;background:none;border:1px solid var(--border2);color:var(--txt2);border-radius:10px;cursor:pointer;font-size:.8rem;font-family:inherit"><svg class="ic" viewBox="0 0 24 24" width="1em" height="1em" style="display:inline-block;vertical-align:-0.13em;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5 12 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"></path></svg> Attach PDF or image
           <input type="file" id="capture-file" accept="application/pdf,image/*" onchange="captureFilePicked(this)" style="display:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
         </label>
         <span style="flex:1"></span>
-        <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:500">Analyze →</button>
+        <button onclick="captureAnalyze(this)" id="capture-analyze-btn" style="padding:13px 24px;background:var(--accent);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:.92rem;font-weight:700;font-family:inherit">Analyze</button>
       </div>
       <!-- Offered after a voice note that reads like a list of people. Non-destructive:
            the transcript stays in the box either way. -->
       <div id="capture-voice-banner" style="display:none;align-items:center;gap:9px;flex-wrap:wrap;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:10px">
         <span id="capture-voice-banner-txt" style="font-size:.78rem;color:#a16207;flex:1;min-width:120px;line-height:1.45"></span>
-        <button onclick="captureVoicePinAll()" style="flex-shrink:0;background:#a16207;color:#fff;border:none;border-radius:6px;padding:8px 13px;cursor:pointer;font-size:.76rem;font-weight:600;font-family:inherit;min-height:34px">Pin them</button>
-        <button onclick="captureVoiceDismiss()" style="flex-shrink:0;background:none;border:1px solid #fcd34d;color:#a16207;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:.76rem;font-family:inherit;min-height:34px">Keep as text</button>
-      </div>
-      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-          <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3)">Pin people <span style="text-transform:none;letter-spacing:0">(optional — add as many as you like)</span></div>
-          <span style="flex:1"></span>
-          <span id="capture-pin-count" style="display:none;font-size:.66rem;color:var(--accent);font-weight:600"></span>
-          <button id="capture-pin-clear" onclick="captureContactClear()" style="display:none;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.66rem;padding:2px 4px">Clear all</button>
-        </div>
-        <!-- Pinned chips accumulate here; scrolls internally so it can never push the action bar off-screen -->
-        <div id="capture-pin-chips" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;max-height:34vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
-        <div id="capture-contact-search" style="position:relative">
-          <input type="text" id="capture-contact-input" placeholder="Start typing a name…" oninput="captureContactFilter()" onfocus="captureSearchFocus()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:.8rem;color:var(--txt);font-family:inherit" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-          <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
-        </div>
-        <!-- Shown only at 0 pins: this is what makes the batch path findable -->
-        <div id="capture-pin-hint" style="font-size:.68rem;color:var(--txt3);margin-top:7px;line-height:1.45">Logging a group all at once? Pin them and skip the AI.</div>
+        <button onclick="captureVoicePinAll()" style="flex-shrink:0;background:#a16207;color:#fff;border:none;border-radius:6px;padding:8px 13px;cursor:pointer;font-size:.76rem;font-weight:600;font-family:inherit;min-height:34px">Add them</button>
+        <button onclick="captureVoiceDismiss()" style="flex-shrink:0;background:none;border:1px solid #fcd34d;color:#a16207;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:.76rem;font-family:inherit;min-height:34px">Leave as text</button>
       </div>
     </div>
 
-    <!-- BATCH BAR — appears only at 2+ pins (progressive disclosure). Sticky so it
-         stays reachable on mobile no matter how many chips are stacked above it. -->
-    <div id="capture-batch-bar" style="display:none;background:var(--surf,#fff);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;margin-bottom:14px;position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:6;box-shadow:0 -2px 14px rgba(0,0,0,.07)">
-      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:7px">Log the same thing to everyone pinned</div>
-      <div id="capture-batch-type-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <select id="capture-batch-type" onchange="captureSetBatchType(this.value)" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 9px;color:var(--txt);font-family:inherit" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></select>
-        <input type="date" id="capture-batch-date" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:6px 8px;color:var(--txt);font-family:inherit" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
-      </div>
-      <!-- Same Notes field as the Log Interaction modal: always here, always optional.
-           Separate from the AI dump box above, which exists to build proposal cards. -->
-      <div style="font-family:var(--font-ui);font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin:9px 0 4px">Notes <span style="text-transform:none;letter-spacing:0">(optional)</span></div>
-      <textarea id="capture-batch-text" rows="2" oninput="captureBatchNoteInput()" placeholder="What happened? Any follow up needed? Interests expressed?" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:8px 9px;color:var(--txt);font-family:inherit;resize:vertical;line-height:1.5" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
-      <div id="capture-batch-note" style="font-size:.68rem;color:var(--txt3);margin-top:7px;line-height:1.45"></div>
-      <div id="capture-batch-progress" style="display:none;font-size:.76rem;color:var(--accent);margin-top:9px;font-weight:500"></div>
-      <button id="capture-batch-btn" onclick="captureBatchLog(this)" style="width:100%;margin-top:9px;padding:11px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.86rem;font-weight:600"></button>
-    </div>
-
+    <!-- AI proposals land here: between the box that produced them and the
+         manual form, never below it. -->
     <div id="capture-results"></div>
+
+    <!-- MANUAL LOG FORM — always on screen, works from one person up.
+         The AI box above can fill it in (voice "pin them all", or just picking
+         names by hand); nothing here needs the AI to have run. -->
+    <div id="capture-manual" style="background:var(--surf,#fff);border:1px solid var(--border2);border-radius:12px;padding:16px 16px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:13px">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--txt)">Log an interaction</div>
+        <span style="flex:1"></span>
+        <span id="capture-pin-count" style="display:none;font-size:.68rem;color:var(--accent);font-weight:600"></span>
+        <button id="capture-pin-clear" onclick="captureContactClear()" style="display:none;background:none;border:none;color:var(--txt3);cursor:pointer;font-size:.68rem;padding:2px 4px">Clear</button>
+      </div>
+
+      <div class="cap-f-lbl">Who</div>
+      <div id="capture-pin-chips" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px;max-height:34vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+      <div id="capture-contact-search" style="position:relative;margin-bottom:15px">
+        <input type="text" id="capture-contact-input" placeholder="Search a name…" oninput="captureContactFilter()" onfocus="captureSearchFocus()" autocomplete="off" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:11px 12px;font-size:.86rem;color:var(--txt);font-family:inherit;outline:none" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+        <div id="capture-contact-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surf,#fff);border:1px solid var(--border2);border-radius:8px;margin-top:3px;max-height:35vh;overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.1)"></div>
+        <div id="capture-pin-hint" style="font-size:.7rem;color:var(--txt3);margin-top:7px;line-height:1.45">Add as many people as you like.</div>
+      </div>
+
+      <div class="cap-f-lbl">Interaction type</div>
+      <div id="capture-batch-type-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:15px"></div>
+
+      <div class="cap-f-lbl">When</div>
+      <input type="date" id="capture-batch-date" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--txt);font-family:inherit;font-size:.86rem;margin-bottom:15px" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other">
+
+      <div class="cap-f-lbl">Notes <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+      <div style="position:relative;margin-bottom:12px">
+        <textarea id="capture-batch-text" rows="3" oninput="captureBatchNoteInput()" placeholder="What happened? Anything to follow up on?" style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 46px 10px 12px;color:var(--txt);font-family:inherit;font-size:.86rem;resize:vertical;line-height:1.5;outline:none" autocomplete="off" data-1p-ignore="" data-lpignore="true" data-bwignore="" data-form-type="other"></textarea>
+        <button class="m-log-mic" id="capture-manual-mic" onclick="_mDictate(this,'capture-batch-text')" title="Dictate" aria-label="Dictate"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg></button>
+      </div>
+
+      <div id="capture-batch-note" style="font-size:.72rem;color:var(--txt3);margin-bottom:9px;line-height:1.45"></div>
+      <div id="capture-batch-progress" style="display:none;font-size:.78rem;color:var(--accent);margin-bottom:9px;font-weight:500"></div>
+      <div id="capture-manual-result" style="margin-bottom:10px"></div>
+      <button id="capture-batch-btn" onclick="captureBatchLog(this)" style="width:100%;padding:15px 16px;background:var(--accent);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:.92rem;font-weight:700;font-family:inherit"></button>
+    </div>
+
   </div>
 </div>
 
@@ -21939,7 +21925,6 @@ function _asExecuteSearch(sentence){
         <div id="mUndoList" style="max-height:280px;overflow-y:auto"></div>
       </div>
     </div>
-    <button class="m-iconbtn" onclick="mSync(this)" title="Sync from CRM"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"></path></svg></button>
     <button class="m-iconbtn" onclick="mMenuToggle()" title="Menu"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg></button>
   </div>
   <div class="m-menu-bd" id="mMenuBd" onclick="mMenuClose()"></div>
@@ -22215,18 +22200,6 @@ function _mRegisterSW(){
   }
 }
 
-/* ---- CRM sync from topbar ---- */
-async function mSync(btn){
-  if(typeof runCanvassSync!=='function'){return;}
-  const orig=btn.innerHTML;
-  btn.innerHTML='<div class="spin" style="width:16px;height:16px;border-width:2px"></div>';
-  btn.disabled=true;
-  try{ await runCanvassSync(); }catch(e){}
-  btn.innerHTML=orig; btn.disabled=false;
-  if(_mActiveTab==='dash') mRenderD5();
-  if(_mActiveTab==='contacts') mRenderRoster();
-  if(_mMapBuilt) _mSyncMapPins(); // synced data may have added/geocoded households
-}
 
 /* ===================== ACTIVITY HEATMAP (mobile) — one week, hover shows count ===================== */
 async function mRenderMHeat(){
@@ -22649,6 +22622,7 @@ function mOpenSheet(h){
   if(def<0) def=members.findIndex(_mReachable);
   if(def<0) def=0;
   _mSheetMemberIdx=def;
+  _mSheetMode='actions';
   _mRenderSheet();
   document.getElementById('mContactSheet').classList.add('open');
 }
@@ -22713,14 +22687,168 @@ function _mRenderSheet(){
       ${navBtn}
     </div>
     <div class="m-sheet-tools">
-      <button class="m-tool-btn m-tool-pri" onclick="mSheetOpenProfile('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Open Full Profile</button>
-      <button class="m-tool-btn" onclick="mSheetEnrich('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg> Build / Enrich Profile</button>
-      <button class="m-tool-btn" onclick="mSheetNotes('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg> Add Notes</button>
+      <button class="m-tool-btn m-tool-log" onclick="mSheetLog('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6M9 17h4"/></svg> Log Interaction</button>
+      <button class="m-tool-btn" onclick="mSheetOpenProfile('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Open Full Profile</button>
       <button class="m-tool-btn" onclick="mSheetChat('${h.id}')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Context Chat</button>
-      <button class="m-tool-btn" onclick="mSheetHide('${h.id}')" style="color:var(--txt2)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13 13 0 0 0 2 12s3 8 10 8a9 9 0 0 0 4.5-1.2M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg> Hide Contact</button>
     </div>`;
 }
 function mCloseSheet(){ document.getElementById('mContactSheet').classList.remove('open'); _mSheetH=null; }
+
+/* ===================== IN-TRAY LOG INTERACTION =====================
+   The tray does not navigate anywhere to log. It swaps its own contents for the
+   form and swaps back — same sheet, same person, no screen change. Logging is
+   the action the whole app depends on, so it is the first and biggest button in
+   the tray and it is never more than one tap from the roster. */
+const M_LOG_TYPES=['Connected','Phone call','Meeting in person','Left VM','Email / Text','Shabbat attendance','Class / Program','Event attendance','Other','Note'];
+let _mSheetMode='actions', _mLogSel=[], _mLogType='Connected';
+
+function mSheetLog(hid){
+  const h=_mSheetH||households.find(x=>x.id===hid);
+  if(!h)return;
+  _mSheetH=h;
+  _mSheetMode='log';
+  const members=h.members||[];
+  _mLogSel=members.map(m=>m.id);      // everyone in the household, pre-checked
+  _mLogType='Connected';
+  _mRenderSheetLog();
+  const sheet=document.getElementById('mSheetInner'); if(sheet)sheet.scrollTop=0;
+}
+function mSheetLogBack(){ _mSheetMode='actions'; _mRenderSheet(); }
+
+function _mRenderSheetLog(){
+  const h=_mSheetH; if(!h)return;
+  const inner=document.getElementById('mSheetInner'); if(!inner)return;
+  const members=h.members||[];
+  const whoBlock = members.length>1
+    ? '<div class="m-log-lbl">Who</div><div class="m-chipwrap" id="mlog-who">'
+      + members.map(m=>'<button class="m-chip'+(_mLogSel.includes(m.id)?' on':'')+'" data-cid="'+m.id+'" onclick="_mLogToggleWho(this)">'+_escHtml(_daasDisplayName(m))+'</button>').join('')
+      + '</div>'
+    : '';
+  inner.innerHTML=`
+    <div class="m-sheet-grab"></div>
+    <div class="m-sheet-head" style="display:flex;align-items:center;gap:8px">
+      <button class="m-log-back" onclick="mSheetLogBack()" aria-label="Back"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div style="min-width:0;flex:1">
+        <div class="m-sheet-name" style="font-size:1.08rem">Log interaction</div>
+        <div class="m-sheet-addr" style="margin-top:2px">${_escHtml(h.displayName||'Household')}</div>
+      </div>
+    </div>
+    <div class="m-log-body">
+      ${whoBlock}
+      <div class="m-log-lbl">Interaction type</div>
+      <div class="m-chipwrap" id="mlog-types">
+        ${M_LOG_TYPES.map(t=>'<button class="m-chip'+(t===_mLogType?' on':'')+'" data-t="'+_escHtml(t)+'" onclick="_mLogSetType(this)">'+_escHtml(t)+'</button>').join('')}
+      </div>
+      <div class="m-log-lbl">When</div>
+      <input type="date" class="m-log-date" id="mlog-date" value="${localToday()}">
+      <div class="m-log-lbl">Notes <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+      <div style="position:relative;margin-bottom:12px">
+        <textarea class="m-log-note" id="mlog-note" placeholder="What happened? Anything to follow up on?"></textarea>
+        <button class="m-log-mic" id="mlog-mic" onclick="_mDictate(this,'mlog-note')" title="Dictate" aria-label="Dictate"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg></button>
+      </div>
+      <label style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--surf2);border-radius:9px;cursor:pointer;font-size:.84rem;color:var(--txt2);margin-bottom:12px;min-height:46px;box-sizing:border-box">
+        <input type="checkbox" id="mlog-sig" style="accent-color:var(--accent);width:19px;height:19px;flex-shrink:0">
+        <span><b style="color:var(--txt)">This one mattered</b> <span style="color:var(--txt3);font-size:.76rem">· adds to Affinity</span></span>
+      </label>
+      <div id="mlog-result"></div>
+      <button class="m-log-save" id="mlog-save" onclick="mSheetLogSave(this)">Log interaction</button>
+    </div>`;
+}
+
+function _mLogToggleWho(btn){
+  const cid=btn.getAttribute('data-cid');
+  if(_mLogSel.includes(cid)){ _mLogSel=_mLogSel.filter(x=>x!==cid); btn.classList.remove('on'); }
+  else { _mLogSel.push(cid); btn.classList.add('on'); }
+  _mLogPaintSave();
+}
+function _mLogSetType(btn){
+  _mLogType=btn.getAttribute('data-t');
+  const wrap=document.getElementById('mlog-types');
+  if(wrap)[...wrap.children].forEach(b=>b.classList.toggle('on',b===btn));
+  _mLogPaintSave();
+}
+function _mLogPaintSave(){
+  const b=document.getElementById('mlog-save'); if(!b)return;
+  b.disabled=!_mLogSel.length;
+  b.textContent=_mLogSel.length?'Log interaction':'Pick who this was with';
+}
+
+async function mSheetLogSave(btn){
+  const h=_mSheetH; if(!h)return;
+  if(!_mLogSel.length){ _mLogPaintSave(); return; }
+  const date=((document.getElementById('mlog-date')||{}).value)||localToday();
+  const notes=((document.getElementById('mlog-note')||{}).value||'').trim();
+  const significant=!!((document.getElementById('mlog-sig')||{}).checked);
+  const type=_mLogType;
+  const orig=btn.textContent;
+  btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const res=await logTouch({contactIds:_mLogSel.slice(),householdId:h.id,type,date,notes:notes||null,significant,
+      source:'tray',trackMode:'close-only',markDaily:(date===localToday()),silent:true,
+      journalLabel:type+' — '+(h.displayName||'')});
+    try{ _invHH(h); refreshAGCScore(h.id).then(()=>recolorAll()); }catch(e){}
+    try{ if(typeof mRenderRoster==='function')mRenderRoster(); }catch(e){}
+    const box=document.getElementById('mlog-result');
+    if(box){
+      box.innerHTML='<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px">'
+        +'<span style="font-size:.82rem;font-weight:700;color:#15803d">Logged</span>'
+        +'<span style="font-size:.78rem;color:var(--txt2);flex:1;min-width:100px">'+_escHtml(type)+' · '+_escHtml(h.displayName||'')+'</span>'
+        +((res&&res.undo)?('<button onclick="_mLogUndo(this,\''+res.undo.id+'\')" style="background:var(--surf);border:1px solid #86efac;color:#15803d;border-radius:7px;padding:8px 13px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:inherit;min-height:36px">Undo</button>'):'')
+        +'</div>';
+    }
+    btn.textContent='Logged';
+    // Give the confirmation a beat, then hand the sheet back so the next tap is
+    // a fresh person rather than a form still holding the last note.
+    setTimeout(()=>{ if(_mSheetMode==='log') mCloseSheet(); }, 1400);
+  }catch(e){
+    btn.disabled=false; btn.textContent=orig;
+    const box=document.getElementById('mlog-result');
+    if(box)box.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:11px 13px;font-size:.79rem;color:var(--red);margin-bottom:10px">Didn\u2019t save: '+_escHtml(e.message||'unknown error')+'</div>';
+  }
+}
+async function _mLogUndo(btn,undoId){
+  btn.disabled=true; btn.textContent='Undoing…';
+  try{ await undoAction(undoId); btn.closest('div').innerHTML='<span style="font-size:.8rem;color:var(--txt2);font-weight:600">Undone</span>'; }
+  catch(e){ btn.disabled=false; btn.textContent='Undo'; }
+}
+
+/* Shared dictation for any textarea. Appends the transcript rather than
+   replacing, so a typed start plus a spoken finish both survive. */
+let _mDictRec=null,_mDictStream=null,_mDictChunks=[],_mDictTarget=null,_mDictBtn=null;
+const _MIC_ON='<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const _MIC_OFF='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>';
+function _mDictate(btn,targetId){
+  if(_mDictRec && _mDictRec.state==='recording'){ _mDictStop(); return; }
+  if(!navigator.mediaDevices||!window.MediaRecorder){ try{_ebToastMsg('This browser can\u2019t record. Use the microphone on your keyboard instead.');}catch(e){} return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    _mDictStream=stream; _mDictChunks=[]; _mDictTarget=targetId; _mDictBtn=btn;
+    let mime=''; if(MediaRecorder.isTypeSupported('audio/webm'))mime='audio/webm'; else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
+    _mDictRec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _mDictRec.ondataavailable=e=>{ if(e.data&&e.data.size>0)_mDictChunks.push(e.data); };
+    _mDictRec.onstop=()=>_mDictProcess();
+    _mDictRec.start();
+    btn.innerHTML=_MIC_ON; btn.style.background='var(--red)'; btn.style.color='#fff'; btn.style.borderColor='var(--red)';
+  }).catch(()=>{ try{_ebToastMsg('DAAS can\u2019t hear your microphone. Allow access in your browser settings, then try again.');}catch(e){} });
+}
+function _mDictStop(){
+  if(_mDictRec && _mDictRec.state==='recording'){ try{_mDictRec.stop();}catch(e){} }
+  if(_mDictBtn){ _mDictBtn.innerHTML=_MIC_OFF; _mDictBtn.style.background=''; _mDictBtn.style.color=''; _mDictBtn.style.borderColor=''; }
+}
+async function _mDictProcess(){
+  if(_mDictStream){ try{_mDictStream.getTracks().forEach(t=>t.stop());}catch(e){} _mDictStream=null; }
+  if(_mDictBtn){ _mDictBtn.innerHTML=_MIC_OFF; _mDictBtn.style.background=''; _mDictBtn.style.color=''; _mDictBtn.style.borderColor=''; }
+  if(!_mDictChunks.length)return;
+  const ta=document.getElementById(_mDictTarget); if(!ta)return;
+  const blob=new Blob(_mDictChunks,{type:_mDictChunks[0].type||'audio/webm'});
+  const prev=ta.value;
+  ta.disabled=true; ta.value=(prev?prev+' ':'')+'Transcribing\u2026';
+  try{
+    let wp=''; try{wp=_captureNamePrompt();}catch(e){}
+    const heard=await _transcribe(blob,{prompt:wp});
+    ta.value=(prev?prev+' ':'')+heard;
+  }catch(e){ ta.value=prev; try{_ebToastMsg('Couldn\u2019t transcribe that. Try again.');}catch(_){} }
+  ta.disabled=false;
+}
 
 /* Sheet tool actions — bridge to desktop detail panel via real APIs.
    openFullPanel(idx) takes an index; showTab(idx,tab) switches detail tabs;
